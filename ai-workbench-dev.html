@@ -2492,7 +2492,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
           <select class="preset-select" id="presetSelect" title="预设">
             <option value="">预设…</option>
           </select>
-          <button class="preset-btn" id="savePresetBtn">保存</button>
+          <button class="preset-btn preset-icon-btn" id="savePresetBtn" type="button" title="保存当前预设" aria-label="保存当前预设"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v6h8V4"/><path d="M8 20v-5h8v5"/></svg></button>
         </div>
       </div>
       <div class="model-select-wrap">
@@ -2520,11 +2520,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
           </button>
         </div>
       </div>
-      <div style="font-size:11px;color:var(--text-dim);margin-top:10px;line-height:1.5">
-        快捷键：<kbd style="font-family:var(--font-mono);background:var(--surface-2);border:1px solid var(--border);border-radius:3px;padding:1px 4px">Ctrl/⌘+V</kbd> 粘贴模板自动识别 · <kbd style="font-family:var(--font-mono);background:var(--surface-2);border:1px solid var(--border);border-radius:3px;padding:1px 4px">Ctrl/⌘+Enter</kbd> 提交 ·
-        <kbd style="font-family:var(--font-mono);background:var(--surface-2);border:1px solid var(--border);border-radius:3px;padding:1px 4px">/</kbd> 聚焦提示词 ·
-        <kbd style="font-family:var(--font-mono);background:var(--surface-2);border:1px solid var(--border);border-radius:3px;padding:1px 4px">Ctrl/⌘+K</kbd> 历史搜索
-      </div>
+      <div class="workspace-shortcuts" aria-label="快捷键提示"><kbd>Ctrl/⌘+V</kbd> 导入模板 · <kbd>Ctrl/⌘+Enter</kbd> 生成</div>
     </div>
   </aside>
 
@@ -4695,14 +4691,14 @@ const UI = {
     form.innerHTML = '';
 
     const byKey = Object.fromEntries(model.params.map(p => [p.key,p]));
-    const mkGroup = (p, extra='') => {
+    const mkGroup = (p, extra='', hideLabel=false) => {
       const grp=document.createElement('div'); grp.className='form-group' + ((p.type==='ref-image'||p.type==='ref-video') ? ' ref-media-group' : ''); grp.dataset.key=p.key;
       let promptHistoryBtn='', inspireBtn='';
       if (p.key==='prompt' || p.key==='text') {
         promptHistoryBtn=`<button class="prompt-history-btn" type="button" id="phBtn-${p.key}">最近</button>`;
         inspireBtn=(p.key==='prompt')?`<button class="prompt-history-btn" type="button" data-prompt-inspire="${p.key}">灵感</button>`:'';
       }
-      const label=`<label>${escapeHtml(p.label||p.key)} ${p.required?'<span class="req">*</span>':'<span class="opt">（可选）</span>'}${promptHistoryBtn}${inspireBtn}</label>`;
+      const label=hideLabel?'':`<label>${escapeHtml(p.label||p.key)} ${p.required?'<span class="req">*</span>':'<span class="opt">（可选）</span>'}${promptHistoryBtn}${inspireBtn}</label>`;
       let input=''; const defVal=p.default!=null?String(p.default):'';
       if(p.type==='textarea') input=`<div class="prompt-history-wrap"><textarea data-key="${escapeHtml(p.key)}" placeholder="${escapeHtml(p.placeholder||'')}" ${p.required?'required':''}>${escapeHtml(defVal)}</textarea><div class="prompt-history-list" id="phList-${escapeHtml(p.key)}"></div></div>`;
       else if(p.type==='select') input=`<select data-key="${escapeHtml(p.key)}">${(p.options||[]).map(o=>{const v=typeof o==='object'?o.value:o,l=typeof o==='object'?o.label:o;return `<option value="${escapeHtml(v)}" ${String(v)===defVal?'selected':''}>${escapeHtml(l)}</option>`}).join('')}</select>`;
@@ -4717,7 +4713,7 @@ const UI = {
         input=`<input type="file" data-ref-file="${escapeHtml(p.key)}" accept="video/*" multiple style="display:none"><div class="ref-upload-progress" id="rup-${escapeHtml(p.key)}"><div class="ring"></div><span id="rupt-${escapeHtml(p.key)}">处理中…</span></div><div class="ref-video-warn" id="rvw-${escapeHtml(p.key)}">⚠ 本地视频需上传到 R2 后才能使用</div><div class="ref-grid ref-grid-video" data-ref-grid="${escapeHtml(p.key)}"></div>`;
       } else input=`<input type="text" data-key="${escapeHtml(p.key)}" value="${escapeHtml(defVal)}" placeholder="${escapeHtml(p.placeholder||'')}" ${p.required?'required':''}>`;
       const charCounter=(p.key==='text'&&model.billing?.type==='perChar')?`<div class="char-counter" id="cc-${escapeHtml(p.key)}"><span class="cc-count">0 字</span><span class="cc-cost"></span></div>`:'';
-      const fieldNote = (p.type==='ref-image'||p.type==='ref-video') ? '' : (extra ? `<div class="api-field-note">${escapeHtml(extra)}</div>` : (p.hint ? `<div class="hint">${escapeHtml(p.hint)}</div>` : ''));
+      const fieldNote = (p.type==='ref-image'||p.type==='ref-video'||p.key==='prompt'||p.key==='text') ? (extra ? `<div class="api-field-note">${escapeHtml(extra)}</div>` : '') : (extra ? `<div class="api-field-note">${escapeHtml(extra)}</div>` : (p.hint ? `<div class="hint">${escapeHtml(p.hint)}</div>` : ''));
       grp.innerHTML=label+input+charCounter+fieldNote;
       return grp;
     };
@@ -4742,7 +4738,7 @@ const UI = {
 
     // 1) 主输入：严格按接口实际 primary field 渲染。
     const primary=byKey.prompt||byKey.text;
-    if(primary) appendSection(primary.key==='prompt'?'提示词':'文本',primary.required?'必填':'', [mkGroup(primary)]);
+    if(primary) appendSection(primary.key==='prompt'?'提示词':'文本','', [mkGroup(primary,'',true)]);
 
     // 2) 视频/图片/音频模型的接口专属参数布局。
     if(model.id==='wan3' || model.id==='minimax_h3'){
@@ -7360,7 +7356,7 @@ const UI = {
       };
       const text = e.clipboardData && e.clipboardData.getData && e.clipboardData.getData('text/plain');
       const templateText = String(text || '').trim();
-      const looksLikeTemplate = /^#\s*速创参数模板\s+v1\b[\s\S]*\n#\s*END\s*$/i.test(templateText) || /^#\s*速创工作台\s*[·-]\s*生成参数[\s\S]*#\s*END/i.test(templateText);
+      const looksLikeTemplate = /^#\s*速创参数模板\s+v1\b[\s\S]*\n#\s*END\s*$/i.test(templateText) || /^#\s*速创工作台\s*[·-]\s*生成参数[\s\S]*#\s*END/i.test(templateText) || /^#\s*速创工作台\s*·\s*生成参数[\s\S]*#\s*END/i.test(templateText);
       // 模板是全局快捷操作：无论当前焦点在哪，Ctrl/⌘+V 都直接识别并导入。
       if (looksLikeTemplate) {
         e.preventDefault();
@@ -7927,4 +7923,57 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-prompt-ins
 }
 .ref-copy-url:hover { background:var(--brand-1); border-color:transparent; }
 .ref-copy-url svg { width:14px; height:14px; }
+</style>
+
+<style id="v30-ui-polish">
+/* v30: prompt/preset visual cleanup */
+.section-title .preset-actions { align-items:center; gap:6px; }
+.preset-select{
+  min-width:118px;
+  height:32px;
+  padding:0 32px 0 10px;
+  border-radius:9px;
+  background:var(--surface-2);
+  border:1px solid var(--border);
+  color:var(--text-muted);
+  font-size:12px;
+}
+.preset-select:hover{border-color:var(--border-hover);color:var(--text);}
+.preset-select:focus{border-color:var(--brand-1);box-shadow:0 0 0 3px var(--brand-soft);}
+.preset-icon-btn{
+  width:32px!important;height:32px!important;
+  padding:0!important;border-radius:9px!important;
+  display:inline-grid!important;place-items:center!important;
+  background:var(--surface-2)!important;
+  border:1px solid var(--border)!important;
+  color:var(--text-muted)!important;
+}
+.preset-icon-btn:hover{
+  background:var(--brand-soft)!important;
+  color:var(--brand-1)!important;
+  border-color:var(--brand-1)!important;
+  transform:translateY(-1px);
+}
+.preset-icon-btn svg{width:15px;height:15px;}
+.workspace-shortcuts{
+  margin-top:8px;
+  text-align:center;
+  font-size:10px;
+  color:var(--text-dim);
+}
+.workspace-shortcuts kbd{
+  display:inline-block;
+  margin:0 2px;
+  padding:2px 5px;
+  border:1px solid var(--border);
+  border-bottom-width:2px;
+  border-radius:5px;
+  background:var(--surface-2);
+  color:var(--text-muted);
+  font:10px var(--font-mono);
+}
+#paramForm .form-group[data-key="prompt"] .prompt-history-wrap,
+#paramForm .form-group[data-key="text"] .prompt-history-wrap{margin-top:0;}
+#paramForm .form-group[data-key="prompt"] .hint,
+#paramForm .form-group[data-key="text"] .hint{display:none!important;}
 </style>
