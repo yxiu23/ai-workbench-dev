@@ -471,7 +471,7 @@ html[data-theme] .header, html[data-theme] .content, html[data-theme] .tabbar, h
     <div id="paramForm"></div>
     <div id="mobilePromptTools"></div>
     <div class="estimate" id="estimate"></div>
-    <div class="mobile-template-actions" role="group" aria-label="模板操作"><button class="template-icon-btn" id="copyParamBtnMobile" type="button" title="复制模板" aria-label="复制模板"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V5a2 2 0 0 1 2-2h9"/></svg><span>复制模板</span></button><div class="template-paste-cue"><kbd>Ctrl/⌘+V</kbd><span>自动导入</span></div></div>
+    <div class="mobile-template-actions" role="group" aria-label="模板操作"><button class="template-icon-btn" id="copyParamBtnMobile" type="button" title="复制模板" aria-label="复制模板"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V5a2 2 0 0 1 2-2h9"/></svg><span>复制模板</span></button><button class="template-icon-btn" id="pasteParamBtnMobile" type="button" title="导入模板" aria-label="导入模板"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="8" width="14" height="12" rx="2"/><path d="M9 4h6l1 4H8l1-4Z"/><path d="M12 12v5M9.5 14.5 12 17l2.5-2.5"/></svg><span>导入模板</span></button></div>
     <button class="gen-btn" id="genBtn"><span id="genBtnText">生成</span></button>
   </div>
 
@@ -664,6 +664,17 @@ html[data-theme] .header, html[data-theme] .content, html[data-theme] .tabbar, h
     <div class="modal-footer">
       <button class="act" id="presetCancelBtn">取消</button>
       <button class="act" id="presetSaveConfirmBtn" style="color:var(--success)">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="pasteModal">
+  <div class="modal-content" style="max-width:340px;">
+    <div class="modal-header"><h3>导入模板</h3></div>
+    <textarea class="pi" id="pasteModalInput" placeholder="粘贴 AI 优化后的生成模板（长按此处 → 粘贴）" style="min-height:140px;resize:vertical;font-family:var(--font-mono);font-size:12px;line-height:1.5;"></textarea>
+    <div class="modal-footer">
+      <button class="act" id="pasteModalCancelBtn">取消</button>
+      <button class="act" id="pasteModalApplyBtn" style="color:var(--success)">应用</button>
     </div>
   </div>
 </div>
@@ -1540,6 +1551,16 @@ const UI = {
     $('#genBtn').onclick = () => this.handleGenerate();
     const cpBtn = $('#copyParamBtnMobile');
     if (cpBtn) cpBtn.onclick = () => this.copyParamTemplate();
+    // 导入模板（手机版）：弹窗内长按粘贴 → 应用，复用桌面版同一套 applyParamTemplate
+    const psBtn = $('#pasteParamBtnMobile');
+    if (psBtn) psBtn.onclick = () => { const inp = $('#pasteModalInput'); if (!inp) return; inp.value = ''; $('#pasteModal').classList.add('show'); setTimeout(() => inp.focus(), 60); };
+    $('#pasteModalCancelBtn')?.addEventListener('click', () => $('#pasteModal').classList.remove('show'));
+    $('#pasteModal')?.addEventListener('click', e => { if (e.target.id === 'pasteModal') $('#pasteModal').classList.remove('show'); });
+    $('#pasteModalApplyBtn')?.addEventListener('click', () => {
+      const inp = $('#pasteModalInput'); if (!inp) return;
+      if (this.applyParamTemplate(inp.value)) { $('#pasteModal').classList.remove('show'); Toast.success('已导入模板'); }
+      else Toast.warning('无法识别模板，请检查粘贴内容');
+    });
     // Modal
     $('#modalCloseBtn').onclick = () => $('#modal').classList.remove('show');
     $('#modal').onclick = e => { if (e.target.id === 'modal') $('#modal').classList.remove('show'); };
