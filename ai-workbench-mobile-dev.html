@@ -410,7 +410,7 @@ select { background-image: none; }
 .energy-mobile-card .ei{width:34px;height:34px;display:grid;place-items:center;border-radius:9px;background:var(--brand-soft)}
 .energy-mobile-card .ec{flex:1;min-width:0}.energy-mobile-card .et{font-weight:700;font-size:13px}.energy-mobile-card .es{font-size:10px;color:var(--text-dim);margin-top:2px}
 .energy-mobile-card .ep{padding:8px 11px;border-radius:9px;background:var(--brand);color:#fff;font-size:11px;font-weight:600}
-.mobile-pay-qr{text-align:center;padding:8px 4px 4px}.mobile-pay-qr img{display:block;width:min(72vw,280px);height:auto;max-height:58vh;object-fit:contain;margin:0 auto 10px;background:#fff;border-radius:12px;padding:8px;box-sizing:border-box}.mobile-pay-qr>div:not(.pay-note){font-size:12px;font-weight:600;color:var(--text)}.mobile-pay-qr .pay-note{font-size:10px;line-height:1.6;color:var(--text-dim);margin-top:5px}..editor-quickdirs{display:flex;gap:4px;align-items:center;margin:6px 0;flex-wrap:wrap}.editor-quickdirs button{width:30px;height:28px;border:1px solid var(--border);border-radius:7px;background:var(--surface-2);color:var(--text-muted);font-size:12px}.editor-quickdirs button:active{transform:scale(.95)}
+.mobile-pay-qr{text-align:center;padding:8px 4px 4px}.mobile-pay-qr img{display:block;width:min(72vw,280px);height:auto;max-height:58vh;object-fit:contain;margin:0 auto 10px;background:#fff;border-radius:12px;padding:8px;box-sizing:border-box}.mobile-pay-qr>div:not(.pay-note){font-size:12px;font-weight:600;color:var(--text)}.mobile-pay-qr .pay-note{font-size:10px;line-height:1.6;color:var(--text-dim);margin-top:5px}.editor-quickdirs{display:flex;gap:4px;align-items:center;margin:6px 0;flex-wrap:wrap}.editor-quickdirs button{width:30px;height:28px;border:1px solid var(--border);border-radius:7px;background:var(--surface-2);color:var(--text-muted);font-size:12px}.editor-quickdirs button:active{transform:scale(.95)}
 .mask-preview-row{display:flex;align-items:center;justify-content:space-between;margin:6px 0;padding:6px 8px;background:var(--surface-2);border-radius:8px;font-size:11px;color:var(--text-muted)}
 @supports not (background:color-mix(in srgb,white,black)){.task-dock{background:var(--surface)}}
 
@@ -431,7 +431,6 @@ select { background-image: none; }
 button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 html[data-theme] .header, html[data-theme] .content, html[data-theme] .tabbar, html[data-theme] .card, html[data-theme] .sheet, html[data-theme] .modal-content { transition: background-color .18s ease, color .18s ease, border-color .18s ease, box-shadow .18s ease; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
-.ref-copy-url{position:absolute;right:32px;top:5px;height:22px;padding:0 7px;border-radius:6px;border:1px solid rgba(148,163,209,.3);background:rgba(0,0,0,.62);color:#fff;font-size:10px;line-height:20px;cursor:pointer}.ref-copy-url:hover{background:var(--brand);border-color:var(--brand)}
 </style>
 <!-- RELEASE v9.2 MOBILE -->
 </head>
@@ -461,7 +460,7 @@ html[data-theme] .header, html[data-theme] .content, html[data-theme] .tabbar, h
       <div class="section-label">模型</div>
       <div class="preset-row">
         <select class="preset-select" id="presetSelect"><option value="">预设…</option></select>
-        <button class="preset-save" id="savePresetBtn">💾</button>
+        <button class="preset-save" id="savePresetBtn" type="button" title="保存当前预设" aria-label="保存当前预设"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v6h8V4"/><path d="M8 20v-5h8v5"/></svg></button>
       </div>
       <button class="model-btn" id="modelBtn">
         <span id="modelBtnText">选择模型</span>
@@ -472,7 +471,7 @@ html[data-theme] .header, html[data-theme] .content, html[data-theme] .tabbar, h
     <div id="paramForm"></div>
     <div id="mobilePromptTools"></div>
     <div class="estimate" id="estimate"></div>
-    <div style="display:flex;gap:8px;margin-bottom:8px"><button class="action-btn" id="copyParamBtnMobile" style="flex:1;padding:10px;font-size:13px;background:var(--surface);color:var(--brand);border:1px solid var(--border);">📋 复制参数</button><button class="action-btn" id="pasteParamBtnMobile" style="flex:1;padding:10px;font-size:13px;background:var(--surface);color:var(--brand);border:1px solid var(--border);">📥 粘贴参数</button></div>
+    <div class="mobile-template-actions" role="group" aria-label="模板操作"><button class="template-icon-btn" id="copyParamBtnMobile" type="button" title="复制模板" aria-label="复制模板"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V5a2 2 0 0 1 2-2h9"/></svg><span>复制模板</span></button><div class="template-paste-cue"><kbd>Ctrl/⌘+V</kbd><span>自动导入</span></div></div>
     <button class="gen-btn" id="genBtn"><span id="genBtnText">生成</span></button>
   </div>
 
@@ -1483,10 +1482,42 @@ const UI = {
 
     // 全局粘贴：检测 MD 参数模版
     document.addEventListener('paste', (e) => {
-      const text = e.clipboardData && e.clipboardData.getData && e.clipboardData.getData('text/plain');
-      if (text && /#\s*速创工作台\s*[·-]\s*生成参数[\s\S]*?#\s*END/i.test(text)) {
-        e.preventDefault();
-        this.applyParamTemplate(text);
+      const target = e.target;
+      const cd = e.clipboardData;
+      const text = cd && cd.getData ? cd.getData('text/plain') : '';
+      const template = text && (
+        /^#\s*速创参数模板\s+v1\b[\s\S]*\n#\s*END\s*$/i.test(text.trim()) ||
+        /^#\s*速创工作台\s*[·-]\s*生成参数[\s\S]*#\s*END/i.test(text.trim())
+      );
+      if (template && !target.closest('textarea,input,[contenteditable="true"]')) {
+        e.preventDefault(); this.applyParamTemplate(text); return;
+      }
+      const wrap = target.closest('.ref-wrap');
+      if (wrap && cd) {
+        const key = wrap.dataset.refKey;
+        const items = Array.from(cd.items || []);
+        const files = items.map(i=>i.kind==='file'?i.getAsFile():null).filter(Boolean);
+        if (files.length && key) {
+          const hasVideo = files.some(f=>/^video\//.test(f.type));
+          const param = this.model?.params.find(p=>p.key===key);
+          if ((param?.type==='ref-video' && hasVideo) || (param?.type==='ref-image' && files.some(f=>/^image\//.test(f.type)))) {
+            e.preventDefault();
+            files.forEach(file=>{ if(/^video\//.test(file.type)) this.addVideoRef(file,key); else if(/^image\//.test(file.type)) this.addRef(file,key); });
+            return;
+          }
+        }
+        if (key && /^https?:\/\/\S+$/i.test(String(text||'').trim())) {
+          e.preventDefault();
+          const url=String(text).trim();
+          const param=this.model?.params.find(p=>p.key===key);
+          if(param?.type==='ref-image'){
+            const arr=this.getRefs(key); if(!arr.some(r=>(r.remote||r.src)===url)){
+              arr.push({id:'r_'+genId(),kind:'url',src:url,name:'URL参考',uploaded:true,remote:url});
+              this.refreshRefGrid(key);
+              Toast.success('已添加参考图');
+            }
+          }
+        }
       }
     });
 
@@ -1509,12 +1540,6 @@ const UI = {
     $('#genBtn').onclick = () => this.handleGenerate();
     const cpBtn = $('#copyParamBtnMobile');
     if (cpBtn) cpBtn.onclick = () => this.copyParamTemplate();
-    const ppBtn = $('#pasteParamBtnMobile');
-    if(ppBtn) ppBtn.onclick = async()=>{ const modal=$('#pasteParamModal'), input=$('#pasteParamInput'); if(!modal||!input)return; input.value=''; try{const t=await navigator.clipboard?.readText?.(); if(t) input.value=t;}catch{} modal.classList.add('show'); setTimeout(()=>input.focus(),30); };
-    $('#pasteParamModalCloseBtn')?.addEventListener('click',()=>$('#pasteParamModal').classList.remove('show'));
-    $('#pasteParamCancelBtn')?.addEventListener('click',()=>$('#pasteParamModal').classList.remove('show'));
-    $('#pasteParamModal')?.addEventListener('click',e=>{if(e.target.id==='pasteParamModal')$('#pasteParamModal').classList.remove('show');});
-    $('#pasteParamApplyBtn')?.addEventListener('click',()=>{if(this.applyParamTemplate($('#pasteParamInput').value))$('#pasteParamModal').classList.remove('show');});
     // Modal
     $('#modalCloseBtn').onclick = () => $('#modal').classList.remove('show');
     $('#modal').onclick = e => { if (e.target.id === 'modal') $('#modal').classList.remove('show'); };
@@ -1622,10 +1647,10 @@ const UI = {
     const f = $('#paramForm'); if (!f) return;
     f.innerHTML = '';
     const byKey = Object.fromEntries(model.params.map(p=>[p.key,p]));
-    const group = (p, note='') => {
+    const group = (p, note='', hideLabel=false) => {
       if (!p) return null;
       const g=document.createElement('div'); g.className='form-group'; g.dataset.key=p.key;
-      const label=`<label>${esc(p.label||p.key)} ${p.required?'<span class="req">*</span>':'<span class="opt">（可选）</span>'}</label>`;
+      const label=hideLabel?'':`<label>${esc(p.label||p.key)} ${p.required?'<span class="req">*</span>':'<span class="opt">（可选）</span>'}</label>`;
       const def=p.default!=null?String(p.default):''; let input='';
       if(p.type==='textarea') input=`<textarea data-key="${esc(p.key)}" placeholder="${esc(p.placeholder||'')}" ${p.required?'required':''}>${esc(def)}</textarea>`;
       else if(p.type==='select') input=`<select data-key="${esc(p.key)}">${(p.options||[]).map(o=>{const v=typeof o==='object'?o.value:o,l=typeof o==='object'?o.label:o;return `<option value="${esc(v)}" ${String(v)===def?'selected':''}>${esc(l)}</option>`}).join('')}</select>`;
@@ -1634,7 +1659,7 @@ const UI = {
       else if(p.type==='ref-image'){if(!this.refState[stateKey][p.key])this.refState[stateKey][p.key]=[];input=this.renderRefGrid(p.key);}
       else if(p.type==='ref-video'){if(!this.refState[stateKey][p.key])this.refState[stateKey][p.key]=[];input=this.renderRefGrid(p.key);}
       else input=`<input type="text" data-key="${esc(p.key)}" value="${esc(def)}" placeholder="${esc(p.placeholder||'')}" ${p.required?'required':''}>`;
-      g.innerHTML=label+input+(note?`<div class="api-field-note">${esc(note)}</div>`:(p.hint?`<div class="hint">${esc(p.hint)}</div>`:''));
+      g.innerHTML=label+input+(note?`<div class="api-field-note">${esc(note)}</div>`:(p.hint && p.key!=='prompt' && p.key!=='text'?`<div class="hint">${esc(p.hint)}</div>`:''));
       return g;
     };
     const section=(title,hint,groups)=>{
@@ -1649,7 +1674,7 @@ const UI = {
       f.appendChild(s);return s;
     };
     const primary=byKey.prompt||byKey.text;
-    if(primary) section(primary.key==='prompt'?'提示词':'文本',primary.required?'必填':'',[group(primary)]);
+    if(primary) section(primary.key==='prompt'?'提示词':'文本','',[group(primary,'',true)]);
     if(model.id==='wan3'||model.id==='minimax_h3'){
       modeSection('参考素材','只能选择一种',[{label:'首 / 尾帧',value:'frame'},{label:'参考图片',value:'images'},{label:'参考视频',value:'videos'},{label:'参考音频',value:'audios'}],{
         frame:()=>[group(byKey.first_frame),group(byKey.last_frame,'尾帧必须搭配首帧')],images:()=>[group(byKey.images)],videos:()=>[group(byKey.videos)],audios:()=>[group(byKey.audios)]
@@ -1693,10 +1718,9 @@ const UI = {
     const items = refs.map(r => {
       const src = r.remote || r.src || '';
       const isVideo = r.mediaType === 'video' || r.kind === 'local-video' || r.kind === 'url-video';
-      let badge;
-      if (r.kind === 'local-video') badge = `<span class="ref-badge local-video">本地视频</span>`;
-      else if (r.kind === 'url-video') badge = `<span class="ref-badge url-video">URL视频</span>`;
-      else badge = `<span class="ref-badge ${r.uploaded?'uploaded':'local'}">${r.uploaded?'已传':'本地'}</span>`;
+      const copyBtn = (!isVideo && r.remote && /^https?:\/\//i.test(r.remote))
+        ? `<button type="button" class="ref-copy-url" data-url="${esc(r.remote)}" title="复制网址" aria-label="复制网址"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V5a2 2 0 0 1 2-2h9"/></svg></button>`
+        : '';
       let metaOverlay = '';
       if (isVideo) {
         const m = r.meta || {};
@@ -1705,17 +1729,16 @@ const UI = {
         if (m.duration) parts.push(`${m.duration}s`);
         if (m.sizeMB) parts.push(`${m.sizeMB}MB`);
         if (parts.length) metaOverlay = `<div class="ref-meta-overlay">${parts.join(' · ')}</div>`;
-        const body = src ? `<video src="${esc(src)}" preload="metadata" muted playsinline></video>` : '<span style="display:grid;place-items:center;height:100%;color:var(--text-dim);font-size:10px">预览失败</span>';
-        return `<div class="ref-item ref-item-video">${badge}${body}${metaOverlay}<div class="ref-play-icon">▶</div><button type="button" class="ref-del" data-key="${esc(key)}" data-rid="${esc(r.id)}" aria-label="删除">×</button></div>`;
+        const body = src ? `<video src="${esc(src)}" preload="metadata" muted playsinline></video>` : '<span class="ref-failed">预览失败</span>';
+        return `<div class="ref-item ref-item-video">${body}${metaOverlay}<div class="ref-play-icon">▶</div>${copyBtn}<button type="button" class="ref-del" data-key="${esc(key)}" data-rid="${esc(r.id)}" aria-label="删除">×</button></div>`;
       }
-      const body = src ? `<img src="${esc(src)}" loading="lazy" alt="${esc(r.name||'参考图')}" referrerpolicy="no-referrer">` : '<span style="display:grid;place-items:center;height:100%;color:var(--text-dim);font-size:10px">预览失败</span>';
-      return `<div class="ref-item">${badge}${body}${r.remote || r.kind === 'url' ? `<button type="button" class="ref-copy-url" data-ref-copy="${esc(r.id)}" data-ref-key="${esc(key)}">复制网址</button>` : ''}<button type="button" class="ref-del" data-key="${esc(key)}" data-rid="${esc(r.id)}" aria-label="删除参考图">×</button></div>`;
+      const body = src ? `<img src="${esc(src)}" loading="lazy" alt="${esc(r.name||'参考图')}" referrerpolicy="no-referrer">` : '<span class="ref-failed">预览失败</span>';
+      return `<div class="ref-item">${body}${copyBtn}<button type="button" class="ref-del" data-key="${esc(key)}" data-rid="${esc(r.id)}" aria-label="删除参考图">×</button></div>`;
     }).join('');
-    const addBtn = `<button type="button" class="ref-add" data-key="${esc(key)}" aria-label="添加${isVideoParam?'视频':'参考图'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button><input type="file" id="refFile-${esc(key)}" accept="${isVideoParam?'video/*':'image/*'}" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">`;
-    const warn = isVideoParam ? `<div class="ref-video-warn" id="rvw-${esc(key)}">⚠ 本地视频需上传到 R2 后才能使用</div>` : '';
+    const addBtn = `<button type="button" class="ref-dropzone" data-key="${esc(key)}" aria-label="添加${isVideoParam?'参考视频':'参考图'}"><span class="ref-drop-plus">＋</span><span>${isVideoParam?'粘贴或拖入参考视频':'粘贴或拖入参考图'}</span></button><input type="file" id="refFile-${esc(key)}" accept="${isVideoParam?'video/*':'image/*'}" multiple style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none">`;
+    const warn = isVideoParam ? `<div class="ref-video-warn" id="rvw-${esc(key)}">本地视频需上传完成后才能生成</div>` : '';
     const gridClass = isVideoParam ? 'ref-grid ref-grid-video' : 'ref-grid';
-    const empty = refs.length ? '' : '';
-    return `<div class="ref-wrap" data-ref-key="${esc(key)}"><div class="${gridClass}" data-key="${esc(key)}">${items}${empty}${addBtn}</div>${warn}<div class="ref-progress" id="rp-${esc(key)}"><div class="ring"></div><span id="rpt-${esc(key)}">上传中…</span></div></div>`;
+    return `<div class="ref-wrap" data-ref-key="${esc(key)}"><div class="${gridClass}" data-key="${esc(key)}">${items}${addBtn}</div>${warn}<div class="ref-progress" id="rp-${esc(key)}"><div class="ring"></div><span id="rpt-${esc(key)}">上传中…</span></div></div>`;
   },
   addVideoRef(file, key) {
     if (!/^video\//.test(file.type)) return Toast.error('非视频文件');
@@ -1761,7 +1784,22 @@ const UI = {
     if (!/^image\//.test(file.type)) return Toast.error('非图片文件');
     if (file.size > 10*1024*1024) return Toast.error('图片过大');
     const r = new FileReader();
-    r.onload = () => { this.getRefs(key).push({ id:'r_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), kind:'local', src:r.result, name:file.name, uploaded:false, remote:null }); this.refreshRefGrid(key); Toast.success('已添加参考图'); };
+    r.onload = async () => {
+      const ref = { id:'r_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6), kind:'local', src:r.result, name:file.name, uploaded:false, remote:null };
+      this.getRefs(key).push(ref); this.refreshRefGrid(key);
+      if (CONFIG.R2.WORKER_URL) {
+        try {
+          const u = Api.getCached(ref.src) || await Api.uploadDataUrl(ref.src);
+          Api.setCached(ref.src,u); ref.remote=u; ref.uploaded=true; ref.kind='url';
+          this.refreshRefGrid(key);
+          Toast.success('参考图已上传');
+        } catch (e) {
+          Toast.warning('参考图上传失败：'+e.message);
+        }
+      } else {
+        Toast.info('已添加参考图');
+      }
+    };
     r.onerror = () => Toast.error('读取图片失败，请重新选择');
     r.readAsDataURL(file);
   },
@@ -1769,8 +1807,18 @@ const UI = {
   refreshRefGrid(key) { const wrap = $(`.ref-wrap[data-ref-key="${CSS.escape(key)}"]`); if (wrap) { wrap.outerHTML = this.renderRefGrid(key); this.bindRefEvents(key); } },
   bindRefEvents(key) {
     const f=$('#paramForm'); if(!f) return;
-    $$('.ref-add[data-key]', f).forEach(b=>b.onclick=()=>{ const inp=$('#refFile-'+b.dataset.key); if(inp) inp.click(); });
-    $$('input[type=file][id^="refFile-"]', f).forEach(inp=>inp.onchange=e=>{ Array.from(e.target.files||[]).forEach(file=>{ if(/^video\//.test(file.type)){ this.addVideoRef(file, inp.id.slice(8)); } else { this.addRef(file, inp.id.slice(8)); } }); e.target.value=''; });
+    $$('.ref-dropzone[data-key]', f).forEach(b=>b.onclick=()=>{ const inp=$('#refFile-'+b.dataset.key); if(inp) inp.click(); });
+    $$('input[type=file][id^="refFile-"]', f).forEach(inp=>inp.onchange=e=>{
+      Array.from(e.target.files||[]).forEach(file=>{
+        if(/^video\//.test(file.type)){ this.addVideoRef(file, inp.id.slice(8)); }
+        else if(/^image\//.test(file.type)){ this.addRef(file, inp.id.slice(8)); }
+      }); e.target.value='';
+    });
+    $$('.ref-copy-url', f).forEach(b=>b.onclick=async e=>{
+      e.preventDefault(); e.stopPropagation();
+      try { const ok=await copyText(b.dataset.url||''); if(ok!==false) Toast.success('网址已复制'); }
+      catch(err){ Toast.error('复制失败：'+(err.message||'')); }
+    });
     $$('.ref-del[data-key]', f).forEach(b=>b.onclick=e=>{ e.preventDefault(); e.stopPropagation(); this.removeRef(b.dataset.key,b.dataset.rid); });
     $$('.ref-item-video video', f).forEach(v=>{ v.addEventListener('loadeddata',()=>{ try{ v.currentTime=0.1; }catch(e){} }); v.onclick=e=>{ e.stopPropagation(); this.openVideoLightbox(v.src); }; });
     $$('.ref-item img', f).forEach(img=>{ img.onclick=()=>this.openLightbox(img.src); });
@@ -2092,80 +2140,149 @@ const UI = {
 
   // ============ 参数模版（MD 中转） ============
   buildParamTemplate(task) {
-    let model, body, tab, resultUrl='';
-    if (task) { model=MODELS[task.tab]?.find(m=>m.id===task.modelId); body=task.params||{}; tab=task.tab; resultUrl=task.resultUrl||''; }
-    else { model=this.currentModel; body=this.collectParamsSync(); tab=this.currentTab; }
+    let model, body, tab;
+    if (task) {
+      model = MODELS[task.tab]?.find(m => m.id === task.modelId);
+      body = task.params || {};
+      tab = task.tab;
+    } else {
+      model = this.model;
+      body = this.collectParamsSync();
+      tab = this.tab;
+    }
     if (!model) return '';
-    const typeText = tab==='image'?'图片':tab==='video'?'视频':'音频';
-    const promptVal = body.prompt || body.text || '';
-    const imageRefs=[];
-    const videoRefs=[];
-    model.params.forEach(p=>{
-      if(p.type==='ref-image'){ const v=body[p.key]; const arr=Array.isArray(v)?v:String(v||'').split(',').map(x=>x.trim()).filter(Boolean); arr.forEach(u=>{if(/^https?:\/\//i.test(u)) imageRefs.push(u);}); }
-      if(p.type==='ref-video'){ const v=body[p.key]; const arr=Array.isArray(v)?v:String(v||'').split(',').map(x=>x.trim()).filter(Boolean); arr.forEach(u=>{if(/^https?:\/\//i.test(u)) videoRefs.push(u);}); }
+    const typeText = tab === 'image' ? '图片' : tab === 'video' ? '视频' : '音频';
+    const lines = ['# 速创参数模板 v1'];
+    lines.push('模型: ' + (model.name || model.id));
+    lines.push('类型: ' + typeText);
+    lines.push('提示词: ' + String(body.prompt || body.text || ''));
+    const imageRefs = [], videoRefs = [];
+    model.params.forEach(p => {
+      if (p.type !== 'ref-image' && p.type !== 'ref-video') return;
+      const v = body[p.key];
+      const urls = Array.isArray(v) ? v : String(v || '').split(',').map(s => s.trim()).filter(Boolean);
+      if (p.type === 'ref-image') imageRefs.push(...urls.filter(u => /^https?:\/\//i.test(u)));
+      if (p.type === 'ref-video') videoRefs.push(...urls.filter(u => /^https?:\/\//i.test(u)));
     });
-    const lines=['# 速创参数模板 v1',`模型: ${model.name||model.id}`,`类型: ${typeText}`,`提示词: ${promptVal}`,`参考图片: ${imageRefs.length?imageRefs.join('\n'):'无'}`];
-    if(videoRefs.length) lines.push(`参考视频: ${videoRefs.join('\n')}`);
-    if(resultUrl) lines.push(`结果图片/视频/音频: ${resultUrl}`);
+    lines.push('参考图片: ' + (imageRefs.length ? imageRefs.join('\\n') : '无'));
+    if (videoRefs.length) lines.push('参考视频: ' + videoRefs.join('\\n'));
     lines.push('其他参数:');
-    model.params.forEach(p=>{
-      if(['prompt','text','ref-image','ref-video'].includes(p.key)) return;
-      const v=body[p.key]; if(v==null||v===''||(Array.isArray(v)&&!v.length)) return;
-      lines.push(`${p.label||p.key}: ${Array.isArray(v)?v.join(', '):String(v)}`);
+    model.params.forEach(p => {
+      if (['prompt','text','ref-image','ref-video'].includes(p.key)) return;
+      const v = body[p.key];
+      if (v == null || v === '' || (Array.isArray(v) && v.length === 0)) return;
+      const valStr = Array.isArray(v) ? v.join(', ') : String(v);
+      lines.push((p.label || p.key) + ': ' + valStr);
     });
-    lines.push('# 可由其他 AI 优化“提示词”；如修改图片/视频网址或参数，请保留字段名称。', '# END');
-    return lines.join('\n');
+    lines.push('# 可由其他 AI 优化“提示词”；如修改图片/视频网址或参数，请保留字段名称。');
+    lines.push('# END');
+    return lines.join('\\n');
   },
   async copyParamTemplate(task) {
     const md = this.buildParamTemplate(task);
     if (!md) { Toast.error('当前无可复制的参数'); return; }
     try {
-      await navigator.clipboard.writeText(md);
+      const ok = await copy(md); if (!ok) throw new Error('浏览器未允许复制');
       Toast.success('参数模版已复制');
     } catch (e) {
       Toast.error('复制失败：' + e.message);
     }
   },
   parseParamTemplate(md) {
-    const text=String(md||'').replace(/\r/g,'').trim();
-    if(!/^#\s*速创参数模板\s+v1\b/i.test(text)) return null;
-    if(!/\n#\s*END\s*$/i.test(text)) return null;
-    const block=text.replace(/\n#\s*END\s*$/i,'').split('\n');
-    const result={model:null,type:null,prompt:'',imageRefs:[],videoRefs:[],fields:{}};
-    let section='';
-    block.forEach(line=>{
-      const m=line.match(/^([^:：]+)[:：]\s*(.*)$/);
-      if(m){
-        const key=m[1].trim(),val=m[2].trim();
-        if(key==='模型'){result.model=val;section='';return;}
-        if(key==='类型'){result.type=val;section='';return;}
-        if(key==='提示词'){result.prompt=val;section='';return;}
-        if(key==='参考图片'){section='images';if(val&&val!=='无'&&/^https?:\/\//i.test(val))result.imageRefs.push(val);return;}
-        if(key==='参考视频'){section='videos';if(val&&val!=='无'&&/^https?:\/\//i.test(val))result.videoRefs.push(val);return;}
-        if(key==='结果图片/视频/音频'){section='';return;}
-        if(key==='其他参数'){section='fields';return;}
-        if(section==='fields') result.fields[key]=val;
-        return;
+    const m = md.match(/#\s*(?:速创参数模板\s+v1|速创工作台\s*[·-]\s*生成参数)[\s\S]*?#\s*END/i);
+    if (!m) return null;
+    const block = m[0];
+    const result = { model: null, type: null, fields: {} };
+    let currentField = null;
+    const lines = block.split('\n').slice(1, -1);
+    lines.forEach(line => {
+      line = line.trim();
+      if (!line) return;
+      const kv = line.match(/^([^:：]+)[:：]\s*(.+)$/);
+      if (kv) {
+        const label = kv[1].trim();
+        const val = kv[2].trim();
+        if (label === '模型') { result.model = val; return; }
+        if (label === '类型') { result.type = val; return; }
+        currentField = label;
+        result.fields[label] = val;
+      } else if (currentField && /^https?:\/\//i.test(line)) {
+        if (Array.isArray(result.fields[currentField])) {
+          result.fields[currentField].push(line);
+        } else if (typeof result.fields[currentField] === 'string' && /^https?:\/\//i.test(result.fields[currentField])) {
+          result.fields[currentField] = [result.fields[currentField], line];
+        } else {
+          result.fields[currentField] = line;
+        }
       }
-      const v=line.trim();
-      if(/^https?:\/\//i.test(v)){if(section==='images')result.imageRefs.push(v);else if(section==='videos')result.videoRefs.push(v);}
     });
     return result;
   },
   applyParamTemplate(md) {
-    const parsed=this.parseParamTemplate(md);
-    if(!parsed){Toast.error('参数模板格式不正确');return false;}
-    if(parsed.model){const target=MODELS[this.currentTab]?.find(m=>m.name===parsed.model||m.id===parsed.model);if(target&&target.id!==this.currentModel?.id){$('#modelSelect').value=target.id;$('#modelSelect').dispatchEvent(new Event('change',{bubbles:true}));}}
-    const model=this.currentModel;if(!model)return false;
-    const pp=model.params.find(p=>p.key==='prompt'||p.key==='text');
-    if(pp){const ta=$(`#paramForm .form-group[data-key="${CSS.escape(pp.key)}"] textarea`);if(ta){ta.value=parsed.prompt||'';ta.dispatchEvent(new Event('input',{bubbles:true}));}}
-    const imageParam=model.params.find(p=>p.type==='ref-image');
-    if(imageParam){this.refState[this.currentModelKey][imageParam.key]=[];parsed.imageRefs.forEach(u=>this.addUrlRef(u,imageParam.key));}
-    const videoParam=model.params.find(p=>p.type==='ref-video');
-    if(videoParam){this.refState[this.currentModelKey][videoParam.key]=[];parsed.videoRefs.forEach(u=>this.addUrlRef(u,videoParam.key));}
-    let filled=parsed.prompt?1:0;
-    Object.entries(parsed.fields).forEach(([label,val])=>{const p=model.params.find(x=>x.label===label||x.key===label);if(!p)return;const grp=$(`#paramForm .form-group[data-key="${CSS.escape(p.key)}"]`);if(!grp)return;const el=this.getParamElement(grp,p);if(!el)return;el.value=val;el.dispatchEvent(new Event('input',{bubbles:true}));filled++;});
-    this.updateEstimate();Toast.success(`已载入 ${filled} 项`);return true;
+    const parsed = this.parseParamTemplate(md);
+    if (!parsed) return false;
+    this._formUndoStack = this._formUndoStack || [];
+    this._formUndoStack.push({ snapshot: this._snapshotForm(), ts: Date.now() });
+    if (this._formUndoStack.length > 5) this._formUndoStack.shift();
+    this._showUndoBtn();
+    if (parsed.model) {
+      const targetModel = MODELS[this.tab]?.find(m => m.name === parsed.model || m.id === parsed.model);
+      if (targetModel && targetModel.id !== this.model?.id) {
+        // 找到对应的 model-item 触发 click
+        const item = document.querySelector(`.model-item[data-mid="${targetModel.id}"]`);
+        if (item) item.click();
+      }
+    }
+    const model = this.model;
+    if (!model) return false;
+    let filled = 0, skipped = 0;
+    const promptParam = model.params.find(p => p.key === 'prompt' || p.key === 'text');
+    const promptField = parsed.fields['提示词'];
+    if (promptParam && promptField != null) {
+      const pg = document.querySelector(`#paramForm .form-group[data-key="${CSS.escape(promptParam.key)}"]`);
+      const pel = this.getParamElement(pg, promptParam);
+      if (pel) { pel.value = String(promptField); pel.dispatchEvent(new Event('input',{bubbles:true})); filled++; }
+    }
+    Object.entries(parsed.fields).forEach(([label, val]) => {
+      if (label === '提示词') return;
+      const param = model.params.find(p => p.label === label || p.key === label);
+      if (!param) { skipped++; return; }
+      const g = document.querySelector(`#paramForm .form-group[data-key="${CSS.escape(param.key)}"]`);
+      if (!g) { skipped++; return; }
+      if (param.type === 'url' || param.type === 'ref-image' || param.type === 'ref-video') {
+        const urls = Array.isArray(val) ? val : [val];
+        const valid = urls.filter(u => /^https?:\/\//i.test(u));
+        const invalid = urls.length - valid.length;
+        if (invalid > 0) Toast.warning(`字段「${label}」有 ${invalid} 个 URL 不合法`);
+        if (valid.length === 0) { skipped++; return; }
+        if (param.type === 'ref-image' || param.type === 'ref-video') {
+          this.refState[this.currentRefKey][param.key] = [];
+          valid.forEach(u => {
+            this.getRefs(param.key).push({id:'r_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),kind: param.type === 'ref-video' ? 'url-video' : 'url',src:u,name:param.type === 'ref-video' ? 'URL视频' : 'URL',uploaded:true,remote:u,mediaType: param.type === 'ref-video' ? 'video' : undefined});
+          });
+          this.refreshRefGrid(param.key);
+          filled++;
+        } else {
+          const inp = g.querySelector('input');
+          if (inp) { inp.value = valid[0]; filled++; }
+        }
+        return;
+      }
+      const el = this.getParamElement(g, param);
+      if (el) {
+        const v = Array.isArray(val) ? val.join(', ') : val;
+        el.value = v;
+        el.dispatchEvent(new Event('input', {bubbles: true}));
+        filled++;
+      }
+    });
+    this.updateEstimate();
+    if (filled > 0) {
+      Toast.success(`已回填 ${filled} 个字段` + (skipped > 0 ? `，跳过 ${skipped} 个` : ''));
+    } else {
+      Toast.warning('未识别到可回填的字段');
+    }
+    return filled > 0;
   },
   _snapshotForm() {
     const snap = { prompt: '', refs: {}, fields: {}, modelKey: this.currentRefKey };
@@ -2997,13 +3114,69 @@ function updateViewResultBadge(){
 })();
 
 </script>
-
-<div class="modal" id="pasteParamModal">
-  <div class="modal-content">
-    <div class="modal-header"><h3>粘贴参数</h3><button class="icon-btn" id="pasteParamModalCloseBtn" aria-label="关闭">×</button></div>
-    <div class="modal-body"><textarea id="pasteParamInput" spellcheck="false" style="min-height:230px;width:100%;font-family:monospace;font-size:12px;line-height:1.6;" placeholder="粘贴参数模板"></textarea></div>
-    <div class="modal-footer"><button class="action-btn" id="pasteParamCancelBtn">取消</button><button class="action-btn success" id="pasteParamApplyBtn">载入参数</button></div>
-  </div>
-</div>
 </body>
 </html>
+
+<style id="v30-mobile-polish">
+.preset-row{align-items:center;gap:7px;margin-bottom:9px;}
+.preset-select{height:34px;border-radius:10px;background:var(--surface-2);border-color:var(--border);font-size:12px;}
+.preset-save{
+  width:34px!important;height:34px!important;border-radius:10px!important;
+  display:grid!important;place-items:center!important;
+  background:var(--surface-2)!important;border:1px solid var(--border)!important;
+  color:var(--text-muted)!important;
+}
+.preset-save:hover{background:var(--brand-soft)!important;border-color:var(--brand)!important;color:var(--brand)!important;}
+.preset-save svg{width:15px;height:15px;}
+.ref-wrap{margin-top:6px;}
+.ref-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.ref-grid-video{grid-template-columns:repeat(2,minmax(0,1fr));}
+.ref-dropzone{
+  min-height:108px; width:100%;
+  border:1px dashed var(--border);
+  border-radius:12px;
+  background:transparent;
+  color:var(--text-dim);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+  cursor:pointer;
+  grid-column:1/-1;
+  transition:border-color .18s ease,background-color .18s ease,color .18s ease,transform .12s ease;
+}
+.ref-dropzone:hover,.ref-dropzone:focus-visible{border-color:var(--brand);background:var(--brand-soft);color:var(--brand);outline:none;}
+.ref-drop-plus{font-size:28px;line-height:1;font-weight:300;color:var(--brand);}
+.ref-dropzone span:last-child{font-size:11px;}
+.ref-failed{display:grid;place-items:center;height:100%;padding:8px;color:var(--text-dim);font-size:10px;}
+.ref-copy-url{
+  position:absolute;top:6px;right:34px;z-index:4;width:25px;height:25px;
+  border:1px solid rgba(255,255,255,.16);border-radius:7px;
+  background:rgba(0,0,0,.58);color:#fff;display:grid;place-items:center;
+  backdrop-filter:blur(6px);
+}
+.ref-copy-url:hover{background:var(--brand);border-color:transparent;transform:translateY(-1px);}
+.ref-copy-url svg{width:13px;height:13px;}
+.ref-item .ref-copy-url + .ref-del{right:5px;}
+.mobile-template-actions{
+  display:flex;align-items:center;gap:8px;margin:4px 0 9px;
+}
+.template-icon-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  min-height:34px;padding:0 11px;border:1px solid var(--border);
+  border-radius:9px;background:var(--surface-2);color:var(--text-muted);
+  font-size:11px;
+}
+.template-icon-btn:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft);}
+.template-icon-btn svg{width:14px;height:14px;}
+.template-paste-cue{font-size:10px;color:var(--text-dim);display:flex;align-items:center;gap:4px;}
+.template-paste-cue kbd,.workspace-shortcuts kbd{
+  border:1px solid var(--border);border-bottom-width:2px;border-radius:5px;
+  background:var(--surface-2);padding:2px 5px;font:10px var(--font-mono);color:var(--text-muted);
+}
+.api-section-title{margin-bottom:8px;}
+.form-group[data-key="prompt"] .hint,.form-group[data-key="text"] .hint{display:none!important;}
+.form-group[data-key="prompt"] label,.form-group[data-key="text"] label{display:none;}
+@media(max-width:640px){
+  .ref-dropzone{min-height:96px;}
+  .mobile-template-actions{margin-bottom:7px;}
+  .template-icon-btn{flex:0 0 auto;}
+}
+</style>
