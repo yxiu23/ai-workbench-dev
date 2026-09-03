@@ -3177,6 +3177,10 @@ function updateViewResultBadge(){
 .ref-item .ref-copy-url + .ref-del{right:5px;}
 .mobile-template-actions{
   display:flex;align-items:stretch;gap:7px;margin:4px 0 9px;
+  /* 三按钮整行悬浮吸底（iPhone 底部安全区自适应） */
+  position:sticky;bottom:env(safe-area-inset-bottom,0px);z-index:10;
+  background:var(--bg-elev);border:1px solid var(--border);border-radius:14px;
+  padding:8px;box-shadow:0 6px 24px rgba(0,0,0,.35);
 }
 /* 与电脑版一致：复制模板 / 导入模板 / 生成 三按钮并列一行 */
 .mobile-template-actions .template-icon-btn{flex:1 1 0;min-width:0;}
