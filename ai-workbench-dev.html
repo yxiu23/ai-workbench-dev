@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>修的媒体工作台 V42</title>
+<title>修的媒体工作台 V43</title>
 <style>
 /* ============================================================
    主题变量
@@ -1001,7 +1001,7 @@ body::before {
   <div class="brand">
     <div>
       <div class="brand-name">修的媒体工作台</div>
-      <div class="brand-sub">V42 · 精工版</div>
+      <div class="brand-sub">V43 · 精工版</div>
     </div>
   </div>
   <div class="header-spacer"></div>
@@ -1194,7 +1194,7 @@ body::before {
     <div class="settings-section">
       <h4>关于</h4>
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V42<br>
+        修的媒体工作台 V43<br>
         支持图片、视频、音频生成<br>
         API: api.wuyinkeji.com
       </div>
@@ -1903,7 +1903,16 @@ const Api = {
     if (res.code && res.code !== 200) {
       throw new Error(res.msg || res.message || `API错误: code ${res.code}`);
     }
-    if (typeof res.data === 'string') return { id: res.data, ...res };
+    // If data is a string, try to parse as JSON first
+    if (typeof res.data === 'string') {
+      const trimmed = res.data.trim();
+      if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+        try { return JSON.parse(trimmed); } catch {}
+      }
+      // If it's a plain string (like a task ID), return as id
+      if (trimmed) return { id: trimmed };
+      return res;
+    }
     if (res.data && typeof res.data === 'object') return res.data;
     return res;
   },
@@ -1973,17 +1982,36 @@ const Api = {
 
   extractUrl(data) {
     if (!data) return null;
-    if (typeof data === 'string') return data;
-    const tryKeys = ['url','output','result','image','video','audio','file_url','download_url'];
-    for (const k of tryKeys) { if (data[k] && typeof data[k] === 'string') return data[k]; }
-    if (data.outputs) {
-      if (Array.isArray(data.outputs) && data.outputs[0]) {
-        if (typeof data.outputs[0] === 'string') return data.outputs[0];
-        return this.extractUrl(data.outputs[0]);
-      }
-      if (typeof data.outputs === 'object') return this.extractUrl(data.outputs);
+    // If data is from detail API, it might be a JSON string
+    const obj = (typeof data === 'string') ? (() => { try { return JSON.parse(data); } catch { return data; } })() : data;
+    const isUrl = s => typeof s === 'string' && /^https?:\/\/\S+/i.test(s) && s.length < 4000;
+    // Check common keys
+    const keys = ['url','video_url','image_url','audio_url','result','result_url','demo_audio','file_url','download_url','output_url','video','image','audio','media_url','output'];
+    for (const k of keys) {
+      if (isUrl(obj?.[k])) return obj[k];
+      if (Array.isArray(obj?.[k])) { const u = obj[k].find(isUrl); if (u) return u; }
     }
-    if (data.data) return this.extractUrl(data.data);
+    // Check nested data field
+    if (obj?.data) {
+      const nested = (typeof obj.data === 'string') ? (() => { try { return JSON.parse(obj.data); } catch { return obj.data; } })() : obj.data;
+      for (const k of keys) { if (isUrl(nested?.[k])) return nested[k]; if (Array.isArray(nested?.[k])) { const u = nested[k].find(isUrl); if (u) return u; } }
+      if (isUrl(nested)) return nested;
+    }
+    // Check outputs array
+    if (obj?.outputs) {
+      if (Array.isArray(obj.outputs)) { for (const it of obj.outputs) { if (isUrl(it)) return it; if (typeof it === 'object') { const u = this.extractUrl(it); if (u) return u; } } }
+      else if (typeof obj.outputs === 'object') return this.extractUrl(obj.outputs);
+    }
+    // Deep search
+    return this._deepFindUrl(obj);
+  },
+
+  _deepFindUrl(obj, depth = 0) {
+    if (!obj || depth > 8) return null;
+    const isUrl = s => typeof s === 'string' && /^https?:\/\/\S+/i.test(s) && s.length < 4000;
+    if (typeof obj === 'string') return isUrl(obj) ? obj : null;
+    if (Array.isArray(obj)) { for (const it of obj) { const u = this._deepFindUrl(it, depth + 1); if (u) return u; } return null; }
+    if (typeof obj === 'object') { for (const [k, v] of Object.entries(obj)) { if (/url|file|output|result|media|video|image|audio/i.test(k) && isUrl(v)) return v; const u = this._deepFindUrl(v, depth + 1); if (u) return u; } }
     return null;
   },
 
@@ -2042,15 +2070,20 @@ class PollManager {
     if (!p || p.stopped) return;
     p.lastPoll = Date.now();
     try {
-      const detail = await Api.queryDetail(task.apiId);
-      const status = String(detail.status || '').toLowerCase();
-      if (status === 'succeeded' || status === 'success' || status === 'completed') {
-        this._onResult(taskId, { status: 'succeeded', data: detail });
-      } else if (status === 'failed' || status === 'error') {
-        this._onResult(taskId, { status: 'failed', error: detail.error || '生成失败' });
-      } else if (status === 'timeout') {
+      const detail = await Api.queryDetail(p.task.apiId);
+      // API doc: data.status is int: 0=init 1=processing 2=success 3=failed
+      const statusNum = Number(detail.status);
+      const statusStr = String(detail.status || '').toLowerCase();
+      if (statusNum === 2 || statusStr === 'succeeded' || statusStr === 'success' || statusStr === 'completed') {
+        // Success - extract result URL from detail
+        const resultUrl = Api.extractUrl(detail) || detail.url || detail.output || detail.result;
+        this._onResult(taskId, { status: 'succeeded', data: { ...detail, url: resultUrl } });
+      } else if (statusNum === 3 || statusStr === 'failed' || statusStr === 'error') {
+        this._onResult(taskId, { status: 'failed', error: detail.message || detail.error || detail.msg || '生成失败' });
+      } else if (statusStr === 'timeout') {
         this._onResult(taskId, { status: 'timeout' });
       } else {
+        // status 0 (init) or 1 (processing) - keep polling
         UI.updateTaskCardPhase(taskId, this.getPhaseName(Date.now() - p.startTime));
         this._scheduleNext(taskId);
       }
@@ -2398,7 +2431,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V42';
+      document.title = '修的媒体工作台 V43';
     }
   },
 
@@ -3130,7 +3163,9 @@ const UI = {
 
   async _uploadLocalImage(key, item) {
     try {
-      const url = await Api.uploadToR2(Api.dataUrlToBlob(item.src).then ? await (async () => { const b = Api.dataUrlToBlob(item.src); const f = new File([b], item.name, { type: b.type }); return Api.uploadToR2(f); })() : Api.uploadToR2(new File([Api.dataUrlToBlob(item.src)], item.name)));
+      const blob = Api.dataUrlToBlob(item.src);
+      const file = new File([blob], item.name, { type: blob.type });
+      const url = await Api.uploadToR2(file);
       item.remote = url; item.uploaded = true;
       this._renderRefGrid(key);
     } catch (e) { Toast.error(`上传失败: ${e.message}`); }
