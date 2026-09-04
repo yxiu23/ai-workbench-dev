@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>修的媒体工作台 V37</title>
+<title>修的媒体工作台 V38</title>
 <style>
 /* ============================================================
    主题变量
@@ -964,9 +964,10 @@ body::before {
 @keyframes result-appear { from { opacity: 0; filter: blur(8px); transform: scale(1.02); } to { opacity: 1; filter: blur(0); transform: scale(1); } }
 .result-media img, .result-media video { animation: result-appear 600ms cubic-bezier(.32,.72,0,1) both; }
 
-/* 按钮涟漪 */
-.ripple { position: absolute; border-radius: 50%; background: rgba(255,255,255,.3); pointer-events: none; transform: scale(0); animation: ripple-anim 600ms ease-out; }
-@keyframes ripple-anim { to { transform: scale(4); opacity: 0; } }
+/* 按钮涟漪 - 精细版 */
+.ripple { position: absolute; border-radius: 50%; background: rgba(255,255,255,.25); pointer-events: none; transform: scale(0); animation: ripple-anim 400ms ease-out; }
+@keyframes ripple-anim { to { transform: scale(1.5); opacity: 0; } }
+.generate-btn, .workflow-btn, .tab, .ref-mode-btn, .header-btn, .filter-tab, .tool-btn, .preset-trigger, .prompt-save-btn { position: relative; overflow: hidden; }
 
 /* 渐变分隔线 */
 .gradient-divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent); margin: 14px 0; }
@@ -995,7 +996,7 @@ body::before {
   <div class="brand">
     <div>
       <div class="brand-name">修的媒体工作台</div>
-      <div class="brand-sub">V37 · 精工版</div>
+      <div class="brand-sub">V38 · 精工版</div>
     </div>
   </div>
   <div class="header-spacer"></div>
@@ -1188,7 +1189,7 @@ body::before {
     <div class="settings-section">
       <h4>关于</h4>
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V37<br>
+        修的媒体工作台 V38<br>
         支持图片、视频、音频生成<br>
         API: api.wuyinkeji.com
       </div>
@@ -2385,7 +2386,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V37';
+      document.title = '修的媒体工作台 V38';
     }
   },
 
@@ -2468,19 +2469,19 @@ const UI = {
     this.bindGlobalPaste();
     this.bindGlobalDrop();
     this.bindKeyboard();
-  // P1: Button ripple effect
+  // P1: Button ripple effect - refined
   document.addEventListener('click', e => {
-    const btn = e.target.closest('.generate-btn, .workflow-btn, .tab, .ref-mode-btn, .header-btn, .filter-tab');
+    const btn = e.target.closest('.generate-btn, .workflow-btn, .tab, .ref-mode-btn, .header-btn, .filter-tab, .tool-btn, .preset-trigger, .prompt-save-btn');
     if (!btn) return;
     const rect = btn.getBoundingClientRect();
     const ripple = document.createElement('span');
     ripple.className = 'ripple';
-    const size = Math.max(rect.width, rect.height);
+    const size = Math.min(rect.width, rect.height) * 0.6;
     ripple.style.width = ripple.style.height = size + 'px';
     ripple.style.left = (e.clientX - rect.left - size/2) + 'px';
     ripple.style.top = (e.clientY - rect.top - size/2) + 'px';
     btn.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 600);
+    setTimeout(() => ripple.remove(), 400);
   }, true);
 
   },
