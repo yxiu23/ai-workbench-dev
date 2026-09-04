@@ -148,7 +148,7 @@ select { background-image: none; padding-right: 32px; }
 }
 .view {
   position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
-  display: none; padding: 12px 12px calc(20px + env(safe-area-inset-bottom));
+  display: none; padding: 12px 12px calc(var(--tabbar-h) + var(--safe-bottom) + 20px);
   opacity: 0; transform: translateY(6px); pointer-events: none;
 }
 .view.active { display: block; animation: viewIn 220ms ease both; pointer-events: auto; }
@@ -606,7 +606,7 @@ body::before {
   opacity: .015; mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
 }
-.header, .tabbar { position: relative; z-index: 1; }
+.header { position: relative; z-index: 1; }
 .tag.type-image { color: var(--brand); background: var(--brand-soft); }
 .tag.type-video { color: #b07cf5; background: rgba(176,124,245,.12); }
 .tag.type-audio { color: var(--success); background: var(--success-soft); }
@@ -2995,9 +2995,16 @@ const UI = {
     this.model.params.forEach(p => {
       if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') {
         const refs = this.getRefs(p.key); if (refs.length) params[p.key] = refs.map(r => ({ ...r }));
+        // Save refs per-tab for cross-model persistence
+        if (refs.length && (p.key === 'urls' || p.key === 'images' || p.key === 'first_frame' || p.key === 'last_frame' || p.key === 'firstFrameUrl' || p.key === 'lastFrameUrl')) {
+          if (!this.formCache[this.tab + '_refs']) this.formCache[this.tab + '_refs'] = {};
+          this.formCache[this.tab + '_refs'][p.key] = refs.map(r => ({ ...r }));
+        }
       } else {
         const el = this.getParamElement(p.key);
         if (el) params[p.key] = el.value;
+        // Save prompt per-tab for cross-model persistence
+        if (p.type === 'textarea' && el) this.formCache[this.tab + '_prompt'] = el.value;
       }
     });
     const presetKey = this.tab + '/' + this.model.id;
@@ -3009,23 +3016,36 @@ const UI = {
   restoreFormFromCache() {
     if (!this.model) return;
     const saved = this.formCache[this.tab + '_' + this.model.id];
-    if (!saved) return;
+    const tabPrompt = this.formCache[this.tab + '_prompt'];
+    const tabRefs = this.formCache[this.tab + '_refs'] || {};
     const presetKey = this.tab + '/' + this.model.id;
-    this.promptPresetBase[presetKey] = saved.__promptPresetBase || '';
-    this.promptPresetName[presetKey] = saved.__promptPresetName || '';
+    this.promptPresetBase[presetKey] = saved?.__promptPresetBase || '';
+    this.promptPresetName[presetKey] = saved?.__promptPresetName || '';
     this.model.params.filter(p => p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio').forEach(p => this.clearRefs(p.key));
     const f = $('#paramForm'); if (!f) return;
     this.model.params.forEach(p => {
-      if (saved[p.key] === undefined) return;
+      // For prompt: try model cache, then tab cache
+      if (p.type === 'textarea') {
+        const el = this.getPromptTextarea();
+        if (el) {
+          const val = saved?.[p.key] || tabPrompt || p.default || '';
+          el.value = val; el.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        return;
+      }
+      // For refs: try model cache, then tab cache
       if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') {
-        const refs = Array.isArray(saved[p.key]) ? saved[p.key] : [];
-        this.setRefs(p.key, refs); this.refreshRefGrid(p.key);
-      } else if (p.type === 'range') {
+        const refData = saved?.[p.key] || tabRefs[p.key];
+        if (refData && Array.isArray(refData) && refData.length) {
+          refData.forEach(r => this.getRefs(p.key).push({ ...r }));
+          this.refreshRefGrid(p.key);
+        }
+        return;
+      }
+      // For other params: only from model cache
+      if (saved && saved[p.key] !== undefined) {
         const el = this.getParamElement(p.key);
-        if (el) { el.value = saved[p.key]; const rv = $('#rv-' + p.key); if (rv) rv.textContent = saved[p.key] + (p.unit || ''); }
-      } else {
-        const el = this.getParamElement(p.key);
-        if (el) el.value = saved[p.key];
+        if (el) { el.value = saved[p.key]; el.dispatchEvent(new Event('input', { bubbles: true })); }
       }
     });
     this.updateEstimate();
