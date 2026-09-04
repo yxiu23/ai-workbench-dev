@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="format-detection" content="telephone=no">
-<title>修的媒体工作台 V37</title>
+<title>修的媒体工作台 V38</title>
 <style>
 /* ============================================================
    主题变量与安全区域
@@ -586,6 +586,9 @@ select { background-image: none; padding-right: 32px; }
 }
 
 /* P0+P1 艺术化升级 */
+.ripple { position: absolute; border-radius: 50%; background: rgba(255,255,255,.20); pointer-events: none; transform: scale(0); animation: ripple-anim 350ms ease-out; }
+@keyframes ripple-anim { to { transform: scale(1.5); opacity: 0; } }
+.gen-btn, .tab, .act, .preset-btn, .source-item, .model-item, .ref-add, .header-btn { position: relative; overflow: hidden; }
 body::before {
   content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
   opacity: .015; mix-blend-mode: overlay;
@@ -597,8 +600,6 @@ body::before {
 .tag.type-audio { color: var(--success); background: var(--success-soft); }
 @keyframes result-appear { from { opacity: 0; filter: blur(8px); transform: scale(1.02); } to { opacity: 1; filter: blur(0); transform: scale(1); } }
 .media img, .media video { animation: result-appear 600ms cubic-bezier(.32,.72,0,1) both; }
-.ripple { position: absolute; border-radius: 50%; background: rgba(255,255,255,.3); pointer-events: none; transform: scale(0); animation: ripple-anim 600ms ease-out; }
-@keyframes ripple-anim { to { transform: scale(4); opacity: 0; } }
 .gradient-divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent); margin: 14px 0; }
 .estimate .val, .pill { font-variant-numeric: tabular-nums; }
 
@@ -2169,20 +2170,20 @@ const UI = {
     setInterval(() => { this.updateTaskDock(); this.updateViewBadge(); }, 1000);
     window.addEventListener('focus', () => { this.renderResults(); });
     setTimeout(() => poller.resumeAll(), 300);
-    // P1: Button ripple + haptic
+    // P1: Button ripple + haptic - refined
     document.addEventListener('click', e => {
-      const btn = e.target.closest('.gen-btn, .tab, .act, .preset-btn, .source-item, .model-item, .ref-add');
+      const btn = e.target.closest('.gen-btn, .tab, .act, .preset-btn, .source-item, .model-item, .ref-add, .header-btn');
       if (!btn) return;
       if (navigator.vibrate) navigator.vibrate(5);
       const rect = btn.getBoundingClientRect();
       const ripple = document.createElement('span');
       ripple.className = 'ripple';
-      const size = Math.max(rect.width, rect.height);
+      const size = Math.min(rect.width, rect.height) * 0.6;
       ripple.style.width = ripple.style.height = size + 'px';
       ripple.style.left = (e.clientX - rect.left - size/2) + 'px';
       ripple.style.top = (e.clientY - rect.top - size/2) + 'px';
       btn.appendChild(ripple);
-      setTimeout(() => ripple.remove(), 600);
+      setTimeout(() => ripple.remove(), 350);
     }, true);
 
     // Connectivity detection
@@ -2271,7 +2272,7 @@ const UI = {
     if (dock) dock.style.display = running.length > 0 ? 'flex' : 'none';
     if (btn) btn.style.display = running.length > 0 ? 'flex' : 'none';
     if (badge) badge.textContent = running.length > 0 ? String(running.length) : '0';
-    document.title = running.length > 0 ? `⏳ ${running.length}个任务 · AI 工作台` : '修的媒体工作台 V37';
+    document.title = running.length > 0 ? `⏳ ${running.length}个任务 · AI 工作台` : '修的媒体工作台 V38';
   },
   updateViewBadge() {
     const badge = $('#viewBadge');
