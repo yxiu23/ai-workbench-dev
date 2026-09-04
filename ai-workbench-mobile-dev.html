@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="format-detection" content="telephone=no">
-<title>修的媒体工作台 V36</title>
+<title>修的媒体工作台 V37</title>
 <style>
 /* ============================================================
    主题变量与安全区域
@@ -79,7 +79,6 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  padding-top: var(--safe-top);
   letter-spacing: .01em;
   transition: background-color 280ms ease, color 280ms ease;
 }
@@ -105,10 +104,12 @@ select { background-image: none; padding-right: 32px; }
    Header
    ============================================================ */
 .header {
-  height: var(--header-h);
+  height: calc(var(--header-h) + var(--safe-top));
+  padding-top: var(--safe-top);
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 12px; background: rgba(8,11,20,.60); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border-soft); z-index: 30; position: relative;
+  padding: var(--safe-top) 12px 0;
+  background: rgba(8,11,20,.60); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-soft); z-index: 30; position: relative; flex-shrink: 0;
 }
 [data-theme="light"] .header { background: rgba(255,255,255,.70); }
 .header-title { font-size: 16px; font-weight: 600; letter-spacing: .02em; }
@@ -142,7 +143,7 @@ select { background-image: none; padding-right: 32px; }
    内容区 (paramView + resultView)
    ============================================================ */
 .content {
-  height: calc(100dvh - var(--header-h) - var(--tabbar-h) - var(--safe-bottom));
+  height: calc(100% - var(--header-h) - var(--safe-top) - var(--tabbar-h) - var(--safe-bottom));
   overflow: hidden; position: relative;
 }
 .view {
@@ -351,18 +352,15 @@ select { background-image: none; padding-right: 32px; }
    底部 Tab (图片/视频/音频)
    ============================================================ */
 .tabbar {
-  position: fixed; bottom: var(--safe-bottom); left: 0; right: 0;
-  height: var(--tabbar-h); background: rgba(8,11,20,.60); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  position: fixed; bottom: 0; left: 0; right: 0; height: calc(var(--tabbar-h) + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background: rgba(8,11,20,.60); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border-soft); display: flex; z-index: 20;
 }
 [data-theme="light"] .tabbar { background: rgba(255,255,255,.70); }
-.tabbar::after {
-  content: ""; position: absolute; top: 100%; left: 0; right: 0; height: var(--safe-bottom);
-  background: inherit; pointer-events: none;
-}
 .tab {
   flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  color: var(--text-muted); font-size: 11px; line-height: 1; position: relative; min-height: 48px;
+  color: var(--text-muted); font-size: 11px; line-height: 1; position: relative; min-height: var(--tabbar-h);
   letter-spacing: .02em;
 }
 .tab svg { width: 22px; height: 22px; }
@@ -449,7 +447,7 @@ select { background-image: none; padding-right: 32px; }
    ============================================================ */
 .modal { position: fixed; inset: 0; background: var(--overlay); z-index: 200; display: none; align-items: center; justify-content: center; padding: 16px; }
 .modal.show { display: flex; }
-.modal-content {
+.modal.content { flex: 1 1 0; min-height: 0; overflow: hidden; position: relative; min-height: 0;
   background: var(--bg-elev); border: 1px solid var(--border); border-radius: 16px; padding: 18px;
   max-width: 100%; width: 100%; max-height: 90vh; overflow-y: auto; -webkit-overflow-scrolling: touch;
   box-shadow: 0 20px 60px rgba(0,0,0,.3);
@@ -586,6 +584,26 @@ select { background-image: none; padding-right: 32px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+
+/* P0+P1 艺术化升级 */
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  opacity: .015; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+}
+.header, .content, .tabbar, .sheet, .modal.content { flex: 1 1 0; min-height: 0; overflow: hidden; position: relative; min-height: 0; position: relative; z-index: 1; }
+.tag.type-image { color: var(--brand); background: var(--brand-soft); }
+.tag.type-video { color: #b07cf5; background: rgba(176,124,245,.12); }
+.tag.type-audio { color: var(--success); background: var(--success-soft); }
+@keyframes result-appear { from { opacity: 0; filter: blur(8px); transform: scale(1.02); } to { opacity: 1; filter: blur(0); transform: scale(1); } }
+.media img, .media video { animation: result-appear 600ms cubic-bezier(.32,.72,0,1) both; }
+.ripple { position: absolute; border-radius: 50%; background: rgba(255,255,255,.3); pointer-events: none; transform: scale(0); animation: ripple-anim 600ms ease-out; }
+@keyframes ripple-anim { to { transform: scale(4); opacity: 0; } }
+.gradient-divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent); margin: 14px 0; }
+.estimate .val, .pill { font-variant-numeric: tabular-nums; }
+
+
+
 </style>
 </head>
 <body>
@@ -2151,6 +2169,22 @@ const UI = {
     setInterval(() => { this.updateTaskDock(); this.updateViewBadge(); }, 1000);
     window.addEventListener('focus', () => { this.renderResults(); });
     setTimeout(() => poller.resumeAll(), 300);
+    // P1: Button ripple + haptic
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.gen-btn, .tab, .act, .preset-btn, .source-item, .model-item, .ref-add');
+      if (!btn) return;
+      if (navigator.vibrate) navigator.vibrate(5);
+      const rect = btn.getBoundingClientRect();
+      const ripple = document.createElement('span');
+      ripple.className = 'ripple';
+      const size = Math.max(rect.width, rect.height);
+      ripple.style.width = ripple.style.height = size + 'px';
+      ripple.style.left = (e.clientX - rect.left - size/2) + 'px';
+      ripple.style.top = (e.clientY - rect.top - size/2) + 'px';
+      btn.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    }, true);
+
     // Connectivity detection
     window.addEventListener('offline', () => { Toast.warning('网络已断开'); });
     window.addEventListener('online', () => { Toast.success('网络已恢复'); poller.resumeAll(); });
@@ -2237,7 +2271,7 @@ const UI = {
     if (dock) dock.style.display = running.length > 0 ? 'flex' : 'none';
     if (btn) btn.style.display = running.length > 0 ? 'flex' : 'none';
     if (badge) badge.textContent = running.length > 0 ? String(running.length) : '0';
-    document.title = running.length > 0 ? `⏳ ${running.length}个任务 · AI 工作台` : '修的媒体工作台 V36';
+    document.title = running.length > 0 ? `⏳ ${running.length}个任务 · AI 工作台` : '修的媒体工作台 V37';
   },
   updateViewBadge() {
     const badge = $('#viewBadge');
@@ -2293,7 +2327,7 @@ const UI = {
     // Model meta
     $('#modelBtnText').textContent = model.name;
     const meta = $('#modelMeta');
-    meta.innerHTML = `<span class="tag price">${esc(model.price || '')}</span><span class="tag ${model.async ? 'async' : 'sync'}">${model.async ? '异步' : '同步'}</span>${model.desc ? `<div style="width:100%;margin-top:4px;font-size:11px;color:var(--text-dim);line-height:1.4">${esc(model.desc)}</div>` : ''}`;
+    meta.innerHTML = `<span class="tag price">${esc(model.price || '')}</span><span class="tag type-${model.type}">${typeName(model.type)}</span>${model.desc ? `<div style="width:100%;margin-top:4px;font-size:11px;color:var(--text-dim);line-height:1.4">${esc(model.desc)}</div>` : ''}`;
 
     // Render the unified prompt module FIRST (always at top)
     const f = $('#paramForm');
