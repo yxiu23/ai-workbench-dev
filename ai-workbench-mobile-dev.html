@@ -63,7 +63,7 @@
    基础重置
    ============================================================ */
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html, body { height: 100%; overflow: hidden; }
+html { height: 100%; } overflow: hidden; }
 html[data-theme] .header, html[data-theme] .content, html[data-theme] .tabbar, html[data-theme] .card,
 html[data-theme] input, html[data-theme] textarea, html[data-theme] select, html[data-theme] .sheet,
 html[data-theme] .modal-content, html[data-theme] .editor, html[data-theme] .model-item,
@@ -105,7 +105,7 @@ select { background-image: none; padding-right: 32px; }
    ============================================================ */
 .header {
   height: calc(var(--header-h) + var(--safe-top));
-  padding-top: var(--safe-top);
+  /* padding-top handled by shorthand */
   display: flex; align-items: center; justify-content: space-between;
   padding: var(--safe-top) 12px 0;
   background: rgba(8,11,20,.60); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
@@ -143,7 +143,7 @@ select { background-image: none; padding-right: 32px; }
    内容区 (paramView + resultView)
    ============================================================ */
 .content {
-  height: calc(100% - var(--header-h) - var(--safe-top) - var(--tabbar-h) - var(--safe-bottom));
+  height: calc(100dvh - var(--header-h) - var(--safe-top) - var(--tabbar-h) - var(--safe-bottom));
   overflow: hidden; position: relative;
 }
 .view {
@@ -467,7 +467,7 @@ select { background-image: none; padding-right: 32px; }
 /* ============================================================
    编辑器 (inpaint + outpaint)
    ============================================================ */
-.editor { position: fixed; inset: 0; background: var(--bg-elev); z-index: 150; display: none; flex-direction: column; padding-top: var(--safe-top); }
+.editor { position: fixed; inset: 0; background: var(--bg-elev); z-index: 150; display: none; flex-direction: column; /* padding-top handled by shorthand */ }
 .editor.show { display: flex; }
 .editor-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; border-bottom: 1px solid var(--border); height: 48px; flex-shrink: 0; }
 .editor-header h3 { font-size: 15px; }
