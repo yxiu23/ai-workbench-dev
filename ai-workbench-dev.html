@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>修的媒体工作台 V38</title>
+<title>修的媒体工作台 V42</title>
 <style>
 /* ============================================================
    主题变量
@@ -149,7 +149,7 @@ textarea { resize: vertical; min-height: 80px; }
 }
 .param-panel {
   border-right: 1px solid var(--border); overflow-y: auto; overflow-x: hidden;
-  padding: 14px; display: flex; flex-direction: column; gap: 14px;
+  padding: 14px; display: flex; flex-direction: column; gap: 16px;
 }
 .result-panel { overflow: hidden; display: flex; flex-direction: column; }
 
@@ -189,6 +189,7 @@ textarea { resize: vertical; min-height: 80px; }
 .model-meta { margin-top: 6px; display: flex; gap: 6px; flex-wrap: wrap; }
 .model-meta .tag { padding: 1px 6px; border-radius: 4px; font-size: 10px; background: var(--surface-2); color: var(--text-muted); }
 .model-meta .tag.price { color: var(--success); background: var(--success-soft); }
+.model-meta .tag.desc-tag { color: var(--text-muted); background: var(--surface-2); font-weight: 400; max-width: 100%; white-space: normal; line-height: 1.4; }
 .model-desc { font-size: 11px; color: var(--text-dim); margin-top: 4px; line-height: 1.4; }
 
 /* ============================================================
@@ -254,10 +255,10 @@ textarea { resize: vertical; min-height: 80px; }
    参考素材系统
    ============================================================ */
 .ref-mode-section {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px;
 }
 .ref-mode-header {
-  display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
 }
 .ref-mode-title { font-size: 12px; font-weight: 600; color: var(--text-muted); }
 .ref-mode-hint { font-size: 10px; color: var(--text-dim); }
@@ -274,6 +275,10 @@ textarea { resize: vertical; min-height: 80px; }
 .ref-mode-btn.active { border-color: var(--brand); background: var(--brand-soft); color: var(--brand); font-weight: 600; }
 .ref-mode-panel { display: none; }
 .ref-mode-panel.active { display: block; }
+.ref-mode-panel[data-ref-panel="frame"] .ref-section,
+.ref-mode-panel[data-ref-panel="frames"] .ref-section { display: inline-block; width: calc(50% - 4px); vertical-align: top; margin-right: 4px; }
+.ref-mode-panel[data-ref-panel="frame"] .ref-section:nth-child(even),
+.ref-mode-panel[data-ref-panel="frames"] .ref-section:nth-child(even) { margin-right: 0; }
 .ref-section {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px;
 }
@@ -946,7 +951,7 @@ body::before {
   opacity: .015; mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
 }
-.app-header, .param-panel, .result-panel, .settings-drawer, .history-sidebar { position: relative; z-index: 1; }
+.app-header, .param-panel, .result-panel { position: relative; z-index: 1; }
 
 /* 模型类型色彩区分 */
 .tag.type-image { color: var(--brand); background: var(--brand-soft); }
@@ -996,7 +1001,7 @@ body::before {
   <div class="brand">
     <div>
       <div class="brand-name">修的媒体工作台</div>
-      <div class="brand-sub">V38 · 精工版</div>
+      <div class="brand-sub">V42 · 精工版</div>
     </div>
   </div>
   <div class="header-spacer"></div>
@@ -1043,7 +1048,7 @@ body::before {
     </div>
 
     <!-- 参数表单容器 (由 JS 动态渲染) -->
-    <div id="paramForm"></div>
+    <div id="paramForm" style="display:flex;flex-direction:column;gap:14px;"></div>
 
     <!-- 生成操作区 -->
     <div class="generate-section">
@@ -1189,7 +1194,7 @@ body::before {
     <div class="settings-section">
       <h4>关于</h4>
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V38<br>
+        修的媒体工作台 V42<br>
         支持图片、视频、音频生成<br>
         API: api.wuyinkeji.com
       </div>
@@ -1621,23 +1626,7 @@ const VIDEO_PROMPT_PRESETS = [
   { id: 'nature', name: '自然风光', prompt: '自然风光，广角大景，色彩饱和，空气感，纪录片画质。' }
 ];
 const AUDIO_PROMPT_PRESETS = [
-  { id: 'none', name: '不用预设', prompt: '' },
-  { id: 'standard-tts', name: '标准播报', prompt: '标准播报风格，语速适中，吐字清晰，适合新闻、通知、说明类内容。' },
-  { id: 'emotional', name: '情感叙述', prompt: '情感叙述风格，语速偏慢，富有感情，适合故事、散文、情感类内容。' },
-  { id: 'lively', name: '活泼口播', prompt: '活泼口播风格，语速偏快，语气轻松，适合短视频、广告、口播类内容。' },
-  { id: 'knowledge-female', name: '知性女声', prompt: '知性女声风格，语速适中，温婉清晰，适合知识科普、课程讲解类内容。' },
-  { id: 'male-anchor', name: '男声播报', prompt: '男声播报风格，沉稳大气，适合新闻、纪录片、商务类内容。' }
-];
-
-/* ============================================================
-   INSPIRATIONS
-   ============================================================ */
-const PROMPT_INSPIRATIONS = [
-  '高质感商业摄影，主体清晰，光线自然，细节丰富，构图干净',
-  '高级极简视觉，留白充足，材质真实，细节精致',
-  '电影感光影，层次分明，色彩自然，画面具有叙事感',
-  '电商主视觉，产品突出，背景整洁，商业广告质感',
-  '专业棚拍效果，柔和轮廓光，真实材质，高清细节'
+  { id: 'none', name: '不用预设', prompt: '' }
 ];
 
 /* ============================================================
@@ -1667,6 +1656,33 @@ const PROMPT_TEMPLATES = {
     { id: 'tpl-v-drone', name: '航拍大景', category: '运镜', prompt: '无人机航拍视角，俯瞰大景，缓慢上升或平移，壮阔风景，自然光线，纪录片质感，震撼大气。' },
     { id: 'tpl-v-product-rotate', name: '产品旋转', category: '运镜', prompt: '产品360度旋转展示，纯色背景，光线均匀，细节清晰，慢速匀速，商业广告级展示。' },
     { id: 'tpl-v-time-lapse', name: '延时摄影', category: '运镜', prompt: '延时摄影效果，云层快速流动，光影变化，城市车流，时间压缩感，4K高清，稳定画面。' },
+    { id: 'tpl-v-push-in', name: '推镜 Push-in', category: '动态运镜', prompt: '匀速向前推进，聚焦画面核心主体，层层聚焦视觉中心，节奏平稳丝滑，强化主体冲击力，电影级稳定无抖动。' },
+    { id: 'tpl-v-pull-out', name: '拉镜 Pull-out', category: '动态运镜', prompt: '匀速向后拉远，逐步展现完整场景，从小景别切换全景，开阔大气，舒展叙事氛围，稳定丝滑运镜。' },
+    { id: 'tpl-v-pan', name: '移镜 Pan', category: '动态运镜', prompt: '水平左右平移，画面稳定无抖动，平行扫景，完整展示场景横向细节，适合长画幅展陈、文化墙漫游。' },
+    { id: 'tpl-v-tilt', name: '摇镜 Tilt', category: '动态运镜', prompt: '垂直上下摇动，从上至下扫景，展示竖向空间层次，适配门头、长廊、竖向装置，稳定无抖动。' },
+    { id: 'tpl-v-orbit', name: '环绕运镜 Orbit', category: '动态运镜', prompt: '360°匀速环形环绕，圆心锁定主体，角度均匀旋转，全方位展示立体结构，美陈/装置/门头专属运镜。' },
+    { id: 'tpl-v-dolly', name: '升降运镜 Dolly', category: '动态运镜', prompt: '平稳升降移动，高低视角切换，空间层次感丰富，高级电影漫游质感，丝滑无抖动。' },
+    { id: 'tpl-v-follow', name: '跟随运镜 Follow', category: '动态运镜', prompt: '定点跟随主体，镜头稳定追踪，动线丝滑流畅，无偏移抖动，沉浸式跟随视角。' },
+    { id: 'tpl-v-through', name: '穿梭运镜 Through', category: '动态运镜', prompt: '镜头穿透空间，穿过门框/格栅/间隙，沉浸式纵深视觉，氛围感极强，第一视角穿梭感。' },
+    { id: 'tpl-v-quick-push', name: '急推急拉', category: '动态运镜', prompt: '快慢节奏对比，卡点运镜，动态张力拉满，适合节日、潮流视觉短片，节奏感强烈。' },
+    { id: 'tpl-v-static', name: '静止定镜', category: '动态运镜', prompt: '机位固定，绝对稳定，无抖动无位移，静态高级质感，适合细节展示、封面定格，克制美学。' },
+    { id: 'tpl-v-hard-cut', name: '硬切转场', category: '转场', prompt: '无缝硬切转场，节奏干脆，画面干净，高级极简，商业短片首选转场方式。' },
+    { id: 'tpl-v-fade', name: '淡入淡出', category: '转场', prompt: '透明渐变过渡，柔和自然，舒缓叙事，适配国风、政务、文艺类视频，干净高级不廉价。' },
+    { id: 'tpl-v-dissolve', name: '叠化转场', category: '转场', prompt: '画面重叠融合，虚实过渡，氛围感朦胧，适合意境、景观、文旅视觉，柔和高级。' },
+    { id: 'tpl-v-push-trans', name: '推拉转场', category: '转场', prompt: '画面整体平移推拉，无缝衔接场景，动态流畅，空间漫游专用转场，丝滑过渡。' },
+    { id: 'tpl-v-blur-trans', name: '模糊转场', category: '转场', prompt: '高斯模糊渐变，虚实切换，高级柔和，无廉价特效，电影级景深过渡。' },
+    { id: 'tpl-v-flash-white', name: '闪白转场', category: '转场', prompt: '高光闪白过渡，干净通透，潮流高级，适配商业、节日、潮流设计，光感自然不刺眼。' },
+    { id: 'tpl-v-focus-trans', name: '景深切换', category: '转场', prompt: '焦点虚实切换，聚焦/失焦过渡，电影级高级转场，景深变化自然丝滑。' },
+    { id: 'tpl-v-zoom-trans', name: '缩放转场', category: '转场', prompt: '中心缩放开合，卡点舒适，动态张力十足，节奏感强，商业短片专用。' },
+    { id: 'tpl-v-dolly-zoom', name: '希区柯克变焦', category: '大师运镜', prompt: '经典Dolly Zoom运镜，机位前后移动配合镜头反向变焦，主体大小不变背景极速拉伸压缩，空间扭曲悬浮感，视觉冲击极强，情绪张力拉满，悬疑/恐怖氛围。' },
+    { id: 'tpl-v-bay-orbit', name: '迈克尔·贝环绕', category: '大师运镜', prompt: '高速丝滑环形环绕，轻微低角度仰拍，镜头带微小动态呼吸抖动，光影随环绕角度流转，画面张力炸裂，史诗商业大片质感，通透高对比画质。' },
+    { id: 'tpl-v-nolan-static', name: '诺兰静态叙事', category: '大师运镜', prompt: '绝对定机位静止镜头，零抖动，超长留白叙事，光影细腻柔和，画面极致干净，克制高级，深沉氛围感，适合高端政务/科技/文艺大片。' },
+    { id: 'tpl-v-wes-anderson', name: '韦斯·安德森对称', category: '大师运镜', prompt: '绝对中心对称构图，水平极致平稳平移，画面规整治愈，色彩均匀干净，构图强迫症美学，极简高级叙事感。' },
+    { id: 'tpl-v-pta-shallow', name: 'PTA景深运镜', category: '大师运镜', prompt: '极浅景深，焦点精准锁定主体，前后景自然虚化流淌，镜头慢速微移，氛围感慵懒高级，电影胶片质感。' },
+    { id: 'tpl-v-epic-push', name: '史诗推进', category: '大师运镜', prompt: '超丝滑匀速长焦推进，无抖动，层层聚焦核心主体，背景逐步弱化，宏大叙事感，适配展厅全景、建筑门头、景观大片。' },
+    { id: 'tpl-v-cine-through', name: '沉浸式穿梭', category: '大师运镜', prompt: '低机位贴地穿梭，穿透式运镜，穿过缝隙/立柱/门框，纵深空间拉满，沉浸式第一视角，短视频爆款镜头。' },
+    { id: 'tpl-v-cinema-breathe', name: '呼吸微动', category: '大师运镜', prompt: '机位轻微上下浮动，微小左右晃动，模拟真人手持拍摄质感，杜绝死板固定，画面灵动自然，真实电影纪实感。' },
+    { id: 'tpl-v-formula', name: '万能组合公式', category: '组合公式', prompt: '24mm广角、f/8深景深、匀速向前推镜、淡入淡出转场、电影级柔光、8K超清、丝滑稳定运镜、无抖动畸变。' },
     { id: 'tpl-v-character', name: '角色动画', category: '动画', prompt: '3D角色动画，表情生动，动作流畅，骨骼绑定自然，材质真实，光线考究，皮克斯风格。' },
     { id: 'tpl-v-2d-anim', name: '2D动画', category: '动画', prompt: '2D动画风格，帧动画质感，鲜艳色彩，流畅动作，日式动画风格，赛璐璐上色，干净线条。' },
     { id: 'tpl-v-music-visual', name: '音乐可视化', category: '动画', prompt: '音乐可视化效果，节奏感强，粒子动效，色彩随节拍变化，抽象艺术，VJ视觉，电子音乐风格。' },
@@ -1674,16 +1690,7 @@ const PROMPT_TEMPLATES = {
     { id: 'tpl-v-city-life', name: '城市生活', category: '场景', prompt: '城市生活纪实，街道人流，咖啡厅氛围，地铁通勤，霓虹夜景，生活感十足，电影色调。' },
     { id: 'tpl-v-sci-fi', name: '科幻场景', category: '场景', prompt: '科幻场景，未来城市，飞行器，全息投影，机械质感，赛博朋克氛围，高科技感，蓝紫色调。' }
   ],
-  audio: [
-    { id: 'tpl-a-narration', name: '旁白解说', category: '播报', prompt: '专业旁白解说风格，语速适中，吐字清晰，富有感染力，适合纪录片或广告旁白。' },
-    { id: 'tpl-a-news', name: '新闻播报', category: '播报', prompt: '新闻播报风格，语速偏快，节奏紧凑，声音沉稳，客观中立，适合时政或财经新闻。' },
-    { id: 'tpl-a-story', name: '故事讲述', category: '叙述', prompt: '故事讲述风格，语速偏慢，富有感情，语气变化丰富，适合儿童故事或睡前故事，温柔亲切。' },
-    { id: 'tpl-a-poetry', name: '诗歌朗诵', category: '叙述', prompt: '诗歌朗诵风格，语速缓慢，韵律感强，情感充沛，停顿考究，适合古典或现代诗歌朗诵。' },
-    { id: 'tpl-a-ad', name: '广告口播', category: '广告', prompt: '广告口播风格，语速明快，充满活力，感染力强，声音明亮，适合产品推广或品牌广告。' },
-    { id: 'tpl-a-promo', name: '促销播报', category: '广告', prompt: '促销活动播报，语速快，热情奔放，重点突出，声音有冲击力，适合限时优惠或活动宣传。' },
-    { id: 'tpl-a-course', name: '课程讲解', category: '教育', prompt: '课程讲解风格，语速适中，条理清晰，重点突出，声音温和有耐心，适合知识科普或在线课程。' },
-    { id: 'tpl-a-podcast', name: '播客开场', category: '教育', prompt: '播客开场白风格，轻松自然，亲切友好，略带个性，适合音频节目或播客开场介绍。' }
-  ]
+  audio: []
 };
 
 /* ============================================================
@@ -1858,6 +1865,7 @@ const Api = {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), opts.timeout || CONFIG.REQUEST_TIMEOUT);
     try {
+      const isGetHead = method === 'GET' || method === 'HEAD';
       const res = await fetch(url, {
         method,
         headers: {
@@ -1865,7 +1873,7 @@ const Api = {
           ...(key ? { 'Authorization': `Bearer ${key}` } : {}),
           ...(opts.headers || {})
         },
-        body: body ? JSON.stringify(body) : undefined,
+        body: (!isGetHead && body) ? JSON.stringify(body) : undefined,
         signal: controller.signal
       });
       clearTimeout(timer);
@@ -1949,12 +1957,12 @@ const Api = {
 
   async testApiKey() {
     try {
-      await this.request('GET', CONFIG.DETAIL_PATH + '?id=test_probe', {}, { timeout: 10000 });
+      await this.request('GET', CONFIG.DETAIL_PATH + '?id=test_probe', null, { timeout: 10000 });
       return { ok: true };
     } catch (e) {
       if (/no_api_key/.test(e.message)) return { ok: false, error: '未填写 API Key' };
       if (e.status === 401 || e.status === 403) return { ok: false, error: 'API Key 无效' };
-      if (e.status === 400 || /not found|找不到|不存在/.test(e.message)) return { ok: true };
+      if (e.status === 400 || /not found|找不到|不存在|test_probe/.test(e.message)) return { ok: true };
       return { ok: false, error: e.message };
     }
   },
@@ -2386,7 +2394,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V38';
+      document.title = '修的媒体工作台 V42';
     }
   },
 
@@ -2578,9 +2586,9 @@ const UI = {
       const models = MODELS[this.state.tab];
       sel.innerHTML = models.map(mm => `<option value="${esc(mm.id)}" ${mm.id === m.id ? 'selected' : ''}>${esc(mm.name)} · ${esc(mm.price)}</option>`).join('');
     }
-    $('#modelMeta').innerHTML = `<span class="tag type-${m.type}">${typeName(m.type)}</span><span class="tag price">${m.price}</span>`;
+    $('#modelMeta').innerHTML = `<span class="tag type-${m.type}">${typeName(m.type)}</span><span class="tag price">${m.price}</span>${m.desc ? `<span class="tag desc-tag">${esc(m.desc)}</span>` : ''}`;
     const descEl = $('#modelDesc');
-    if (descEl) descEl.textContent = m.desc || '';
+    if (descEl) descEl.textContent = '';
   },
 
   /* ---------- FORM RENDERING ---------- */
@@ -2601,13 +2609,41 @@ const UI = {
       model.refGroups.modes.forEach(m => m.params.forEach(k => refGroupParamKeys.add(k)));
     }
 
+    // Group simple params (select/range) into pairs for compact layout
+    const simpleParams = [];
+    const complexParams = [];
     for (const p of model.params) {
       if (p.type === 'textarea') continue;
-      if (refGroupParamKeys.has(p.key)) continue; // handled by refGroups
+      if (refGroupParamKeys.has(p.key)) continue;
       if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') {
-        container.appendChild(this._buildRefSection(p));
+        complexParams.push({ type: 'ref', param: p });
+      } else if (p.type === 'select' || p.type === 'range' || p.type === 'datalist') {
+        simpleParams.push(p);
       } else {
-        container.appendChild(this._buildFieldRow(p));
+        complexParams.push({ type: 'field', param: p });
+      }
+    }
+
+    // Render simple params in pairs (2-column grid)
+    for (let i = 0; i < simpleParams.length; i += 2) {
+      const pair = simpleParams.slice(i, i + 2);
+      if (pair.length === 2) {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:10px;';
+        row.appendChild(this._buildFieldRow(pair[0]));
+        row.appendChild(this._buildFieldRow(pair[1]));
+        container.appendChild(row);
+      } else {
+        container.appendChild(this._buildFieldRow(pair[0]));
+      }
+    }
+
+    // Render complex params (refs, text, url) full width
+    for (const item of complexParams) {
+      if (item.type === 'ref') {
+        container.appendChild(this._buildRefSection(item.param));
+      } else {
+        container.appendChild(this._buildFieldRow(item.param));
       }
     }
 
@@ -2762,25 +2798,26 @@ const UI = {
     const list = btn.closest('.prompt-module').querySelector('.prompt-history-list');
     const items = Store.getPromptHistory();
     if (list.classList.contains('show')) { list.classList.remove('show'); return; }
-    if (!items.length) { list.innerHTML = '<div class="ph-empty">暂无历史</div>'; }
-    else { list.innerHTML = items.map(p => `<div class="ph-item">${esc(trunc(p, 80))}</div>`).join(''); $$('.ph-item', list).forEach((el, i) => el.addEventListener('click', () => { const ta = btn.closest('.prompt-module').querySelector('textarea'); ta.value = items[i]; this._onPromptInput(ta); list.classList.remove('show'); })); }
+    if (!items.length) {
+      list.innerHTML = '<div class="ph-empty">暂无历史</div>';
+    } else {
+      list.innerHTML = items.map(p => `<div class="ph-item">${esc(trunc(p, 80))}</div>`).join('');
+      list.innerHTML += '<div class="ph-clear" id="phClearBtn" style="padding:8px 12px;font-size:11px;color:var(--danger);text-align:center;cursor:pointer;border-top:1px solid var(--border-soft);">清空历史</div>';
+      $$('.ph-item', list).forEach((el, i) => el.addEventListener('click', () => { const ta = btn.closest('.prompt-module').querySelector('textarea'); ta.value = items[i]; this._onPromptInput(ta); list.classList.remove('show'); }));
+      const clearBtn = list.querySelector('#phClearBtn');
+      if (clearBtn) clearBtn.addEventListener('click', () => {
+        if (confirm('确定清空所有提示词历史？')) {
+          storageSet(CONFIG.STORAGE_KEYS.PROMPT_HISTORY, '[]');
+          list.classList.remove('show');
+          Toast.success('已清空');
+        }
+      });
+    }
     const rect = btn.getBoundingClientRect();
     list.style.position = 'fixed';
     list.style.top = (rect.bottom + 4) + 'px';
     list.style.left = rect.left + 'px';
     list.classList.add('show');
-  },
-
-  _insertInspiration(ta) {
-    const insp = PROMPT_INSPIRATIONS[Math.floor(Math.random() * PROMPT_INSPIRATIONS.length)];
-    ta.value = ta.value.trim() ? `${ta.value.replace(/[，,]\s*$/, '')}，${insp}` : insp;
-    this._onPromptInput(ta);
-    Toast.success('已添加灵感提示词');
-  },
-
-  _copyPrompt(ta) {
-    if (!ta.value.trim()) { Toast.warning('提示词为空'); return; }
-    copy(ta.value).then(ok => ok ? Toast.success('已复制') : Toast.error('复制失败'));
   },
 
   _clearPrompt(ta) {
