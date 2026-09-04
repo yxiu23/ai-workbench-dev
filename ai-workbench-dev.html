@@ -1870,7 +1870,7 @@ const Api = {
         method,
         headers: {
           'Content-Type': 'application/json',
-          ...(key ? { 'Authorization': `Bearer ${key}` } : {}),
+          ...(key ? { 'Authorization': key } : {}),
           ...(opts.headers || {})
         },
         body: (!isGetHead && body) ? JSON.stringify(body) : undefined,
@@ -1899,6 +1899,10 @@ const Api = {
 
   normalizeResponse(res) {
     if (!res) return null;
+    // Check API-level error (HTTP 200 but code != 200)
+    if (res.code && res.code !== 200) {
+      throw new Error(res.msg || res.message || `API错误: code ${res.code}`);
+    }
     if (typeof res.data === 'string') return { id: res.data, ...res };
     if (res.data && typeof res.data === 'object') return res.data;
     return res;
@@ -1908,7 +1912,7 @@ const Api = {
     const res = await this.request('POST', model.endpoint, body);
     const data = this.normalizeResponse(res);
     const id = data.id || data.taskId || data.requestId;
-    if (!id) throw new Error('服务未返回任务 ID');
+    if (!id) throw new Error('服务未返回任务 ID，响应: ' + JSON.stringify(data).slice(0, 200));
     return { id: String(id), raw: data };
   },
 
@@ -2403,7 +2407,7 @@ const UI = {
     $('#tabs').addEventListener('click', e => { const t = e.target.closest('.tab'); if (t) this.switchTab(t.dataset.tab); });
     $('#modelSelect').addEventListener('change', e => {
       const m = MODELS[this.state.tab].find(x => x.id === e.target.value);
-      if (m) { this.state.model = m; this.state.modelKey = `${this.state.tab}/${m.id}`; this._updateModelBar(); this.renderParamForm(m.id); this._restoreFormFromCache(); }
+      if (m) { this._saveFormToCache(); this.state.model = m; this.state.modelKey = `${this.state.tab}/${m.id}`; this._updateModelBar(); this.renderParamForm(m.id); this._restoreFormFromCache(); }
     });
     $('#filterTabs').addEventListener('click', e => { const t = e.target.closest('.filter-tab'); if (t) { $$('#filterTabs .filter-tab').forEach(x => x.classList.remove('active')); t.classList.add('active'); this.state.filter = t.dataset.filter; this._renderTaskList(); } });
     $('#dateFilterTabs').addEventListener('click', e => { const t = e.target.closest('.filter-tab'); if (t) { $$('#dateFilterTabs .filter-tab').forEach(x => x.classList.remove('active')); t.classList.add('active'); this.state.dateFilter = t.dataset.date; this._renderTaskList(); } });
