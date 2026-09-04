@@ -4168,9 +4168,21 @@ ${items.map(h => {
     if (!this.state.model) return;
     const cache = {};
     const ta = $('[data-key="prompt"], [data-key="text"]');
-    if (ta) cache[ta.dataset.key] = ta.value;
+    if (ta) {
+      cache[ta.dataset.key] = ta.value;
+      // Also save prompt per-tab for cross-model persistence
+      this.state.formCache[this.state.tab + '_prompt'] = ta.value;
+    }
     for (const p of this.state.model.params) {
-      if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') { cache[p.key] = JSON.parse(JSON.stringify(this._getRefs(p.key))); }
+      if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') {
+        cache[p.key] = JSON.parse(JSON.stringify(this._getRefs(p.key)));
+        // Also save refs per-tab for cross-model persistence
+        if (!this.state.formCache[this.state.tab + '_refs']) this.state.formCache[this.state.tab + '_refs'] = {};
+        // Find a common ref key (urls/images/first_frame etc.)
+        if (p.key === 'urls' || p.key === 'images' || p.key === 'first_frame' || p.key === 'last_frame' || p.key === 'firstFrameUrl' || p.key === 'lastFrameUrl') {
+          this.state.formCache[this.state.tab + '_refs'][p.key] = JSON.parse(JSON.stringify(this._getRefs(p.key)));
+        }
+      }
       else { const el = $(`[data-key="${p.key}"]`); if (el) cache[p.key] = el.value; }
     }
     this.state.formCache[this.state.modelKey] = cache;
@@ -4178,11 +4190,34 @@ ${items.map(h => {
 
   _restoreFormFromCache() {
     const cache = this.state.formCache[this.state.modelKey];
-    if (!cache) return;
+    // Restore prompt from tab-level cache if model-level cache doesn't have it
+    const tabPrompt = this.state.formCache[this.state.tab + '_prompt'];
+    const tabRefs = this.state.formCache[this.state.tab + '_refs'] || {};
+    
+    // Restore prompt
+    const promptParam = this.state.model.params.find(p => p.type === 'textarea');
+    if (promptParam) {
+      const ta = $('[data-key="prompt"], [data-key="text"]');
+      if (ta) {
+        const promptVal = (cache && cache[promptParam.key]) || tabPrompt || promptParam.default || '';
+        ta.value = promptVal;
+        this._onPromptInput(ta);
+      }
+    }
+    
+    // Restore refs - try model cache first, then tab cache
     for (const p of this.state.model.params) {
       if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') {
-        if (cache[p.key]) { this.state.refState[this.state.modelKey] = this.state.refState[this.state.modelKey] || {}; this.state.refState[this.state.modelKey][p.key] = cache[p.key]; this._renderRefGrid(p.key); }
-      } else { const el = $(`[data-key="${p.key}"]`); if (el && cache[p.key] != null) { el.value = cache[p.key]; this._onFieldChange(p.key, el); } }
+        const refData = (cache && cache[p.key]) || tabRefs[p.key];
+        if (refData && refData.length > 0) {
+          this.state.refState[this.state.modelKey] = this.state.refState[this.state.modelKey] || {};
+          this.state.refState[this.state.modelKey][p.key] = JSON.parse(JSON.stringify(refData));
+          this._renderRefGrid(p.key);
+        }
+      } else if (p.type !== 'textarea') {
+        const el = $(`[data-key="${p.key}"]`);
+        if (el && cache && cache[p.key] != null) { el.value = cache[p.key]; this._onFieldChange(p.key, el); }
+      }
     }
   },
 
