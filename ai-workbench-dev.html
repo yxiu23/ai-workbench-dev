@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>修的媒体工作台 V36</title>
+<title>修的媒体工作台 V37</title>
 <style>
 /* ============================================================
    主题变量
@@ -935,6 +935,50 @@ textarea { resize: vertical; min-height: 80px; }
   .editor-body { flex-direction: column; }
   .editor-tools { width: 100%; max-height: 200px; border-right: none; border-bottom: 1px solid var(--border); }
 }
+
+/* ============================================================
+   P0+P1 艺术化升级
+   ============================================================ */
+
+/* 噪点纹理 - 消除纯色塑料感 */
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  opacity: .015; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+}
+.app-header, .param-panel, .result-panel, .settings-drawer, .history-sidebar { position: relative; z-index: 1; }
+
+/* 模型类型色彩区分 */
+.tag.type-image { color: var(--brand); background: var(--brand-soft); }
+.tag.type-video { color: #b07cf5; background: rgba(176,124,245,.12); }
+.tag.type-audio { color: var(--success); background: var(--success-soft); }
+
+/* 骨架屏 */
+.skeleton-card {
+  border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: var(--surface);
+}
+.skeleton-line { height: 12px; border-radius: 6px; background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%); background-size: 200% 100%; animation: shimmer-skel 1.5s infinite; }
+@keyframes shimmer-skel { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* 结果出现动画 - 模糊→清晰 */
+@keyframes result-appear { from { opacity: 0; filter: blur(8px); transform: scale(1.02); } to { opacity: 1; filter: blur(0); transform: scale(1); } }
+.result-media img, .result-media video { animation: result-appear 600ms cubic-bezier(.32,.72,0,1) both; }
+
+/* 按钮涟漪 */
+.ripple { position: absolute; border-radius: 50%; background: rgba(255,255,255,.3); pointer-events: none; transform: scale(0); animation: ripple-anim 600ms ease-out; }
+@keyframes ripple-anim { to { transform: scale(4); opacity: 0; } }
+
+/* 渐变分隔线 */
+.gradient-divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent); margin: 14px 0; }
+
+/* 等宽数字 */
+.estimate-cost .amount, .card-cost, .stats-card .sc-value { font-variant-numeric: tabular-nums; }
+
+/* 空状态专属图标 */
+.empty-state[data-type="image"] svg { color: var(--brand); }
+.empty-state[data-type="video"] svg { color: #b07cf5; }
+.empty-state[data-type="audio"] svg { color: var(--success); }
+
 </style>
 </head>
 <body>
@@ -951,7 +995,7 @@ textarea { resize: vertical; min-height: 80px; }
   <div class="brand">
     <div>
       <div class="brand-name">修的媒体工作台</div>
-      <div class="brand-sub">V36 · 艺术版</div>
+      <div class="brand-sub">V37 · 精工版</div>
     </div>
   </div>
   <div class="header-spacer"></div>
@@ -1144,7 +1188,7 @@ textarea { resize: vertical; min-height: 80px; }
     <div class="settings-section">
       <h4>关于</h4>
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V36<br>
+        修的媒体工作台 V37<br>
         支持图片、视频、音频生成<br>
         API: api.wuyinkeji.com
       </div>
@@ -2341,7 +2385,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V36';
+      document.title = '修的媒体工作台 V37';
     }
   },
 
@@ -2424,6 +2468,21 @@ const UI = {
     this.bindGlobalPaste();
     this.bindGlobalDrop();
     this.bindKeyboard();
+  // P1: Button ripple effect
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('.generate-btn, .workflow-btn, .tab, .ref-mode-btn, .header-btn, .filter-tab');
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    const size = Math.max(rect.width, rect.height);
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = (e.clientX - rect.left - size/2) + 'px';
+    ripple.style.top = (e.clientY - rect.top - size/2) + 'px';
+    btn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+  }, true);
+
   },
 
   bindKeyboard() {
@@ -2518,7 +2577,7 @@ const UI = {
       const models = MODELS[this.state.tab];
       sel.innerHTML = models.map(mm => `<option value="${esc(mm.id)}" ${mm.id === m.id ? 'selected' : ''}>${esc(mm.name)} · ${esc(mm.price)}</option>`).join('');
     }
-    $('#modelMeta').innerHTML = `<span class="tag">${typeName(m.type)}</span><span class="tag price">${m.price}</span>`;
+    $('#modelMeta').innerHTML = `<span class="tag type-${m.type}">${typeName(m.type)}</span><span class="tag price">${m.price}</span>`;
     const descEl = $('#modelDesc');
     if (descEl) descEl.textContent = m.desc || '';
   },
