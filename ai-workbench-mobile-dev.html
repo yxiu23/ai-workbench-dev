@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="format-detection" content="telephone=no">
-<title>修的媒体工作台 V42</title>
+<title>修的媒体工作台 V43</title>
 <style>
 /* ============================================================
    主题变量与安全区域
@@ -105,7 +105,7 @@ select { background-image: none; padding-right: 32px; }
    ============================================================ */
 .header {
   height: calc(var(--header-h) + var(--safe-top));
-  /* padding-top handled by shorthand */
+  
   display: flex; align-items: center; justify-content: space-between;
   padding: var(--safe-top) 12px 0;
   background: rgba(8,11,20,.60); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
@@ -173,8 +173,6 @@ select { background-image: none; padding-right: 32px; }
 .tag { font-size: 10px; padding: 3px 9px; border-radius: 999px; font-weight: 500; }
 .tag.price { background: var(--success-soft); color: var(--success); }
 .tag.desc-tag { background: var(--surface-2); color: var(--text-muted); font-weight: 400; max-width: 100%; white-space: normal; line-height: 1.4; }
-.tag.async { background: var(--brand-soft); color: var(--brand); }
-.tag.sync { background: var(--warning-soft); color: var(--warning); }
 
 /* ============================================================
    提示词模块 (unified)
@@ -467,7 +465,7 @@ select { background-image: none; padding-right: 32px; }
 /* ============================================================
    编辑器 (inpaint + outpaint)
    ============================================================ */
-.editor { position: fixed; inset: 0; background: var(--bg-elev); z-index: 150; display: none; flex-direction: column; /* padding-top handled by shorthand */ }
+.editor { position: fixed; inset: 0; background: var(--bg-elev); z-index: 150; display: none; flex-direction: column;  }
 .editor.show { display: flex; }
 .editor-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; border-bottom: 1px solid var(--border); height: 48px; flex-shrink: 0; }
 .editor-header h3 { font-size: 15px; }
@@ -740,7 +738,7 @@ body::before {
   </div>
   <div class="settings-section">
     <div class="settings-section-title">关于</div>
-    <div class="settings-about">修的媒体工作台 V42 · 速创 API</div>
+    <div class="settings-about">修的媒体工作台 V43 · 速创 API</div>
   </div>
 </div>
 
@@ -2291,7 +2289,7 @@ const UI = {
     if (dock) dock.style.display = running.length > 0 ? 'flex' : 'none';
     if (btn) btn.style.display = running.length > 0 ? 'flex' : 'none';
     if (badge) badge.textContent = running.length > 0 ? String(running.length) : '0';
-    document.title = running.length > 0 ? `⏳ ${running.length}个任务 · AI 工作台` : '修的媒体工作台 V42';
+    document.title = running.length > 0 ? `⏳ ${running.length}个任务 · AI 工作台` : '修的媒体工作台 V43';
   },
   updateViewBadge() {
     const badge = $('#viewBadge');
