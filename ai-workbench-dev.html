@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>修的媒体工作台 V59</title>
+<title>修的媒体工作台 V60</title>
 <style>
 /* ============================================================
    主题变量
@@ -1419,7 +1419,7 @@ body::before {
     <div class="settings-section">
       <h4>关于</h4>
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V59<br>
+        修的媒体工作台 V60<br>
         支持图片、视频、音频生成<br>
         API: api.wuyinkeji.com
       </div>
@@ -3196,7 +3196,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V59';
+      document.title = '修的媒体工作台 V60';
     }
   },
 
@@ -4282,8 +4282,8 @@ const UI = {
         <select id="plPackage">${this._PIPELINE_PACKAGES.map(p => `<option value="${esc(p.id)}" ${p.id === state.package ? 'selected' : ''}>${esc(p.label)}</option>`).join('')}</select>
       </div>
       <div class="param-group" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px 12px">
-        <div class="field-label">底片选择<span class="field-hint">数字人形象视频（≥10秒，从R2或上传）</span></div>
-        <div id="plBaseImageArea" style="margin-top:6px"></div>
+        <div class="field-label">底片选择<span class="field-hint">数字人形象视频（≥10秒）</span></div>
+        <div class="ref-grid" id="plBaseGrid" data-ref-grid="plBase" style="margin-top:6px"></div>
         <input type="file" id="plFileInput" accept="image/*,video/*" style="display:none">
       </div>
       <div class="pipeline-steps" id="plSteps"></div>
@@ -4293,42 +4293,38 @@ const UI = {
     $('#plVoice').addEventListener('change', e => { state.voice = e.target.value; });
     $('#plSpeed').addEventListener('input', e => { state.speed = parseFloat(e.target.value); $('#plSpeedVal').textContent = state.speed.toFixed(1) + '×'; });
     $('#plPackage').addEventListener('change', e => { state.package = e.target.value; this._updatePipelineEstimate(); });
-    // 底片上传：参考ref-grid的展示逻辑
-    const baseArea = $('#plBaseImageArea');
-    const renderBaseImage = () => {
-      if (!state.baseImage) {
-        baseArea.innerHTML = `<div class="ref-add" style="border:2px dashed var(--border);border-radius:var(--radius-sm);padding:20px;text-align:center;cursor:pointer;color:var(--text-dim);font-size:12px" id="plAddBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:24px;height:24px;margin-bottom:6px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <div>点击上传底片</div><div style="font-size:10px;margin-top:2px">图片或视频，≥10秒</div></div>`;
-        $('#plAddBtn').addEventListener('click', () => $('#plFileInput').click());
-      } else {
-        const isVideo = /\.(mp4|webm|mov|avi)(\?|$)/i.test(state.baseImage);
-        const media = isVideo
-          ? `<video src="${esc(state.baseImage)}" muted preload="metadata" style="width:100%;height:100%;object-fit:cover"></video>`
-          : `<img src="${esc(state.baseImage)}" loading="lazy" style="width:100%;height:100%;object-fit:cover">`;
-        baseArea.innerHTML = `<div style="display:flex;gap:8px;align-items:flex-start">
-          <div class="ref-item" style="width:96px;height:96px;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border);position:relative;flex-shrink:0">${media}
-            <button id="plRemoveBtn" style="position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;border:none;cursor:pointer;font-size:12px;line-height:1">×</button>
-          </div>
-          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
-            <div style="font-size:11px;color:var(--text-dim);word-break:break-all">${esc(state.baseImage.substring(0,60))}${state.baseImage.length>60?'...':''}</div>
-            <button class="workflow-btn" id="plChangeBtn" style="align-self:flex-start">更换底片</button>
-          </div>
-        </div>`;
-        $('#plRemoveBtn').addEventListener('click', () => { state.baseImage = ''; renderBaseImage(); });
-        $('#plChangeBtn').addEventListener('click', () => $('#plFileInput').click());
-      }
-    };
-    renderBaseImage();
+    // 底片上传：复用ref-grid展示逻辑
+    this._renderPipelineBaseGrid();
     $('#plFileInput').addEventListener('change', async e => {
       const file = e.target.files[0];
       if (!file) return;
+      const isVideo = /^video\//.test(file.type);
       try {
         Toast.info('底片上传中...');
-        const url = await Api.uploadToR2(file);
-        state.baseImage = url;
-        renderBaseImage();
-        Toast.success('底片已上传');
+        if (isVideo) {
+          if (file.size > 100 * 1024 * 1024) { Toast.error('视频不能超过 100MB'); return; }
+          const url = URL.createObjectURL(file);
+          state._baseLocal = { src: url, name: file.name, file, uploaded: false, remote: null, uploadError: null };
+          this._renderPipelineBaseGrid();
+          const r2url = await Api.uploadToR2(file);
+          state._baseLocal.remote = r2url; state._baseLocal.uploaded = true; state.baseImage = r2url;
+          this._renderPipelineBaseGrid();
+          Toast.success('底片已上传');
+        } else {
+          if (file.size > 10 * 1024 * 1024) { Toast.error('图片不能超过 10MB'); return; }
+          const reader = new FileReader();
+          reader.onload = async ev => {
+            state._baseLocal = { src: ev.target.result, name: file.name, uploaded: false, remote: null, uploadError: null };
+            this._renderPipelineBaseGrid();
+            try {
+              const r2url = await Api.uploadToR2(file);
+              state._baseLocal.remote = r2url; state._baseLocal.uploaded = true; state.baseImage = r2url;
+              this._renderPipelineBaseGrid();
+              Toast.success('底片已上传');
+            } catch (err) { state._baseLocal.uploadError = err.message; this._renderPipelineBaseGrid(); Toast.error('上传失败: ' + err.message); }
+          };
+          reader.readAsDataURL(file);
+        }
       } catch (err) { Toast.error('上传失败: ' + err.message); }
       e.target.value = '';
     });
@@ -4347,6 +4343,46 @@ const UI = {
     const total = ttsCost + videoCost + packageCost;
     const el = $('#estimateCost');
     if (el) el.innerHTML = `预计 <span class="amount">¥${total.toFixed(4)}</span> · 文本 ${charLen}字 × ¥0.0006 + 视频 ${estDuration}s × ¥0.02 + 包装 ${estDuration}s × ¥0.02`;
+  },
+
+  _renderPipelineBaseGrid() {
+    const grid = $('#plBaseGrid');
+    if (!grid) return;
+    const state = this.state.pipeline || {};
+    const base = state._baseLocal;
+    // 如果已有底片（URL或本地上传）
+    if (base && (base.src || base.remote)) {
+      const isUploading = !base.uploaded && !base.uploadError;
+      const isUploadError = !!base.uploadError;
+      let badge = '';
+      if (isUploading) badge = '<span class="ref-badge uploading">上传中</span>';
+      else if (isUploadError) badge = '<span class="ref-badge" style="background:var(--danger-soft);color:var(--danger)">失败</span>';
+      const localBadge = (!base.uploaded && !isUploadError) ? '<span class="ref-badge local">本地</span>' : (isUploadError ? badge : '');
+      const progressHtml = isUploading ? '<div class="ref-upload-progress"><div class="ref-upload-bar" style="width:0%"></div></div><span class="ref-upload-pct">0%</span>' : '';
+      const isVideo = /\.(mp4|webm|mov|avi)(\?|$)/i.test(base.src || base.remote || '');
+      const media = isVideo ? `<video src="${esc(base.src || base.remote)}" muted></video>` : `<img src="${esc(base.src || base.remote)}" loading="lazy" referrerpolicy="no-referrer">`;
+      grid.innerHTML = `<div class="ref-item ${isVideo ? 'ref-item-video' : ''}">${media}${localBadge}${progressHtml}<button class="ref-del" id="plBaseDel">×</button><button class="ref-copy" id="plBaseCopy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>`;
+      $('#plBaseDel').addEventListener('click', () => {
+        if (base.src && base.src.startsWith('blob:')) URL.revokeObjectURL(base.src);
+        state._baseLocal = null; state.baseImage = '';
+        this._renderPipelineBaseGrid();
+      });
+      $('#plBaseCopy').addEventListener('click', () => {
+        if (base.remote) copy(base.remote).then(ok => ok ? Toast.success('URL 已复制') : Toast.error('复制失败'));
+        else Toast.warning('底片正在上传中');
+      });
+    } else if (state.baseImage) {
+      // 只有URL，没有本地文件
+      const isVideo = /\.(mp4|webm|mov|avi)(\?|$)/i.test(state.baseImage);
+      const media = isVideo ? `<video src="${esc(state.baseImage)}" muted></video>` : `<img src="${esc(state.baseImage)}" loading="lazy" referrerpolicy="no-referrer">`;
+      grid.innerHTML = `<div class="ref-item ${isVideo ? 'ref-item-video' : ''}">${media}<button class="ref-del" id="plBaseDel">×</button><button class="ref-copy" id="plBaseCopy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>`;
+      $('#plBaseDel').addEventListener('click', () => { state.baseImage = ''; this._renderPipelineBaseGrid(); });
+      $('#plBaseCopy').addEventListener('click', () => copy(state.baseImage).then(ok => ok ? Toast.success('URL 已复制') : Toast.error('复制失败')));
+    } else {
+      // 空状态：显示添加按钮（与其他模式一致的ref-add样式）
+      grid.innerHTML = `<div class="ref-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加</div>`;
+      grid.querySelector('.ref-add').addEventListener('click', () => $('#plFileInput').click());
+    }
   },
 
   _renderPipelineSteps() {
@@ -4429,7 +4465,7 @@ const UI = {
       const text = await res.text();
       let data; try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }
       if (!res.ok) throw new Error(data.error || data.message || `HTTP ${res.status}`);
-      const workerId = data.id || data.taskId;
+      const workerId = data.id || data.taskId || data.task?.id;
       if (!workerId) throw new Error('任务中心未返回任务 ID');
       // Register with TaskCenter so polling picks it up
       TaskCenter._submitted.set(taskId, { task: { id: taskId }, lastStatus: 'processing', startTime: Date.now(), workerId: String(workerId), isPipeline: true });
