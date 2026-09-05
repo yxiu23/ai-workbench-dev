@@ -49,8 +49,7 @@
         location.replace(saved === 'mobile' ? 'ai-workbench-mobile-dev.html' : 'ai-workbench-dev.html');
         return;
       }
-      var ua = navigator.userAgent || '';
-      var isMobile = /Android|iPhone|iPad|iPod|Windows Phone|BlackBerry|Mobile|Nokia/i.test(ua) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches && window.innerWidth < 900);
+      var isMobile = window.innerWidth <= 768 || /Android|iPhone|iPod|Windows Phone|BlackBerry|Mobile/i.test(navigator.userAgent || '');
       document.getElementById('choices').addEventListener('click', function(e) {
         var choice = e.target.closest('.choice');
         if (!choice) return;

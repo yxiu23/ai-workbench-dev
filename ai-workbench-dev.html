@@ -2,14 +2,22 @@
 <html lang="zh-CN" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>修的媒体工作台 V60</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#080b14" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
+<title>修的媒体工作台 V61</title>
 <style>
 /* ============================================================
    主题变量
    ============================================================ */
 :root {
-  color-scheme: dark;
+  color-scheme: light dark;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
   --brand: #5b7ff5;
   --brand-hover: #4a6ee0;
   --brand-soft: rgba(91,127,245,.12);
@@ -1142,16 +1150,211 @@ input[type="range"].im-range {
 .batch-model-item .bm-price { font-size: 11px; color: var(--success); margin-top: 4px; font-weight: 500; }
 
 /* ============================================================
-   响应式
+   响应式 — 移动端适配 (iOS26 Liquid Glass + 安全区自适应)
    ============================================================ */
+
+/* 平板：窄屏双栏→单栏堆叠 */
 @media (max-width: 1024px) {
   .app-body { grid-template-columns: 1fr; }
-  .param-panel { border-right: none; border-bottom: 1px solid var(--border); max-height: 60vh; }
-  .result-panel { min-height: 40vh; }
+  .param-panel { border-right: none; border-bottom: 1px solid var(--border); max-height: 55vh; }
+  .result-panel { min-height: 45vh; }
+  .icon-btn-text { display: none; }
+  .icon-btn { padding: 0 8px; }
 }
-@media (max-width: 640px) {
-  .param-panel { padding: 8px; }
-  .result-body { padding: 8px; }
+
+/* 手机：完整移动适配 */
+@media (max-width: 768px) {
+  :root {
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+  }
+  /* 安全区适配 */
+  .app-header {
+    padding-top: var(--safe-top);
+    height: calc(52px + var(--safe-top));
+  }
+  .app-body {
+    padding-bottom: var(--safe-bottom);
+  }
+  /* 布局：上下堆叠 + 视图切换 */
+  .app-body {
+    display: flex;
+    flex-direction: column;
+  }
+  .param-panel {
+    flex: 1;
+    max-height: none;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 12px;
+    padding-left: max(12px, var(--safe-left));
+    padding-right: max(12px, var(--safe-right));
+    display: none;
+  }
+  .param-panel.mobile-active { display: flex; }
+  .result-panel {
+    flex: 1;
+    min-height: 0;
+    display: none;
+  }
+  .result-panel.mobile-active { display: flex; }
+  /* 移动端视图切换栏 */
+  .mobile-view-switch {
+    display: flex !important;
+    position: sticky;
+    top: calc(52px + var(--safe-top));
+    z-index: 15;
+    background: var(--bg-elev);
+    border-bottom: 1px solid var(--border);
+    padding: 0 max(12px, var(--safe-left));
+  }
+  .mobile-view-switch button {
+    flex: 1;
+    padding: 8px 0;
+    border: none;
+    background: none;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all var(--transition-fast);
+  }
+  .mobile-view-switch button.active {
+    color: var(--brand);
+    border-bottom-color: var(--brand);
+  }
+  /* Header紧凑 */
+  .brand-name { font-size: 13px; }
+  .header-btn, .icon-btn {
+    width: 36px; height: 36px;
+    border-radius: 9px;
+  }
+  .header-btn svg, .icon-btn svg { width: 18px; height: 18px; }
+  /* 结果区单列 */
+  .result-list { grid-template-columns: 1fr !important; gap: 10px; }
+  .result-body {
+    padding: 8px max(12px, var(--safe-left)) calc(8px + var(--safe-bottom));
+  }
+  /* 结果header紧凑 */
+  .result-header {
+    padding: 6px max(10px, var(--safe-left));
+    gap: 4px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+  .result-search-wrap { min-width: 80px; flex: 1; }
+  .result-search-input { font-size: 11px; padding: 4px 6px 4px 24px; }
+  .sort-select { font-size: 11px; min-width: 90px; }
+  /* 表单元素触控优化 */
+  .param-panel input[type="text"],
+  .param-panel input[type="number"],
+  .param-panel select,
+  .param-panel textarea {
+    min-height: 40px;
+    font-size: 15px;
+  }
+  .param-panel textarea { min-height: 60px; }
+  /* 生成按钮区域适配安全区 */
+  .gen-section {
+    padding-bottom: max(10px, var(--safe-bottom));
+  }
+  /* 弹窗移动化 */
+  .settings-drawer {
+    width: 100vw;
+    max-width: 100vw;
+    height: 85vh;
+    border-radius: 16px 16px 0 0;
+    top: auto;
+    bottom: 0;
+    right: 0;
+    transform: translateY(100%);
+    padding: 0 max(16px, var(--safe-left)) max(16px, var(--safe-bottom));
+  }
+  .settings-drawer.show { transform: translateY(0); }
+  .history-sidebar {
+    width: 100vw;
+    max-width: 100vw;
+    border-radius: 16px 16px 0 0;
+    top: auto;
+    bottom: 0;
+    right: 0;
+    transform: translateX(0) translateY(100%);
+  }
+  .history-sidebar.show { transform: translateY(0); }
+  /* ImageMarker编辑器移动适配 */
+  .im-overlay {
+    flex-direction: column !important;
+    padding: calc(20px + var(--safe-top)) 8px calc(80px + var(--safe-bottom)) !important;
+    gap: 8px !important;
+  }
+  .im-float-tools {
+    width: 100% !important;
+    flex-direction: row !important;
+    overflow-x: auto;
+    padding: 4px 8px !important;
+  }
+  .im-float-tools .im-tool-btn.active::after { display: none; }
+  .im-float-tools .im-tool-divider { width: 1px; height: 22px; margin: 0 3px; }
+  .im-float-canvas { max-width: 100% !important; flex: 1; }
+  .im-float-sidebar {
+    width: 100% !important;
+    max-height: 160px;
+  }
+  .im-bottom-bar {
+    bottom: calc(8px + var(--safe-bottom)) !important;
+    width: calc(100% - 16px);
+  }
+  /* 液态玻璃增强 */
+  .app-header, .result-header {
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+  }
+  .settings-drawer, .history-sidebar {
+    -webkit-backdrop-filter: blur(40px) saturate(200%);
+    backdrop-filter: blur(40px) saturate(200%);
+  }
+  /* 模态框全屏 */
+  .modal-overlay .modal-content {
+    width: 95vw;
+    max-width: 95vw;
+    max-height: 90vh;
+    border-radius: 16px;
+  }
+  /* Tab紧凑 */
+  .filter-tabs { gap: 2px; padding: 2px; }
+  .filter-tab { padding: 4px 8px; font-size: 12px; }
+  /* 提示词区域 */
+  .prompt-module { padding: 10px; }
+  .prompt-actions { gap: 2px; flex-wrap: wrap; }
+  .tool-btn { padding: 4px 8px; font-size: 11px; }
+  /* 参考图网格 */
+  .ref-grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 6px; }
+  /* 批量面板 */
+  .batch-panel { padding: 10px; }
+}
+
+/* 小手机：进一步压缩 */
+@media (max-width: 380px) {
+  .brand-name { display: none; }
+  .filter-tab { padding: 3px 6px; font-size: 11px; }
+  .result-search-wrap { min-width: 60px; }
+}
+
+/* 移动端视图切换栏（桌面隐藏） */
+.mobile-view-switch { display: none; }
+
+/* iOS26 液态玻璃：支持backdrop-filter的元素增强 */
+@supports (backdrop-filter: blur(20px)) or (-webkit-backdrop-filter: blur(20px)) {
+  .app-header, .settings-drawer, .history-sidebar, .im-float, .im-bottom-bar {
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+  }
+  /* iOS26 liquid glass: 边框+高光 */
+  .im-float, .im-bottom-bar {
+    border: 0.5px solid rgba(255,255,255,.08);
+    box-shadow: 0 8px 32px rgba(0,0,0,.25), inset 0 0.5px 0 rgba(255,255,255,.06);
+  }
 }
 
 /* ============================================================
@@ -1209,10 +1412,16 @@ body::before {
   <button class="guide-close" id="guideClose">×</button>
 </div>
 
+<!-- 移动端视图切换栏 -->
+<div class="mobile-view-switch" id="mobileViewSwitch">
+  <button class="active" data-mview="param">编辑</button>
+  <button data-mview="result">结果</button>
+</div>
+
 <!-- 主体 -->
 <div class="app-body">
   <!-- 参数面板 -->
-  <aside class="param-panel" id="paramPanel">
+  <aside class="param-panel mobile-active" id="paramPanel">
     <!-- Tabs -->
     <div class="tabs" id="tabs">
       <button class="tab active" data-tab="image">
@@ -1271,7 +1480,7 @@ body::before {
   </aside>
 
   <!-- 结果面板 -->
-  <main class="result-panel">
+  <main class="result-panel" id="resultPanel">
     <div class="result-header">
       <div class="filter-tabs" id="filterTabs">
         <button class="filter-tab active" data-filter="all">全部</button>
@@ -1419,7 +1628,7 @@ body::before {
     <div class="settings-section">
       <h4>关于</h4>
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V60<br>
+        修的媒体工作台 V61<br>
         支持图片、视频、音频生成<br>
         API: api.wuyinkeji.com
       </div>
@@ -3182,6 +3391,7 @@ const UI = {
     this._startTitleTimer();
     this._startTaskCardTicker();
     this.renderHistoryBadge();
+    this._bindMobileViewSwitch();
     // V56: init TaskCenter (async, non-blocking; falls back to local polling)
     if (typeof TaskCenter !== 'undefined') {
       TaskCenter.init().catch(() => {});
@@ -3200,7 +3410,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V60';
+      document.title = '修的媒体工作台 V61';
     }
   },
 
@@ -5843,6 +6053,28 @@ ${items.map(h => {
   },
 
   /* ---------- CONNECTIVITY ---------- */
+  /* ---------- MOBILE VIEW SWITCH ---------- */
+  _bindMobileViewSwitch() {
+    const sw = $('#mobileViewSwitch');
+    if (!sw) return;
+    sw.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const view = btn.dataset.mview;
+        sw.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
+        $('#paramPanel').classList.toggle('mobile-active', view === 'param');
+        $('#resultPanel').classList.toggle('mobile-active', view === 'result');
+      });
+    });
+    // 切换到结果视图的快捷方式：点击生成后、点击结果缩略图
+    $('#generateBtn')?.addEventListener('click', () => {
+      setTimeout(() => {
+        if (window.innerWidth <= 768) {
+          sw.querySelector('[data-mview="result"]')?.click();
+        }
+      }, 500);
+    });
+  },
+
   _bindConnectivity() {
     window.addEventListener('offline', () => {
       Toast.warning('网络已断开，生成功能暂停');
