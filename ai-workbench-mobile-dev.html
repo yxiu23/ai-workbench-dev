@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="format-detection" content="telephone=no">
-<title>修的媒体工作台 V56</title>
+<title>修的媒体工作台 V60</title>
 <style>
 /* ============================================================
    主题变量与安全区域
@@ -106,7 +106,7 @@ select { background-image: none; padding-right: 32px; }
   height: calc(var(--header-h) + var(--safe-top));
   display: flex; align-items: center; justify-content: space-between;
   padding: var(--safe-top) 12px 0;
-  background: rgba(8,11,20,.60); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  background: var(--surface); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-soft); z-index: 30; position: relative; flex-shrink: 0;
 }
 [data-theme="light"] .header { background: rgba(255,255,255,.70); }
@@ -425,13 +425,13 @@ select { background-image: none; padding-right: 32px; }
 .tabbar {
   position: fixed; bottom: 0; left: 0; right: 0; height: calc(var(--tabbar-h) + var(--safe-bottom));
   padding-bottom: var(--safe-bottom);
-  background: rgba(8,11,20,.60); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  background: var(--surface); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border-soft); display: flex; z-index: 20;
 }
-[data-theme="light"] .tabbar { background: rgba(255,255,255,.70); }
+[data-theme="light"] .tabbar { background: rgba(255,255,255,.85); }
 .tab {
   flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
-  color: var(--text-muted); font-size: 11px; line-height: 1; position: relative; min-height: var(--tabbar-h);
+  color: var(--text-muted); font-size: 10px; line-height: 1; position: relative; min-height: var(--tabbar-h); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   letter-spacing: .02em;
 }
 .tab svg { width: 22px; height: 22px; }
@@ -444,7 +444,7 @@ select { background-image: none; padding-right: 32px; }
 .overlay { position: fixed; inset: 0; background: var(--overlay); z-index: 90; opacity: 0; pointer-events: none; transition: opacity var(--transition); }
 .overlay.show { opacity: 1; pointer-events: auto; }
 .sheet {
-  position: fixed; bottom: 0; left: 0; right: 0; background: rgba(15,19,32,.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-elev); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
   border-radius: 20px 20px 0 0; max-height: 88vh; overflow-y: auto; -webkit-overflow-scrolling: touch; z-index: 100;
   transform: translateY(100%); transition: transform 320ms cubic-bezier(.32,.72,0,1);
   padding: 14px 16px calc(20px + var(--safe-bottom));
@@ -1148,7 +1148,11 @@ input[type="range"].im-range {
   </div>
   <div class="settings-section">
     <div class="settings-section-title">关于</div>
-    <div class="settings-about">修的媒体工作台 V56 · 清理版 · 速创 API</div>
+    <div class="settings-about">修的媒体工作台 V60 · 速创 API</div>
+    <button type="button" class="source-item" id="switchDesktopBtn" style="width:100%;margin-top:8px;justify-content:center">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="18" height="18"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      切换到桌面版
+    </button>
   </div>
 </div>
 
@@ -2897,6 +2901,7 @@ const UI = {
 
     // Settings sheet
     $('#closeSettingsBtn').onclick = () => this.closeSheet('settingsSheet', 'settingsOverlay');
+    $('#switchDesktopBtn').onclick = () => { try { localStorage.setItem('sc_preferred_version', 'desktop'); } catch(e) {} location.href = 'ai-workbench-dev.html'; };
     $('#settingsOverlay').onclick = () => this.closeSheet('settingsSheet', 'settingsOverlay');
     $('#apiKeyInput').oninput = e => Store.setApiKey(String(e.target.value || '').trim());
     // FIX 3: R2 inputs — bind save + show transient "已保存" feedback (debounced).
@@ -3157,7 +3162,7 @@ const UI = {
     if (dock) dock.style.display = running.length > 0 ? 'flex' : 'none';
     if (btn) btn.style.display = running.length > 0 ? 'flex' : 'none';
     if (badge) badge.textContent = running.length > 0 ? String(running.length) : '0';
-    document.title = running.length > 0 ? `⏳ ${running.length}个任务 · 修的媒体工作台` : '修的媒体工作台 V56';
+    document.title = running.length > 0 ? `⏳ ${running.length}个任务 · 修的媒体工作台` : '修的媒体工作台 V60';
   },
   updateViewBadge() {
     const badge = $('#viewBadge');

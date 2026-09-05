@@ -1,1 +1,65 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b0d12"><title>AI 多媒体工作台</title><style>html,body{margin:0;width:100%;height:100%;background:#0b0d12;color:#fff;font:14px system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{display:grid;place-items:center}.loading{text-align:center;opacity:.75}</style></head><body><div class="loading">正在打开 AI 多媒体工作台</div><script>const mobile=window.matchMedia('(max-width:760px),(pointer:coarse)').matches;location.replace(mobile?'ai-workbench-mobile-dev.html':'ai-workbench-dev.html');</script></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0d12">
+<title>AI 多媒体工作台</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+  html, body { width: 100%; min-height: 100vh; background: #0b0d12; color: #fff; font: 14px -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+  body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 20px; }
+  .logo { width: 56px; height: 56px; border-radius: 14px; background: linear-gradient(135deg, #5b7ff5, #36c58a); display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 700; color: #fff; box-shadow: 0 8px 32px rgba(91,127,245,.3); }
+  .title { font-size: 18px; font-weight: 600; letter-spacing: .02em; }
+  .subtitle { font-size: 12px; color: #8a94b0; margin-top: -16px; }
+  .choices { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
+  .choice { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 20px 28px; border: 1px solid rgba(120,140,200,.15); border-radius: 14px; background: rgba(20,25,40,.55); backdrop-filter: blur(12px); cursor: pointer; transition: all .2s; min-width: 120px; text-decoration: none; color: #fff; }
+  .choice:hover { border-color: #5b7ff5; background: rgba(91,127,245,.08); transform: translateY(-2px); }
+  .choice svg { width: 28px; height: 28px; stroke: #5b7ff5; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .choice-label { font-size: 13px; font-weight: 500; }
+  .choice-hint { font-size: 10px; color: #555f7a; }
+  .remember { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #555f7a; margin-top: 4px; }
+  .remember input { accent-color: #5b7ff5; }
+  @media (prefers-color-scheme: light) { html, body { background: #f7f8fc; color: #181c28; } .choice { background: rgba(255,255,255,.8); border-color: #e2e5f0; } .subtitle { color: #545c75; } .remember { color: #9099b0; } }
+</style>
+</head>
+<body>
+  <div class="logo">AI</div>
+  <div class="title">修的媒体工作台</div>
+  <div class="subtitle">选择适合的版本进入</div>
+  <div class="choices" id="choices">
+    <a class="choice" href="ai-workbench-dev.html" data-ver="desktop">
+      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      <span class="choice-label">桌面版</span>
+      <span class="choice-hint">大屏体验</span>
+    </a>
+    <a class="choice" href="ai-workbench-mobile-dev.html" data-ver="mobile">
+      <svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+      <span class="choice-label">移动版</span>
+      <span class="choice-hint">手机平板</span>
+    </a>
+  </div>
+  <label class="remember"><input type="checkbox" id="rememberChk" checked> 记住选择，下次自动跳转</label>
+  <script>
+    (function() {
+      var STORAGE_KEY = 'sc_preferred_version';
+      var saved = null;
+      try { saved = localStorage.getItem(STORAGE_KEY); } catch(e) {}
+      if (saved === 'desktop' || saved === 'mobile') {
+        location.replace(saved === 'mobile' ? 'ai-workbench-mobile-dev.html' : 'ai-workbench-dev.html');
+        return;
+      }
+      var ua = navigator.userAgent || '';
+      var isMobile = /Android|iPhone|iPad|iPod|Windows Phone|BlackBerry|Mobile|Nokia/i.test(ua) || (window.matchMedia && window.matchMedia('(pointer: coarse)').matches && window.innerWidth < 900);
+      document.getElementById('choices').addEventListener('click', function(e) {
+        var choice = e.target.closest('.choice');
+        if (!choice) return;
+        if (document.getElementById('rememberChk').checked) { try { localStorage.setItem(STORAGE_KEY, choice.dataset.ver); } catch(e) {} }
+      });
+      var rec = isMobile ? 'mobile' : 'desktop';
+      var recEl = document.querySelector('[data-ver="' + rec + '"]');
+      if (recEl) { recEl.style.borderColor = '#5b7ff5'; recEl.style.boxShadow = '0 0 0 3px rgba(91,127,245,.12)'; var h = recEl.querySelector('.choice-hint'); if (h) h.textContent = '✓ 推荐'; }
+    })();
+  </script>
+</body>
+</html>
