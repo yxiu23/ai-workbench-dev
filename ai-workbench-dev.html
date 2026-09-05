@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>修的媒体工作台 V57</title>
+<title>修的媒体工作台 V58</title>
 <style>
 /* ============================================================
    主题变量
@@ -547,56 +547,46 @@ textarea { resize: vertical; min-height: 80px; }
 .queue-panel .qp-label { font-size: 11px; color: var(--text-dim); }
 .queue-panel .qp-val { font-size: 14px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
 
-/* V57: 流水线 (Pipeline) 进度条样式 */
+/* V58: 流水线进度条 — 单行横向，4个节点灯 */
 .pipeline-steps {
-  display: flex; flex-direction: column; gap: 0; margin-bottom: 16px;
-  background: var(--surface-2); border-radius: var(--radius-md); padding: 4px;
+  display: flex; align-items: center; gap: 0; margin-bottom: 16px;
+  padding: 10px 16px; background: var(--surface-2); border-radius: var(--radius-md);
   border: 1px solid var(--border);
 }
 .pipeline-step {
-  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
-  position: relative; transition: background var(--transition);
-  border-radius: var(--radius-sm);
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  flex: 1; position: relative; padding: 0 4px;
 }
-.pipeline-step + .pipeline-step::before {
-  content: ''; position: absolute; top: -2px; left: 26px; width: 2px; height: 4px;
-  background: var(--border);
+/* Connecting line between steps */
+.pipeline-step:not(:last-child)::after {
+  content: ''; position: absolute; top: 11px; left: 50%; width: 100%; height: 2px;
+  background: var(--border); z-index: 0;
 }
-.pipeline-step.active { background: var(--brand-soft); }
-.pipeline-step.done { }
-.pipeline-step.error { background: var(--danger-soft); }
+.pipeline-step.done:not(:last-child)::after { background: var(--success); }
+.pipeline-step.active:not(:last-child)::after { background: linear-gradient(90deg, var(--success) 50%, var(--border) 50%); }
 .pipeline-step .ps-icon {
-  width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 700; color: #fff; background: var(--text-dim); flex-shrink: 0;
-  transition: all var(--transition);
+  width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: #fff; background: var(--text-dim); flex-shrink: 0;
+  z-index: 1; transition: all var(--transition); border: 2px solid var(--surface-2);
 }
 .pipeline-step.active .ps-icon { background: var(--brand); animation: pulse 1.5s ease-in-out infinite; }
 .pipeline-step.done .ps-icon { background: var(--success); }
 .pipeline-step.error .ps-icon { background: var(--danger); }
-@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 var(--brand-press); } 50% { box-shadow: 0 0 0 6px transparent; } }
-.pipeline-step .ps-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.pipeline-step .ps-title { font-size: 13px; font-weight: 600; color: var(--text); }
-.pipeline-step .ps-meta { font-size: 11px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
-.pipeline-step .ps-progress-bar {
-  height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 4px;
-}
-.pipeline-step.active .ps-progress-bar { background: var(--surface-3); }
-.pipeline-step.active .ps-progress-bar::after {
-  content: ''; display: block; height: 100%; width: 40%; background: var(--brand);
-  animation: progress-slide 1.5s ease-in-out infinite;
-}
-@keyframes progress-slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } }
-.pipeline-step .ps-preview {
-  width: 48px; height: 48px; border-radius: 6px; overflow: hidden; flex-shrink: 0;
-  background: var(--surface-3); display: flex; align-items: center; justify-content: center;
-}
-.pipeline-step .ps-preview img, .pipeline-step .ps-preview video { width: 100%; height: 100%; object-fit: cover; }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 var(--brand-press); } 50% { box-shadow: 0 0 0 5px transparent; } }
+.pipeline-step .ps-title { font-size: 11px; font-weight: 500; color: var(--text-muted); white-space: nowrap; transition: color var(--transition); }
+.pipeline-step.active .ps-title { color: var(--brand); font-weight: 600; }
+.pipeline-step.done .ps-title { color: var(--text); }
+.pipeline-step.error .ps-title { color: var(--danger); }
+.pipeline-step .ps-meta { font-size: 9px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.pipeline-step .ps-preview { display: none; }
 .pipeline-step .ps-rerun {
-  font-size: 10px; padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border);
+  font-size: 9px; padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border);
   background: var(--surface); color: var(--text-muted); cursor: pointer; flex-shrink: 0;
-  transition: all var(--transition);
+  margin-top: 2px; transition: all var(--transition);
 }
 .pipeline-step .ps-rerun:hover { background: var(--brand-soft); color: var(--brand); border-color: var(--brand); }
+.pipeline-step .ps-body { display: contents; }
+.pipeline-step .ps-progress-bar { display: none; }
 
 /* ============================================================
    任务卡 / 结果卡 (紧凑 2 列)
@@ -893,7 +883,7 @@ textarea { resize: vertical; min-height: 80px; }
   background: rgba(0,0,0,.55);
   backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
   display: flex; align-items: center; justify-content: center;
-  gap: 20px; padding: 40px 60px; padding-bottom: 80px;
+  gap: 16px; padding: 60px 80px; padding-bottom: 80px;
 }
 .im-overlay[hidden] { display: none; }
 /* Floating panels: rounded rectangles */
@@ -923,16 +913,16 @@ textarea { resize: vertical; min-height: 80px; }
 .im-tool-divider { width: 22px; height: 1px; background: var(--border); margin: 2px 0; }
 /* Center: canvas - transparent, shows dimmed page behind */
 .im-float-canvas {
-  flex: 1; min-width: 0; max-width: calc(100vw - 360px);
+  flex: 0 1 auto; min-width: 200px; max-width: calc(100vw - 520px);
   display: flex; align-items: center; justify-content: center;
   background: transparent; overflow: auto; padding: 10px;
   min-height: 200px;
 }
 .im-float-canvas canvas { display: block; box-shadow: 0 4px 24px rgba(0,0,0,.25); background: #fff; border-radius: 6px; }
-/* Right: properties panel - narrow */
+/* Right: properties panel - wider */
 .im-float-sidebar {
-  width: 220px; flex-shrink: 0; padding: 12px;
-  max-height: calc(94vh - 90px); overflow-y: auto;
+  width: 280px; flex-shrink: 0; padding: 14px;
+  max-height: calc(94vh - 100px); overflow-y: auto;
 }
 .im-float-sidebar::-webkit-scrollbar { width: 5px; }
 .im-float-sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
@@ -1429,7 +1419,7 @@ body::before {
     <div class="settings-section">
       <h4>关于</h4>
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V57<br>
+        修的媒体工作台 V58<br>
         支持图片、视频、音频生成<br>
         API: api.wuyinkeji.com
       </div>
@@ -1550,6 +1540,9 @@ body::before {
     </button>
     <input type="file" data-ref="file" accept="image/*" multiple hidden>
     <div class="im-tool-divider"></div>
+    <button class="im-tool-btn" data-tool="pan" title="抓手平移 (H/空格)">
+      <svg viewBox="0 0 24 24"><path d="M18 11V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2 2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+    </button>
     <button class="im-tool-btn active" data-tool="select" title="选择/移动/缩放 (V)">
       <svg viewBox="0 0 24 24"><path d="M5 3l14 6-6 2-2 6-6-14z"/></svg>
     </button>
@@ -3206,7 +3199,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V57';
+      document.title = '修的媒体工作台 V58';
     }
   },
 
@@ -4342,33 +4335,18 @@ const UI = {
   _renderPipelineSteps() {
     const wrap = $('#plSteps');
     if (!wrap) return;
-    const active = this._pipeline.active;
     const steps = this._pipeline.steps || [];
     const defs = this._PIPELINE_STEP_DEFS;
     wrap.innerHTML = defs.map((def, i) => {
       const st = steps[i] || { status: 'pending' };
       const cls = st.status === 'done' ? 'done' : st.status === 'active' ? 'active' : st.status === 'error' ? 'error' : '';
       const icon = st.status === 'done' ? '✓' : st.status === 'active' ? '…' : st.status === 'error' ? '!' : String(i + 1);
-      const meta = st.elapsed ? `用时 ${fmtDur(st.elapsed)}` : (st.status === 'pending' ? '等待中' : '处理中');
-      let preview = '';
-      if (st.result?.url) {
-        const isVideo = /\.(mp4|webm|mov)(\?|$)/i.test(st.result.url);
-        preview = isVideo
-          ? `<div class="ps-preview"><video src="${esc(st.result.url)}" muted preload="metadata"></video></div>`
-          : `<div class="ps-preview"><img src="${esc(st.result.thumbUrl || st.result.url)}" loading="lazy"></div>`;
-      } else if (st.result?.audioUrl) {
-        preview = `<div class="ps-preview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="22" height="22"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`;
-      }
-      const progressBar = st.status === 'active' ? '<div class="ps-progress-bar"></div>' : '';
+      const meta = st.elapsed ? fmtDur(st.elapsed) : (st.status === 'pending' ? '等待' : '处理中');
       const rerunBtn = st.status === 'done' ? `<button class="ps-rerun" data-rerun-step="${i}">重跑</button>` : '';
       return `<div class="pipeline-step ${cls}">
         <div class="ps-icon">${icon}</div>
-        <div class="ps-body">
-          <div class="ps-title">${esc(def.title)}</div>
-          <div class="ps-meta">${meta}</div>
-          ${progressBar}
-        </div>
-        ${preview}
+        <div class="ps-title">${esc(def.title)}</div>
+        <div class="ps-meta">${meta}</div>
         ${rerunBtn}
       </div>`;
     }).join('');
@@ -5919,6 +5897,8 @@ document.addEventListener('DOMContentLoaded', () => UI.init());
     btn.addEventListener('click', () => {
       root.querySelectorAll('[data-tool]').forEach(b => b.classList.remove('active'));
       btn.classList.add('active'); tool = btn.dataset.tool;
+      // Update cursor for pan tool
+      workspace.style.cursor = tool === 'pan' ? 'grab' : '';
       if (tool !== 'select') selected = null; cancelPoly(); draw();
     });
   });
@@ -5966,20 +5946,21 @@ document.addEventListener('DOMContentLoaded', () => UI.init());
     if (root.hidden) return;
     if (e.code === 'Space' && document.activeElement.tagName !== 'INPUT') {
       e.preventDefault();
-      if (!spaceHeld) { spaceHeld = true; workspace.style.cursor = 'grab'; }
+      if (!spaceHeld) { spaceHeld = true; if (tool !== 'pan') workspace.style.cursor = 'grab'; }
     }
   });
   window.addEventListener('keyup', e => {
     if (e.code === 'Space') {
       spaceHeld = false;
       if (panning) { panning = false; panStart = null; }
-      workspace.style.cursor = '';
+      workspace.style.cursor = tool === 'pan' ? 'grab' : '';
     }
   });
 
-  // Pan via workspace scroll when space+drag
+  // Pan via workspace scroll when space+drag OR pan tool active
   workspace.addEventListener('pointerdown', e => {
-    if (root.hidden || !spaceHeld) return;
+    if (root.hidden) return;
+    if (!spaceHeld && tool !== 'pan') return;
     e.preventDefault();
     panning = true;
     panStart = { x: e.clientX, y: e.clientY, scrollLeft: workspace.scrollLeft, scrollTop: workspace.scrollTop };
@@ -5997,7 +5978,7 @@ document.addEventListener('DOMContentLoaded', () => UI.init());
   });
 
   canvas.addEventListener('pointerdown', e => {
-    if (spaceHeld) return; // don't draw while panning
+    if (spaceHeld || tool === 'pan') return; // don't draw while panning
     canvas.setPointerCapture(e.pointerId); const p = pos(e);
     if (tool === 'poly') {
       if (!pendingPoly) pendingPoly = [p];
@@ -6197,7 +6178,7 @@ document.addEventListener('DOMContentLoaded', () => UI.init());
     if ((e.key === 'Delete' || e.key === 'Backspace') && selected) { e.preventDefault(); deleteSelected(); }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); }
-    const keyMap = { v:'select', b:'pen', a:'arrow', r:'rect', o:'ellipse', p:'poly', t:'text' };
+    const keyMap = { v:'select', b:'pen', a:'arrow', r:'rect', o:'ellipse', p:'poly', t:'text', h:'pan' };
     const k = e.key.toLowerCase();
     if (keyMap[k] && !e.ctrlKey && !e.metaKey) {
       const btn = root.querySelector('[data-tool="'+keyMap[k]+'"]');
