@@ -6,7 +6,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="format-detection" content="telephone=no">
-<title>修的媒体工作台 V43</title>
+<title>修的媒体工作台 V56</title>
 <style>
 /* ============================================================
    主题变量与安全区域
@@ -63,10 +63,10 @@
    基础重置
    ============================================================ */
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-html { height: 100%; } overflow: hidden; }
+html { height: 100%; overflow: hidden; }
 html[data-theme] .header, html[data-theme] .content, html[data-theme] .tabbar, html[data-theme] .card,
 html[data-theme] input, html[data-theme] textarea, html[data-theme] select, html[data-theme] .sheet,
-html[data-theme] .modal-content, html[data-theme] .editor, html[data-theme] .model-item,
+html[data-theme] .modal-content, html[data-theme] .model-item,
 html[data-theme] .preset-item, html[data-theme] .source-item {
   transition: background-color var(--transition), border-color var(--transition), color var(--transition), box-shadow var(--transition);
 }
@@ -98,21 +98,19 @@ textarea { resize: none; min-height: 80px; }
 select { background-image: none; padding-right: 32px; }
 ::-webkit-scrollbar { width: 0; height: 0; }
 ::selection { background: var(--brand-soft); }
-::selection { background: var(--brand-soft); }
 
 /* ============================================================
    Header
    ============================================================ */
 .header {
   height: calc(var(--header-h) + var(--safe-top));
-  
   display: flex; align-items: center; justify-content: space-between;
   padding: var(--safe-top) 12px 0;
   background: rgba(8,11,20,.60); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--border-soft); z-index: 30; position: relative; flex-shrink: 0;
 }
 [data-theme="light"] .header { background: rgba(255,255,255,.70); }
-.header-title { font-size: 16px; font-weight: 600; letter-spacing: .02em; }
+.header-spacer { flex: 1; }
 .header-actions { display: flex; align-items: center; gap: 2px; }
 .header-btn {
   width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
@@ -241,6 +239,12 @@ select { background-image: none; padding-right: 32px; }
 .ref-progress.show { display: flex; }
 .ref-progress .ring { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--brand); border-top-color: transparent; animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+/* FIX 4 / FIX 16: per-ref upload progress bar */
+.ref-item-progress { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(0,0,0,.40); opacity: 0; transition: opacity 200ms; pointer-events: none; }
+.ref-item-progress.show { opacity: 1; }
+.ref-item-progress-bar { height: 100%; width: 0%; background: var(--brand); transition: width 0.25s; }
+/* FIX 4: task running spinner + polling count */
+.task-spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,.18); border-top-color: var(--brand); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; vertical-align: middle; margin-right: 6px; }
 
 /* ============================================================
    生成参数 (form-group)
@@ -299,21 +303,28 @@ select { background-image: none; padding-right: 32px; }
 .task-dock b { color: var(--brand); }
 .task-dock button { padding: 6px 12px; border-radius: 8px; background: var(--brand-soft); color: var(--brand); font-size: 11px; font-weight: 600; }
 .result-list { display: flex; flex-direction: column; gap: 12px; }
-.empty { display: flex; flex-direction: column; align-items: center; padding: 80px 20px; text-align: center; color: var(--text-dim); }
-.empty svg { width: 56px; height: 56px; opacity: .25; margin-bottom: 16px; }
-.empty h3 { font-size: 14px; font-weight: 500; color: var(--text-muted); margin-bottom: 4px; letter-spacing: .02em; }
+/* FIX 7: empty state — centered, auto-hides when results exist (renderResults only injects it when tasks.length === 0). */
+.empty { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; min-height: 240px; text-align: center; color: var(--text-dim); gap: 4px; }
+.empty svg { width: 64px; height: 64px; opacity: .22; margin-bottom: 14px; stroke-width: 1.2; }
+.empty h3 { font-size: 15px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; letter-spacing: .02em; }
 .empty p { font-size: 12px; letter-spacing: .01em; }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-radius); overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.06); animation: fade-in-up 300ms cubic-bezier(.32,.72,0,1) both; }
 @keyframes fade-in-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-.card-top { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.card-top { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid var(--border-soft); gap: 8px; }
+.card-top .card-model-wrap { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
 .card-model { font-size: 13px; font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* FIX 3: type badge on each card. */
+.card-type-badge { font-size: 9px; padding: 1px 6px; border-radius: 4px; font-weight: 600; flex-shrink: 0; letter-spacing: .04em; }
+.card-type-badge.type-image { background: var(--brand-soft); color: var(--brand); }
+.card-type-badge.type-video { background: rgba(176,124,245,.14); color: #b07cf5; }
+.card-type-badge.type-audio { background: var(--success-soft); color: var(--success); }
 .pill { font-size: 10px; padding: 2px 9px; border-radius: 999px; font-weight: 500; flex-shrink: 0; }
 .pill.running { background: var(--brand-soft); color: var(--brand); }
 .pill.success { background: var(--success-soft); color: var(--success); }
 .pill.failed { background: var(--danger-soft); color: var(--danger); }
 .pill.timeout { background: var(--warning-soft); color: var(--warning); }
 .pill.stopped { background: var(--surface-2); color: var(--text-dim); }
-.card-prompt { padding: 8px 12px; font-size: 11px; color: var(--text-muted); background: var(--surface-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.card-prompt { padding: 7px 12px; font-size: 11px; color: var(--text-muted); background: var(--surface-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .card-body { padding: 10px 12px; }
 .task-id { font-family: monospace; font-size: 10px; color: var(--text-dim); background: var(--surface-2); padding: 5px 8px; border-radius: 6px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; word-break: break-all; }
 .task-id .copy-mini { flex-shrink: 0; padding: 3px 7px; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; font-size: 9px; color: var(--brand); }
@@ -329,13 +340,58 @@ select { background-image: none; padding-right: 32px; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
 .poll-actions { display: flex; gap: 6px; margin-top: 8px; }
 .poll-actions .act { flex: 1; }
-.media { width: 100%; border-radius: 10px; background: var(--surface-2); overflow: hidden; margin-bottom: 8px; display: flex; justify-content: center; }
-.media img, .media video { max-width: 100%; max-height: 320px; display: block; }
+.media { width: 100%; border-radius: 10px; background: var(--surface-2); overflow: hidden; margin-bottom: 8px; display: flex; justify-content: center; max-height: 320px; }
+.media img, .media video { max-width: 100%; max-height: 320px; display: block; object-fit: contain; }
 .media img { cursor: zoom-in; }
 .media audio { width: 100%; padding: 12px; }
 .url-row { display: flex; gap: 4px; align-items: center; background: var(--surface-2); padding: 6px 8px; border-radius: 8px; font-size: 10px; font-family: monospace; color: var(--text-muted); word-break: break-all; }
 .url-row .copy-mini { flex-shrink: 0; padding: 4px 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; font-size: 10px; color: var(--brand); }
 .actions { display: flex; gap: 5px; margin-top: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+/* FIX 5: compact icon-only action row */
+.actions.actions-compact { gap: 4px; margin-top: 6px; }
+.actions.actions-compact .act { padding: 8px 9px; font-size: 14px; min-height: 32px; min-width: 32px; justify-content: center; }
+.actions.actions-compact .act svg { width: 14px; height: 14px; }
+/* FIX 15 / FIX 3: bottom result thumbnail strip — redesigned with larger 72×72 thumbs, type badge, count, styled scrollbar. */
+.result-strip {
+  display: flex; gap: 8px; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  padding: 10px 6px 12px; margin-top: 10px; border-top: 1px solid var(--border-soft);
+  position: relative;
+}
+.result-strip:empty { display: none; }
+/* styled scrollbar */
+.result-strip::-webkit-scrollbar { height: 4px; }
+.result-strip::-webkit-scrollbar-track { background: transparent; }
+.result-strip::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.result-strip-thumb {
+  width: 72px; height: 72px; border-radius: 10px; overflow: hidden; flex-shrink: 0;
+  background: var(--surface-2); position: relative; border: 2px solid transparent;
+  display: flex; align-items: center; justify-content: center; font-size: 24px;
+  transition: transform 160ms ease, border-color 160ms ease;
+}
+.result-strip-thumb:active { transform: scale(0.94); }
+.result-strip-thumb.active { border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand-soft); }
+.result-strip-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.result-strip-thumb video { width: 100%; height: 100%; object-fit: cover; background: #000; }
+.result-strip-thumb .rst-icon { color: var(--brand); font-size: 24px; }
+.result-strip-thumb .rst-type {
+  position: absolute; bottom: 3px; right: 3px; font-size: 9px; color: #fff;
+  background: rgba(0,0,0,.65); border-radius: 4px; padding: 1px 5px; font-weight: 600;
+}
+.result-strip-thumb .rst-play {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 26px; height: 26px; border-radius: 50%; background: rgba(0,0,0,.5);
+  display: flex; align-items: center; justify-content: center; pointer-events: none;
+}
+.result-strip-thumb .rst-play::after {
+  content: ""; width: 0; height: 0; border-left: 8px solid #fff; border-top: 5px solid transparent; border-bottom: 5px solid transparent; margin-left: 2px;
+}
+/* FIX 3: count indicator on the strip header */
+.result-strip-header {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px; color: var(--text-dim); padding: 4px 6px 0; margin-top: 8px; border-top: 1px solid var(--border-soft);
+}
+.result-strip-header .rsh-title { font-weight: 600; color: var(--text-muted); }
+.result-strip-header .rsh-count { font-family: monospace; }
 .act {
   flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px; padding: 8px 11px; font-size: 11px;
   background: var(--surface-2); color: var(--text-muted); border: 1px solid var(--border); border-radius: 9px;
@@ -346,6 +402,22 @@ select { background-image: none; padding-right: 32px; }
 .act.danger { color: var(--danger); }
 .act.primary { background: var(--brand-soft); color: var(--brand); border-color: transparent; }
 .err-banner { background: var(--danger-soft); color: var(--danger); padding: 9px 11px; border-radius: 9px; font-size: 11px; margin-bottom: 8px; line-height: 1.5; }
+/* FIX 2: hidden task manager rows in action sheet. */
+.hidden-task-row { display: flex; align-items: center; gap: 8px; padding: 8px; border: 1px solid var(--border); border-radius: 9px; margin-bottom: 6px; background: var(--surface); }
+.hidden-task-thumb { width: 40px; height: 40px; border-radius: 7px; overflow: hidden; flex-shrink: 0; background: var(--surface-2); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+.hidden-task-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.hidden-task-info { flex: 1; min-width: 0; }
+.hidden-task-info .ht-model { font-size: 11px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hidden-task-info .ht-prompt { font-size: 10px; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px; }
+.hidden-task-row .act { padding: 6px 9px; font-size: 11px; min-height: 30px; flex-shrink: 0; }
+/* FIX 6: more menu in header. */
+.more-btn { position: relative; }
+.more-btn .dot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; display: inline-block; }
+/* FIX 6: result-area toolbar (filter / sort / more) at top of resultView. */
+.result-toolbar { display: flex; align-items: center; gap: 6px; margin: -2px 0 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+.result-toolbar .rt-title { font-size: 13px; font-weight: 600; flex: 1; }
+.result-toolbar .rt-count { font-size: 10px; color: var(--text-dim); font-family: monospace; }
+.result-toolbar .act { padding: 6px 10px; font-size: 11px; min-height: 30px; }
 
 /* ============================================================
    底部 Tab (图片/视频/音频)
@@ -398,6 +470,11 @@ select { background-image: none; padding-right: 32px; }
 .input-row .act { padding: 0 14px; font-size: 12px; }
 .sheet-group { margin-bottom: 12px; }
 .sheet-group > label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+/* FIX 3: R2 saved hint indicator */
+.r2-saved-hint { display: inline-block; opacity: 0; transform: translateY(-2px); transition: opacity 200ms ease, transform 200ms ease; font-size: 10px; color: var(--success); margin-left: 6px; font-weight: 600; pointer-events: none; }
+.r2-saved-hint.show { opacity: 1; transform: translateY(0); }
+/* FIX 3: ensure inputs in sheets are tappable on mobile */
+.sheet input, .sheet textarea, .sheet select { pointer-events: auto; -webkit-user-select: text; user-select: text; touch-action: manipulation; }
 
 /* Model sheet */
 .model-list { display: flex; flex-direction: column; gap: 8px; }
@@ -463,47 +540,6 @@ select { background-image: none; padding-right: 32px; }
 .workflow-textarea { width: 100%; min-height: 240px; font-family: monospace; font-size: 12px; line-height: 1.6; }
 
 /* ============================================================
-   编辑器 (inpaint + outpaint)
-   ============================================================ */
-.editor { position: fixed; inset: 0; background: var(--bg-elev); z-index: 150; display: none; flex-direction: column;  }
-.editor.show { display: flex; }
-.editor-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; border-bottom: 1px solid var(--border); height: 48px; flex-shrink: 0; }
-.editor-header h3 { font-size: 15px; }
-.editor-body { flex: 1; overflow-y: auto; padding: 12px; -webkit-overflow-scrolling: touch; }
-.editor-tools { display: flex; gap: 4px; flex-wrap: wrap; padding: 8px; background: var(--surface-2); border-radius: 10px; margin-bottom: 8px; align-items: center; }
-.tg { display: flex; align-items: center; gap: 3px; padding-right: 6px; border-right: 1px solid var(--border); }
-.tg:last-child { border-right: none; }
-.tb { padding: 7px 9px; font-size: 12px; border-radius: 7px; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); min-height: 34px; }
-.tb.active { background: var(--brand); color: white; border-color: var(--brand); }
-.sb { padding: 5px 8px; font-size: 11px; border-radius: 6px; background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); min-height: 30px; }
-.sb.active { background: var(--brand-soft); color: var(--brand); border-color: var(--brand); }
-.cb { width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent; }
-.cb.active { border-color: var(--text); transform: scale(1.1); }
-.or { width: 70px; appearance: none; -webkit-appearance: none; height: 4px; background: var(--surface); border-radius: 2px; padding: 0; border: none; }
-.or::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--brand); }
-.op-ctrl { display: none; padding: 12px; background: var(--brand-soft); border-radius: 10px; margin-bottom: 8px; gap: 12px; flex-direction: column; }
-.op-row { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
-.op-label { font-size: 11px; color: var(--text-muted); min-width: 60px; }
-.op-label span { color: var(--brand); font-family: monospace; margin-left: 4px; }
-.dir-grid { display: grid; grid-template-columns: repeat(2,44px); gap: 6px; }
-.dir-btn { width: 44px; height: 40px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--text-muted); font-size: 20px; line-height: 1; touch-action: manipulation; }
-.dir-btn.active { background: var(--brand); border-color: var(--brand); color: #fff; }
-.op-segment { display: flex; gap: 6px; flex: 1; }
-.op-segment .sb { flex: 1; min-height: 36px; padding: 7px 8px; font-size: 12px; justify-content: center; }
-.op-apply { min-height: 44px; border: 0; border-radius: 10px; background: var(--brand); color: #fff; font-weight: 700; font-size: 13px; touch-action: manipulation; }
-.canvas-wrap { position: relative; background: var(--surface-2); border-radius: 10px; overflow: auto; max-height: 50vh; display: flex; justify-content: center; align-items: center; min-height: 220px; padding: 8px; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
-.canvas-stack { position: relative; display: inline-block; }
-#bgCanvas, #maskCanvas { display: block; max-width: 100%; max-height: 50vh; }
-#bgCanvas { position: relative; z-index: 1; }
-#maskCanvas { position: absolute; top: 0; left: 0; z-index: 2; background: transparent; touch-action: none; -webkit-user-select: none; user-select: none; }
-.canvas-hint { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--text-dim); font-size: 12px; pointer-events: none; }
-.canvas-hint.hide { display: none; }
-.editor-prompt { min-height: 60px; font-size: 13px; }
-.mask-preview-row { display: flex; align-items: center; justify-content: space-between; margin: 6px 0; padding: 8px 10px; background: var(--surface-2); border-radius: 8px; font-size: 11px; color: var(--text-muted); }
-.mask-preview-row label { display: flex; align-items: center; gap: 6px; }
-.mask-preview-row input[type=checkbox] { width: 18px; height: 18px; padding: 0; }
-
-/* ============================================================
    统计
    ============================================================ */
 .stabs { display: flex; gap: 5px; margin-bottom: 12px; flex-wrap: wrap; }
@@ -557,6 +593,8 @@ select { background-image: none; padding-right: 32px; }
 .media-lightbox.show { display: flex; animation: fadeIn 160ms ease-out; }
 .media-lightbox img { max-width: 100%; max-height: 88vh; object-fit: contain; border-radius: 10px; box-shadow: 0 10px 50px rgba(0,0,0,.4); }
 .media-lightbox video { max-width: 100%; max-height: 88vh; object-fit: contain; border-radius: 10px; background: #000; }
+/* FIX 14: audio lightbox styling */
+.media-lightbox audio { width: min(92vw, 520px); margin-top: 12px; box-shadow: 0 10px 50px rgba(0,0,0,.4); border-radius: 12px; }
 .lightbox-close { position: absolute; top: calc(12px + var(--safe-top)); right: 12px; width: 40px; height: 40px; border-radius: 20px; background: rgba(255,255,255,.12); color: #fff; font-size: 24px; line-height: 1; display: grid; place-items: center; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
@@ -615,6 +653,252 @@ body::before {
 .gradient-divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border) 20%, var(--border) 80%, transparent); margin: 14px 0; }
 .estimate .val, .pill { font-variant-numeric: tabular-nums; }
 
+/* ============================================================
+   字体渲染优化
+   ============================================================ */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-feature-settings: "kern" 1, "liga" 1;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ============================================================
+   图片标记组件 (ImageMarker - 悬浮面板式，背景变暗网页)
+   ============================================================ */
+.im-overlay {
+  position: fixed; inset: 0; z-index: 99999;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  gap: 14px; padding: 20px; padding-bottom: 70px;
+}
+.im-overlay[hidden] { display: none; }
+/* Floating panels: rounded rectangles */
+.im-float {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,.3);
+}
+/* Left: vertical toolbar - narrow */
+.im-float-tools {
+  width: 50px; flex-shrink: 0; padding: 6px 4px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+}
+.im-tool-btn {
+  width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+  border: none; background: transparent; border-radius: 9px;
+  cursor: pointer; color: var(--text-muted); padding: 0;
+  transition: all var(--transition-fast); position: relative;
+}
+.im-tool-btn:hover { background: var(--surface-2); color: var(--text); }
+.im-tool-btn.active { background: var(--brand); color: #fff; }
+.im-tool-btn.active::after {
+  content: ''; position: absolute; left: -4px; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 18px; background: var(--brand); border-radius: 0 2px 2px 0;
+}
+.im-tool-btn svg { width: 17px; height: 17px; stroke: currentColor; fill: none;
+                   stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.im-tool-divider { width: 22px; height: 1px; background: var(--border); margin: 2px 0; }
+/* Center: canvas - transparent, shows dimmed page behind */
+.im-float-canvas {
+  flex: 1; min-width: 0; max-width: calc(100vw - 360px);
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; overflow: auto; padding: 10px;
+  min-height: 200px;
+}
+.im-float-canvas canvas { display: block; box-shadow: 0 4px 24px rgba(0,0,0,.25); background: #fff; border-radius: 6px; }
+/* Right: properties panel - narrow */
+.im-float-sidebar {
+  width: 220px; flex-shrink: 0; padding: 12px;
+  max-height: calc(94vh - 90px); overflow-y: auto;
+}
+.im-float-sidebar::-webkit-scrollbar { width: 5px; }
+.im-float-sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.im-section { margin-bottom: 14px; }
+.im-section:last-child { margin-bottom: 0; }
+.im-section-title {
+  font-size: 10px; font-weight: 700; color: var(--text-dim);
+  text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px;
+  padding-bottom: 5px; border-bottom: 1px solid var(--border-soft);
+}
+.im-field { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.im-field-label { font-size: 11px; color: var(--text-muted); min-width: 26px; text-align: right; flex-shrink: 0; }
+.im-num {
+  flex: 1; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px;
+  font-size: 12px; background: var(--surface); color: var(--text);
+  min-width: 0; width: 64px; font-variant-numeric: tabular-nums;
+}
+.im-num-s { flex: none; width: 50px; }
+.im-mini { font-size: 10px; color: var(--text-dim); flex-shrink: 0; }
+.im-btn {
+  height: 28px; min-width: 28px; padding: 0 8px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  border: 1px solid var(--border); background: var(--surface); border-radius: 7px;
+  cursor: pointer; color: var(--text-muted);
+  transition: all var(--transition-fast); font-size: 11px;
+}
+.im-btn:hover { background: var(--surface-2); color: var(--text); border-color: var(--text-dim); }
+.im-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+.im-btn.primary { background: var(--brand); color: #fff; border-color: var(--brand); }
+.im-btn.primary:hover { opacity: .88; }
+.im-btn.danger { color: var(--danger); border-color: var(--border); }
+.im-btn.danger:hover { background: var(--danger-soft); }
+.im-btn.success { background: var(--success); color: #fff; border-color: var(--success); }
+.im-btn.success:hover { opacity: .88; }
+.im-btn:disabled { opacity: .5; cursor: not-allowed; }
+.im-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none;
+              stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.im-btn-row { display: flex; gap: 4px; }
+.im-btn-row .im-btn { flex: 1; min-width: 0; }
+input[type="color"].im-color {
+  width: 30px; height: 28px; border: 1px solid var(--border); border-radius: 6px;
+  cursor: pointer; background: var(--surface); padding: 1px; flex-shrink: 0;
+}
+input[type="range"].im-range {
+  flex: 1; height: 4px; accent-color: var(--brand); cursor: pointer; min-width: 0;
+}
+.im-fill-btn {
+  width: 100%; height: 30px; display: flex; align-items: center; justify-content: center; gap: 6px;
+  border: 1px solid var(--border); background: var(--surface); border-radius: 7px;
+  cursor: pointer; color: var(--text-muted); font-size: 11px;
+  transition: all var(--transition-fast);
+}
+.im-fill-btn:hover { background: var(--surface-2); }
+.im-fill-btn.active { background: var(--brand-soft); color: var(--brand); border-color: var(--brand); }
+.im-fill-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none;
+                   stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.im-dir-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; margin-bottom: 6px; }
+.im-dir-btn {
+  height: 28px; display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); background: var(--surface); border-radius: 6px;
+  cursor: pointer; color: var(--text-muted); padding: 0;
+  transition: all var(--transition-fast);
+}
+.im-dir-btn:hover { background: var(--surface-2); color: var(--text); }
+.im-dir-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+.im-dir-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none;
+                  stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.im-dir-center {
+  height: 28px; padding: 2px;
+  border: 1px solid var(--brand); border-radius: 6px;
+  font-size: 11px; text-align: center; background: var(--brand-soft);
+  color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums;
+}
+/* Bottom action bar: floating centered below the 3 panels */
+.im-bottom-bar {
+  position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 8px; padding: 8px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,.3);
+  z-index: 100001;
+}
+.im-bottom-bar .im-btn { height: 36px; min-width: 36px; padding: 0 16px; font-size: 12px; font-weight: 500; }
+.im-bottom-bar .im-btn svg { width: 16px; height: 16px; }
+@media (max-width: 900px) {
+  .im-overlay { flex-direction: column; padding: 10px; padding-bottom: 70px; gap: 8px; }
+  .im-float-tools { width: 100%; flex-direction: row; overflow-x: auto; padding: 4px 8px; }
+  .im-float-tools .im-tool-btn.active::after { display: none; }
+  .im-float-tools .im-tool-divider { width: 1px; height: 22px; margin: 0 3px; }
+  .im-float-canvas { max-width: 100%; }
+  .im-float-sidebar { width: 100%; max-height: 160px; }
+}
+
+/* ============================================================
+   V56 Phase 3: Batch Queue — compact mobile status bar
+   ============================================================ */
+.qbar {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  padding: 8px 10px; margin: -2px 0 10px;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  font-size: 11px; color: var(--text-muted);
+}
+.qbar .qb-item { display: inline-flex; align-items: center; gap: 3px; }
+.qbar .qb-item b { color: var(--text); font-family: monospace; font-size: 12px; }
+.qbar .qb-sep { width: 1px; height: 12px; background: var(--border); margin: 0 2px; }
+.qbar .qb-spacer { flex: 1; }
+.qbar .qb-act { padding: 4px 9px; font-size: 10px; min-height: 26px; }
+
+/* V56 Phase 3: 立即/排队 toggle + priority field */
+.qmode-row { display: flex; align-items: center; gap: 8px; margin: 4px 0 10px; }
+.qmode-toggle { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; padding: 2px; flex-shrink: 0; }
+.qmode-toggle button {
+  border: 0; background: transparent; color: var(--text-muted);
+  font-size: 11px; padding: 6px 12px; border-radius: 999px; cursor: pointer;
+  min-height: 28px; transition: all 160ms ease;
+}
+.qmode-toggle button.active { background: var(--brand); color: #fff; font-weight: 600; }
+.qmode-priority {
+  display: inline-flex; align-items: center; gap: 4px; padding: 6px 10px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px;
+  font-size: 11px; color: var(--text-muted);
+}
+.qmode-priority input { width: 50px; padding: 2px 6px; font-size: 11px; background: var(--surface); border: 1px solid var(--border); border-radius: 5px; color: var(--text); }
+
+/* ============================================================
+   V56 Phase 4: Pipeline — vertical 4-step progress (mobile)
+   ============================================================ */
+.pipe-view { display: none; }
+.pipe-view.active { display: block; }
+.pipe-section { margin-bottom: 12px; }
+.pipe-section-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+.pipe-input-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 12px; margin-bottom: 10px;
+}
+.pipe-input-card label { display: block; font-size: 11px; color: var(--text-muted); margin-bottom: 6px; }
+.pipe-input-card textarea, .pipe-input-card input, .pipe-input-card select {
+  width: 100%; padding: 10px 11px; font-size: 13px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px; color: var(--text);
+}
+.pipe-input-card textarea { min-height: 80px; resize: vertical; line-height: 1.5; }
+.pipe-input-card .pic-hint { font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+.pipe-ref-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.pipe-ref-row > * { flex: 1; min-width: 120px; }
+.pipe-actions { display: flex; gap: 8px; margin-top: 6px; }
+.pipe-actions .act { flex: 1; justify-content: center; padding: 12px; font-size: 13px; min-height: 44px; }
+
+/* Vertical 4-step progress (mobile) */
+.pipe-steps { display: flex; flex-direction: column; gap: 0; margin: 8px 0; }
+.pipe-step {
+  display: flex; gap: 12px; padding: 12px 0;
+  position: relative;
+}
+.pipe-step:not(:last-child)::before {
+  content: ""; position: absolute; left: 16px; top: 38px; bottom: -6px;
+  width: 2px; background: var(--border);
+}
+.pipe-step.done:not(:last-child)::before { background: var(--success); }
+.pipe-step.active:not(:last-child)::before { background: var(--brand); }
+.pipe-step-icon {
+  width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+  display: grid; place-items: center; font-size: 14px; font-weight: 700;
+  background: var(--surface-2); border: 2px solid var(--border); color: var(--text-dim);
+  position: relative; z-index: 1;
+}
+.pipe-step.done .pipe-step-icon { background: var(--success-soft); border-color: var(--success); color: var(--success); }
+.pipe-step.active .pipe-step-icon { background: var(--brand-soft); border-color: var(--brand); color: var(--brand); }
+.pipe-step.failed .pipe-step-icon { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+.pipe-step-body { flex: 1; min-width: 0; }
+.pipe-step-title { font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pipe-step-meta { font-size: 10px; color: var(--text-dim); margin-top: 3px; font-family: monospace; }
+.pipe-step-preview { margin-top: 8px; border-radius: 8px; overflow: hidden; background: var(--surface-2); border: 1px solid var(--border); max-height: 120px; display: flex; align-items: center; justify-content: center; }
+.pipe-step-preview img, .pipe-step-preview video, .pipe-step-preview audio { width: 100%; max-height: 120px; object-fit: cover; }
+.pipe-step-actions { margin-top: 6px; display: flex; gap: 6px; }
+.pipe-step-actions .act { padding: 5px 10px; font-size: 10px; min-height: 26px; }
+.pipe-step-error { font-size: 10px; color: var(--danger); margin-top: 4px; }
+
+.pipe-cost {
+  display: flex; align-items: center; gap: 6px; padding: 10px 12px;
+  background: var(--brand-soft); color: var(--brand);
+  border-radius: 10px; font-size: 12px; font-weight: 600; margin-top: 8px;
+}
+.pipe-cost .pc-amt { font-family: monospace; font-size: 14px; }
+.pipe-empty { text-align: center; padding: 28px 16px; color: var(--text-dim); font-size: 12px; }
+.pipe-empty svg { width: 36px; height: 36px; opacity: 0.4; margin: 0 auto 8px; display: block; }
 
 
 </style>
@@ -623,7 +907,7 @@ body::before {
 
 <!-- ========== Header ========== -->
 <header class="header">
-  <span class="header-title">AI 工作台</span>
+  <div class="header-spacer"></div>
   <div class="header-actions">
     <button type="button" class="view-switch" id="viewSwitchBtn" aria-label="切换视图">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" id="viewSwitchIcon"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
@@ -633,8 +917,8 @@ body::before {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6v6l4 2"/><circle cx="12" cy="12" r="10"/></svg>
       <span class="badge" id="taskBadge">0</span>
     </button>
-    <button type="button" class="header-btn" id="settingsBtn" aria-label="设置">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <button type="button" class="header-btn more-btn" id="moreBtn" aria-label="更多">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>
     </button>
   </div>
 </header>
@@ -664,6 +948,16 @@ body::before {
         导入工作流
       </button>
     </div>
+    <!-- V56 Phase 3: 立即/排队 toggle + priority (only relevant if TaskCenter available) -->
+    <div class="qmode-row" id="qmodeRow" style="display:none">
+      <div class="qmode-toggle" role="group" aria-label="提交模式">
+        <button type="button" data-qmode="instant" class="active">立即</button>
+        <button type="button" data-qmode="queue">排队</button>
+      </div>
+      <div class="qmode-priority" id="qmodePriority" style="display:none">
+        优先级 <input type="number" id="qmodePriorityInput" min="0" max="10" step="1" value="0" inputmode="numeric">
+      </div>
+    </div>
     <button type="button" class="gen-btn" id="genBtn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v4"/><path d="M3 5h4"/><path d="M6 17v4"/><path d="M4 19h4"/><path d="M13 3l2.5 6.5L22 12l-6.5 2.5L13 21l-2.5-6.5L4 12l6.5-2.5z"/></svg>
       <span id="genBtnText">生成</span>
@@ -672,6 +966,30 @@ body::before {
 
   <!-- 结果视图 -->
   <section class="view" id="resultView">
+    <!-- FIX 6: result-area toolbar — quick actions in result view (count / sort / more). -->
+    <div class="result-toolbar" id="resultToolbar">
+      <span class="rt-title">结果</span>
+      <span class="rt-count" id="resultCount">0</span>
+      <button type="button" class="act" id="sortBtn" aria-label="排序" title="排序">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M6 12h12"/><path d="M10 18h4"/></svg>
+      </button>
+      <button type="button" class="act" id="restoreBtn" aria-label="还原隐藏" title="还原隐藏" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9"/><polyline points="3 4 3 12 11 12"/></svg>
+      </button>
+      <button type="button" class="act" id="resultMoreBtn" aria-label="更多操作" title="更多">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg>
+      </button>
+    </div>
+    <!-- V56 Phase 3: compact queue status bar (only shown when TaskCenter available) -->
+    <div class="qbar" id="queueBar" style="display:none">
+      <span class="qb-item">排队 <b id="qbQueued">0</b></span>
+      <span class="qb-sep"></span>
+      <span class="qb-item">运行 <b id="qbRunning">0</b></span>
+      <span class="qb-sep"></span>
+      <span class="qb-item">今日已耗 <b id="qbCost">¥0</b></span>
+      <span class="qb-spacer"></span>
+      <button type="button" class="act qb-act" id="qbCancelAllBtn" style="display:none">取消排队</button>
+    </div>
     <div class="task-dock" id="taskDock" style="display:none">
       <span>运行中 <b id="runningCount">0</b></span>
       <button type="button" id="refreshTasksBtn">刷新</button>
@@ -681,6 +999,82 @@ body::before {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         <h3>暂无生成任务</h3>
         <p>填写参数并点击「生成」</p>
+      </div>
+    </div>
+    <!-- FIX 15: bottom thumbnail strip for recent succeeded tasks -->
+    <div class="result-strip" id="resultStrip" style="display:none"></div>
+  </section>
+
+  <!-- V56 Phase 4: 流水线视图 -->
+  <section class="view pipe-view" id="pipelineView">
+    <div class="pipe-section">
+      <div class="pipe-section-title">输入</div>
+      <div class="pipe-input-card">
+        <label for="pipeText">口播文本</label>
+        <textarea id="pipeText" placeholder="输入要生成的口播文本…" maxlength="2000"></textarea>
+        <div class="pic-hint">将依次经过：文本 → 音频 → 数字人 → 成品</div>
+      </div>
+      <div class="pipe-ref-row">
+        <div class="pipe-input-card" style="margin-bottom:0">
+          <label for="pipeVoice">音色</label>
+          <select id="pipeVoice">
+            <option value="male-qn-qingse">青涩男声</option>
+            <option value="male-qn-jingying">精英男声</option>
+            <option value="male-qn-badao">霸道男声</option>
+            <option value="male-qn-chengshu">成熟男声</option>
+            <option value="female-shaonv">少女女声</option>
+            <option value="female-yujie">御姐女声</option>
+            <option value="female-chengshu">成熟女声</option>
+            <option value="female-wenrou">温柔女声</option>
+            <option value="presenter_male">主持人男声</option>
+            <option value="presenter_female">主持人女声</option>
+          </select>
+        </div>
+        <div class="pipe-input-card" style="margin-bottom:0">
+          <label for="pipeSpeed">语速</label>
+          <select id="pipeSpeed">
+            <option value="0.8">慢 0.8×</option>
+            <option value="1" selected>正常 1.0×</option>
+            <option value="1.2">快 1.2×</option>
+            <option value="1.5">很快 1.5×</option>
+          </select>
+        </div>
+      </div>
+      <div class="pipe-input-card">
+        <label for="pipeTemplate">包装模板</label>
+        <select id="pipeTemplate">
+          <option value="1">模板 1</option>
+          <option value="2">模板 2</option>
+          <option value="3">模板 3</option>
+          <option value="4">模板 4</option>
+          <option value="5">模板 5</option>
+        </select>
+        <div class="pic-hint">数字人成片将套用所选模板进行包装</div>
+      </div>
+      <div class="pipe-input-card">
+        <label>底片选择</label>
+        <div class="pipe-ref-row">
+          <button type="button" class="act" id="pipePickBaseBtn" style="justify-content:center;padding:11px;font-size:12px">从最近结果选择</button>
+          <input type="url" id="pipeBaseInput" placeholder="或粘贴人物视频 URL" style="flex:1" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+        </div>
+        <div class="pic-hint" id="pipeBaseHint">底片为数字人背景视频（至少 10 秒）</div>
+      </div>
+      <div class="pipe-cost">
+        <span>预计费用</span>
+        <span class="pc-amt" id="pipeCost">¥0.00</span>
+      </div>
+      <div class="pipe-actions">
+        <button type="button" class="act primary" id="pipeSubmitBtn">提交流水线</button>
+        <button type="button" class="act" id="pipeCancelBtn" style="display:none">取消</button>
+      </div>
+    </div>
+    <div class="pipe-section">
+      <div class="pipe-section-title">进度</div>
+      <div class="pipe-steps" id="pipeSteps">
+        <div class="pipe-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><polyline points="12 5 19 12 12 19"/></svg>
+          尚未启动流水线任务
+        </div>
       </div>
     </div>
   </section>
@@ -697,6 +1091,9 @@ body::before {
   </button>
   <button type="button" class="tab" data-tab="audio" aria-label="音频">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>音频
+  </button>
+  <button type="button" class="tab" data-tab="pipeline" aria-label="流水线">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M6 9v3a3 3 0 0 0 3 3h6"/></svg>流水线
   </button>
 </nav>
 
@@ -718,14 +1115,27 @@ body::before {
   <div class="settings-section">
     <div class="settings-section-title">媒体上传</div>
     <div class="sheet-group">
-      <label for="r2WorkerUrlInput">R2 网址</label>
-      <input type="text" id="r2WorkerUrlInput" placeholder="https://ai-media-proxy.xxx.workers.dev" autocomplete="off" style="font-family:monospace;font-size:13px">
+      <label for="r2WorkerUrlInput">R2 网址 <span id="r2SavedHint" class="r2-saved-hint">已保存 ✓</span></label>
+      <input type="text" id="r2WorkerUrlInput" placeholder="建议使用自定义域名，workers.dev 在大陆可能无法直连" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="font-family:monospace;font-size:13px">
     </div>
     <div class="sheet-group">
       <label for="r2AuthTokenInput">R2 密钥</label>
-      <input type="password" id="r2AuthTokenInput" placeholder="Worker 鉴权 Token" autocomplete="off" style="font-family:monospace;font-size:13px">
+      <input type="password" id="r2AuthTokenInput" placeholder="Worker 鉴权 Token" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="font-family:monospace;font-size:13px">
     </div>
     <button type="button" class="act" id="testR2Btn" style="width:100%;padding:11px;font-size:12px;margin-top:4px;justify-content:center">测试 R2 连接</button>
+  </div>
+  <div class="settings-section">
+    <div class="settings-section-title">任务中心（可选）</div>
+    <div class="sheet-group">
+      <label for="taskCenterUrlInput">Worker URL <span id="taskCenterSavedHint" class="r2-saved-hint">已保存 ✓</span></label>
+      <input type="text" id="taskCenterUrlInput" placeholder="https://your-task-center.workers.dev" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="font-family:monospace;font-size:13px">
+    </div>
+    <div class="sheet-group">
+      <label for="taskCenterTokenInput">访问 Token</label>
+      <input type="password" id="taskCenterTokenInput" placeholder="留空则不鉴权" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="font-family:monospace;font-size:13px">
+    </div>
+    <button type="button" class="act" id="testTaskCenterBtn" style="width:100%;padding:11px;font-size:12px;margin-top:4px;justify-content:center">测试任务中心连接</button>
+    <div style="font-size:10px;color:var(--text-dim);margin-top:6px;line-height:1.5">配置后可在生成时选择「排队」模式，将任务投递到远端队列；未配置则使用本地直连模式。</div>
   </div>
   <div class="settings-section">
     <div class="settings-section-title">偏好</div>
@@ -738,7 +1148,7 @@ body::before {
   </div>
   <div class="settings-section">
     <div class="settings-section-title">关于</div>
-    <div class="settings-about">修的媒体工作台 V43 · 速创 API</div>
+    <div class="settings-about">修的媒体工作台 V56 · 清理版 · 速创 API</div>
   </div>
 </div>
 
@@ -785,6 +1195,17 @@ body::before {
     <button type="button" class="sheet-close" id="closeActionBtn" aria-label="关闭">×</button>
   </div>
   <div class="sheet-actions" id="actionSheetActions"></div>
+</div>
+
+<!-- ========== 更多菜单 Sheet (FIX 6) ========== -->
+<div class="overlay" id="moreOverlay"></div>
+<div class="sheet" id="moreSheet">
+  <div class="handle" data-sheet-handle></div>
+  <div class="sheet-title-row">
+    <h3>更多</h3>
+    <button type="button" class="sheet-close" id="closeMoreBtn" aria-label="关闭">×</button>
+  </div>
+  <div class="sheet-actions" id="moreSheetActions"></div>
 </div>
 
 <!-- ========== 最近结果选择 Sheet ========== -->
@@ -839,79 +1260,127 @@ body::before {
   </div>
 </div>
 
-<!-- ========== 编辑器 ========== -->
-<div class="editor" id="editor">
-  <div class="editor-header">
-    <h3>图片编辑</h3>
-    <button type="button" class="header-btn" id="editorCloseBtn" aria-label="关闭">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+<!-- 图片标记组件 ImageMarker（悬浮面板式） -->
+<div class="im-overlay" id="imOverlay" hidden>
+  <!-- Left: toolbar -->
+  <div class="im-float im-float-tools">
+    <button class="im-tool-btn primary" data-act="upload" title="上传图片">
+      <svg viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M7 8l5-5 5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
+    </button>
+    <input type="file" data-ref="file" accept="image/*" multiple hidden>
+    <div class="im-tool-divider"></div>
+    <button class="im-tool-btn active" data-tool="select" title="选择/移动/缩放 (V)">
+      <svg viewBox="0 0 24 24"><path d="M5 3l14 6-6 2-2 6-6-14z"/></svg>
+    </button>
+    <button class="im-tool-btn" data-tool="pen" title="画笔 (B)">
+      <svg viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/></svg>
+    </button>
+    <button class="im-tool-btn" data-tool="arrow" title="箭头 (A)">
+      <svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="19" y2="5"/><polyline points="9 5 19 5 19 15"/></svg>
+    </button>
+    <button class="im-tool-btn" data-tool="rect" title="方框 (R)">
+      <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+    </button>
+    <button class="im-tool-btn" data-tool="ellipse" title="圆圈 (O)">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/></svg>
+    </button>
+    <button class="im-tool-btn" data-tool="poly" title="多边形 (P)">
+      <svg viewBox="0 0 24 24"><path d="M12 3l8 6-3 9H7l-3-9z"/></svg>
+    </button>
+    <button class="im-tool-btn" data-tool="text" title="文字 (T)">
+      <svg viewBox="0 0 24 24"><polyline points="4 7 4 4 20 4 20 7"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="9" y1="20" x2="15" y2="20"/></svg>
     </button>
   </div>
-  <div class="editor-body">
-    <div class="editor-tools" id="editorTools">
-      <div class="tg">
-        <button type="button" class="tb active" data-tool="rect" title="矩形">▭</button>
-        <button type="button" class="tb" data-tool="brush" title="画笔">🖌</button>
-        <button type="button" class="tb" data-tool="eraser" title="橡皮">🧽</button>
-        <button type="button" class="tb" data-tool="outpaint" title="扩图">🔄</button>
+
+  <!-- Center: canvas (no title, no zoom controls) -->
+  <div class="im-float-canvas" data-ref="work"><canvas data-ref="canvas" width="1000" height="700"></canvas></div>
+
+  <!-- Right: properties -->
+  <div class="im-float im-float-sidebar">
+    <div class="im-section">
+      <div class="im-section-title">样式</div>
+      <div class="im-field">
+        <span class="im-field-label">颜色</span>
+        <input type="color" class="im-color" data-ref="color" value="#e11d48" title="标注颜色">
+        <input type="range" class="im-range" data-ref="size" min="1" max="30" value="6" title="粗细">
+        <span class="im-mini" data-ref="sizeVal" style="width:14px;text-align:right">6</span>
       </div>
-      <div class="tg" id="brushSizeGroup">
-        <button type="button" class="sb" data-size="10">S</button>
-        <button type="button" class="sb active" data-size="30">M</button>
-        <button type="button" class="sb" data-size="60">L</button>
+      <button class="im-fill-btn" data-act="filltoggle" title="实心/空心切换">
+        <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" fill="currentColor" stroke="none"/></svg>
+        <span>实心填充</span>
+      </button>
+    </div>
+    <div class="im-section">
+      <div class="im-section-title">画布</div>
+      <div class="im-field">
+        <span class="im-field-label">宽</span>
+        <input type="number" class="im-num" data-ref="cw" min="50" max="8000" placeholder="宽度">
+        <span class="im-mini">px</span>
       </div>
-      <div class="tg">
-        <button type="button" class="cb active" data-color="255,0,0" style="background:#f00"></button>
-        <button type="button" class="cb" data-color="0,255,0" style="background:#0f0"></button>
-        <button type="button" class="cb" data-color="0,150,255" style="background:#0096ff"></button>
-        <button type="button" class="cb" data-color="255,220,0" style="background:#ffdc00"></button>
+      <div class="im-field">
+        <span class="im-field-label">高</span>
+        <input type="number" class="im-num" data-ref="ch" min="50" max="8000" placeholder="高度">
+        <span class="im-mini">px</span>
       </div>
-      <div class="tg">
-        <input type="range" class="or" id="opacitySlider" min="10" max="100" value="50">
-        <span style="font-size:10px;color:var(--brand);min-width:32px" id="opacityValue">50%</span>
+      <div class="im-btn-row" style="margin-top:4px">
+        <button class="im-btn" data-act="resize" title="应用尺寸">应用</button>
+        <button class="im-btn" data-act="fit" title="自适应扩边">自适应</button>
       </div>
-      <div class="tg">
-        <button type="button" class="tb" id="undoBtn" title="撤销">↩</button>
-        <button type="button" class="tb" id="clearBtn" title="清空">🗑</button>
+      <div class="im-field" style="margin-top:8px">
+        <span class="im-field-label">边距</span>
+        <input type="number" class="im-num im-num-s" data-ref="margin" min="0" max="500" value="40">
+        <span class="im-mini">px</span>
+        <span class="im-field-label" style="margin-left:4px">背景</span>
+        <input type="color" class="im-color" data-ref="bgColor" value="#ffffff">
       </div>
     </div>
-    <div class="op-ctrl" id="outpaintCtrl">
-      <div class="op-row">
-        <div class="op-label">扩展方向</div>
-        <div class="dir-grid" id="outpaintDirections">
-          <button type="button" class="dir-btn" data-dir="top" aria-label="向上">↑</button>
-          <button type="button" class="dir-btn" data-dir="left" aria-label="向左">←</button>
-          <button type="button" class="dir-btn" data-dir="right" aria-label="向右">→</button>
-          <button type="button" class="dir-btn" data-dir="bottom" aria-label="向下">↓</button>
-        </div>
+    <div class="im-section">
+      <div class="im-section-title">扩图</div>
+      <div class="im-dir-grid">
+        <button class="im-dir-btn" data-dir="tl" title="左上"><svg viewBox="0 0 24 24"><line x1="19" y1="19" x2="9" y2="9"/><polyline points="15 9 9 9 9 15"/></svg></button>
+        <button class="im-dir-btn" data-dir="t" title="上"><svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="6 11 12 5 18 11"/></svg></button>
+        <button class="im-dir-btn" data-dir="tr" title="右上"><svg viewBox="0 0 24 24"><line x1="5" y1="19" x2="15" y2="9"/><polyline points="9 9 15 9 15 15"/></svg></button>
+        <button class="im-dir-btn" data-dir="l" title="左"><svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="11 6 5 12 11 18"/></svg></button>
+        <input type="number" class="im-dir-center" data-ref="expandPx" min="32" max="1024" value="128" title="扩展像素">
+        <button class="im-dir-btn" data-dir="r" title="右"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="13 6 19 12 13 18"/></svg></button>
+        <button class="im-dir-btn" data-dir="bl" title="左下"><svg viewBox="0 0 24 24"><line x1="19" y1="5" x2="9" y2="15"/><polyline points="9 9 9 15 15 15"/></svg></button>
+        <button class="im-dir-btn" data-dir="b" title="下"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="6 13 12 19 18 13"/></svg></button>
+        <button class="im-dir-btn" data-dir="br" title="右下"><svg viewBox="0 0 24 24"><line x1="5" y1="5" x2="15" y2="15"/><polyline points="9 15 15 15 15 9"/></svg></button>
       </div>
-      <div class="op-row">
-        <div class="op-label">扩展尺寸</div>
-        <div class="op-segment">
-          <button type="button" class="sb" data-expand="128">128</button>
-          <button type="button" class="sb active" data-expand="256">256</button>
-          <button type="button" class="sb" data-expand="512">512</button>
-        </div>
-      </div>
-      <div class="op-row">
-        <div class="op-label">羽化 <span id="featherValue">8px</span></div>
-        <input type="range" class="or" id="featherSlider" min="0" max="20" value="8" style="flex:1;width:auto">
-      </div>
-      <button type="button" class="op-apply" id="applyOutpaintBtn">应用扩图</button>
+      <button class="im-btn" data-act="expand" style="width:100%" title="应用扩图">
+        <svg viewBox="0 0 24 24"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>
+        应用扩图
+      </button>
     </div>
-    <div class="mask-preview-row">
-      <span>蒙版预览</span>
-      <label><input type="checkbox" id="maskPreviewToggle"> 显示蒙版</label>
-    </div>
-    <div class="canvas-wrap" id="canvasWrap">
-      <div class="canvas-stack">
-        <canvas id="bgCanvas"></canvas>
-        <canvas id="maskCanvas"></canvas>
+    <div class="im-section">
+      <div class="im-section-title">操作</div>
+      <div class="im-btn-row">
+        <button class="im-btn" data-act="undo" title="撤销 Ctrl+Z">
+          <svg viewBox="0 0 24 24"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+          撤销
+        </button>
+        <button class="im-btn" data-act="redo" title="重做 Ctrl+Y">
+          <svg viewBox="0 0 24 24"><polyline points="15 14 20 9 15 4"/><path d="M4 20v-7a4 4 0 0 1 4-4h12"/></svg>
+          重做
+        </button>
       </div>
-      <div class="canvas-hint" id="canvasHint">加载中…</div>
+      <button class="im-btn danger" data-act="clearMarks" style="width:100%;margin-top:4px" title="清空所有标注">
+        <svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        清空标注
+      </button>
     </div>
-    <textarea class="editor-prompt" id="editorPrompt" placeholder="描述修改内容，如：把红色区域换成日落海滩" style="margin-top:10px"></textarea>
-    <button type="button" class="gen-btn" id="editorConfirmBtn" style="margin-top:10px">用作参考图</button>
+  </div>
+
+  <!-- Bottom: action buttons -->
+  <div class="im-bottom-bar">
+    <button class="im-btn" data-act="close" title="关闭 Esc">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      关闭
+    </button>
+    <button class="im-btn success" data-act="save" title="合成参考图">
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      合成参考图
+    </button>
   </div>
 </div>
 
@@ -920,6 +1389,7 @@ body::before {
   <button type="button" class="lightbox-close" id="lightboxCloseBtn" aria-label="关闭">×</button>
   <img id="lightboxImage" alt="预览">
   <video id="lightboxVideo" controls playsinline preload="metadata" style="display:none"></video>
+  <audio id="lightboxAudio" controls preload="metadata" style="display:none"></audio>
 </div>
 
 <!-- ========== Toast ========== -->
@@ -938,7 +1408,7 @@ body::before {
 const CONFIG = {
   API_BASE: 'https://api.wuyinkeji.com',
   DETAIL_PATH: '/api/async/detail',
-  POLL_TIMEOUT: 10 * 60 * 1000,
+  POLL_TIMEOUT: 30 * 60 * 1000,
   POLL_FAIL_LIMIT: 5,
   REQUEST_TIMEOUT: 25000,
   POLL_PHASES: [
@@ -956,7 +1426,14 @@ const CONFIG = {
     PRESETS: 'sc_presets',
     R2_WORKER_URL: 'sc_r2_worker_url',
     R2_AUTH_TOKEN: 'sc_r2_auth_token',
-    GUIDE_DISMISSED: 'sc_guide_dismissed'
+    GUIDE_DISMISSED: 'sc_guide_dismissed',
+    // FIX 2: track hidden (not deleted) task ids for restore feature.
+    HIDDEN_TASKS: 'sc_hidden_tasks_v46',
+    // V56: TaskCenter (optional remote queue/polling service).
+    TASK_CENTER_URL: 'sc_task_center_url_v56',
+    TASK_CENTER_TOKEN: 'sc_task_center_token_v56',
+    // V56: batch queue mode preference ('instant' | 'queue').
+    QUEUE_MODE: 'sc_queue_mode_v56'
   },
   R2: { WORKER_URL: '', AUTH_TOKEN: '' },
   WECHAT_PAY_URI: 'wxp://f2f0bhNf2RE-C229PBeSBM85o3AVfGoHJfCF5uhtlrg7jhA',
@@ -1363,6 +1840,15 @@ const Store = {
   addTask(t) { const a = this.getTasks(); a.unshift(t); if (a.length > 500) a.length = 500; this.saveTasks(a); },
   updateTask(id, p) { const a = this.getTasks(); const i = a.findIndex(x => x.id === id); if (i >= 0) { Object.assign(a[i], p); this.saveTasks(a); } },
   delTask(id) { this.saveTasks(this.getTasks().filter(x => x.id !== id)); },
+  // FIX 2: hidden (soft-delete) tasks — restorable from result area "more" menu.
+  getHiddenTaskIds() { try { const v = JSON.parse(storageGet(CONFIG.STORAGE_KEYS.HIDDEN_TASKS, '[]')); return Array.isArray(v) ? v : []; } catch { return []; } },
+  saveHiddenTaskIds(arr) { storageSet(CONFIG.STORAGE_KEYS.HIDDEN_TASKS, JSON.stringify(arr)); },
+  hideTask(id) {
+    const ids = this.getHiddenTaskIds();
+    if (!ids.includes(id)) { ids.push(id); this.saveHiddenTaskIds(ids); }
+  },
+  unhideTask(id) { this.saveHiddenTaskIds(this.getHiddenTaskIds().filter(x => x !== id)); },
+  unhideAllTasks() { this.saveHiddenTaskIds([]); },
   getPromptHistory() { try { const v = JSON.parse(storageGet(CONFIG.STORAGE_KEYS.PROMPT_HISTORY, '[]')); return Array.isArray(v) ? v : []; } catch { return []; } },
   addPromptHistory(text) { if (!text) return; const a = this.getPromptHistory().filter(p => p !== text); a.unshift(text); if (a.length > 20) a.length = 20; storageSet(CONFIG.STORAGE_KEYS.PROMPT_HISTORY, JSON.stringify(a)); },
   getPresets() { try { const v = JSON.parse(storageGet(CONFIG.STORAGE_KEYS.PRESETS, '[]')); return Array.isArray(v) ? v : []; } catch { return []; } },
@@ -1378,7 +1864,15 @@ const Store = {
   },
   delPreset(id) { const arr = this.getPresets().filter(p => p.id !== id); storageSet(CONFIG.STORAGE_KEYS.PRESETS, JSON.stringify(arr)); },
   getGuideDismissed() { return storageGet(CONFIG.STORAGE_KEYS.GUIDE_DISMISSED, '') === '1'; },
-  setGuideDismissed() { storageSet(CONFIG.STORAGE_KEYS.GUIDE_DISMISSED, '1'); }
+  setGuideDismissed() { storageSet(CONFIG.STORAGE_KEYS.GUIDE_DISMISSED, '1'); },
+  // V56: TaskCenter URL / Token storage.
+  getTaskCenterUrl() { return storageGet(CONFIG.STORAGE_KEYS.TASK_CENTER_URL, ''); },
+  setTaskCenterUrl(u) { const v = String(u||'').trim().replace(/\/$/, ''); storageSet(CONFIG.STORAGE_KEYS.TASK_CENTER_URL, v); return v; },
+  getTaskCenterToken() { return storageGet(CONFIG.STORAGE_KEYS.TASK_CENTER_TOKEN, ''); },
+  setTaskCenterToken(t) { const v = String(t||'').trim(); storageSet(CONFIG.STORAGE_KEYS.TASK_CENTER_TOKEN, v); return v; },
+  // V56: batch queue mode preference ('instant' default).
+  getQueueMode() { const v = storageGet(CONFIG.STORAGE_KEYS.QUEUE_MODE, 'instant'); return v === 'queue' ? 'queue' : 'instant'; },
+  setQueueMode(m) { storageSet(CONFIG.STORAGE_KEYS.QUEUE_MODE, m === 'queue' ? 'queue' : 'instant'); }
 };
 
 /* ============================================================
@@ -1473,21 +1967,26 @@ const Api = {
     if (apiErr) throw apiErr;
     return payload;
   },
+  // P0-2: aliyuncs / wywxopenai.oss 图片走 https，避免混合内容拦截。
+  fixUrl(url) {
+    if (typeof url !== 'string') return url;
+    return url.replace(/^http:\/\/(wywxopenai\.oss[^/]+|[^/]*aliyuncs\.com)\//i, 'https://$1/');
+  },
   extractUrl(d) {
     if (!d) return null;
     const data = (typeof d.data === 'string') ? (() => { try { return JSON.parse(d.data); } catch { return d.data; } })() : d.data;
     const isUrl = s => typeof s === 'string' && /^https?:\/\/\S+/i.test(s) && s.length < 4000;
     const keys = ['url','video_url','image_url','audio_url','result','result_url','demo_audio','file_url','download_url','output_url','video','image','audio','media_url'];
-    for (const k of keys) { if (isUrl(data?.[k])) return data[k]; if (Array.isArray(data?.[k])) { const u = data[k].find(isUrl); if (u) return u; } }
-    if (isUrl(data)) return data;
-    return this._deepFind(data);
+    for (const k of keys) { if (isUrl(data?.[k])) return this.fixUrl(data[k]); if (Array.isArray(data?.[k])) { const u = data[k].find(isUrl); if (u) return this.fixUrl(u); } }
+    if (isUrl(data)) return this.fixUrl(data);
+    return this.fixUrl(this._deepFind(data));
   },
   _deepFind(obj, d = 0) {
     if (!obj || d > 8) return null;
     const isUrl = s => typeof s === 'string' && /^https?:\/\/\S+/i.test(s) && s.length < 4000;
-    if (typeof obj === 'string') return isUrl(obj) ? obj : null;
+    if (typeof obj === 'string') return isUrl(obj) ? this.fixUrl(obj) : null;
     if (Array.isArray(obj)) { for (const it of obj) { const u = this._deepFind(it, d+1); if (u) return u; } return null; }
-    if (typeof obj === 'object') { for (const [k, v] of Object.entries(obj)) { if (/url|file|output|result|media|video|image|audio/i.test(k) && isUrl(v)) return v; const u = this._deepFind(v, d+1); if (u) return u; } }
+    if (typeof obj === 'object') { for (const [k, v] of Object.entries(obj)) { if (/url|file|output|result|media|video|image|audio/i.test(k) && isUrl(v)) return this.fixUrl(v); const u = this._deepFind(v, d+1); if (u) return u; } }
     return null;
   },
   async uploadToR2(file, onProgress, retry = 0) {
@@ -1522,7 +2021,7 @@ const Api = {
         if (/\.r2\.dev/.test(workerUrl)) hint = '网址错误：应填 Worker URL（形如 https://ai-media-proxy.xxx.workers.dev），不是 R2 公网域名';
         else if (!/\.workers\.dev/.test(workerUrl) && !/cloudflare/.test(workerUrl)) hint = '网址看起来不是 Cloudflare Worker';
         else if (retry < 1) { setTimeout(() => this.uploadToR2(file, onProgress, retry + 1).then(resolve, reject), 1000); return; }
-        else hint = '网络连接失败（已重试 1 次仍失败）';
+        else hint = '网络无法连接到 Worker 域名，若使用 workers.dev 请更换自定义域名';
         reject(new Error(hint));
       };
       xhr.ontimeout = () => reject(new Error('R2 上传超时'));
@@ -1571,6 +2070,315 @@ const Api = {
 };
 
 /* ============================================================
+   ThumbService — V56 Phase 1
+   Generates lightweight webp thumbnails (320px) for images and
+   videos. Uploads to R2 under the `thumb/` prefix. Falls back to
+   the original URL on any failure. Lazy generation respects
+   10 thumbs/minute rate-limit for back-filling old items.
+   ============================================================ */
+const ThumbService = {
+  THUMB_SIZE: 320,
+  THUMB_QUALITY: 0.8,
+  RATE_LIMIT: 10,            // 10 thumbs
+  RATE_WINDOW: 60 * 1000,    // per minute
+  _rateStamps: [],
+  _inflight: new Set(),
+  _cache: Object.create(null), // resultUrl -> thumbUrl
+
+  // Internal: enforce 10/min rate limit.
+  _allow() {
+    const now = Date.now();
+    this._rateStamps = this._rateStamps.filter(t => now - t < this.RATE_WINDOW);
+    if (this._rateStamps.length >= this.RATE_LIMIT) return false;
+    this._rateStamps.push(now);
+    return true;
+  },
+
+  // makeThumb(source, type): generates a webp data URL.
+  //  - image: draw to canvas, downscale to 320px on long edge, webp 0.8
+  //  - video: load metadata, seek to 1s, capture frame, webp 0.8
+  //  - audio: returns null (no static thumbnail needed)
+  // 3s hard timeout — resolves to null on failure/timeout.
+  makeThumb(source, type) {
+    return new Promise(resolve => {
+      let done = false;
+      const finish = v => { if (done) return; done = true; resolve(v); };
+      const timer = setTimeout(() => finish(null), 3000);
+      try {
+        if (type === 'image') {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            clearTimeout(timer);
+            try {
+              const w = img.naturalWidth || img.width;
+              const h = img.naturalHeight || img.height;
+              if (!w || !h) return finish(null);
+              const scale = Math.min(1, this.THUMB_SIZE / Math.max(w, h));
+              const cw = Math.max(1, Math.round(w * scale));
+              const ch = Math.max(1, Math.round(h * scale));
+              const c = document.createElement('canvas');
+              c.width = cw; c.height = ch;
+              const ctx = c.getContext('2d');
+              ctx.drawImage(img, 0, 0, cw, ch);
+              const url = c.toDataURL('image/webp', this.THUMB_QUALITY);
+              finish(url || null);
+            } catch { finish(null); }
+          };
+          img.onerror = () => { clearTimeout(timer); finish(null); };
+          img.src = source;
+        } else if (type === 'video') {
+          const vid = document.createElement('video');
+          vid.muted = true; vid.playsInline = true; vid.preload = 'metadata';
+          vid.crossOrigin = 'anonymous';
+          vid.onloadeddata = () => {
+            try { vid.currentTime = Math.min(1, (vid.duration || 1) / 2); } catch {}
+          };
+          vid.onseeked = () => {
+            try {
+              const w = vid.videoWidth || 320;
+              const h = vid.videoHeight || 240;
+              if (!w || !h) return finish(null);
+              const scale = Math.min(1, this.THUMB_SIZE / Math.max(w, h));
+              const cw = Math.max(1, Math.round(w * scale));
+              const ch = Math.max(1, Math.round(h * scale));
+              const c = document.createElement('canvas');
+              c.width = cw; c.height = ch;
+              const ctx = c.getContext('2d');
+              ctx.drawImage(vid, 0, 0, cw, ch);
+              const url = c.toDataURL('image/webp', this.THUMB_QUALITY);
+              finish(url || null);
+            } catch { finish(null); }
+          };
+          vid.onerror = () => { clearTimeout(timer); finish(null); };
+          vid.src = source;
+        } else {
+          clearTimeout(timer);
+          finish(null);
+        }
+      } catch { clearTimeout(timer); finish(null); }
+    });
+  },
+
+  // ensureThumb(record): generate + upload to R2 thumb/ dir, return thumbUrl || original url.
+  // record: { id, type, resultUrl }
+  async ensureThumb(record) {
+    if (!record || !record.resultUrl) return null;
+    const orig = record.resultUrl;
+    if (this._cache[orig]) return this._cache[orig];
+    if (this._inflight.has(orig)) return orig;
+    if (record.type !== 'image' && record.type !== 'video') return orig;
+    // Skip if R2 not configured.
+    if (!CONFIG.R2.WORKER_URL) return orig;
+    this._inflight.add(orig);
+    try {
+      const dataUrl = await this.makeThumb(orig, record.type);
+      if (!dataUrl) return orig;
+      const blob = await Api.dataUrlToBlob(dataUrl);
+      const file = new File([blob], `thumb/${record.id || 't'}-${Date.now()}.webp`, { type: 'image/webp' });
+      const upUrl = await Api.uploadToR2(file);
+      if (upUrl) {
+        this._cache[orig] = upUrl;
+        // Persist on the task record.
+        if (record.id) Store.updateTask(record.id, { thumbUrl: upUrl });
+        return upUrl;
+      }
+      return orig;
+    } catch { return orig; }
+    finally { this._inflight.delete(orig); }
+  },
+
+  // Lookup cached thumb (no generation). Used by render code.
+  getThumb(record) {
+    if (!record) return null;
+    if (record.thumbUrl) return record.thumbUrl;
+    if (record.resultUrl && this._cache[record.resultUrl]) return this._cache[record.resultUrl];
+    return record.resultUrl;
+  },
+
+  // Lazy generation for old items (rate-limited). Triggered after render.
+  // records: array of {id, type, resultUrl, thumbUrl}
+  lazyBackfill(records) {
+    if (!records || !records.length) return;
+    const pending = records.filter(r => r && r.resultUrl && !r.thumbUrl && !this._cache[r.resultUrl] && (r.type === 'image' || r.type === 'video'));
+    if (!pending.length) return;
+    const run = () => {
+      const next = pending.shift();
+      if (!next) return;
+      if (!this._allow()) { pending.unshift(next); return; }
+      this.ensureThumb(next).then(url => {
+        if (url && url !== next.resultUrl) {
+          // Update the DOM <img>/<video> src directly without re-rendering the whole list.
+          document.querySelectorAll(`[data-thumb-src="${CSS.escape(next.resultUrl)}"]`).forEach(el => {
+            try { el.src = url; } catch {}
+          });
+        }
+      }).finally(() => { if (pending.length) setTimeout(run, 200); });
+    };
+    run();
+  }
+};
+
+/* ============================================================
+   TaskCenter — V56 Phase 2 (optional remote task queue/polling)
+   The host can run in two modes:
+     · 'instant' — submit directly via Api.submit + PollManager (default)
+     · 'queue'   — submit via TaskCenter, which queues the job on a
+                   remote worker and exposes /tasks?status=active for
+                   polling. Auto-fallback to instant on failure.
+   ============================================================ */
+const TaskCenter = {
+  enabled: false,
+  url: '',
+  token: '',
+  _pollTimer: null,
+  _listeners: { result: [], error: [], status: [] },
+
+  on(event, cb) {
+    if (!this._listeners[event]) this._listeners[event] = [];
+    this._listeners[event].push(cb);
+    return () => {
+      const arr = this._listeners[event];
+      const i = arr.indexOf(cb);
+      if (i >= 0) arr.splice(i, 1);
+    };
+  },
+  _emit(event, payload) {
+    (this._listeners[event] || []).forEach(cb => { try { cb(payload); } catch (e) { console.warn('TaskCenter listener err', e); } });
+  },
+
+  isAvailable() { return !!this.enabled && !!this.url; },
+
+  // init(): read workerUrl/token from Store, test connectivity, set enabled flag.
+  async init() {
+    this.url = Store.getTaskCenterUrl();
+    this.token = Store.getTaskCenterToken();
+    if (!this.url) { this.enabled = false; return false; }
+    try {
+      const r = await Api.request(this.url + '/health', { method: 'GET' }, 5000);
+      this.enabled = r.ok;
+      if (this.enabled) {
+        this.startPolling();
+        Toast.info('任务中心已连接');
+      }
+      return this.enabled;
+    } catch {
+      this.enabled = false;
+      return false;
+    }
+  },
+
+  // test(): explicit user-initiated connectivity test (used by Settings → 测试 button).
+  async test() {
+    const url = Store.getTaskCenterUrl();
+    if (!url) { Toast.error('请先填写任务中心 URL'); return false; }
+    const btn = $('#testTaskCenterBtn'); const orig = btn?.textContent;
+    if (btn) { btn.disabled = true; btn.textContent = '测试中…'; }
+    try {
+      const r = await Api.request(url + '/health', { method: 'GET', headers: this._authHeaders() }, 8000);
+      if (r.ok) {
+        this.url = url; this.token = Store.getTaskCenterToken();
+        this.enabled = true;
+        this.startPolling();
+        Toast.success('任务中心连接成功');
+        if (btn) { btn.disabled = false; btn.textContent = '已连接 ✓'; setTimeout(() => { btn.textContent = orig; }, 2500); }
+        return true;
+      }
+      throw new Error('HTTP ' + r.status);
+    } catch (e) {
+      this.enabled = false;
+      Toast.error('任务中心测试失败：' + (e.message || e));
+      if (btn) { btn.disabled = false; btn.textContent = orig; }
+      return false;
+    }
+  },
+
+  _authHeaders() {
+    const h = { 'Content-Type': 'application/json' };
+    if (this.token) h.Authorization = 'Bearer ' + this.token;
+    return h;
+  },
+
+  // submit(task): POST /task with the prepared payload.
+  // task: { endpoint, body, kind?, priority?, ref? }
+  // Returns: { taskId, apiId } or throws.
+  async submit(task) {
+    if (!this.isAvailable()) throw new Error('TASK_CENTER_UNAVAILABLE');
+    const payload = {
+      endpoint: task.endpoint,
+      body: task.body,
+      kind: task.kind || 'image',
+      priority: task.priority || 0,
+      apiKey: Store.getApiKey()
+    };
+    const r = await Api.request(this.url + '/task', {
+      method: 'POST',
+      headers: this._authHeaders(),
+      body: JSON.stringify(payload)
+    }, 20000);
+    if (!r.ok) throw new Error('TASK_CENTER_HTTP_' + r.status);
+    const data = await Api.parseJson(r);
+    if (!data?.taskId && !data?.data?.id) throw new Error('TASK_CENTER_NO_ID');
+    return { taskId: data.taskId || data.data?.id, apiId: data.apiId || data.data?.apiId || data.taskId || data.data?.id };
+  },
+
+  // cancel(taskId): POST /task/<id>/cancel
+  async cancel(taskId) {
+    if (!this.isAvailable()) return false;
+    try {
+      const r = await Api.request(this.url + '/task/' + encodeURIComponent(taskId) + '/cancel', {
+        method: 'POST',
+        headers: this._authHeaders()
+      }, 8000);
+      return r.ok;
+    } catch { return false; }
+  },
+
+  // list(): GET /tasks?status=active
+  async list() {
+    if (!this.isAvailable()) return [];
+    try {
+      const r = await Api.request(this.url + '/tasks?status=active', {
+        method: 'GET',
+        headers: this._authHeaders()
+      }, 10000);
+      if (!r.ok) return [];
+      const data = await Api.parseJson(r);
+      return Array.isArray(data) ? data : (data?.tasks || data?.data || []);
+    } catch { return []; }
+  },
+
+  // startPolling(): every 5s, query active tasks and fire result/error listeners.
+  startPolling() {
+    if (this._pollTimer) return;
+    const tick = async () => {
+      if (!this.isAvailable()) { this.stopPolling(); return; }
+      try {
+        const tasks = await this.list();
+        this._emit('status', tasks);
+        for (const t of tasks) {
+          if (!t) continue;
+          const status = t.status || t.state;
+          if (status === 'succeeded' || status === 'success' || status === 2) {
+            const url = t.resultUrl || t.result_url || Api.extractUrl(t);
+            this._emit('result', { taskId: t.taskId || t.id, apiId: t.apiId, url, raw: t });
+          } else if (status === 'failed' || status === 'fail' || status === 3) {
+            this._emit('error', { taskId: t.taskId || t.id, apiId: t.apiId, error: t.error || t.message || '生成失败' });
+          }
+        }
+      } catch (e) {
+        // Silent — single failed poll shouldn't disable TaskCenter.
+      }
+    };
+    this._pollTimer = setInterval(tick, 5000);
+    tick();
+  },
+  stopPolling() {
+    if (this._pollTimer) { clearInterval(this._pollTimer); this._pollTimer = null; }
+  }
+};
+
+/* ============================================================
    PollManager
    ============================================================ */
 class PollManager {
@@ -1611,6 +2419,8 @@ class PollManager {
           Store.updateTask(task.id, { status: 'success', resultUrl: url, rawDetail: detail, endTime: Date.now(), elapsed });
           Store.updateHistory(task.historyId, { status: 'success', resultUrl: url, endTime: Date.now(), elapsed });
           UI.renderResults();
+          // V56 Phase 1: generate thumb for the succeeded task
+          if (url) { const tt = Store.getTasks().find(x => x.id === task.id); if (tt) ThumbService.ensureThumb({ id: tt.id, type: tt.type, resultUrl: url }).then(() => UI.renderResults()); }
           if (url) { Toast.success(`${task.modelName} 成功`, { actions: [{ label: '查看', onClick: () => UI.switchView('result') }] }); UI.playSound(); UI.notify(task.modelName, false); }
           else Toast.warning('任务成功但未提取到 URL');
           return;
@@ -1693,7 +2503,7 @@ class PollManager {
         Store.updateTask(id, { status: 'success', resultUrl: url, rawDetail: d, endTime: now, elapsed: now - (t.startTime || now) });
         Store.updateHistory(t.historyId, { status: 'success', resultUrl: url, endTime: now, elapsed: now - (t.startTime || now) });
         UI.renderResults(); Toast.success(url ? '成功' : '成功，但未提取到结果 URL');
-        if (url) UI.playSound();
+        if (url) { UI.playSound(); ThumbService.ensureThumb({ id: t.id, type: t.type, resultUrl: url }).then(() => UI.renderResults()); }
       } else if (s === 3 || s === 'failed' || s === 'fail') {
         const msg = d?.data?.message || d?.data?.error || '生成失败'; const now = Date.now();
         this.stop(id);
@@ -1872,15 +2682,26 @@ const Workflow = {
       tab = UI.tab;
     }
     if (!model) return '';
-    const refs = { image: [], video: [], first: [], last: [] };
+    const refs = { image: [], video: [], audio: [], first: [], last: [] };
+    // FIX 1: collect ref URLs preferring r.remote over r.src; only http(s) URLs.
+    const collectFromRefs = (p) => {
+      const list = UI.getRefs(p.key) || [];
+      return list.map(r => (r.remote || r.src || '')).filter(x => /^https?:\/\//i.test(String(x)));
+    };
     (model.params || []).forEach(p => {
-      let v = body[p.key];
+      let v;
+      if (!task && (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio')) {
+        v = collectFromRefs(p);
+      } else {
+        v = body[p.key];
+      }
       let a = Array.isArray(v) ? v : (v == null ? [] : String(v).split(',').map(x => x.trim()).filter(Boolean));
-      a = a.filter(x => /^https?:\/\//i.test(x));
+      a = a.map(x => String(x)).filter(x => /^https?:\/\//i.test(x));
       if (['first_frame','firstFrameUrl'].includes(p.key)) refs.first.push(...a);
       else if (['last_frame','lastFrameUrl'].includes(p.key)) refs.last.push(...a);
       else if (p.type === 'ref-image') refs.image.push(...a);
       else if (p.type === 'ref-video') refs.video.push(...a);
+      else if (p.type === 'ref-audio') refs.audio.push(...a);
     });
     const lines = [
       '# 速创工作台 · 工作流 V32',
@@ -1891,6 +2712,7 @@ const Workflow = {
       '【参考素材】',
       '参考图：' + (refs.image.length ? '\n' + refs.image.map((u, i) => `${i + 1}. ${u}`).join('\n') : '无'),
       '参考视频：' + (refs.video.length ? '\n' + refs.video.map((u, i) => `${i + 1}. ${u}`).join('\n') : '无'),
+      '参考音频：' + (refs.audio.length ? '\n' + refs.audio.map((u, i) => `${i + 1}. ${u}`).join('\n') : '无'),
       '首帧：' + (refs.first[0] || '无'),
       '尾帧：' + (refs.last[0] || '无'),
       '',
@@ -1918,13 +2740,14 @@ const Workflow = {
   parse(text) {
     const s = String(text || '').replace(/\r/g, '').trim();
     if (!/^#\s*速创工作台\s*[·-]\s*工作流\s+V32[\s\S]*#\s*END\s*$/i.test(s)) return null;
-    const r = { model: null, type: null, prompt: '', refs: { image: [], video: [], first: null, last: null }, fields: {} };
+    const r = { model: null, type: null, prompt: '', refs: { image: [], video: [], audio: [], first: null, last: null }, fields: {} };
     let sec = '', field = '';
     const add = (k, v) => {
       const u = String(v || '').trim().replace(/^\d+\.\s*/, '');
       if (/^https?:\/\//i.test(u)) {
         if (k === '参考图' || k === '参考图片') r.refs.image.push(u);
         else if (k === '参考视频') r.refs.video.push(u);
+        else if (k === '参考音频') r.refs.audio.push(u);
         else if (k === '首帧') r.refs.first = u;
         else if (k === '尾帧') r.refs.last = u;
       }
@@ -1945,7 +2768,7 @@ const Workflow = {
         if (k === '模型') { r.model = v; return; }
         if (k === '任务' || k === '类型') { r.type = v; return; }
         if (k === '提示词') { sec = '提示词'; r.prompt = v === '（空）' ? '' : v; return; }
-        if (['参考图','参考图片','参考视频','首帧','尾帧'].includes(k)) { field = k; if (v && v !== '无') add(k, v); return; }
+        if (['参考图','参考图片','参考视频','参考音频','首帧','尾帧'].includes(k)) { field = k; if (v && v !== '无') add(k, v); return; }
         if (sec === '生成设置' || sec === '生成参数' || sec === '其他参数') r.fields[k] = v;
         return;
       }
@@ -1977,12 +2800,14 @@ const Workflow = {
     }
     const ip = model.params.find(x => x.type === 'ref-image' && !isFrameKey(x.key));
     const vp = model.params.find(x => x.type === 'ref-video' && !isFrameKey(x.key));
+    const ap = model.params.find(x => x.type === 'ref-audio' && !isFrameKey(x.key));
     const fp = model.params.find(x => ['first_frame','firstFrameUrl'].includes(x.key));
     const lp = model.params.find(x => ['last_frame','lastFrameUrl'].includes(x.key));
-    if (ip && p.refs.image.length) this._replaceRefs(ip.key, p.refs.image, false);
-    if (vp && p.refs.video.length) this._replaceRefs(vp.key, p.refs.video, true);
-    if (fp && p.refs.first) this._replaceRefs(fp.key, [p.refs.first], false);
-    if (lp && p.refs.last) this._replaceRefs(lp.key, [p.refs.last], false);
+    if (ip && p.refs.image.length) this._replaceRefs(ip.key, p.refs.image, false, false);
+    if (vp && p.refs.video.length) this._replaceRefs(vp.key, p.refs.video, true, false);
+    if (ap && p.refs.audio.length) this._replaceRefs(ap.key, p.refs.audio, false, true);
+    if (fp && p.refs.first) this._replaceRefs(fp.key, [p.refs.first], false, false);
+    if (lp && p.refs.last) this._replaceRefs(lp.key, [p.refs.last], false, false);
     Object.entries(p.fields).forEach(([label, v]) => {
       const param = model.params.find(x => x.label === label || x.key === label);
       if (!param) return;
@@ -1997,15 +2822,17 @@ const Workflow = {
     Toast.success('工作流已导入');
     return true;
   },
-  _replaceRefs(key, urls, video) {
+  _replaceRefs(key, urls, video, audio) {
     const refs = UI.getRefs(key);
     if (!refs) return;
     refs.splice(0);
+    const isAudio = !!audio;
+    const isVideo = !!video;
     urls.forEach(u => refs.push({
       id: 'r_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
-      kind: video ? 'url-video' : 'url',
-      src: u, name: video ? '工作流视频' : '工作流图片', uploaded: true, remote: u,
-      mediaType: video ? 'video' : 'image'
+      kind: isVideo ? 'url-video' : isAudio ? 'url-audio' : 'url',
+      src: u, name: isVideo ? '工作流视频' : isAudio ? '工作流音频' : '工作流图片', uploaded: true, remote: u,
+      mediaType: isVideo ? 'video' : isAudio ? 'audio' : 'image'
     }));
     UI.refreshRefGrid(key);
   },
@@ -2042,33 +2869,55 @@ const UI = {
   activeSourceRefKey: null,  // for source picker
   activeSourceIsVideo: false,
 
-  editor: {
-    canvas: null, ctx: null, bg: null, bgCtx: null, img: null, imgClean: false, origSrc: null,
-    tool: 'rect', color: '255,0,0', opacity: .5, brushSize: 30, expandSize: 256, feather: 8,
-    isDrawing: false, startX: 0, startY: 0, undoStack: [], rectPreview: null, strokeSnapshot: null,
-    maskOps: [], currentBrush: null, dirty: false
-  },
-
   /* ===== INIT ===== */
   init() {
     // Load storage
     $('#apiKeyInput').value = Store.getApiKey();
     $('#r2WorkerUrlInput').value = Store.getR2WorkerUrl();
     $('#r2AuthTokenInput').value = Store.getR2AuthToken();
+    // V56: TaskCenter inputs
+    const tcUrl = $('#taskCenterUrlInput'); if (tcUrl) tcUrl.value = Store.getTaskCenterUrl();
+    const tcTok = $('#taskCenterTokenInput'); if (tcTok) tcTok.value = Store.getTaskCenterToken();
     this.applyTheme(Store.getTheme());
 
     // Header
     $('#viewSwitchBtn').onclick = () => this.switchView(this.currentView === 'resultView' ? 'paramView' : 'resultView');
-    $('#settingsBtn').onclick = () => this.openSheet('settingsSheet', 'settingsOverlay');
+    // FIX 6: moreBtn replaces direct settingsBtn — opens consolidated menu sheet.
+    $('#moreBtn').onclick = () => this.openMoreMenu();
     $('#taskBtn').onclick = () => this.switchView('resultView');
+
+    // FIX 6: result-area toolbar buttons.
+    $('#sortBtn').onclick = () => this.toggleSort();
+    $('#restoreBtn').onclick = () => this.openHiddenManager();
+    $('#resultMoreBtn').onclick = () => this.openMoreMenu();
+
+    // More sheet (FIX 6)
+    $('#closeMoreBtn').onclick = () => this.closeSheet('moreSheet', 'moreOverlay');
+    $('#moreOverlay').onclick = () => this.closeSheet('moreSheet', 'moreOverlay');
 
     // Settings sheet
     $('#closeSettingsBtn').onclick = () => this.closeSheet('settingsSheet', 'settingsOverlay');
     $('#settingsOverlay').onclick = () => this.closeSheet('settingsSheet', 'settingsOverlay');
     $('#apiKeyInput').oninput = e => Store.setApiKey(String(e.target.value || '').trim());
-    $('#r2WorkerUrlInput').oninput = e => Store.setR2WorkerUrl(e.target.value);
-    $('#r2AuthTokenInput').oninput = e => Store.setR2AuthToken(e.target.value);
+    // FIX 3: R2 inputs — bind save + show transient "已保存" feedback (debounced).
+    this._r2SavedTimer = null;
+    const showR2Saved = () => {
+      const t = $('#r2SavedHint');
+      if (t) { t.classList.add('show'); clearTimeout(this._r2SavedTimer); this._r2SavedTimer = setTimeout(() => t.classList.remove('show'), 1200); }
+    };
+    $('#r2WorkerUrlInput').oninput = e => { Store.setR2WorkerUrl(e.target.value); showR2Saved(); };
+    $('#r2AuthTokenInput').oninput = e => { Store.setR2AuthToken(e.target.value); showR2Saved(); };
     $('#testR2Btn').onclick = () => Api.testR2Connection();
+    // V56: TaskCenter inputs + test button
+    this._tcSavedTimer = null;
+    const showTcSaved = () => {
+      const t = $('#taskCenterSavedHint');
+      if (t) { t.classList.add('show'); clearTimeout(this._tcSavedTimer); this._tcSavedTimer = setTimeout(() => t.classList.remove('show'), 1200); }
+    };
+    if (tcUrl) tcUrl.oninput = e => { Store.setTaskCenterUrl(e.target.value); showTcSaved(); this.syncQueueModeUI(); };
+    if (tcTok) tcTok.oninput = e => { Store.setTaskCenterToken(e.target.value); showTcSaved(); };
+    const tcTestBtn = $('#testTaskCenterBtn');
+    if (tcTestBtn) tcTestBtn.onclick = async () => { await TaskCenter.test(); this.syncQueueModeUI(); };
     $('#themeBtn').onclick = () => {
       const next = Store.getTheme() === 'light' ? 'dark' : 'light';
       Store.setTheme(next); this.applyTheme(next);
@@ -2077,6 +2926,29 @@ const UI = {
     $('#soundBtn').onclick = () => { const cur = Store.getSound(); Store.setSound(!cur); Toast.info(!cur ? '声音已开启' : '声音已关闭'); };
     $('#statsBtn').onclick = () => { this.closeSheet('settingsSheet', 'settingsOverlay'); this.showStats(); };
     $('#historyBtn').onclick = () => { this.closeSheet('settingsSheet', 'settingsOverlay'); this.showHistory(); };
+
+    // V56 Phase 3: 立即/排队 toggle bindings
+    $$('[data-qmode]').forEach(b => b.onclick = () => {
+      const m = b.dataset.qmode;
+      Store.setQueueMode(m);
+      this.syncQueueModeUI();
+    });
+
+    // V56 Phase 3: queue status bar — cancel all queued
+    const qbCancel = $('#qbCancelAllBtn');
+    if (qbCancel) qbCancel.onclick = () => this.cancelAllQueued();
+
+    // V56 Phase 4: pipeline bindings
+    const pipeSubmit = $('#pipeSubmitBtn');
+    if (pipeSubmit) pipeSubmit.onclick = () => this.submitPipeline();
+    const pipeCancel = $('#pipeCancelBtn');
+    if (pipeCancel) pipeCancel.onclick = () => this.cancelPipeline();
+    const pipePick = $('#pipePickBaseBtn');
+    if (pipePick) pipePick.onclick = () => this.pickPipelineBase();
+    const pipeText = $('#pipeText');
+    if (pipeText) pipeText.oninput = () => this.updatePipelineCost();
+    const pipeBaseInput = $('#pipeBaseInput');
+    if (pipeBaseInput) pipeBaseInput.oninput = () => this.updatePipelineCost();
 
     // Model sheet
     $('#modelBtn').onclick = () => this.openSheet('modelSheet', 'modelOverlay');
@@ -2137,18 +3009,6 @@ const UI = {
     $('#lightboxCloseBtn').onclick = () => this.closeLightbox();
     $('#mediaLightbox').onclick = e => { if (e.target.id === 'mediaLightbox') this.closeLightbox(); };
 
-    // Editor
-    $('#editorCloseBtn').onclick = () => this.closeEditor();
-    $('#editorConfirmBtn').onclick = () => this.confirmEditor();
-    $('#undoBtn').onclick = () => this.undoEditor();
-    $('#clearBtn').onclick = () => this.clearEditor();
-    $('#applyOutpaintBtn').onclick = () => this.applyOutpaint();
-    $('#opacitySlider').oninput = e => { this.editor.opacity = +e.target.value / 100; $('#opacityValue').textContent = e.target.value + '%'; };
-    $('#featherSlider').oninput = e => { this.editor.feather = +e.target.value; $('#featherValue').textContent = e.target.value + 'px'; };
-    $('#maskPreviewToggle').onchange = e => {
-      const c = $('#maskCanvas'); if (c) c.style.opacity = e.target.checked ? '0.75' : '0';
-    };
-
     // File inputs (album + file)
     $('#albumInput').onchange = e => this.handleFilePick(Array.from(e.target.files || []));
     $('#fileInput').onchange = e => this.handleFilePick(Array.from(e.target.files || []));
@@ -2160,9 +3020,9 @@ const UI = {
     this.bindSheetSwipe('sourceSheet', 'sourceOverlay');
     this.bindSheetSwipe('recentSheet', 'recentOverlay');
     this.bindSheetSwipe('actionSheet', 'actionOverlay');
+    this.bindSheetSwipe('moreSheet', 'moreOverlay');
 
-    // Global paste (workflow auto-apply)
-    document.addEventListener('paste', e => this.handleGlobalPaste(e));
+    // Removed auto-paste workflow — import only via modal now.
 
     // Esc to close overlays
     document.addEventListener('keydown', e => {
@@ -2171,22 +3031,30 @@ const UI = {
       $('#presetSaveModal').classList.remove('show');
       $('#workflowModal').classList.remove('show');
       this.closeLightbox();
-      this.closeEditor();
       this.closeSheet('settingsSheet', 'settingsOverlay');
       this.closeSheet('modelSheet', 'modelOverlay');
       this.closeSheet('presetSheet', 'presetOverlay');
       this.closeSheet('sourceSheet', 'sourceOverlay');
       this.closeSheet('recentSheet', 'recentOverlay');
       this.closeSheet('actionSheet', 'actionOverlay');
+      this.closeSheet('moreSheet', 'moreOverlay');
     });
 
     // Init
     this.switchTab('image');
     this.renderResults();
     this.updateViewBadge();
-    setInterval(() => { this.updateTaskDock(); this.updateViewBadge(); }, 1000);
+    this.syncQueueModeUI();
+    setInterval(() => { this.updateTaskDock(); this.updateViewBadge(); this.updateQueueBar(); }, 1000);
     window.addEventListener('focus', () => { this.renderResults(); });
     setTimeout(() => poller.resumeAll(), 300);
+    // V56: TaskCenter — initialize asynchronously. If unavailable, local direct mode remains.
+    setTimeout(() => { TaskCenter.init().then(() => { this.syncQueueModeUI(); this.bindTaskCenterEvents(); }); }, 500);
+    // V56: lazy backfill thumbnails for old succeeded tasks (rate-limited).
+    setTimeout(() => {
+      const succeeded = Store.getTasks().filter(t => t.status === 'success' && t.resultUrl && !t.thumbUrl);
+      if (succeeded.length) ThumbService.lazyBackfill(succeeded.slice(0, 30));
+    }, 2500);
     // P1: Button ripple + haptic - refined
     document.addEventListener('click', e => {
       const btn = e.target.closest('.gen-btn, .tab, .act, .preset-btn, .source-item, .model-item, .ref-add, .header-btn');
@@ -2289,7 +3157,7 @@ const UI = {
     if (dock) dock.style.display = running.length > 0 ? 'flex' : 'none';
     if (btn) btn.style.display = running.length > 0 ? 'flex' : 'none';
     if (badge) badge.textContent = running.length > 0 ? String(running.length) : '0';
-    document.title = running.length > 0 ? `⏳ ${running.length}个任务 · AI 工作台` : '修的媒体工作台 V43';
+    document.title = running.length > 0 ? `⏳ ${running.length}个任务 · 修的媒体工作台` : '修的媒体工作台 V56';
   },
   updateViewBadge() {
     const badge = $('#viewBadge');
@@ -2297,6 +3165,373 @@ const UI = {
     const count = Store.getTasks().length;
     badge.textContent = count > 99 ? '99+' : String(count);
     badge.style.display = count > 0 ? 'inline-flex' : 'none';
+  },
+
+  /* ===== V56 Phase 3: Queue mode UI sync ===== */
+  syncQueueModeUI() {
+    const row = $('#qmodeRow');
+    if (!row) return;
+    // Only show 立即/排队 toggle when TaskCenter is available.
+    const show = TaskCenter.isAvailable();
+    row.style.display = show ? 'flex' : 'none';
+    const mode = Store.getQueueMode();
+    $$('[data-qmode]').forEach(b => b.classList.toggle('active', b.dataset.qmode === mode));
+    const prio = $('#qmodePriority');
+    if (prio) prio.style.display = (show && mode === 'queue') ? 'inline-flex' : 'none';
+    // Update gen button label.
+    const txt = $('#genBtnText');
+    if (txt) txt.textContent = (show && mode === 'queue') ? '排队提交' : '生成';
+    // Show/hide queue status bar in result view.
+    const qbar = $('#queueBar');
+    if (qbar) qbar.style.display = show ? 'flex' : 'none';
+  },
+  // Update compact queue status bar: 排队 X · 运行 Y · 今日已耗 ¥Z
+  updateQueueBar() {
+    if (!TaskCenter.isAvailable()) return;
+    const qbar = $('#queueBar');
+    if (!qbar || qbar.style.display === 'none') return;
+    const tasks = Store.getTasks();
+    const queued = tasks.filter(t => t.status === 'running' && t.queued).length;
+    const running = tasks.filter(t => t.status === 'running' && !t.queued).length;
+    // 今日已耗：sum of successful tasks' estimates created today
+    const todayStart = new Date().setHours(0, 0, 0, 0);
+    let cost = 0;
+    tasks.forEach(t => {
+      if (t.status === 'success' && (t.createdAt || 0) >= todayStart) {
+        const m = MODELS[t.tab]?.find(x => x.id === t.modelId);
+        const est = m ? calcEstimate(m, t.params || {}) : null;
+        if (est?.amount != null) cost += est.amount;
+      }
+    });
+    const qEl = $('#qbQueued'); if (qEl) qEl.textContent = String(queued);
+    const rEl = $('#qbRunning'); if (rEl) rEl.textContent = String(running);
+    const cEl = $('#qbCost'); if (cEl) cEl.textContent = '¥' + cost.toFixed(2);
+    const cancelBtn = $('#qbCancelAllBtn');
+    if (cancelBtn) cancelBtn.style.display = queued > 0 ? '' : 'none';
+  },
+  async cancelAllQueued() {
+    const queued = Store.getTasks().filter(t => t.status === 'running' && t.queued);
+    if (!queued.length) { Toast.info('当前无排队任务'); return; }
+    if (!confirm(`取消 ${queued.length} 个排队任务？`)) return;
+    let ok = 0;
+    for (const t of queued) {
+      let cancelled = false;
+      if (t.tcTaskId && TaskCenter.isAvailable()) cancelled = await TaskCenter.cancel(t.tcTaskId);
+      if (!cancelled) { poller.stop(t.id); }
+      Store.updateTask(t.id, { status: 'stopped', error: '已取消排队', endTime: Date.now() });
+      ok++;
+    }
+    this.renderResults();
+    Toast.success(`已取消 ${ok} 个排队任务`);
+  },
+  // V56: bind TaskCenter event listeners — feed results back into local task store.
+  bindTaskCenterEvents() {
+    TaskCenter.on('result', (payload) => {
+      // Find the local task by apiId or tcTaskId
+      const t = Store.getTasks().find(x => (x.tcTaskId && x.tcTaskId === payload.taskId) || (x.apiId && x.apiId === payload.apiId));
+      if (!t) return;
+      if (t.status === 'success') return; // already done
+      const now = Date.now();
+      poller.stop(t.id);
+      Store.updateTask(t.id, { status: 'success', resultUrl: payload.url, endTime: now, elapsed: now - (t.startTime || now) });
+      Store.updateHistory(t.historyId, { status: 'success', resultUrl: payload.url, endTime: now });
+      // V56 Phase 1: generate thumb for the result
+      if (payload.url) ThumbService.ensureThumb({ id: t.id, type: t.type, resultUrl: payload.url }).then(() => this.renderResults());
+      this.renderResults();
+      if (payload.url) { Toast.success(`${t.modelName} 成功`, { actions: [{ label: '查看', onClick: () => this.switchView('result') }] }); this.playSound(); this.notify(t.modelName, false); }
+    });
+    TaskCenter.on('error', (payload) => {
+      const t = Store.getTasks().find(x => (x.tcTaskId && x.tcTaskId === payload.taskId) || (x.apiId && x.apiId === payload.apiId));
+      if (!t) return;
+      if (t.status === 'failed') return;
+      poller.stop(t.id);
+      Store.updateTask(t.id, { status: 'failed', error: payload.error || '生成失败', endTime: Date.now() });
+      Store.updateHistory(t.historyId, { status: 'failed', error: payload.error || '生成失败', endTime: Date.now() });
+      this.renderResults();
+      Toast.error(`${t.modelName} 失败: ${payload.error || ''}`);
+      this.notify(t.modelName, true, payload.error);
+    });
+    TaskCenter.on('status', (/* tasks */) => {
+      // Periodically refresh the queue bar.
+      this.updateQueueBar();
+    });
+  },
+
+  /* ===== V56 Phase 4: Pipeline ===== */
+  // Simple in-memory pipeline state. Persisted to localStorage via Store pipeline task entry.
+  pipeline: null, // { id, steps: [{key, label, status, elapsed, previewUrl, error}], startTime, kind:'pipeline' }
+
+  updatePipelineCost() {
+    const text = String($('#pipeText')?.value || '').trim();
+    const chars = text.length;
+    // TTS: 0.0006/char; digital_humans: 0.02/sec (assume 1 sec per 5 chars at speed 1); package: 0.02/sec
+    const estDuration = chars / 5; // seconds (rough)
+    const cost = chars * 0.0006 + estDuration * 0.02 + estDuration * 0.02;
+    const el = $('#pipeCost');
+    if (el) el.textContent = '¥' + (isFinite(cost) ? cost.toFixed(2) : '0.00');
+  },
+  pickPipelineBase() {
+    // Reuse the recent picker flow to choose a video URL
+    const succeeded = Store.getHistory().filter(h => h.status === 'success' && h.resultUrl && h.type === 'video');
+    if (!succeeded.length) { Toast.info('暂无成功的视频任务，请先在视频 Tab 生成'); return; }
+    const body = `<div class="ref-grid">` + succeeded.slice(0, 30).map(h => `<div class="ref-item ref-item-video" data-pipe-pick="${esc(h.resultUrl)}"><video src="${esc(h.resultUrl)}" preload="metadata" muted playsinline></video><div class="ref-play-icon">▶</div></div>`).join('') + `</div>`;
+    $('#modalTitle').textContent = '选择底片（视频）';
+    $('#modalBody').innerHTML = body;
+    $('#modalFooter').innerHTML = `<button class="act" id="modalClose">关闭</button>`;
+    $('#modalClose').onclick = () => $('#modal').classList.remove('show');
+    $$('#modalBody [data-pipe-pick]').forEach(el => el.onclick = () => {
+      const u = el.dataset.pipePick;
+      const inp = $('#pipeBaseInput'); if (inp) inp.value = u;
+      this.updatePipelineCost();
+      $('#modal').classList.remove('show');
+      Toast.success('已选择底片');
+    });
+    $$('#modalBody video').forEach(v => {
+      v.addEventListener('loadeddata', () => { try { v.currentTime = 0.1; } catch {} });
+    });
+    $('#modal').classList.add('show');
+  },
+  async submitPipeline() {
+    if (!Store.getApiKey()) { this.openSheet('settingsSheet', 'settingsOverlay'); Toast.error('请先填写 API 密钥'); return; }
+    const text = String($('#pipeText')?.value || '').trim();
+    if (!text) { Toast.warning('请输入口播文本'); return; }
+    const voice = String($('#pipeVoice')?.value || 'male-qn-qingse');
+    const speed = String($('#pipeSpeed')?.value || '1');
+    const template = String($('#pipeTemplate')?.value || '1');
+    const base = String($('#pipeBaseInput')?.value || '').trim();
+    if (!base) { Toast.warning('请选择或粘贴底片视频 URL'); return; }
+    if (!/^https?:\/\//.test(base)) { Toast.warning('底片 URL 必须以 http(s):// 开头'); return; }
+
+    const steps = [
+      { key: 'text', label: '文本', status: 'pending', elapsed: 0, previewUrl: null, error: null },
+      { key: 'audio', label: '音频', status: 'pending', elapsed: 0, previewUrl: null, error: null },
+      { key: 'digital', label: '数字人', status: 'pending', elapsed: 0, previewUrl: null, error: null },
+      { key: 'final', label: '成品', status: 'pending', elapsed: 0, previewUrl: null, error: null }
+    ];
+    const pipeId = 'p_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    this.pipeline = { id: pipeId, text, voice, speed, template, base, steps, startTime: Date.now(), status: 'running' };
+    this.renderPipelineSteps();
+    $('#pipeSubmitBtn').style.display = 'none';
+    $('#pipeCancelBtn').style.display = '';
+    Toast.info('流水线已启动');
+
+    // Submit via TaskCenter if available (kind: 'pipeline'), else run locally step-by-step.
+    if (TaskCenter.isAvailable() && Store.getQueueMode() === 'queue') {
+      try {
+        const r = await TaskCenter.submit({
+          endpoint: '/pipeline',
+          body: { text, voice_id: voice, speed: Number(speed), template_id: template, video_url: base },
+          kind: 'pipeline',
+          priority: Number($('#qmodePriorityInput')?.value || 0)
+        });
+        this.pipeline.tcTaskId = r.taskId;
+        this.pipeline.apiId = r.apiId;
+        Toast.success('流水线已投递至任务中心');
+        // Register a synthetic task in the result list for visibility.
+        const taskId = genId(), historyId = 'h_' + taskId.slice(2), now = Date.now();
+        Store.addTask({ id: taskId, apiId: r.apiId, tcTaskId: r.taskId, historyId, tab: 'pipeline', modelId: 'pipeline', modelName: '流水线', type: 'video', params: { text, voice_id: voice, speed, template_id: template, video_url: base }, prompt: trunc(text, 40), status: 'running', startTime: now, async: true, queued: true, createdAt: now });
+        Store.addHistory({ id: historyId, taskId, apiId: r.apiId, tab: 'pipeline', modelId: 'pipeline', modelName: '流水线', type: 'video', params: { text, voice_id: voice, speed, template_id: template, video_url: base }, prompt: trunc(text, 40), status: 'running', startTime: now, createdAt: now });
+        this.renderResults();
+      } catch (e) {
+        Toast.warning('任务中心投递失败，转为本地执行：' + (e.message || e));
+        this.runPipelineLocally();
+      }
+    } else {
+      this.runPipelineLocally();
+    }
+  },
+  // Local sequential pipeline execution (fallback when TaskCenter unavailable).
+  async runPipelineLocally() {
+    if (!this.pipeline) return;
+    const p = this.pipeline;
+    const stepLabels = ['text', 'audio', 'digital', 'final'];
+    for (let i = 0; i < stepLabels.length; i++) {
+      if (p.status !== 'running') break;
+      const key = stepLabels[i];
+      const step = p.steps[i];
+      step.status = 'running'; step.startedAt = Date.now();
+      this.renderPipelineSteps();
+      try {
+        const url = await this.runPipelineStep(key, p);
+        step.status = url ? 'done' : 'failed';
+        step.elapsed = Date.now() - step.startedAt;
+        step.previewUrl = url || null;
+        if (!url) { step.error = '未返回 URL'; this.renderPipelineSteps(); break; }
+        this.renderPipelineSteps();
+      } catch (e) {
+        step.status = 'failed'; step.elapsed = Date.now() - step.startedAt;
+        step.error = e.message || String(e);
+        this.renderPipelineSteps();
+        break;
+      }
+    }
+    if (p.status === 'running') p.status = p.steps.every(s => s.status === 'done') ? 'done' : 'failed';
+    if (p.status === 'done') {
+      const finalUrl = p.steps[3].previewUrl;
+      Toast.success('流水线完成');
+      // Record final result as a task.
+      const taskId = genId(), historyId = 'h_' + taskId.slice(2), now = Date.now();
+      Store.addTask({ id: taskId, historyId, tab: 'pipeline', modelId: 'pipeline', modelName: '流水线', type: 'video', params: { text: p.text, voice_id: p.voice, speed: p.speed, template_id: p.template, video_url: p.base }, prompt: trunc(p.text, 40), status: 'success', resultUrl: finalUrl, startTime: p.startTime, endTime: now, elapsed: now - p.startTime, async: false, createdAt: now });
+      Store.addHistory({ id: historyId, taskId, tab: 'pipeline', modelId: 'pipeline', modelName: '流水线', type: 'video', params: { text: p.text, voice_id: p.voice, speed: p.speed, template_id: p.template, video_url: p.base }, prompt: trunc(p.text, 40), status: 'success', resultUrl: finalUrl, startTime: p.startTime, endTime: now, elapsed: now - p.startTime, createdAt: now });
+      this.renderResults();
+      // V56 Phase 1: generate thumb for the final video
+      if (finalUrl) ThumbService.ensureThumb({ id: taskId, type: 'video', resultUrl: finalUrl }).then(() => this.renderResults());
+    }
+    $('#pipeSubmitBtn').style.display = '';
+    $('#pipeCancelBtn').style.display = 'none';
+  },
+  // Run a single pipeline step via the appropriate model endpoint.
+  async runPipelineStep(key, p) {
+    if (key === 'text') {
+      // Step 1: text — no API call needed, just mark done with the text itself.
+      return 'text://pipeline';
+    }
+    if (key === 'audio') {
+      // Step 2: TTS using async audio_tts.
+      const resp = await Api.submit('/api/async/audio_tts', { text: p.text, voice_id: p.voice, speed: Number(p.speed), vol: 1, language_boost: 'auto' });
+      const apiId = resp?.data?.id || (typeof resp?.data === 'string' ? (() => { try { return JSON.parse(resp.data).id; } catch { return null; } })() : null);
+      if (!apiId) throw new Error('TTS 未返回任务 ID');
+      // Poll for completion (simplified — reuse PollManager-like logic inline).
+      const url = await this.pollStep(apiId);
+      return url;
+    }
+    if (key === 'digital') {
+      // Step 3: digital_humans — needs audio URL + base video URL.
+      const audioUrl = p.steps[1].previewUrl;
+      if (!audioUrl) throw new Error('缺少音频 URL');
+      const resp = await Api.submit('/api/async/video_digital_humans', { videoName: 'pipeline-' + p.id, audioUrl, videoUrl: p.base });
+      const apiId = resp?.data?.id || (typeof resp?.data === 'string' ? (() => { try { return JSON.parse(resp.data).id; } catch { return null; } })() : null);
+      if (!apiId) throw new Error('数字人未返回任务 ID');
+      return await this.pollStep(apiId);
+    }
+    if (key === 'final') {
+      // Step 4: package — needs digital video URL + template.
+      const digitalUrl = p.steps[2].previewUrl;
+      if (!digitalUrl) throw new Error('缺少数字人视频 URL');
+      const resp = await Api.submit('/api/async/video_package', { video: digitalUrl, template_id: p.template });
+      const apiId = resp?.data?.id || (typeof resp?.data === 'string' ? (() => { try { return JSON.parse(resp.data).id; } catch { return null; } })() : null);
+      if (!apiId) throw new Error('包装未返回任务 ID');
+      return await this.pollStep(apiId);
+    }
+    return null;
+  },
+  // Lightweight inline poller for pipeline steps (max 6 minutes per step).
+  pollStep(apiId) {
+    return new Promise((resolve, reject) => {
+      const startAt = Date.now();
+      const to = setTimeout(() => { clearInterval(t); reject(new Error('步骤超时')); }, 6 * 60 * 1000);
+      const t = setInterval(async () => {
+        try {
+          const d = await Api.queryDetail(apiId);
+          const s = d?.data?.status;
+          if (s === 2 || s === 'succeeded' || s === 'success') {
+            clearTimeout(to); clearInterval(t);
+            resolve(Api.extractUrl(d));
+          } else if (s === 3 || s === 'failed' || s === 'fail') {
+            clearTimeout(to); clearInterval(t);
+            reject(new Error(d?.data?.message || d?.data?.error || '步骤失败'));
+          }
+        } catch (e) {
+          // Network blip — keep polling until timeout.
+        }
+      }, 3000);
+    });
+  },
+  cancelPipeline() {
+    if (!this.pipeline) return;
+    this.pipeline.status = 'cancelled';
+    Toast.info('已取消流水线（已完成的步骤不会回滚）');
+    $('#pipeSubmitBtn').style.display = '';
+    $('#pipeCancelBtn').style.display = 'none';
+    this.renderPipelineSteps();
+  },
+  rerunPipelineStep(idx) {
+    if (!this.pipeline) return;
+    const p = this.pipeline;
+    const step = p.steps[idx];
+    if (!step) return;
+    if (p.status !== 'running') {
+      p.status = 'running';
+      $('#pipeSubmitBtn').style.display = 'none';
+      $('#pipeCancelBtn').style.display = '';
+    }
+    step.status = 'running'; step.error = null; step.startedAt = Date.now();
+    // Reset downstream steps
+    for (let i = idx + 1; i < p.steps.length; i++) { p.steps[i].status = 'pending'; p.steps[i].previewUrl = null; p.steps[i].error = null; }
+    this.renderPipelineSteps();
+    this.runPipelineLocallyFrom(idx);
+  },
+  async runPipelineLocallyFrom(startIdx) {
+    if (!this.pipeline) return;
+    const p = this.pipeline;
+    const stepLabels = ['text', 'audio', 'digital', 'final'];
+    for (let i = startIdx; i < stepLabels.length; i++) {
+      if (p.status !== 'running') break;
+      const key = stepLabels[i];
+      const step = p.steps[i];
+      if (step.status === 'done') continue;
+      step.status = 'running'; step.startedAt = step.startedAt || Date.now();
+      this.renderPipelineSteps();
+      try {
+        const url = await this.runPipelineStep(key, p);
+        step.status = url ? 'done' : 'failed';
+        step.elapsed = Date.now() - step.startedAt;
+        step.previewUrl = url || null;
+        if (!url) { step.error = '未返回 URL'; this.renderPipelineSteps(); break; }
+        this.renderPipelineSteps();
+      } catch (e) {
+        step.status = 'failed'; step.elapsed = Date.now() - step.startedAt;
+        step.error = e.message || String(e);
+        this.renderPipelineSteps();
+        break;
+      }
+    }
+    if (p.status === 'running') p.status = p.steps.every(s => s.status === 'done') ? 'done' : 'failed';
+    if (p.status === 'done') Toast.success('流水线完成');
+    $('#pipeSubmitBtn').style.display = '';
+    $('#pipeCancelBtn').style.display = 'none';
+  },
+  renderPipelineSteps() {
+    const c = $('#pipeSteps'); if (!c) return;
+    if (!this.pipeline) {
+      c.innerHTML = `<div class="pipe-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><polyline points="12 5 19 12 12 19"/></svg>尚未启动流水线任务</div>`;
+      return;
+    }
+    const p = this.pipeline;
+    const stepIcons = { text: '📝', audio: '🎵', digital: '🧑', final: '🎬' };
+    c.innerHTML = p.steps.map((s, i) => {
+      const stCls = s.status === 'done' ? 'done' : s.status === 'running' ? 'active' : s.status === 'failed' ? 'failed' : '';
+      const stLabel = s.status === 'done' ? '完成' : s.status === 'running' ? '运行中' : s.status === 'failed' ? '失败' : '待执行';
+      let preview = '';
+      if (s.previewUrl && s.key === 'audio') preview = `<div class="pipe-step-preview"><audio src="${esc(s.previewUrl)}" controls preload="metadata"></audio></div>`;
+      else if (s.previewUrl && s.key !== 'text') preview = `<div class="pipe-step-preview"><video src="${esc(s.previewUrl)}" controls preload="metadata" playsinline></video></div>`;
+      const elapsed = s.elapsed ? ` · ${fmtDur(s.elapsed)}` : (s.status === 'running' && s.startedAt ? ` · ${fmtDur(Date.now() - s.startedAt)}` : '');
+      const rerunBtn = (s.status === 'failed' || s.status === 'done') ? `<button class="act" data-pipe-rerun="${i}">重跑此步</button>` : '';
+      const errBlock = s.error ? `<div class="pipe-step-error">${esc(s.error)}</div>` : '';
+      return `<div class="pipe-step ${stCls}">
+        <div class="pipe-step-icon">${stepIcons[s.key] || '?'}</div>
+        <div class="pipe-step-body">
+          <div class="pipe-step-title">${esc(s.label)} <span class="pill ${stCls || 'pending'}" style="font-size:9px">${stLabel}</span></div>
+          <div class="pipe-step-meta">step ${i + 1}/4${elapsed}</div>
+          ${preview}
+          ${errBlock}
+          <div class="pipe-step-actions">${rerunBtn}</div>
+        </div>
+      </div>`;
+    }).join('');
+    // Bind 重跑 buttons
+    $$('#pipeSteps [data-pipe-rerun]').forEach(b => b.onclick = () => this.rerunPipelineStep(Number(b.dataset.pipeRerun)));
+    // If pipeline is running, refresh every second to update elapsed time.
+    if (p.status === 'running' && !this._pipeRefreshTimer) {
+      this._pipeRefreshTimer = setInterval(() => {
+        if (!this.pipeline || this.pipeline.status !== 'running') {
+          clearInterval(this._pipeRefreshTimer); this._pipeRefreshTimer = null; return;
+        }
+        this.renderPipelineSteps();
+      }, 1000);
+    } else if (p.status !== 'running' && this._pipeRefreshTimer) {
+      clearInterval(this._pipeRefreshTimer); this._pipeRefreshTimer = null;
+    }
   },
 
   /* ===== View switch ===== */
@@ -2320,6 +3555,16 @@ const UI = {
 
   /* ===== Tabs ===== */
   switchTab(tab) {
+    // V56 Phase 4: 'pipeline' is a special tab — switch to pipeline view, not a model form.
+    if (tab === 'pipeline') {
+      this.saveFormToCache();
+      this.tab = 'pipeline';
+      $$('.tab[data-tab]').forEach(t => t.classList.toggle('active', t.dataset.tab === 'pipeline'));
+      this.switchView('pipeline');
+      this.updatePipelineCost();
+      this.renderPipelineSteps();
+      return;
+    }
     if (!MODELS[tab]) return;
     this.saveFormToCache();
     this.tab = tab;
@@ -2739,6 +3984,8 @@ const UI = {
     const param = this.model && this.model.params.find(p => p.key === key);
     const isVideoParam = param && param.type === 'ref-video';
     const isAudioParam = param && param.type === 'ref-audio';
+    // FIX 16: helper to render a per-item progress bar (shown when uploading).
+    const progBar = id => `<div class="ref-item-progress" id="rip-${esc(id)}"><div class="ref-item-progress-bar" id="ripb-${esc(id)}"></div></div>`;
     const items = refs.map(r => {
       const src = r.remote || r.src || '';
       const isVideo = r.mediaType === 'video' || r.kind === 'local-video' || r.kind === 'url-video';
@@ -2748,16 +3995,16 @@ const UI = {
         if (m.width && m.height) parts.push(`${m.width}×${m.height}`);
         if (m.duration) parts.push(`${m.duration}s`);
         if (m.sizeMB) parts.push(`${m.sizeMB}MB`);
-        if (parts.length) metaOverlay = `<div class="ref-meta-overlay">${parts.join(' · ')}</div>`;
+        const metaOverlay = parts.length ? `<div class="ref-meta-overlay">${parts.join(' · ')}</div>` : '';
         const body = src ? `<video src="${esc(src)}" preload="metadata" muted playsinline></video>` : '<span class="ref-failed">预览失败</span>';
-        return `<div class="ref-item ref-item-video">${body}${metaOverlay}<div class="ref-play-icon">▶</div>${r.remote ? `<div class="ref-badge uploaded">已传</div>` : '<div class="ref-badge local">本地</div>'}<button type="button" class="ref-del" data-key="${esc(key)}" data-rid="${esc(r.id)}" aria-label="删除">×</button></div>`;
+        return `<div class="ref-item ref-item-video">${body}${metaOverlay}<div class="ref-play-icon">▶</div>${r.remote ? `<div class="ref-badge uploaded">已传</div>` : '<div class="ref-badge local">本地</div>'}<button type="button" class="ref-del" data-key="${esc(key)}" data-rid="${esc(r.id)}" aria-label="删除">×</button>${progBar(r.id)}</div>`;
       }
       if (isAudio) {
         const name = trunc(r.name || 'audio', 10);
-        return `<div class="ref-item ref-item-audio"><div class="ref-audio-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span class="ref-audio-name">${esc(name)}</span></div>${r.remote ? `<div class="ref-badge uploaded">已传</div>` : '<div class="ref-badge local">本地</div>'}<button type="button" class="ref-del" data-key="${esc(key)}" data-rid="${esc(r.id)}" aria-label="删除">×</button></div>`;
+        return `<div class="ref-item ref-item-audio"><div class="ref-audio-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span class="ref-audio-name">${esc(name)}</span></div>${r.remote ? `<div class="ref-badge uploaded">已传</div>` : '<div class="ref-badge local">本地</div>'}<button type="button" class="ref-del" data-key="${esc(key)}" data-rid="${esc(r.id)}" aria-label="删除">×</button>${progBar(r.id)}</div>`;
       }
       const body = src ? `<img src="${esc(src)}" loading="lazy" alt="${esc(r.name || '参考图')}" referrerpolicy="no-referrer">` : '<span class="ref-failed">预览失败</span>';
-      return `<div class="ref-item">${body}${r.remote ? `<div class="ref-badge uploaded">已传</div>` : '<div class="ref-badge local">本地</div>'}<button type="button" class="ref-del" data-key="${esc(key)}" data-rid="${esc(r.id)}" aria-label="删除">×</button></div>`;
+      return `<div class="ref-item">${body}${r.remote ? `<div class="ref-badge uploaded">已传</div>` : '<div class="ref-badge local">本地</div>'}<button type="button" class="ref-del" data-key="${esc(key)}" data-rid="${esc(r.id)}" aria-label="删除">×</button>${progBar(r.id)}</div>`;
     }).join('');
     const addLabel = isVideoParam ? '参考视频' : isAudioParam ? '参考音频' : '参考图';
     const addBtn = `<button type="button" class="ref-add" data-key="${esc(key)}" aria-label="添加${addLabel}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>添加</span></button>`;
@@ -2766,9 +4013,18 @@ const UI = {
     const gridClass = isVideoParam ? 'ref-grid ref-grid-video' : isAudioParam ? 'ref-grid ref-grid-audio' : 'ref-grid';
     return `<div class="ref-wrap" data-ref-key="${esc(key)}"><div class="${gridClass}" data-key="${esc(key)}">${items}${addBtn}</div>${warn}<div class="ref-progress" id="rp-${esc(key)}"><div class="ring"></div><span id="rpt-${esc(key)}">上传中…</span></div></div>`;
   },
+  // FIX 4: update a ref item's per-item progress bar (and the per-grid status text).
+  setRefProgress(refId, pct, labelText) {
+    const bar = $('#ripb-' + refId);
+    const wrap = $('#rip-' + refId);
+    if (bar) bar.style.width = (pct || 0) + '%';
+    if (wrap) wrap.classList.toggle('show', pct != null && pct < 100);
+    if (labelText) { const t = $('#rpt-' + (this._lastProgressKey || '')); if (t) t.textContent = labelText; }
+  },
   bindRefEvents() {
     const f = $('#paramForm'); if (!f) return;
-    $$('.ref-add[data-key]', f).forEach(b => b.onclick = () => this.openSourcePicker(b.dataset.key));
+    // FIX 13: only `.ref-add` opens the source picker — no parent delegation.
+    $$('.ref-add[data-key]', f).forEach(b => b.onclick = e => { e.stopPropagation(); this.openSourcePicker(b.dataset.key); });
     $$('.ref-del[data-key]', f).forEach(b => b.onclick = e => {
       e.preventDefault(); e.stopPropagation();
       this.removeRef(b.dataset.key, b.dataset.rid);
@@ -2777,7 +4033,16 @@ const UI = {
       v.addEventListener('loadeddata', () => { try { v.currentTime = 0.1; } catch {} });
       v.onclick = e => { e.stopPropagation(); this.openVideoLightbox(v.src); };
     });
-    $$('.ref-item img', f).forEach(img => { img.onclick = () => this.openLightbox(img.src); });
+    $$('.ref-item img', f).forEach(img => { img.onclick = e => { e.stopPropagation(); this.openLightbox(img.src); }; });
+    // FIX 14: tap on audio ref opens audio lightbox.
+    $$('.ref-item-audio', f).forEach(el => { el.onclick = e => { e.stopPropagation(); const r = this._findRefByNode(el); if (r && (r.remote || r.src)) this.openAudioLightbox(r.remote || r.src); }; });
+  },
+  _findRefByNode(node) {
+    const del = node.querySelector('.ref-del');
+    if (!del) return null;
+    const key = del.dataset.key; const rid = del.dataset.rid;
+    const refs = this.getRefs(key);
+    return refs.find(r => r.id === rid);
   },
   removeRef(key, id) {
     const refs = this.getRefs(key);
@@ -2869,7 +4134,9 @@ const UI = {
     if (filtered.length === 0) {
       body.innerHTML = `<div class="preset-empty">暂无最近${isVideo ? '视频' : '图片'}结果</div>`;
     } else {
-      body.innerHTML = `<div class="ref-grid">` + filtered.slice(0, 30).map(h => `<div class="ref-item" data-recent-url="${esc(h.resultUrl)}">${isVideo ? `<video src="${esc(h.resultUrl)}" preload="metadata" muted></video><div class="ref-play-icon">▶</div>` : `<img src="${esc(h.resultUrl)}" loading="lazy" referrerpolicy="no-referrer">`}</div>`).join('') + `</div>`;
+      body.innerHTML = `<div class="ref-grid">` + filtered.slice(0, 30).map(h => `<div class="ref-item" data-recent-url="${esc(h.resultUrl)}">${isVideo ? `<video src="${esc(h.resultUrl)}" preload="metadata" muted playsinline></video><div class="ref-play-icon">▶</div>` : `<img src="${esc(h.resultUrl)}" loading="lazy" referrerpolicy="no-referrer">`}</div>`).join('') + `</div>`;
+      // FIX 16: set video first frame.
+      $$('#recentListBody video').forEach(v => { v.addEventListener('loadeddata', () => { try { v.currentTime = 0.1; } catch {} }); });
       $$('#recentListBody [data-recent-url]').forEach(el => el.onclick = () => {
         this.addUrlRef(key, el.dataset.recentUrl, isVideo);
         this.closeSheet('recentSheet', 'recentOverlay');
@@ -2896,13 +4163,22 @@ const UI = {
       this.getRefs(key).push(ref);
       this.refreshRefGrid(key);
       if (CONFIG.R2.WORKER_URL) {
+        // FIX 4: wire onProgress to update per-item progress bar.
+        const prog = $('#rp-' + key); if (prog) prog.classList.add('show');
         try {
           let u = Api.getCached(ref.src);
-          if (!u) { u = await Api.uploadDataUrl(ref.src); Api.setCached(ref.src, u); }
+          if (!u) {
+            u = await Api.uploadDataUrl(ref.src, pct => {
+              this.setRefProgress(ref.id, pct, `上传中 ${pct}%`);
+            });
+            Api.setCached(ref.src, u);
+          }
           ref.remote = u; ref.uploaded = true; ref.kind = 'url';
+          this.setRefProgress(ref.id, 100, '');
           this.refreshRefGrid(key);
           Toast.success('参考图已上传');
-        } catch (e) { Toast.warning('参考图上传失败：' + e.message); }
+        } catch (e) { Toast.warning('参考图上传失败：' + e.message); this.setRefProgress(ref.id, 0, ''); }
+        finally { if (prog) prog.classList.remove('show'); }
       } else {
         Toast.info('已添加（未配置 R2，仅本地预览）');
       }
@@ -2937,8 +4213,12 @@ const UI = {
     if (!ref) return;
     const prog = $('#rp-' + key); if (prog) prog.classList.add('show');
     try {
-      const remoteUrl = await Api.uploadToR2(file, pct => { const t = $('#rpt-' + key); if (t) t.textContent = `上传中 ${pct}%`; });
+      const remoteUrl = await Api.uploadToR2(file, pct => {
+        const t = $('#rpt-' + key); if (t) t.textContent = `上传中 ${pct}%`;
+        this.setRefProgress(ref.id, pct, `上传中 ${pct}%`);
+      });
       ref.kind = 'url-video'; ref.src = remoteUrl; ref.remote = remoteUrl; ref.uploaded = true;
+      this.setRefProgress(ref.id, 100, '');
       this.refreshRefGrid(key);
       Toast.success('视频已上传');
     } finally { if (prog) prog.classList.remove('show'); }
@@ -2964,8 +4244,12 @@ const UI = {
     if (!ref) return;
     const prog = $('#rp-' + key); if (prog) prog.classList.add('show');
     try {
-      const remoteUrl = await Api.uploadToR2(file, pct => { const t = $('#rpt-' + key); if (t) t.textContent = `上传中 ${pct}%`; });
+      const remoteUrl = await Api.uploadToR2(file, pct => {
+        const t = $('#rpt-' + key); if (t) t.textContent = `上传中 ${pct}%`;
+        this.setRefProgress(ref.id, pct, `上传中 ${pct}%`);
+      });
       ref.kind = 'url-audio'; ref.src = remoteUrl; ref.remote = remoteUrl; ref.uploaded = true;
+      this.setRefProgress(ref.id, 100, '');
       this.refreshRefGrid(key);
       Toast.success('音频已上传');
     } finally { if (prog) prog.classList.remove('show'); }
@@ -3169,6 +4453,29 @@ const UI = {
       if (promptVal) Store.addPromptHistory(String(promptVal));
       const summary = trunc(String(promptVal), 40);
       const taskId = genId(), historyId = 'h_' + taskId.slice(2), now = Date.now();
+      // V56 Phase 2/3: If TaskCenter available AND queue mode → submit via TaskCenter.
+      const queueMode = TaskCenter.isAvailable() && Store.getQueueMode() === 'queue';
+      if (queueMode && this.model.async) {
+        $('#genBtnText').textContent = '投递中…';
+        const priority = Number($('#qmodePriorityInput')?.value || 0);
+        try {
+          const r = await TaskCenter.submit({
+            endpoint: this.model.endpoint,
+            body,
+            kind: this.model.type || 'image',
+            priority
+          });
+          Store.addTask({ id: taskId, apiId: r.apiId, tcTaskId: r.taskId, historyId, tab: this.tab, modelId: this.model.id, modelName: this.model.name, type: this.model.type, params: body, prompt: summary, status: 'running', startTime: now, async: true, queued: true, priority, createdAt: now });
+          Store.addHistory({ id: historyId, taskId, apiId: r.apiId, tab: this.tab, modelId: this.model.id, modelName: this.model.name, type: this.model.type, params: body, prompt: summary, status: 'running', startTime: now, createdAt: now });
+          this.renderResults();
+          this.switchView('result');
+          Toast.success('已投递至任务中心，远端排队中');
+          return;
+        } catch (e) {
+          Toast.warning('任务中心投递失败，回退到本地直连：' + (e.message || e));
+          // Fall through to local direct mode below.
+        }
+      }
       if (this.model.async) {
         $('#genBtnText').textContent = '提交中…';
         let resp;
@@ -3197,6 +4504,8 @@ const UI = {
           Store.updateHistory(historyId, { status: 'success', resultUrl: url, endTime: done, elapsed: done - now });
           Toast.success('生成成功'); this.playSound();
           this.switchView('result');
+          // V56 Phase 1: generate thumbnail for the result
+          if (url) ThumbService.ensureThumb({ id: taskId, type: this.model.type, resultUrl: url }).then(() => this.renderResults());
         } catch (e) {
           const done = Date.now();
           const cls = classifyErr(e.message);
@@ -3211,17 +4520,30 @@ const UI = {
       Toast.error(`操作失败：${e?.message || '未知错误'}`);
     } finally {
       btn.disabled = false;
-      $('#genBtnText').textContent = '生成';
+      $('#genBtnText').textContent = (TaskCenter.isAvailable() && Store.getQueueMode() === 'queue') ? '排队提交' : '生成';
     }
   },
 
   /* ===== Render results ===== */
   renderResults() {
     const list = $('#resultList');
-    const tasks = Store.getTasks();
+    // FIX 2: filter out hidden (soft-deleted) tasks.
+    const hidden = Store.getHiddenTaskIds();
+    let tasks = Store.getTasks().filter(t => !hidden.includes(t.id));
+    // FIX 6: apply sort mode.
+    tasks = tasks.slice().sort((a, b) => {
+      const ta = a.createdAt || a.startTime || 0;
+      const tb = b.createdAt || b.startTime || 0;
+      return this.sortMode === 'oldest' ? ta - tb : tb - ta;
+    });
+    // FIX 6: update toolbar count + restore button visibility.
+    const cnt = $('#resultCount'); if (cnt) cnt.textContent = tasks.length;
+    const rbtn = $('#restoreBtn'); if (rbtn) rbtn.style.display = hidden.length ? '' : 'none';
     list.innerHTML = '';
     if (tasks.length === 0) {
-      list.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><h3>暂无生成任务</h3><p>填写参数并点击「生成」</p></div>`;
+      list.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><h3>暂无生成任务</h3><p>填写参数并点击「生成」</p>${hidden.length ? `<button class="act" id="emptyRestoreBtn" style="margin-top:16px">还原隐藏任务（${hidden.length}）</button>` : ''}</div>`;
+      const erb = $('#emptyRestoreBtn'); if (erb) erb.onclick = () => this.openHiddenManager();
+      this.renderResultStrip();
       return;
     }
     const visible = tasks.slice(0, this.page);
@@ -3231,31 +4553,151 @@ const UI = {
       $('#loadMore').onclick = () => { this.page += 20; this.renderResults(); };
     }
     this.bindCardEvents();
+    this.renderResultStrip();
+    // V56 Phase 1: lazy backfill missing thumbnails (rate-limited to 10/min).
+    const pendingThumbs = visible.filter(t => t.status === 'success' && t.resultUrl && !t.thumbUrl && (t.type === 'image' || t.type === 'video'));
+    if (pendingThumbs.length) ThumbService.lazyBackfill(pendingThumbs);
+  },
+  // FIX 2: open a sheet to manage hidden tasks (restore or permanently delete).
+  openHiddenManager() {
+    const hiddenIds = Store.getHiddenTaskIds();
+    const hidden = Store.getTasks().filter(t => hiddenIds.includes(t.id));
+    $('#actionSheetTitle').textContent = `隐藏的任务（${hidden.length}）`;
+    if (!hidden.length) {
+      $('#actionSheetActions').innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:12px">暂无隐藏的任务</div><button class="act" data-menu-action="close" style="justify-content:center;margin-top:6px">关闭</button>`;
+    } else {
+      const html = hidden.map(t => `<div class="hidden-task-row" data-hid="${esc(t.id)}">
+        <div class="hidden-task-thumb">${t.resultUrl && t.type === 'image' ? `<img src="${esc(ThumbService.getThumb(t) || t.resultUrl)}" loading="lazy" data-thumb-src="${esc(t.resultUrl)}">` : t.type === 'video' ? '🎬' : t.type === 'audio' ? '🎵' : '📄'}</div>
+        <div class="hidden-task-info">
+          <div class="ht-model">${esc(t.modelName)}</div>
+          <div class="ht-prompt">${esc(trunc(t.prompt || '', 30))}</div>
+        </div>
+        <button class="act" data-restore="${esc(t.id)}">还原</button>
+        <button class="act danger" data-purge="${esc(t.id)}">删除</button>
+      </div>`).join('');
+      $('#actionSheetActions').innerHTML = html + `<div style="display:flex;gap:6px;margin-top:8px"><button class="act" data-restore-all="1" style="flex:1;justify-content:center">全部还原</button><button class="act danger" data-purge-all="1" style="flex:1;justify-content:center">全部删除</button></div><button class="act" data-menu-action="close" style="justify-content:center;margin-top:6px">关闭</button>`;
+    }
+    $$('#actionSheetActions [data-menu-action="close"]').forEach(b => b.onclick = () => this.closeSheet('actionSheet', 'actionOverlay'));
+    $$('#actionSheetActions [data-restore]').forEach(b => b.onclick = () => { Store.unhideTask(b.dataset.restore); Toast.success('已还原'); this.openHiddenManager(); this.renderResults(); });
+    $$('#actionSheetActions [data-purge]').forEach(b => b.onclick = () => { Store.unhideTask(b.dataset.purge); poller.stop(b.dataset.purge); Store.delTask(b.dataset.purge); Toast.success('已永久删除'); this.openHiddenManager(); this.renderResults(); });
+    $$('#actionSheetActions [data-restore-all]').forEach(b => b.onclick = () => { Store.unhideAllTasks(); Toast.success('已全部还原'); this.closeSheet('actionSheet', 'actionOverlay'); this.renderResults(); });
+    $$('#actionSheetActions [data-purge-all]').forEach(b => b.onclick = () => {
+      if (!confirm('确定永久删除所有隐藏的任务？此操作不可撤销。')) return;
+      const ids = Store.getHiddenTaskIds();
+      ids.forEach(id => { poller.stop(id); Store.delTask(id); });
+      Store.unhideAllTasks();
+      Toast.success('已全部删除');
+      this.closeSheet('actionSheet', 'actionOverlay');
+      this.renderResults();
+    });
+    this.openSheet('actionSheet', 'actionOverlay');
+  },
+  // FIX 6: open the consolidated "more" menu sheet — settings / theme / sound / stats / history / restore hidden.
+  openMoreMenu() {
+    const hiddenCount = Store.getHiddenTaskIds().length;
+    const themeLabel = Store.getTheme() === 'dark' ? '🌙 深色主题' : '☀️ 浅色主题';
+    const soundLabel = Store.getSound() ? '🔊 声音：开' : '🔇 声音：关';
+    const items = [
+      ['⚙ 设置', () => { this.closeSheet('moreSheet', 'moreOverlay'); this.openSheet('settingsSheet', 'settingsOverlay'); }],
+      [themeLabel, () => {
+        const next = Store.getTheme() === 'light' ? 'dark' : 'light';
+        Store.setTheme(next); this.applyTheme(next);
+        Toast.info(next === 'dark' ? '已切换到深色主题' : '已切换到浅色主题');
+        this.closeSheet('moreSheet', 'moreOverlay');
+      }],
+      [soundLabel, () => {
+        const cur = Store.getSound(); Store.setSound(!cur);
+        Toast.info(!cur ? '声音已开启' : '声音已关闭');
+        this.closeSheet('moreSheet', 'moreOverlay');
+      }],
+      ['📊 消费统计', () => { this.closeSheet('moreSheet', 'moreOverlay'); this.showStats(); }],
+      ['🕒 历史记录', () => { this.closeSheet('moreSheet', 'moreOverlay'); this.showHistory(); }],
+      hiddenCount ? [`♻ 还原隐藏（${hiddenCount}）`, () => { this.closeSheet('moreSheet', 'moreOverlay'); this.openHiddenManager(); }] : null
+    ].filter(Boolean);
+    $('#moreSheetActions').innerHTML = items.map((a, i) => `<button class="act" data-more-action="${i}" style="justify-content:flex-start;width:100%">${esc(a[0])}</button>`).join('') + `<button class="act" data-more-action="close" style="justify-content:center;margin-top:6px;width:100%">关闭</button>`;
+    $$('#moreSheetActions [data-more-action]').forEach(b => b.onclick = async () => {
+      if (b.dataset.moreAction === 'close') { this.closeSheet('moreSheet', 'moreOverlay'); return; }
+      try { await items[Number(b.dataset.moreAction)][1](); }
+      catch (e) { Toast.error(e.message || '操作失败'); }
+    });
+    this.openSheet('moreSheet', 'moreOverlay');
+  },
+  // FIX 6: toggle sort order for the result list (newest-first ⇄ oldest-first).
+  sortMode: 'newest',
+  toggleSort() {
+    this.sortMode = this.sortMode === 'newest' ? 'oldest' : 'newest';
+    Toast.info(this.sortMode === 'newest' ? '按最新排序' : '按最早排序');
+    this.renderResults();
+  },
+  // FIX 15 / FIX 3: render bottom thumbnail strip from recent succeeded tasks — redesigned.
+  renderResultStrip() {
+    const strip = $('#resultStrip'); if (!strip) return;
+    // Bottom strip shows ALL recent succeeded items, ignoring hide state (per user request)
+    const succeeded = Store.getTasks().filter(t => t.status === 'success' && t.resultUrl).slice(0, 15);
+    if (!succeeded.length) { strip.style.display = 'none'; strip.innerHTML = ''; return; }
+    strip.style.display = '';
+    strip.innerHTML = succeeded.map(t => {
+      const url = t.resultUrl;
+      // V56 Phase 1: use thumbUrl for image/video strip thumbs
+      const thumbUrl = ThumbService.getThumb(t) || url;
+      const isVideo = t.type === 'video';
+      const isAudio = t.type === 'audio';
+      const inner = t.type === 'image'
+        ? `<img src="${esc(thumbUrl)}" loading="lazy" referrerpolicy="no-referrer" data-thumb-src="${esc(url)}" alt="${esc(t.modelName || '')}">`
+        : isVideo
+        ? `<video src="${esc(url)}" poster="${esc(thumbUrl)}" preload="metadata" muted playsinline data-thumb-src="${esc(url)}"></video><span class="rst-play"></span>`
+        : `<span class="rst-icon">🎵</span>`;
+      const typeLabel = isVideo ? '视' : isAudio ? '音' : '图';
+      return `<div class="result-strip-thumb" data-strip-url="${esc(url)}" data-strip-type="${esc(t.type)}" title="${esc(t.modelName || '')}">${inner}<span class="rst-type">${typeLabel}</span></div>`;
+    }).join('');
+    // Bind click on thumbnails.
+    $$('#resultStrip .result-strip-thumb').forEach(el => el.onclick = () => {
+      $$('#resultStrip .result-strip-thumb').forEach(x => x.classList.remove('active'));
+      el.classList.add('active');
+      const u = el.dataset.stripUrl; const ty = el.dataset.stripType;
+      if (!u) return;
+      if (ty === 'image') this.openLightbox(u);
+      else if (ty === 'video') this.openVideoLightbox(u);
+      else this.openAudioLightbox(u);
+    });
+    // FIX 16: for video thumbnails, set currentTime to 0.1 to show first frame.
+    $$('#resultStrip video').forEach(v => {
+      v.addEventListener('loadeddata', () => { try { v.currentTime = 0.1; } catch {} });
+    });
   },
   renderCard(t) {
     const stMap = { running: '生成中', success: '成功', failed: '失败', timeout: '超时', stopped: '已停止' };
     const st = stMap[t.status] || t.status;
     const sc = t.status === 'timeout' ? 'timeout' : (t.status === 'stopped' ? 'stopped' : t.status);
     const prompt = t.prompt || trunc(JSON.stringify(t.params).slice(0, 60), 40);
+    // FIX 4B: phase display text in Chinese.
+    const phaseText = name => name === '冷启动' ? '排队中' : name === '黄金窗口' ? '生成中' : name === '长尾' ? '处理中' : (name || '');
     let body = '';
     if (t.status === 'running') {
       const elapsed = t.elapsed || (Date.now() - (t.startTime || Date.now()));
-      const phase = poller.getPhase(elapsed)?.name || '';
-      const interval = (poller.getPhase(elapsed)?.interval || 3000) / 1000;
-      body = `${t.apiId ? `<div class="task-id">ID: ${esc(t.apiId)} <button class="copy-mini" data-url="${esc(t.apiId)}">复制</button></div>` : ''}<div class="skeleton skeleton-media"></div><div class="bar"></div><div class="timer"><span class="dot"></span>${fmtDur(elapsed)} · ${esc(phase)} ${interval}s${t.error ? ` · ${esc(t.error)}` : ''}</div><div class="poll-actions"><button class="act" data-refresh="${t.id}">刷新</button><button class="act danger" data-stop="${t.id}">停止</button></div>`;
+      const ph = poller.getPhase(elapsed);
+      const phase = phaseText(ph?.name || '');
+      const interval = (ph?.interval || 3000) / 1000;
+      const pollCount = poller.polls[t.id]?.count || 0;
+      body = `${t.apiId ? `<div class="task-id">ID: ${esc(t.apiId)} <button class="copy-mini" data-url="${esc(t.apiId)}">复制</button></div>` : ''}<div class="skeleton skeleton-media"></div><div class="bar"></div><div class="timer"><span class="task-spinner"></span>${fmtDur(elapsed)} · ${esc(phase)} · 轮询 ${pollCount} 次 · ${interval}s${t.error ? ` · ${esc(t.error)}` : ''}</div><div class="poll-actions"><button class="act" data-refresh="${t.id}">刷新</button><button class="act danger" data-stop="${t.id}">停止</button></div>`;
     } else if (t.status === 'success' && t.resultUrl) {
-      const m = t.type === 'image' ? `<img src="${esc(t.resultUrl)}" loading="lazy" referrerpolicy="no-referrer" data-preview="${esc(t.resultUrl)}" alt="生成结果">`
-        : t.type === 'video' ? `<video src="${esc(t.resultUrl)}" controls preload="metadata" playsinline></video>`
+      // V56 Phase 1: prefer thumbUrl for image/video media; fallback to original url.
+      const thumbUrl = ThumbService.getThumb(t) || t.resultUrl;
+      // FIX 5 / FIX 16: compact card with media + icon-only action row.
+      const m = t.type === 'image' ? `<img src="${esc(thumbUrl)}" loading="lazy" referrerpolicy="no-referrer" data-preview="${esc(t.resultUrl)}" data-thumb-src="${esc(t.resultUrl)}" alt="生成结果">`
+        : t.type === 'video' ? `<video src="${esc(t.resultUrl)}" poster="${esc(thumbUrl)}" controls preload="metadata" playsinline data-thumb-src="${esc(t.resultUrl)}"></video>`
         : `<audio src="${esc(t.resultUrl)}" controls></audio>`;
-      body = `<div class="media">${m}</div><div class="url-row"><span style="flex:1">${esc(t.resultUrl)}</span><button class="copy-mini" data-url="${esc(t.resultUrl)}">复制</button></div><div class="actions"><button class="act" data-copy="${esc(t.resultUrl)}" aria-label="复制链接"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>复制</button><a class="act" href="${esc(t.resultUrl)}" download><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>下载</a>${t.type === 'image' ? `<button class="act" data-edit="${esc(t.resultUrl)}">✏ 编辑</button>` : ''}<button class="act" data-ref="${esc(t.resultUrl)}" data-type="${t.type}">📌 用作参考</button><button class="act" data-regen="${t.id}">🔄 重生成</button><button class="act" data-copy-workflow="${t.id}">📋 工作流</button><button class="act danger" data-del="${t.id}">🗑 删除</button></div>`;
+      // FIX 14: for audio, add an extra "全屏播放" button to open audio lightbox.
+      const audioExpandBtn = t.type === 'audio' ? `<button class="act" data-preview-audio="${esc(t.resultUrl)}" title="全屏播放" aria-label="全屏播放">🔊</button>` : '';
+      body = `<div class="media">${m}</div><div class="url-row"><span style="flex:1">${esc(t.resultUrl)}</span><button class="copy-mini" data-url="${esc(t.resultUrl)}">复制</button></div><div class="actions actions-compact">${audioExpandBtn}<button class="act" data-copy="${esc(t.resultUrl)}" title="复制链接" aria-label="复制链接"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button><a class="act" href="${esc(t.resultUrl)}" download data-download="${esc(t.resultUrl)}" data-type="${t.type}" title="下载" aria-label="下载"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></a>${t.type === 'image' ? `<button class="act" data-edit="${esc(t.resultUrl)}" title="编辑" aria-label="编辑">✏</button>` : ''}<button class="act" data-ref="${esc(t.resultUrl)}" data-type="${t.type}" title="用作参考" aria-label="用作参考">📌</button><button class="act" data-regen="${t.id}" title="重生成" aria-label="重生成">🔄</button><button class="act" data-copy-workflow="${t.id}" title="复制工作流" aria-label="复制工作流">📋</button><button class="act danger" data-del="${t.id}" title="删除" aria-label="删除">🗑</button></div>`;
     } else if (t.status === 'failed' || t.status === 'timeout' || t.status === 'stopped') {
       const cls = classifyErr(t.error);
       const retryTip = cls.category === '认证' ? '检查设置中的 API 密钥'
         : (cls.category === '网络' || cls.category === '超时') ? '检查网络后点「刷新」或「重生成」'
         : '检查参数后重试';
-      body = `<div class="err-banner"><strong>${esc(cls.category)}：${esc(t.error || '错误')}</strong><br><span>${esc(cls.hint)}</span><br><span style="font-size:10px;color:var(--text-dim)">建议：${esc(retryTip)}</span></div>${t.apiId ? `<div class="poll-actions"><button class="act" data-refresh="${t.id}">刷新</button></div>` : ''}<div class="actions"><button class="act" data-regen="${t.id}">🔄 重生成</button><button class="act" data-copy-workflow="${t.id}">📋 工作流</button><button class="act danger" data-del="${t.id}">🗑 删除</button></div>`;
+      body = `<div class="err-banner"><strong>${esc(cls.category)}：${esc(t.error || '错误')}</strong><br><span>${esc(cls.hint)}</span><br><span style="font-size:10px;color:var(--text-dim)">建议：${esc(retryTip)}</span></div>${t.apiId ? `<div class="poll-actions"><button class="act" data-refresh="${t.id}">刷新</button></div>` : ''}<div class="actions actions-compact"><button class="act" data-regen="${t.id}" title="重生成" aria-label="重生成">🔄</button><button class="act" data-copy-workflow="${t.id}" title="工作流" aria-label="工作流">📋</button><button class="act danger" data-del="${t.id}" title="删除" aria-label="删除">🗑</button></div>`;
     }
-    return `<div class="card" data-id="${t.id}"><div class="card-top"><span class="card-model">${esc(t.modelName)}</span><span class="pill ${sc}">${st}</span></div><div class="card-prompt">${esc(prompt)}</div><div class="card-body">${body}</div></div>`;
+    return `<div class="card" data-id="${t.id}"><div class="card-top"><div class="card-model-wrap"><span class="card-model">${esc(t.modelName)}</span><span class="card-type-badge type-${t.type}">${t.type === 'image' ? '图' : t.type === 'video' ? '视' : '音'}</span></div><span class="pill ${sc}">${st}</span></div><div class="card-prompt">${esc(prompt)}</div><div class="card-body">${body}</div></div>`;
   },
   bindCardEvents() {
     $$('.copy-mini').forEach(b => b.onclick = async e => {
@@ -3267,6 +4709,14 @@ const UI = {
       Toast[ok ? 'success' : 'error'](ok ? '已复制' : '复制失败');
     });
     $$('[data-preview]').forEach(img => img.onclick = e => { e.stopPropagation(); this.openLightbox(img.dataset.preview); });
+    // FIX 14: audio preview — open audio lightbox.
+    $$('[data-preview-audio]').forEach(el => el.onclick = e => { e.stopPropagation(); this.openAudioLightbox(el.dataset.previewAudio); });
+    // FIX 10: force-download via JS (blob fetch + a[download]) with <a> fallback already in markup.
+    $$('[data-download]').forEach(a => a.onclick = async e => {
+      e.preventDefault(); e.stopPropagation();
+      const url = a.dataset.download; const type = a.dataset.type || 'image';
+      await this.downloadResult(url, type);
+    });
     $$('[data-refresh]').forEach(b => b.onclick = e => { e.stopPropagation(); void poller.refresh(b.dataset.refresh); });
     $$('[data-stop]').forEach(b => b.onclick = e => {
       e.stopPropagation(); poller.stop(b.dataset.stop);
@@ -3308,8 +4758,14 @@ const UI = {
     card.addEventListener('contextmenu', e => { e.preventDefault(); this.openCardActions(card.dataset.id); });
   },
   confirmDeleteTask(id) {
-    if (!confirm('删除这条任务记录？')) return;
+    if (!confirm('永久删除这条任务记录？')) return;
     poller.stop(id); Store.delTask(id); this.renderResults(); Toast.success('已删除');
+  },
+  // FIX 2: soft-hide (not delete) — restorable from "more" menu.
+  hideTask(id) {
+    Store.hideTask(id);
+    Toast.success('已隐藏，可在「更多」中还原');
+    this.renderResults();
   },
   openCardActions(id) {
     const t = Store.getTasks().find(x => x.id === id);
@@ -3326,8 +4782,10 @@ const UI = {
     if (t.status === 'failed' || t.status === 'timeout' || t.status === 'running') actions.push(['重生成', () => this.regen(id)]);
     actions.push(['复制工作流', () => Workflow.copy(t)]);
     actions.push(['详情', () => this.showDetail(t)]);
-    actions.push(['删除', () => this.confirmDeleteTask(id)]);
-    const html = actions.map((a, i) => `<button class="act ${a[0] === '删除' ? 'danger' : ''}" data-menu-action="${i}" style="justify-content:flex-start">${esc(a[0])}</button>`).join('') + `<button class="act" data-menu-action="close" style="justify-content:center;margin-top:6px">取消</button>`;
+    // FIX 2: distinct "隐藏" (soft hide, restorable) vs "删除" (permanent).
+    actions.push(['隐藏', () => this.hideTask(id)]);
+    actions.push(['永久删除', () => this.confirmDeleteTask(id)]);
+    const html = actions.map((a, i) => `<button class="act ${a[0] === '永久删除' ? 'danger' : ''}" data-menu-action="${i}" style="justify-content:flex-start">${esc(a[0])}</button>`).join('') + `<button class="act" data-menu-action="close" style="justify-content:center;margin-top:6px">取消</button>`;
     $('#actionSheetActions').innerHTML = html;
     $$('#actionSheetActions [data-menu-action]').forEach(b => b.onclick = async () => {
       if (b.dataset.menuAction === 'close') { this.closeSheet('actionSheet', 'actionOverlay'); return; }
@@ -3414,11 +4872,14 @@ const UI = {
     if (!card) return;
     const timer = card.querySelector('.timer');
     if (timer) {
-      const phase = poller.getPhase(elapsed)?.name || '';
+      // FIX 4B: phase display text in Chinese + polling count.
+      const rawPhase = poller.getPhase(elapsed)?.name || '';
+      const phase = rawPhase === '冷启动' ? '排队中' : rawPhase === '黄金窗口' ? '生成中' : rawPhase === '长尾' ? '处理中' : rawPhase;
       const interval = (poller.getPhase(elapsed)?.interval || 3000) / 1000;
+      const pollCount = st.count || 0;
       const net = st.netFails > 0 ? ` · 网络失败 ${st.netFails}/${CONFIG.POLL_FAIL_LIMIT}` : '';
       const req = st.requestError === 'REQUEST_TIMEOUT' ? ' · 请求超时，自动重试' : st.requestError === 'NETWORK_OR_CORS' ? ' · 网络异常，自动重试' : '';
-      timer.innerHTML = `<span class="dot"></span>${fmtDur(elapsed)} · ${esc(phase)} ${interval}s${net}${req}`;
+      timer.innerHTML = `<span class="task-spinner"></span>${fmtDur(elapsed)} · ${esc(phase)} · 轮询 ${pollCount} 次 · ${interval}s${net}${req}`;
     }
   },
 
@@ -3430,6 +4891,8 @@ const UI = {
     $('#lightboxImage').style.display = '';
     $('#lightboxVideo').style.display = 'none';
     $('#lightboxVideo').pause();
+    $('#lightboxAudio').style.display = 'none';
+    try { $('#lightboxAudio').pause(); } catch {}
     lb.classList.add('show');
     lb.setAttribute('aria-hidden', 'false');
   },
@@ -3438,11 +4901,27 @@ const UI = {
     const lb = $('#mediaLightbox');
     const vid = $('#lightboxVideo');
     $('#lightboxImage').style.display = 'none';
+    $('#lightboxAudio').style.display = 'none';
+    try { $('#lightboxAudio').pause(); } catch {}
     vid.style.display = '';
     vid.src = url;
     lb.classList.add('show');
     lb.setAttribute('aria-hidden', 'false');
     try { vid.play().catch(() => {}); } catch {}
+  },
+  // FIX 14: open audio lightbox.
+  openAudioLightbox(url) {
+    if (!url) return;
+    const lb = $('#mediaLightbox');
+    const aud = $('#lightboxAudio');
+    $('#lightboxImage').style.display = 'none';
+    $('#lightboxVideo').style.display = 'none';
+    try { $('#lightboxVideo').pause(); } catch {}
+    aud.style.display = '';
+    aud.src = url;
+    lb.classList.add('show');
+    lb.setAttribute('aria-hidden', 'false');
+    try { aud.play().catch(() => {}); } catch {}
   },
   closeLightbox() {
     const lb = $('#mediaLightbox'); if (!lb) return;
@@ -3451,6 +4930,8 @@ const UI = {
     $('#lightboxImage').removeAttribute('src');
     const vid = $('#lightboxVideo');
     try { vid.pause(); vid.removeAttribute('src'); vid.load(); } catch {}
+    const aud = $('#lightboxAudio');
+    try { aud.pause(); aud.removeAttribute('src'); aud.load(); } catch {}
   },
 
   /* ===== Detail modal ===== */
@@ -3590,7 +5071,7 @@ const UI = {
       if (items.length === 0) return;
       body += `<div class="history-day-group">${day}（${items.length}）</div>`;
       body += items.map(h => `<div class="history-item" data-hid="${esc(h.id)}">
-        <div class="history-thumb">${h.resultUrl && h.type === 'image' ? `<img src="${esc(h.resultUrl)}" loading="lazy">` : h.type === 'video' ? '🎬' : h.type === 'audio' ? '🎵' : '📄'}</div>
+        <div class="history-thumb">${h.resultUrl && h.type === 'image' ? `<img src="${esc(ThumbService.getThumb(h) || h.resultUrl)}" loading="lazy" data-thumb-src="${esc(h.resultUrl)}">` : h.type === 'video' ? '🎬' : h.type === 'audio' ? '🎵' : '📄'}</div>
         <div class="history-info">
           <div class="hi-top">${esc(h.modelName)} <span class="pill ${h.status}" style="font-size:9px">${statusMap[h.status] || h.status}</span></div>
           <div class="hi-prompt">${esc(trunc(h.prompt || '', 60))}</div>
@@ -3636,331 +5117,467 @@ const UI = {
     $('#modal').classList.add('show');
   },
 
-  /* ===== Editor ===== */
+  /* ===== Editor (ImageMarker integration) =====
+     ImageMarker is a self-contained object-based image annotation overlay
+     (`#imOverlay`). UI.openEditor(url) opens the overlay with the source
+     image pre-loaded; onSave uploads the composed PNG to R2 and feeds it
+     back as a ref-image, plus auto-fills the prompt template. */
   openEditor(url) {
     if (!url) { Toast.error('图片 URL 为空'); return; }
-    $('#editor').classList.add('show');
-    $('#canvasHint').textContent = '加载图片…'; $('#canvasHint').classList.remove('hide');
-    const promptEl = $('#editorPrompt'); if (promptEl) promptEl.value = '';
-    this.editor.isDrawing = false; this.editor.undoStack = []; this.editor.maskOps = [];
-    this.editor.currentBrush = null; this.editor.rectPreview = null; this.editor.strokeSnapshot = null;
-    $$('.dir-btn').forEach(b => b.classList.remove('active'));
-    const loadImage = (src, crossOrigin = false) => new Promise((resolve, reject) => {
-      const img = new Image();
-      if (crossOrigin) img.crossOrigin = 'anonymous';
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error('IMAGE_LOAD_FAILED'));
-      img.src = src;
-    });
-    (async () => {
-      try {
-        const img = await loadImage(url, false);
-        this.editor.img = img; this.editor.origSrc = url; this.editor.imgClean = false;
-        this.initEditorCanvas(); $('#canvasHint').classList.add('hide');
-      } catch {
-        try {
-          const proxyUrl = 'https://images.weserv.nl/?url=' + encodeURIComponent(url.replace(/^https?:\/\//, ''));
-          const img = await loadImage(proxyUrl, true);
-          this.editor.img = img; this.editor.origSrc = url; this.editor.imgClean = true;
-          this.initEditorCanvas(); $('#canvasHint').classList.add('hide');
-        } catch {
-          $('#canvasHint').textContent = '图片加载失败，请使用公开可访问的图片';
-          Toast.error('编辑器无法读取此图片');
-        }
-      }
-    })();
-  },
-  initEditorCanvas() {
-    const canvas = $('#maskCanvas'), ctx = canvas.getContext('2d');
-    const bgCanvas = $('#bgCanvas'), bgCtx = bgCanvas.getContext('2d');
-    const img = this.editor.img; if (!img) return;
-    const MAX = 1024;
-    let w = img.naturalWidth, h = img.naturalHeight;
-    if (w > MAX || h > MAX) { const r = Math.min(MAX / w, MAX / h); w = Math.round(w * r); h = Math.round(h * r); }
-    canvas.width = w; canvas.height = h; bgCanvas.width = w; bgCanvas.height = h;
-    bgCtx.clearRect(0, 0, w, h); bgCtx.drawImage(img, 0, 0, w, h);
-    ctx.clearRect(0, 0, w, h); ctx.globalCompositeOperation = 'source-over';
-    this.editor.canvas = canvas; this.editor.ctx = ctx;
-    this.editor.bg = bgCanvas; this.editor.bgCtx = bgCtx;
-    this.editor.undoStack = []; this.editor.maskOps = [];
-    this.pushUndo(); this.bindEditorEvents();
-    this.updateEditorToolUI();
-  },
-  updateEditorToolUI() {
-    const bg = $('#brushSizeGroup');
-    if (bg) {
-      const need = this.editor.tool === 'brush' || this.editor.tool === 'eraser';
-      bg.style.opacity = need ? '1' : '0.4';
-      bg.style.pointerEvents = need ? 'auto' : 'none';
-    }
-    const op = $('#outpaintCtrl');
-    if (op) op.style.display = this.editor.tool === 'outpaint' ? 'flex' : 'none';
-    const c = $('#maskCanvas');
-    if (c) c.className = `tool-${this.editor.tool}`;
-  },
-  bindEditorEvents() {
-    $$('.tb[data-tool]').forEach(b => b.onclick = () => {
-      $$('.tb[data-tool]').forEach(x => x.classList.remove('active'));
-      b.classList.add('active');
-      this.editor.tool = b.dataset.tool;
-      this.editor.isDrawing = false; this.editor.currentBrush = null;
-      this.updateEditorToolUI();
-    });
-    $$('.sb[data-size]').forEach(b => b.onclick = () => {
-      $$('.sb[data-size]').forEach(x => x.classList.remove('active'));
-      b.classList.add('active');
-      this.editor.brushSize = +b.dataset.size;
-    });
-    $$('.cb').forEach(b => b.onclick = () => {
-      $$('.cb').forEach(x => x.classList.remove('active'));
-      b.classList.add('active');
-      this.editor.color = b.dataset.color;
-    });
-    $$('.dir-btn[data-dir]').forEach(b => b.onclick = () => b.classList.toggle('active'));
-    $$('.sb[data-expand]').forEach(b => b.onclick = () => {
-      $$('.sb[data-expand]').forEach(x => x.classList.remove('active'));
-      b.classList.add('active');
-      this.editor.expandSize = +b.dataset.expand;
-    });
-    const c = this.editor.canvas;
-    if (window.PointerEvent) {
-      c.onpointerdown = e => { if (e.pointerType !== 'mouse' || e.button === 0) { e.preventDefault(); c.setPointerCapture?.(e.pointerId); this.onEditorDown(e); } };
-      c.onpointermove = e => { if (this.editor.isDrawing) { e.preventDefault(); this.onEditorMove(e); } };
-      c.onpointerup = e => { if (this.editor.isDrawing) { e.preventDefault(); this.onEditorUp(e); } c.releasePointerCapture?.(e.pointerId); };
-      c.onpointercancel = e => { if (this.editor.isDrawing) this.onEditorUp(e); c.releasePointerCapture?.(e.pointerId); };
-      c.onpointerleave = e => { if (e.pointerType === 'mouse' && this.editor.isDrawing) this.onEditorUp(e); };
-    } else {
-      c.onmousedown = e => this.onEditorDown(e);
-      c.onmousemove = e => this.onEditorMove(e);
-      c.onmouseup = e => this.onEditorUp(e);
-      c.onmouseleave = e => this.onEditorUp(e);
-      c.ontouchstart = e => { e.preventDefault(); this.onEditorDown(e.touches[0]); };
-      c.ontouchmove = e => { e.preventDefault(); this.onEditorMove(e); };
-      c.ontouchend = e => { e.preventDefault(); const t = e.changedTouches[0]; if (t) this.onEditorUp(t); };
-    }
-  },
-  getCanvasPos(e) {
-    const canvas = this.editor.canvas, rect = canvas.getBoundingClientRect();
-    const sx = canvas.width / (rect.width || 1), sy = canvas.height / (rect.height || 1);
-    return { x: (e.clientX - rect.left) * sx, y: (e.clientY - rect.top) * sy };
-  },
-  onEditorDown(e) {
-    if (!this.editor.img || !this.editor.canvas || this.editor.tool === 'outpaint') return;
-    const p = this.getCanvasPos(e);
-    this.editor.isDrawing = true; this.editor.startX = p.x; this.editor.startY = p.y;
-    if (this.editor.tool === 'rect') {
-      this.editor.rectPreview = this.snapshotMaskCanvas();
-    } else {
-      this.editor.strokeSnapshot = this.snapshotMaskCanvas();
-      this.editor.currentBrush = { type: this.editor.tool, color: this.editor.color, opacity: this.editor.opacity, size: this.editor.brushSize, points: [{ x: p.x, y: p.y }] };
-      this.redrawStroke(this.editor.currentBrush);
-    }
-  },
-  onEditorMove(e) {
-    if (!this.editor.isDrawing) return;
-    const p = this.getCanvasPos(e);
-    if (this.editor.tool === 'rect') {
-      this.restoreMaskCanvas(this.editor.rectPreview);
-      this.drawRect(this.editor.startX, this.editor.startY, p.x, p.y);
-    } else if (this.editor.currentBrush) {
-      this.editor.currentBrush.points.push({ x: p.x, y: p.y });
-      this.restoreMaskCanvas(this.editor.strokeSnapshot);
-      this.redrawStroke(this.editor.currentBrush);
-    }
-  },
-  onEditorUp(e) {
-    if (!this.editor.isDrawing) return;
-    this.editor.isDrawing = false;
-    if (this.editor.tool === 'rect' && e) {
-      const p = this.getCanvasPos(e);
-      const x = Math.min(this.editor.startX, p.x), y = Math.min(this.editor.startY, p.y);
-      const w = Math.abs(p.x - this.editor.startX), h = Math.abs(p.y - this.editor.startY);
-      if (w > 2 && h > 2) this.editor.maskOps.push({ type: 'rect', color: this.editor.color, opacity: this.editor.opacity, x, y, w, h });
-    } else if (this.editor.currentBrush) {
-      if (this.editor.currentBrush.points.length) this.editor.maskOps.push(this.editor.currentBrush);
-      this.editor.currentBrush = null;
-    }
-    this.editor.dirty = true; this.pushUndo();
-  },
-  redrawStroke(brush) {
-    const ctx = this.editor.ctx, pts = brush.points;
-    if (!ctx || !pts || !pts.length) return;
-    ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = brush.size;
-    if (brush.type === 'brush') { ctx.strokeStyle = `rgba(${brush.color},${brush.opacity})`; ctx.globalCompositeOperation = 'source-over'; }
-    else { ctx.strokeStyle = 'rgba(0,0,0,1)'; ctx.globalCompositeOperation = 'destination-out'; }
-    ctx.beginPath();
-    if (pts.length === 1) { ctx.moveTo(pts[0].x, pts[0].y); ctx.lineTo(pts[0].x + .01, pts[0].y + .01); }
-    else { ctx.moveTo(pts[0].x, pts[0].y); for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y); }
-    ctx.stroke(); ctx.restore(); ctx.globalCompositeOperation = 'source-over';
-  },
-  drawRect(x1, y1, x2, y2) {
-    const ctx = this.editor.ctx;
-    const x = Math.min(x1, x2), y = Math.min(y1, y2);
-    const w = Math.abs(x2 - x1), h = Math.abs(y2 - y1);
-    ctx.fillStyle = `rgba(${this.editor.color},${this.editor.opacity})`;
-    ctx.fillRect(x, y, w, h);
-  },
-  snapshotMaskCanvas() {
-    const tmp = document.createElement('canvas');
-    tmp.width = this.editor.canvas.width; tmp.height = this.editor.canvas.height;
-    tmp.getContext('2d').drawImage(this.editor.canvas, 0, 0);
-    return tmp;
-  },
-  restoreMaskCanvas(snapshot) {
-    if (!snapshot) return;
-    const ctx = this.editor.ctx;
-    ctx.clearRect(0, 0, this.editor.canvas.width, this.editor.canvas.height);
-    ctx.drawImage(snapshot, 0, 0);
-  },
-  applyOutpaint() {
-    const top = $('#outpaintDirections .dir-btn[data-dir="top"]')?.classList.contains('active');
-    const bottom = $('#outpaintDirections .dir-btn[data-dir="bottom"]')?.classList.contains('active');
-    const left = $('#outpaintDirections .dir-btn[data-dir="left"]')?.classList.contains('active');
-    const right = $('#outpaintDirections .dir-btn[data-dir="right"]')?.classList.contains('active');
-    if (!top && !bottom && !left && !right) { Toast.warning('请选择至少一个扩展方向'); return; }
-    const exp = this.editor.expandSize;
-    const bgCanvas = this.editor.bg, bgCtx = this.editor.bgCtx;
-    const maskCanvas = this.editor.canvas, maskCtx = this.editor.ctx;
-    if (!bgCanvas || !maskCanvas) { Toast.error('编辑器未就绪'); return; }
-    const oldW = bgCanvas.width, oldH = bgCanvas.height;
-    const newW = oldW + (left ? exp : 0) + (right ? exp : 0);
-    const newH = oldH + (top ? exp : 0) + (bottom ? exp : 0);
-    const offsetX = left ? exp : 0, offsetY = top ? exp : 0;
-    const tmpBg = document.createElement('canvas'); tmpBg.width = oldW; tmpBg.height = oldH;
-    tmpBg.getContext('2d').drawImage(bgCanvas, 0, 0);
-    const tmpMask = document.createElement('canvas'); tmpMask.width = oldW; tmpMask.height = oldH;
-    tmpMask.getContext('2d').drawImage(maskCanvas, 0, 0);
-    bgCanvas.width = newW; bgCanvas.height = newH;
-    maskCanvas.width = newW; maskCanvas.height = newH;
-    bgCtx.fillStyle = `rgba(${this.editor.color},${this.editor.opacity})`;
-    bgCtx.fillRect(0, 0, newW, newH);
-    bgCtx.drawImage(tmpBg, offsetX, offsetY);
-    if (this.editor.feather > 0) {
-      const f = Math.min(this.editor.feather, Math.max(1, Math.min(oldW, oldH) / 2));
-      bgCtx.save(); bgCtx.globalCompositeOperation = 'source-over';
-      const edge = `rgba(${this.editor.color},${this.editor.opacity})`;
-      const none = `rgba(${this.editor.color},0)`;
-      if (top) { const g = bgCtx.createLinearGradient(0, offsetY - f, 0, offsetY + f); g.addColorStop(0, none); g.addColorStop(1, edge); bgCtx.fillStyle = g; bgCtx.fillRect(offsetX, offsetY - f, oldW, f * 2); }
-      if (bottom) { const g = bgCtx.createLinearGradient(0, offsetY + oldH - f, 0, offsetY + oldH + f); g.addColorStop(0, edge); g.addColorStop(1, none); bgCtx.fillStyle = g; bgCtx.fillRect(offsetX, offsetY + oldH - f, oldW, f * 2); }
-      if (left) { const g = bgCtx.createLinearGradient(offsetX - f, 0, offsetX + f, 0); g.addColorStop(0, none); g.addColorStop(1, edge); bgCtx.fillStyle = g; bgCtx.fillRect(offsetX - f, offsetY, f * 2, oldH); }
-      if (right) { const g = bgCtx.createLinearGradient(offsetX + oldW - f, 0, offsetX + oldW + f, 0); g.addColorStop(0, edge); g.addColorStop(1, none); bgCtx.fillStyle = g; bgCtx.fillRect(offsetX + oldW - f, offsetY, f * 2, oldH); }
-      bgCtx.restore();
-    }
-    maskCtx.clearRect(0, 0, newW, newH);
-    maskCtx.drawImage(tmpMask, offsetX, offsetY);
-    this.editor.maskOps.push({ type: 'outpaint', color: this.editor.color, opacity: this.editor.opacity, feather: this.editor.feather, top, bottom, left, right, oldW, oldH, newW, newH, offsetX, offsetY });
-    this.editor.dirty = true; this.pushUndo();
-    Toast.success(`已扩展画布至 ${newW}×${newH}`);
-  },
-  pushUndo() {
-    const m = this.editor.canvas, b = this.editor.bg; if (!m || !b) return;
-    if (this.editor.undoStack.length >= 20) this.editor.undoStack.shift();
-    const maskSnap = document.createElement('canvas');
-    maskSnap.width = m.width; maskSnap.height = m.height;
-    maskSnap.getContext('2d').drawImage(m, 0, 0);
-    const bgSnap = document.createElement('canvas');
-    bgSnap.width = b.width; bgSnap.height = b.height;
-    bgSnap.getContext('2d').drawImage(b, 0, 0);
-    this.editor.undoStack.push({ mask: maskSnap, bg: bgSnap, maskOps: JSON.parse(JSON.stringify(this.editor.maskOps || [])) });
-  },
-  undoEditor() {
-    if (this.editor.undoStack.length <= 1) { Toast.info('已是最早状态'); return; }
-    this.editor.undoStack.pop();
-    const prev = this.editor.undoStack[this.editor.undoStack.length - 1];
-    if (!prev) return;
-    this.editor.canvas.width = prev.mask.width; this.editor.canvas.height = prev.mask.height;
-    this.editor.ctx.clearRect(0, 0, prev.mask.width, prev.mask.height);
-    this.editor.ctx.drawImage(prev.mask, 0, 0);
-    this.editor.bg.width = prev.bg.width; this.editor.bg.height = prev.bg.height;
-    this.editor.bgCtx.clearRect(0, 0, prev.bg.width, prev.bg.height);
-    this.editor.bgCtx.drawImage(prev.bg, 0, 0);
-    this.editor.maskOps = JSON.parse(JSON.stringify(prev.maskOps || []));
-    this.editor.dirty = true;
-  },
-  clearEditor() {
-    if (this.editor.ctx) this.editor.ctx.clearRect(0, 0, this.editor.canvas.width, this.editor.canvas.height);
-    this.editor.maskOps = []; this.editor.undoStack = []; this.pushUndo();
-    this.editor.dirty = true; Toast.info('已清空蒙版');
-  },
-  async confirmEditor() {
-    if (!this.editor.canvas || !this.editor.bg) { Toast.error('画布未就绪'); return; }
-    const prompt = String($('#editorPrompt')?.value || '').trim();
-    if (!prompt) { Toast.warning('请填写修改描述'); $('#editorPrompt')?.focus(); return; }
-    const btn = $('#editorConfirmBtn'), orig = btn.textContent;
-    btn.disabled = true; btn.textContent = '合成上传中…';
-    try {
-      const maskCanvas = this.editor.canvas, bgCanvas = this.editor.bg;
-      const w = Math.max(bgCanvas.width, maskCanvas.width), h = Math.max(bgCanvas.height, maskCanvas.height);
-      let mergedDataUrl = null;
-      const mergeWithImage = async (src, cross = true) => {
-        const i = new Image(); if (cross) i.crossOrigin = 'anonymous';
-        i.src = src; await new Promise((r, j) => { i.onload = r; i.onerror = j; });
-        const c = document.createElement('canvas'); c.width = w; c.height = h;
-        const x = c.getContext('2d');
-        x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);
-        x.drawImage(i, Math.round((w - bgCanvas.width) / 2), Math.round((h - bgCanvas.height) / 2), bgCanvas.width, bgCanvas.height);
-        x.drawImage(maskCanvas, Math.round((w - maskCanvas.width) / 2), Math.round((h - maskCanvas.height) / 2));
-        return c.toDataURL('image/png');
-      };
-      try {
-        const proxy = 'https://images.weserv.nl/?url=' + encodeURIComponent(this.editor.origSrc.replace(/^https?:\/\//, ''));
-        mergedDataUrl = await mergeWithImage(proxy, true);
-      } catch {}
-      if (!mergedDataUrl) {
-        try {
-          const c = document.createElement('canvas'); c.width = w; c.height = h;
-          const x = c.getContext('2d');
-          x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);
-          x.drawImage(bgCanvas, Math.round((w - bgCanvas.width) / 2), Math.round((h - bgCanvas.height) / 2));
-          x.drawImage(maskCanvas, Math.round((w - maskCanvas.width) / 2), Math.round((h - maskCanvas.height) / 2));
-          mergedDataUrl = c.toDataURL('image/png');
-        } catch {}
-      }
-      if (!mergedDataUrl) throw new Error('浏览器无法导出编辑结果');
-      let refUrl = Api.getCached(mergedDataUrl);
-      if (!refUrl) { refUrl = await Api.uploadDataUrl(mergedDataUrl); Api.setCached(mergedDataUrl, refUrl); }
-      if (this.tab !== 'image') this.switchTab('image');
-      const refParam = this.model?.params.find(p => p.type === 'ref-image');
-      if (refParam) {
-        this.setRefs(refParam.key, [
-          { id: 'r_' + genId(), kind: 'url', src: this.editor.origSrc, name: '原图', uploaded: true, remote: this.editor.origSrc },
-          { id: 'r_' + genId(), kind: 'url', src: refUrl, name: '合成图', uploaded: true, remote: refUrl }
-        ]);
-        this.refreshRefGrid(refParam.key);
-      }
-      const pParam = this.model?.params.find(p => p.key === 'prompt');
-      if (pParam) {
-        const ta = this.getPromptTextarea();
-        if (ta) { ta.value = prompt; ta.dispatchEvent(new Event('input', { bubbles: true })); }
-      }
-      this.closeEditor(); this.switchView('param');
-      Toast.success('已合成参考图并填入参数');
-    } catch (e) {
-      Toast.error('合成失败：' + e.message);
-    } finally {
-      btn.disabled = false; btn.textContent = orig;
-    }
-  },
-  closeEditor() {
-    const ed = $('#editor'); if (ed) ed.classList.remove('show');
-    this.editor.isDrawing = false; this.editor.currentBrush = null;
-    this.editor.canvas = null; this.editor.ctx = null;
-    this.editor.bg = null; this.editor.bgCtx = null; this.editor.img = null;
-    this.editor.undoStack = []; this.editor.maskOps = [];
-  },
-
-  /* ===== Global paste (workflow auto-apply) ===== */
-  handleGlobalPaste(e) {
-    const cd = e.clipboardData; if (!cd) return;
-    const text = cd.getData ? cd.getData('text/plain') : '';
-    // Workflow auto-apply
-    if (text && /^#\s*速创工作台\s*[·-]\s*工作流\s+V32[\s\S]*#\s*END\s*$/i.test(text.trim())) {
-      e.preventDefault();
-      Workflow.apply(text);
+    if (!window.ImageMarker || typeof window.ImageMarker.open !== 'function') {
+      Toast.error('标记组件未加载');
       return;
     }
+    if (!Store.getR2WorkerUrl() || !Store.getR2AuthToken()) {
+      Toast.warning('编辑器需要 R2 配置才能导出，请先在设置中填写');
+      this.openSheet('settingsSheet', 'settingsOverlay');
+      return;
+    }
+    // 通过 weserv.nl 代理加载图片（支持CORS，避免canvas tainted无法导出）
+    const imgUrl = url.startsWith('data:') ? url
+      : url.startsWith('https://images.weserv.nl/') ? (url + (url.includes('?') ? '&' : '?') + '_=' + Date.now())
+      : ('https://images.weserv.nl/?url=' + encodeURIComponent(url.replace(/^https?:\/\//, '')) + '&_=' + Date.now());
+    window.ImageMarker.open({
+      fileName: '标记合成',
+      onSave: (dataURL/*, w, h*/) => {
+        const refParam = this.model?.params?.find(p => p.type === 'ref-image' && !isFrameKey(p.key));
+        if (!refParam) { Toast.warning('当前模型不支持参考图'); return true; }
+        // 1. 先添加原图作为参考图（放在前面）
+        if (url && /^https?:\/\//.test(url)) {
+          this._addUrlRefTyped(refParam.key, url, false, false);
+        }
+        // 2. 再添加标记合成图作为参考图（放在后面）
+        const ref = { id: 'r_' + genId(), kind: 'local', src: dataURL, name: '标记图_' + Date.now() + '.png', uploaded: false, remote: null };
+        this.getRefs(refParam.key).push(ref);
+        this.refreshRefGrid(refParam.key);
+        // Auto-fill prompt prefix
+        const promptEl = this.getPromptTextarea?.() || document.querySelector('#promptInput') || document.querySelector('[data-key="prompt"]');
+        if (promptEl) {
+          const prefix = '图1为原图，图2为标记参考图，请根据图2中的标记进行如下修改：';
+          const existing = String(promptEl.value || '').trim();
+          if (existing && !existing.startsWith(prefix)) { promptEl.value = prefix + '\n' + existing; promptEl.dispatchEvent(new Event('input', { bubbles: true })); }
+          else if (!existing) { promptEl.value = prefix; promptEl.dispatchEvent(new Event('input', { bubbles: true })); }
+        }
+        if (this.currentView !== 'paramView') this.switchView('param');
+        Toast.success('原图+标记图已添加到参考图，标记图正在后台上传...');
+        // Upload in background (don't block editor close)
+        if (CONFIG.R2.WORKER_URL) {
+          const prog = document.querySelector('#rp-' + refParam.key); if (prog) prog.classList.add('show');
+          Api.uploadDataUrl(dataURL, pct => this.setRefProgress(ref.id, pct, '上传中 ' + pct + '%'))
+            .then(u => { ref.remote = u; ref.uploaded = true; ref.kind = 'url'; Api.setCached(dataURL, u); this.setRefProgress(ref.id, 100, ''); this.refreshRefGrid(refParam.key); })
+            .catch(e => { Toast.warning('标记图上传失败：' + e.message); this.setRefProgress(ref.id, 0, ''); })
+            .finally(() => { if (prog) prog.classList.remove('show'); });
+        }
+        return true;
+      }
+    });
+    window.ImageMarker.loadImage(imgUrl);
   }
+
+  // FIX 2: handleGlobalPaste removed — workflow import only via modal.
 };
+
+/* ============================================================
+   ImageMarker 弹窗组件 (悬浮面板式，无标题无缩放控件)
+   ============================================================ */
+(function () {
+  const root = document.getElementById('imOverlay');
+  if (!root) return;
+  const $ = name => root.querySelector('[data-ref="' + name + '"]');
+  const canvas = $('canvas');
+  const ctx = canvas.getContext('2d');
+  const workspace = $('work');
+
+  let bgColor = '#ffffff';
+  let objects = [], selected = null;
+  let tool = 'select', color = '#e11d48', size = 6;
+  let fillMode = false;
+  let pendingPoly = null;
+  let lastMouse = null;
+  let viewScale = 1;
+  const srcMap = new Map();
+  let srcSeq = 0;
+  let undoStack = [], redoStack = [];
+  let onSaveCb = null;
+  let onCloseCb = null;
+  let saveFileName = '标记合成';
+  const expandDirs = new Set();
+  let isSaving = false;
+
+  function applyView() {
+    canvas.style.width = canvas.width * viewScale + 'px';
+    canvas.style.height = canvas.height * viewScale + 'px';
+  }
+  function setView(s) { viewScale = Math.max(.03, Math.min(8, s)); applyView(); }
+  function fitView() {
+    const aw = workspace.clientWidth - 20, ah = workspace.clientHeight - 20;
+    setView(Math.min(aw / canvas.width, ah / canvas.height, 1));
+  }
+
+  const stateNow = () => ({ objs: JSON.stringify(objects), w: canvas.width, h: canvas.height, bg: bgColor });
+  function snapshot() { undoStack.push(stateNow()); if (undoStack.length > 50) undoStack.shift(); redoStack = []; }
+  function restore(en) {
+    objects = JSON.parse(en.objs); canvas.width = en.w; canvas.height = en.h; bgColor = en.bg;
+    $('cw').value = en.w; $('ch').value = en.h; $('bgColor').value = en.bg;
+    selected = null; applyView(); draw();
+  }
+  function undo() { if (undoStack.length) { redoStack.push(stateNow()); restore(undoStack.pop()); } }
+  function redo() { if (redoStack.length) { undoStack.push(stateNow()); restore(redoStack.pop()); } }
+
+  function setCanvasSize(w, h) {
+    w = Math.max(50, Math.min(8000, Math.round(w))); h = Math.max(50, Math.min(8000, Math.round(h)));
+    canvas.width = w; canvas.height = h; $('cw').value = w; $('ch').value = h; applyView(); fitView(); draw();
+  }
+  function shiftObj(o, dx, dy) {
+    if (o.type === 'image') { o.x += dx; o.y += dy; }
+    else if (o.type === 'pen' || o.type === 'poly') o.pts.forEach(p => { p.x += dx; p.y += dy; });
+    else if (o.type === 'text') { o.x += dx; o.y += dy; }
+    else { o.x1 += dx; o.y1 += dy; o.x2 += dx; o.y2 += dy; }
+  }
+  function fitToImages() {
+    const imgs = objects.filter(o => o.type === 'image'); if (!imgs.length) return;
+    const m = +$('margin').value || 0;
+    let x1=Infinity,y1=Infinity,x2=-Infinity,y2=-Infinity;
+    imgs.forEach(o => { x1=Math.min(x1,o.x); y1=Math.min(y1,o.y); x2=Math.max(x2,o.x+o.w); y2=Math.max(y2,o.y+o.h); });
+    snapshot(); const dx=m-x1, dy=m-y1; objects.forEach(o => shiftObj(o, dx, dy));
+    setCanvasSize((x2-x1)+m*2, (y2-y1)+m*2);
+  }
+  function applyExpand() {
+    if (!expandDirs.size) { alert('请先选择至少一个扩图方向'); return; }
+    const px = Math.max(32, Math.min(1024, +$('expandPx').value || 128));
+    const oldW=canvas.width, oldH=canvas.height;
+    const left = expandDirs.has('l')||expandDirs.has('tl')||expandDirs.has('bl')?px:0;
+    const right = expandDirs.has('r')||expandDirs.has('tr')||expandDirs.has('br')?px:0;
+    const top = expandDirs.has('t')||expandDirs.has('tl')||expandDirs.has('tr')?px:0;
+    const bottom = expandDirs.has('b')||expandDirs.has('bl')||expandDirs.has('br')?px:0;
+    snapshot(); objects.forEach(o => shiftObj(o, left, top));
+    setCanvasSize(oldW+left+right, oldH+top+bottom);
+  }
+
+  function loadFiles(files) {
+    [].forEach.call(files, f => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          snapshot(); const id='src'+(++srcSeq); srcMap.set(id, img);
+          const first = !objects.some(o => o.type === 'image');
+          if (first) {
+            canvas.width = Math.min(8000, img.width); canvas.height = Math.min(8000, img.height);
+            $('cw').value = canvas.width; $('ch').value = canvas.height;
+            objects.push({ type:'image', srcId:id, x:0, y:0, w:img.width, h:img.height });
+          } else {
+            const n = objects.filter(o => o.type === 'image').length;
+            objects.push({ type:'image', srcId:id, x:30+(n%4)*26, y:30+(n%4)*22, w:img.width, h:img.height });
+          }
+          selected = objects[objects.length-1]; fitView(); draw();
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(f);
+    });
+  }
+  $('file').addEventListener('change', e => { loadFiles(e.target.files); e.target.value = ''; });
+
+  root.querySelectorAll('[data-tool]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      root.querySelectorAll('[data-tool]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active'); tool = btn.dataset.tool;
+      if (tool !== 'select') selected = null; cancelPoly(); draw();
+    });
+  });
+  $('color').addEventListener('input', e => { color = e.target.value; if (selected && selected.type !== 'image') { selected.color = color; draw(); } });
+  $('size').addEventListener('input', e => { size = +e.target.value; $('sizeVal').textContent = size; if (selected && selected.size != null) { selected.size = size; draw(); } });
+  $('bgColor').addEventListener('input', e => { bgColor = e.target.value; draw(); });
+
+  root.querySelectorAll('[data-dir]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const d = btn.dataset.dir;
+      if (expandDirs.has(d)) { expandDirs.delete(d); btn.classList.remove('active'); }
+      else { expandDirs.add(d); btn.classList.add('active'); }
+    });
+  });
+
+  function bbox(o) {
+    if (o.type === 'image') return { x:o.x, y:o.y, w:o.w, h:o.h };
+    if (o.type === 'pen' || o.type === 'poly') {
+      let x1=Infinity,y1=Infinity,x2=-Infinity,y2=-Infinity;
+      o.pts.forEach(p => { x1=Math.min(x1,p.x); y1=Math.min(y1,p.y); x2=Math.max(x2,p.x); y2=Math.max(y2,p.y); });
+      return { x:x1-o.size, y:y1-o.size, w:x2-x1+o.size*2, h:y2-y1+o.size*2 };
+    }
+    if (o.type === 'text') { ctx.font = o.size+'px "Microsoft YaHei", sans-serif'; return { x:o.x, y:o.y-o.size, w:ctx.measureText(o.text).width, h:o.size*1.3 }; }
+    return { x:Math.min(o.x1,o.x2), y:Math.min(o.y1,o.y2), w:Math.abs(o.x2-o.x1), h:Math.abs(o.y2-o.y1) };
+  }
+  const inBBox = (b,x,y,tol) => x>=b.x-tol && x<=b.x+b.w+tol && y>=b.y-tol && y<=b.y+b.h+tol;
+
+  const HANDLE_SIZE = 14;
+  const handles = b => [
+    { name:'tl', x:b.x, y:b.y, cur:'nwse-resize' },
+    { name:'tr', x:b.x+b.w, y:b.y, cur:'nesw-resize' },
+    { name:'bl', x:b.x, y:b.y+b.h, cur:'nesw-resize' },
+    { name:'br', x:b.x+b.w, y:b.y+b.h, cur:'nwse-resize' },
+  ];
+  const hitHandle = (b,p) => { const t=HANDLE_SIZE/viewScale; for (const h of handles(b)) { if (Math.abs(p.x-h.x)<t && Math.abs(p.y-h.y)<t) return h; } return null; };
+
+  let dragging = null;
+  const pos = e => { const r = canvas.getBoundingClientRect(); return { x:(e.clientX-r.left)/viewScale, y:(e.clientY-r.top)/viewScale }; };
+
+  canvas.addEventListener('pointerdown', e => {
+    canvas.setPointerCapture(e.pointerId); const p = pos(e);
+    if (tool === 'poly') {
+      if (!pendingPoly) pendingPoly = [p];
+      else { const first = pendingPoly[0]; if (pendingPoly.length>=3 && Math.hypot(p.x-first.x,p.y-first.y)<12/viewScale) commitPoly(); else pendingPoly.push(p); }
+      draw(); return;
+    }
+    if (tool === 'select') {
+      if (selected) { const b = bbox(selected); const h = hitHandle(b,p); if (h) { snapshot(); dragging = { mode:'resize', obj:selected, handle:h.name, startMouse:{...p}, origObj:JSON.parse(JSON.stringify(selected)) }; return; } }
+      for (let i=objects.length-1; i>=0; i--) { if (inBBox(bbox(objects[i]),p.x,p.y,6/viewScale)) { selected=objects[i]; dragging={mode:'move',obj:selected,sx:p.x,sy:p.y,snapDone:false}; draw(); return; } }
+      selected = null; draw(); return;
+    }
+    if (tool === 'text') { const t = prompt('文字：'); if (t && t.trim()) { snapshot(); objects.push({type:'text',x:p.x,y:p.y,text:t.trim(),color,size:Math.max(18,size*5)}); selected=objects[objects.length-1]; draw(); } return; }
+    snapshot();
+    if (tool === 'pen') dragging = { mode:'draw', obj:{type:'pen',pts:[p],color,size} };
+    else if (tool === 'rect' || tool === 'ellipse') dragging = { mode:'draw', obj:{type:tool,x1:p.x,y1:p.y,x2:p.x,y2:p.y,color,size,fill:fillMode} };
+    else dragging = { mode:'draw', obj:{type:tool,x1:p.x,y1:p.y,x2:p.x,y2:p.y,color,size} };
+    objects.push(dragging.obj);
+  });
+  canvas.addEventListener('dblclick', () => { if (tool === 'poly' && pendingPoly && pendingPoly.length>=3) commitPoly(); });
+
+  // Wheel zoom on canvas
+  workspace.addEventListener('wheel', e => {
+    if (root.hidden) return;
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.15 : 1/1.15;
+    setView(viewScale * factor);
+  }, { passive: false });
+
+  canvas.addEventListener('pointermove', e => {
+    const p = pos(e); lastMouse = p;
+    if (tool === 'poly' && pendingPoly) { draw(); return; }
+    if (tool === 'select' && !dragging) {
+      let cur = 'default';
+      if (selected) { const h = hitHandle(bbox(selected),p); if (h) cur = h.cur; }
+      if (cur === 'default') { for (let i=objects.length-1;i>=0;i--) { if (inBBox(bbox(objects[i]),p.x,p.y,6/viewScale)) { cur='move'; break; } } }
+      canvas.style.cursor = cur;
+    }
+    if (!dragging) return;
+    const d = dragging, o = d.obj;
+    if (d.mode === 'move') { if (!d.snapDone) { snapshot(); d.snapDone = true; } shiftObj(o, p.x-d.sx, p.y-d.sy); d.sx=p.x; d.sy=p.y; }
+    else if (d.mode === 'resize') {
+      const orig = d.origObj;
+      let obx,oby,obw,obh;
+      if (orig.type === 'image') { obx=orig.x; oby=orig.y; obw=orig.w; obh=orig.h; }
+      else if (orig.type === 'text') { ctx.font=orig.size+'px "Microsoft YaHei", sans-serif'; obx=orig.x; oby=orig.y-orig.size; obw=ctx.measureText(orig.text).width; obh=orig.size*1.3; }
+      else if (orig.type === 'pen' || orig.type === 'poly') { let x1=Infinity,y1=Infinity,x2=-Infinity,y2=-Infinity; orig.pts.forEach(pt=>{x1=Math.min(x1,pt.x);y1=Math.min(y1,pt.y);x2=Math.max(x2,pt.x);y2=Math.max(y2,pt.y);}); obx=x1-orig.size; oby=y1-orig.size; obw=x2-x1+orig.size*2; obh=y2-y1+orig.size*2; }
+      else { obx=Math.min(orig.x1,orig.x2); oby=Math.min(orig.y1,orig.y2); obw=Math.abs(orig.x2-orig.x1); obh=Math.abs(orig.y2-orig.y1); }
+      let ax,ay;
+      if (d.handle==='br') { ax=obx; ay=oby; }
+      else if (d.handle==='tl') { ax=obx+obw; ay=oby+obh; }
+      else if (d.handle==='tr') { ax=obx; ay=oby+obh; }
+      else { ax=obx+obw; ay=oby; }
+      let nx=Math.min(ax,p.x), ny=Math.min(ay,p.y), nw=Math.abs(p.x-ax), nh=Math.abs(p.y-ay);
+      const MIN=8; if (nw<MIN) nw=MIN; if (nh<MIN) nh=MIN;
+      const fx=nw/Math.max(obw,1), fy=nh/Math.max(obh,1);
+      if (o.type === 'image') {
+        const dxChange=Math.abs(nw-obw), dyChange=Math.abs(nh-obh);
+        const f = dxChange>=dyChange ? fx : fy;
+        const useW=obw*f, useH=obh*f;
+        if (d.handle==='br') { o.x=ax; o.y=ay; }
+        else if (d.handle==='tl') { o.x=ax-useW; o.y=ay-useH; }
+        else if (d.handle==='tr') { o.x=ax; o.y=ay-useH; }
+        else { o.x=ax-useW; o.y=ay; }
+        o.w=useW; o.h=useH;
+      } else if (o.type === 'pen' || o.type === 'poly') {
+        o.pts = orig.pts.map(pt => ({ x:nx+(pt.x-obx)*fx, y:ny+(pt.y-oby)*fy }));
+        o.size = Math.max(1, orig.size*Math.min(fx,fy));
+      } else if (o.type === 'text') {
+        const f = Math.max(fx,fy); o.size = Math.max(8, Math.round(orig.size*f)); o.x=nx; o.y=ny+o.size;
+      } else {
+        o.x1 = nx+(orig.x1-obx)*fx; o.y1 = ny+(orig.y1-oby)*fy;
+        o.x2 = nx+(orig.x2-obx)*fx; o.y2 = ny+(orig.y2-oby)*fy;
+      }
+    } else if (d.mode === 'draw') { if (o.type === 'pen') o.pts.push(p); else { o.x2=p.x; o.y2=p.y; } }
+    draw();
+  });
+  canvas.addEventListener('pointerup', () => {
+    if (dragging && dragging.mode === 'draw') {
+      const o = dragging.obj; let discarded = false;
+      if (o.type === 'pen' && o.pts.length<2) { objects.pop(); discarded=true; }
+      else if (o.type !== 'pen' && Math.abs(o.x2-o.x1)<4 && Math.abs(o.y2-o.y1)<4) { objects.pop(); discarded=true; }
+      if (discarded && undoStack.length) undoStack.pop();
+      selected = null;
+    }
+    dragging = null; draw();
+  });
+
+  function drawObj(c, o) {
+    if (o.type === 'image') { const img = srcMap.get(o.srcId); if (img) c.drawImage(img, o.x, o.y, o.w, o.h); return; }
+    if (o.type === 'pen') { c.strokeStyle=o.color; c.lineWidth=o.size; c.lineCap='round'; c.lineJoin='round'; c.beginPath(); o.pts.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y)); if (o.pts.length===1) c.lineTo(o.pts[0].x+.1,o.pts[0].y); c.stroke(); return; }
+    if (o.type === 'arrow') {
+      c.strokeStyle=o.color; c.fillStyle=o.color; c.lineWidth=o.size; c.lineCap='round';
+      const ang=Math.atan2(o.y2-o.y1,o.x2-o.x1); const cos=Math.cos(ang), sin=Math.sin(ang);
+      const hl=Math.max(14,o.size*5), hw=hl*0.5, r=o.size/2;
+      const sx=o.x1+cos*r, sy=o.y1+sin*r, ex=o.x2-cos*hl*0.9, ey=o.y2-sin*hl*0.9;
+      c.beginPath(); c.moveTo(sx,sy); c.lineTo(ex,ey); c.stroke();
+      const bx=o.x2-cos*hl, by=o.y2-sin*hl;
+      c.beginPath(); c.moveTo(o.x2,o.y2); c.lineTo(bx-sin*hw,by+cos*hw); c.lineTo(bx+sin*hw,by-cos*hw); c.closePath(); c.fill(); return;
+    }
+    if (o.type === 'rect') { c.strokeStyle=o.color; c.lineWidth=o.size; if (o.fill) { c.fillStyle=o.color; c.fillRect(o.x1,o.y1,o.x2-o.x1,o.y2-o.y1); } c.strokeRect(o.x1,o.y1,o.x2-o.x1,o.y2-o.y1); return; }
+    if (o.type === 'ellipse') { c.strokeStyle=o.color; c.lineWidth=o.size; c.beginPath(); c.ellipse((o.x1+o.x2)/2,(o.y1+o.y2)/2,Math.abs(o.x2-o.x1)/2,Math.abs(o.y2-o.y1)/2,0,0,Math.PI*2); if (o.fill) { c.fillStyle=o.color; c.fill(); } c.stroke(); return; }
+    if (o.type === 'poly') { c.beginPath(); o.pts.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y)); c.closePath(); if (o.fill) { c.fillStyle=o.color; c.fill(); } c.strokeStyle=o.color; c.lineWidth=o.size; c.lineCap='butt'; c.lineJoin='miter'; c.miterLimit=8; c.stroke(); return; }
+    if (o.type === 'text') { c.fillStyle=o.color; c.font=o.size+'px "Microsoft YaHei", sans-serif'; c.fillText(o.text, o.x, o.y); }
+  }
+  function draw() {
+    ctx.fillStyle = bgColor; ctx.fillRect(0,0,canvas.width,canvas.height);
+    objects.forEach(o => drawObj(ctx, o));
+    if (selected) {
+      const b = bbox(selected), k = 1/viewScale;
+      ctx.save();
+      ctx.strokeStyle = '#5b7ff5'; ctx.lineWidth = 1.5*k; ctx.setLineDash([6*k,4*k]);
+      ctx.strokeRect(b.x-4*k, b.y-4*k, b.w+8*k, b.h+8*k); ctx.setLineDash([]);
+      const hs = HANDLE_SIZE*k; ctx.fillStyle='#5b7ff5'; ctx.strokeStyle='#fff'; ctx.lineWidth=1.5*k;
+      handles(b).forEach(h => { ctx.fillRect(h.x-hs/2,h.y-hs/2,hs,hs); ctx.strokeRect(h.x-hs/2,h.y-hs/2,hs,hs); });
+      ctx.restore();
+    }
+    if (pendingPoly && pendingPoly.length) {
+      const k = 1/viewScale; ctx.save();
+      ctx.strokeStyle = color; ctx.lineWidth = 2*k; ctx.setLineDash([6*k,4*k]);
+      ctx.beginPath(); pendingPoly.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));
+      if (lastMouse) ctx.lineTo(lastMouse.x,lastMouse.y); ctx.stroke(); ctx.setLineDash([]);
+      pendingPoly.forEach((p,i) => { ctx.beginPath(); ctx.arc(p.x,p.y,4*k,0,Math.PI*2); if (i===0) { ctx.fillStyle='#f59e0b'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=1.5*k; ctx.stroke(); } else { ctx.fillStyle=color; ctx.fill(); } });
+      ctx.restore();
+    }
+  }
+
+  function deleteSelected() { if (!selected) return; snapshot(); objects = objects.filter(o => o !== selected); selected = null; draw(); }
+  function clearMarks() {
+    const marks = objects.filter(o => o.type !== 'image');
+    if (!marks.length) { alert('没有可清空的标注'); return; }
+    if (!confirm('确定清空所有标注（保留图片）？')) return;
+    snapshot(); objects = objects.filter(o => o.type === 'image'); selected = null; draw();
+  }
+  function cancelPoly() { pendingPoly = null; draw(); }
+  function commitPoly() {
+    if (pendingPoly && pendingPoly.length >= 3) { snapshot(); objects.push({type:'poly',pts:pendingPoly,color,size,fill:fillMode}); selected = null; }
+    pendingPoly = null; draw();
+  }
+  function exportPNG() {
+    const out = document.createElement('canvas'); out.width=canvas.width; out.height=canvas.height;
+    const c = out.getContext('2d'); c.fillStyle=bgColor; c.fillRect(0,0,out.width,out.height);
+    objects.forEach(o => drawObj(c, o));
+    return out.toDataURL('image/png');
+  }
+  function close() {
+    root.hidden = true; objects=[]; selected=null; undoStack=[]; redoStack=[]; srcMap.clear(); srcSeq=0; pendingPoly=null; expandDirs.clear();
+    root.querySelectorAll('[data-dir].active').forEach(b => b.classList.remove('active'));
+    const fb = root.querySelector('.im-fill-btn'); if (fb) fb.classList.remove('active');
+    isSaving = false;
+    if (typeof onCloseCb === 'function') onCloseCb();
+  }
+
+  const acts = {
+    filltoggle: () => { fillMode = !fillMode; const fb = root.querySelector('.im-fill-btn'); if (fb) fb.classList.toggle('active', fillMode); },
+    upload: () => $('file').click(),
+    resize: () => { snapshot(); setCanvasSize(+$('cw').value, +$('ch').value); },
+    fit: fitToImages, expand: applyExpand,
+    undo, redo, clearMarks,
+    close: () => { if (isSaving) return; if (objects.length && !confirm('放弃当前编辑？')) return; close(); },
+    save: () => {
+      if (isSaving) return; isSaving = true;
+      const saveBtn = root.querySelector('[data-act="save"]');
+      const closeBtn = root.querySelector('[data-act="close"]');
+      if (saveBtn) { saveBtn.disabled = true; saveBtn.style.opacity = '0.6'; }
+      if (closeBtn) { closeBtn.disabled = true; }
+      try {
+        const url = exportPNG();
+        if (typeof onSaveCb === 'function') {
+          const result = onSaveCb(url, canvas.width, canvas.height);
+          if (result === false) {
+            if (saveBtn) { saveBtn.disabled = false; saveBtn.style.opacity = ''; }
+            if (closeBtn) { closeBtn.disabled = false; }
+            isSaving = false; return;
+          }
+        }
+      } catch (e) {
+        console.error('save error:', e);
+        alert('合成失败: ' + (e.message || e) + '\n\n如果图片跨域导致无法导出，请尝试上传本地图片。');
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.style.opacity = ''; }
+        if (closeBtn) { closeBtn.disabled = false; }
+        isSaving = false; return;
+      }
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.style.opacity = ''; }
+      if (closeBtn) { closeBtn.disabled = false; }
+      isSaving = false; close();
+    }
+  };
+  root.querySelectorAll('[data-act]').forEach(btn => {
+    btn.addEventListener('click', () => acts[btn.dataset.act] && acts[btn.dataset.act]());
+  });
+
+  window.addEventListener('keydown', e => {
+    if (root.hidden) return;
+    if (e.key === 'Escape') { if (pendingPoly) { cancelPoly(); return; } acts.close(); return; }
+    if (pendingPoly) { if (e.key === 'Enter') { commitPoly(); return; } if (e.key === 'Backspace') { e.preventDefault(); pendingPoly.pop(); if (!pendingPoly.length) pendingPoly = null; draw(); return; } }
+    if (document.activeElement.tagName === 'INPUT') return;
+    if ((e.key === 'Delete' || e.key === 'Backspace') && selected) { e.preventDefault(); deleteSelected(); }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); }
+    const keyMap = { v:'select', b:'pen', a:'arrow', r:'rect', o:'ellipse', p:'poly', t:'text' };
+    const k = e.key.toLowerCase();
+    if (keyMap[k] && !e.ctrlKey && !e.metaKey) {
+      const btn = root.querySelector('[data-tool="'+keyMap[k]+'"]');
+      if (btn) btn.click();
+    }
+  });
+
+  window.addEventListener('resize', () => { if (!root.hidden) fitView(); });
+
+  window.ImageMarker = {
+    open(opts) {
+      opts = opts || {};
+      onSaveCb = opts.onSave || null;
+      onCloseCb = opts.onClose || null;
+      saveFileName = opts.fileName || '标记合成';
+      root.hidden = false;
+      applyView(); fitView(); draw();
+    },
+    loadImage(url) {
+      // Use fetch + blob to avoid canvas taint (blob: URL is same-origin)
+      fetch(url, { mode: 'cors' })
+        .then(r => { if (!r.ok) throw new Error('fetch failed'); return r.blob(); })
+        .then(blob => {
+          const objUrl = URL.createObjectURL(blob);
+          const img = new Image();
+          img.onload = () => {
+            snapshot();
+            const id = 'src' + (++srcSeq);
+            srcMap.set(id, img);
+            canvas.width = Math.min(8000, img.width);
+            canvas.height = Math.min(8000, img.height);
+            $('cw').value = canvas.width; $('ch').value = canvas.height;
+            objects.push({ type: 'image', srcId: id, x: 0, y: 0, w: img.width, h: img.height });
+            fitView(); draw();
+          };
+          img.src = objUrl;
+        })
+        .catch(() => {
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.onload = () => {
+            snapshot();
+            const id = 'src' + (++srcSeq);
+            srcMap.set(id, img);
+            canvas.width = Math.min(8000, img.width);
+            canvas.height = Math.min(8000, img.height);
+            $('cw').value = canvas.width; $('ch').value = canvas.height;
+            objects.push({ type: 'image', srcId: id, x: 0, y: 0, w: img.width, h: img.height });
+            fitView(); draw();
+          };
+          img.src = url;
+        });
+    }
+  };
+})();
 
 /* ============================================================
    INIT
