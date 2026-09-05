@@ -1459,7 +1459,7 @@ body::before {
     </div>
 
     <!-- 参数表单容器 (由 JS 动态渲染) -->
-    <div id="paramForm" style="display:flex;flex-direction:column;gap:14px;"></div>
+    <div id="paramForm" style="display:flex !important;flex-direction:column;gap:14px;"></div>
 
     <!-- V56: 流水线面板 (pipeline tab) -->
     <div id="pipelinePanel" style="display:none;flex-direction:column;gap:14px;"></div>
@@ -3630,7 +3630,7 @@ const UI = {
     $$('#tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
     // V56: Pipeline tab — render pipeline panel, hide model/param form
     if (tab === 'pipeline') {
-      $('#paramForm').style.display = 'none';
+      $('#paramForm').style.cssText = 'display:none;';
       $('#pipelinePanel').style.display = 'flex';
       $('.model-select-wrap').style.display = 'none';
       this.state.model = null;
@@ -3638,7 +3638,7 @@ const UI = {
       this._renderPipelineForm();
       return;
     }
-    $('#paramForm').style.display = '';
+    $('#paramForm').style.display = 'flex';
     $('#pipelinePanel').style.display = 'none';
     $('.model-select-wrap').style.display = '';
     const model = MODELS[tab][0];
