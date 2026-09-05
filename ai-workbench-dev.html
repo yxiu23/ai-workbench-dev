@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>修的媒体工作台 V56</title>
+<title>修的媒体工作台 V57</title>
 <style>
 /* ============================================================
    主题变量
@@ -547,37 +547,56 @@ textarea { resize: vertical; min-height: 80px; }
 .queue-panel .qp-label { font-size: 11px; color: var(--text-dim); }
 .queue-panel .qp-val { font-size: 14px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
 
-/* V56: 流水线 (Pipeline) UI */
+/* V57: 流水线 (Pipeline) 进度条样式 */
 .pipeline-steps {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px;
+  display: flex; flex-direction: column; gap: 0; margin-bottom: 16px;
+  background: var(--surface-2); border-radius: var(--radius-md); padding: 4px;
+  border: 1px solid var(--border);
 }
 .pipeline-step {
-  border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--surface-2);
-  padding: 10px; display: flex; flex-direction: column; gap: 4px; min-height: 90px; position: relative;
-  transition: border-color var(--transition), background var(--transition);
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  position: relative; transition: background var(--transition);
+  border-radius: var(--radius-sm);
 }
-.pipeline-step.active { border-color: var(--brand); background: var(--brand-soft); }
-.pipeline-step.done { border-color: var(--success); }
-.pipeline-step.error { border-color: var(--danger); }
+.pipeline-step + .pipeline-step::before {
+  content: ''; position: absolute; top: -2px; left: 26px; width: 2px; height: 4px;
+  background: var(--border);
+}
+.pipeline-step.active { background: var(--brand-soft); }
+.pipeline-step.done { }
+.pipeline-step.error { background: var(--danger-soft); }
 .pipeline-step .ps-icon {
-  width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  font-size: 11px; color: #fff; background: var(--text-dim); flex-shrink: 0;
+  width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff; background: var(--text-dim); flex-shrink: 0;
+  transition: all var(--transition);
 }
-.pipeline-step.active .ps-icon { background: var(--brand); }
+.pipeline-step.active .ps-icon { background: var(--brand); animation: pulse 1.5s ease-in-out infinite; }
 .pipeline-step.done .ps-icon { background: var(--success); }
 .pipeline-step.error .ps-icon { background: var(--danger); }
-.pipeline-step .ps-title { font-size: 12px; font-weight: 600; color: var(--text); }
-.pipeline-step .ps-meta { font-size: 10px; color: var(--text-dim); font-family: var(--font-mono); }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 var(--brand-press); } 50% { box-shadow: 0 0 0 6px transparent; } }
+.pipeline-step .ps-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pipeline-step .ps-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.pipeline-step .ps-meta { font-size: 11px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.pipeline-step .ps-progress-bar {
+  height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; margin-top: 4px;
+}
+.pipeline-step.active .ps-progress-bar { background: var(--surface-3); }
+.pipeline-step.active .ps-progress-bar::after {
+  content: ''; display: block; height: 100%; width: 40%; background: var(--brand);
+  animation: progress-slide 1.5s ease-in-out infinite;
+}
+@keyframes progress-slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(350%); } }
 .pipeline-step .ps-preview {
-  margin-top: 4px; max-height: 60px; overflow: hidden; border-radius: 4px; background: var(--surface-3);
+  width: 48px; height: 48px; border-radius: 6px; overflow: hidden; flex-shrink: 0;
+  background: var(--surface-3); display: flex; align-items: center; justify-content: center;
 }
-.pipeline-step .ps-preview img, .pipeline-step .ps-preview video { width: 100%; display: block; }
+.pipeline-step .ps-preview img, .pipeline-step .ps-preview video { width: 100%; height: 100%; object-fit: cover; }
 .pipeline-step .ps-rerun {
-  position: absolute; top: 6px; right: 6px; font-size: 10px; padding: 2px 6px; border-radius: 4px;
-  background: var(--surface-3); color: var(--text-muted); cursor: pointer; opacity: 0; transition: opacity var(--transition);
+  font-size: 10px; padding: 3px 8px; border-radius: 4px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text-muted); cursor: pointer; flex-shrink: 0;
+  transition: all var(--transition);
 }
-.pipeline-step:hover .ps-rerun { opacity: 1; }
-.pipeline-step .ps-rerun:hover { background: var(--brand); color: #fff; }
+.pipeline-step .ps-rerun:hover { background: var(--brand-soft); color: var(--brand); border-color: var(--brand); }
 
 /* ============================================================
    任务卡 / 结果卡 (紧凑 2 列)
@@ -874,7 +893,7 @@ textarea { resize: vertical; min-height: 80px; }
   background: rgba(0,0,0,.55);
   backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
   display: flex; align-items: center; justify-content: center;
-  gap: 14px; padding: 20px; padding-bottom: 70px;
+  gap: 20px; padding: 40px 60px; padding-bottom: 80px;
 }
 .im-overlay[hidden] { display: none; }
 /* Floating panels: rounded rectangles */
@@ -998,7 +1017,7 @@ input[type="range"].im-range {
 .im-bottom-bar .im-btn { height: 36px; min-width: 36px; padding: 0 16px; font-size: 12px; font-weight: 500; }
 .im-bottom-bar .im-btn svg { width: 16px; height: 16px; }
 @media (max-width: 900px) {
-  .im-overlay { flex-direction: column; padding: 10px; padding-bottom: 70px; gap: 8px; }
+  .im-overlay { flex-direction: column; padding: 10px; padding-bottom: 80px; gap: 8px; }
   .im-float-tools { width: 100%; flex-direction: row; overflow-x: auto; padding: 4px 8px; }
   .im-float-tools .im-tool-btn.active::after { display: none; }
   .im-float-tools .im-tool-divider { width: 1px; height: 22px; margin: 0 3px; }
@@ -1410,7 +1429,7 @@ body::before {
     <div class="settings-section">
       <h4>关于</h4>
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V56<br>
+        修的媒体工作台 V57<br>
         支持图片、视频、音频生成<br>
         API: api.wuyinkeji.com
       </div>
@@ -3187,7 +3206,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V56';
+      document.title = '修的媒体工作台 V57';
     }
   },
 
@@ -3937,7 +3956,8 @@ const UI = {
     if (!/^https?:\/\//.test(url)) { Toast.error('请输入有效的 URL'); return null; }
     const refs = this._getRefs(key);
     if (refs.some(r => r.remote === url || r.src === url)) { Toast.warning('该 URL 已存在'); return null; }
-    const param = this.state.model.params.find(p => p.key === key);
+    const model = this.state.model || MODELS.image[0];
+    const param = model?.params?.find(p => p.key === key);
     const isVideo = param && param.type === 'ref-video';
     const isAudio = param && param.type === 'ref-audio';
     const kind = isVideo ? 'url-video' : isAudio ? 'url-audio' : 'url';
@@ -4000,7 +4020,9 @@ const UI = {
   },
 
   _renderAllRefGrids() {
-    for (const p of this.state.model.params) {
+    const model = this.state.model || MODELS.image[0];
+    if (!model?.params) return;
+    for (const p of model.params) {
       if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') this._renderRefGrid(p.key);
     }
   },
@@ -4009,10 +4031,11 @@ const UI = {
     const grid = $(`[data-ref-grid="${key}"]`);
     if (!grid) return;
     const refs = this._getRefs(key);
-    const param = this.state.model.params.find(p => p.key === key);
+    const model = this.state.model || MODELS.image[0];
+    const param = model?.params?.find(p => p.key === key);
     const isVideo = param && param.type === 'ref-video';
     const isAudio = param && param.type === 'ref-audio';
-    const max = param.output === 'single' ? 1 : (param.output === 'csv' ? 99 : (param.output === 'array' ? 14 : 99));
+    const max = param ? (param.output === 'single' ? 1 : (param.output === 'csv' ? 99 : (param.output === 'array' ? 14 : 99))) : 99;
     let html = refs.map(r => {
       const isLocal = r.kind === 'local' || r.kind === 'local-video' || r.kind === 'local-audio';
       const isUploading = isLocal && !r.uploaded && !r.uploadError;
@@ -4120,8 +4143,8 @@ const UI = {
 
   /* ---------- ESTIMATE ---------- */
   _updateEstimate() {
-    // V56: pipeline tab has its own estimate display
     if (this.state.tab === 'pipeline') { this._updatePipelineEstimate(); return; }
+    if (!this.state.model) { $('#estimateCost').textContent = '预计 —'; return; }
     let body;
     try { body = this._collectParamsSync(); } catch { $('#estimateCost').textContent = '预计 —'; return; }
     const est = calcEstimate(this.state.model, body);
@@ -4326,7 +4349,7 @@ const UI = {
       const st = steps[i] || { status: 'pending' };
       const cls = st.status === 'done' ? 'done' : st.status === 'active' ? 'active' : st.status === 'error' ? 'error' : '';
       const icon = st.status === 'done' ? '✓' : st.status === 'active' ? '…' : st.status === 'error' ? '!' : String(i + 1);
-      const meta = st.elapsed ? `用时 ${fmtDur(st.elapsed)}` : (st.status === 'pending' ? '等待' : '处理中');
+      const meta = st.elapsed ? `用时 ${fmtDur(st.elapsed)}` : (st.status === 'pending' ? '等待中' : '处理中');
       let preview = '';
       if (st.result?.url) {
         const isVideo = /\.(mp4|webm|mov)(\?|$)/i.test(st.result.url);
@@ -4334,17 +4357,21 @@ const UI = {
           ? `<div class="ps-preview"><video src="${esc(st.result.url)}" muted preload="metadata"></video></div>`
           : `<div class="ps-preview"><img src="${esc(st.result.thumbUrl || st.result.url)}" loading="lazy"></div>`;
       } else if (st.result?.audioUrl) {
-        preview = `<div class="ps-preview" style="display:flex;align-items:center;justify-content:center;padding:6px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="22" height="22"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`;
+        preview = `<div class="ps-preview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="22" height="22"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>`;
       }
+      const progressBar = st.status === 'active' ? '<div class="ps-progress-bar"></div>' : '';
       const rerunBtn = st.status === 'done' ? `<button class="ps-rerun" data-rerun-step="${i}">重跑</button>` : '';
       return `<div class="pipeline-step ${cls}">
-        <div style="display:flex;align-items:center;gap:6px"><div class="ps-icon">${icon}</div><div class="ps-title">${esc(def.title)}</div></div>
-        <div class="ps-meta">${meta}</div>
+        <div class="ps-icon">${icon}</div>
+        <div class="ps-body">
+          <div class="ps-title">${esc(def.title)}</div>
+          <div class="ps-meta">${meta}</div>
+          ${progressBar}
+        </div>
         ${preview}
         ${rerunBtn}
       </div>`;
     }).join('');
-    // Bind rerun buttons
     wrap.querySelectorAll('[data-rerun-step]').forEach(btn => {
       btn.addEventListener('click', () => this._rerunPipelineStep(parseInt(btn.dataset.rerunStep, 10)));
     });
@@ -5697,6 +5724,11 @@ ${items.map(h => {
       Toast.error('标注组件未加载');
       return;
     }
+    // 确保当前有图片模型（流水线标签页下model为null）
+    if (!this.state.model || !this.state.model.params) {
+      this.switchTab('image');
+    }
+    const model = this.state.model;
     // 通过 weserv.nl 代理加载图片（支持CORS，避免canvas tainted无法导出）
     const imgUrl = url.startsWith('data:') ? url
       : url.startsWith('https://images.weserv.nl/') ? (url + (url.includes('?') ? '&' : '?') + '_=' + Date.now())
@@ -5705,12 +5737,12 @@ ${items.map(h => {
     window.ImageMarker.open({
       fileName: '标记合成',
       onSave: (dataURL, w, h) => {
-        // Find ref-image param (prefer non-frame keys)
-        const refParam = this.state.model.params.find(p => p.type === 'ref-image' && !isFrameKey(p.key))
-          || this.state.model.params.find(p => p.type === 'ref-image');
+        try {
+        const refParam = model?.params?.find(p => p.type === 'ref-image' && !isFrameKey(p.key))
+          || model?.params?.find(p => p.type === 'ref-image');
         if (!refParam) {
           Toast.warning('当前模型不支持参考图');
-          return true; // close editor anyway
+          return true;
         }
         // 1. 先添加原图作为参考图（放在前面）
         if (url && /^https?:\/\//.test(url)) {
@@ -5744,6 +5776,11 @@ ${items.map(h => {
         // Upload annotated image to R2 in background
         this._uploadLocalImage(refParam.key, item);
         return true; // close editor immediately
+        } catch (err) {
+          console.error('onSave内部错误:', err.message, err.stack);
+          Toast.error('合成失败: ' + err.message);
+          return true;
+        }
       }
     });
     // 异步加载原始图片到标注画布（通过代理确保CORS）
@@ -5919,9 +5956,48 @@ document.addEventListener('DOMContentLoaded', () => UI.init());
   const hitHandle = (b,p) => { const t=HANDLE_SIZE/viewScale; for (const h of handles(b)) { if (Math.abs(p.x-h.x)<t && Math.abs(p.y-h.y)<t) return h; } return null; };
 
   let dragging = null;
+  let spaceHeld = false;
+  let panning = false;
+  let panStart = null;
   const pos = e => { const r = canvas.getBoundingClientRect(); return { x:(e.clientX-r.left)/viewScale, y:(e.clientY-r.top)/viewScale }; };
 
+  // Space key for grab-pan
+  window.addEventListener('keydown', e => {
+    if (root.hidden) return;
+    if (e.code === 'Space' && document.activeElement.tagName !== 'INPUT') {
+      e.preventDefault();
+      if (!spaceHeld) { spaceHeld = true; workspace.style.cursor = 'grab'; }
+    }
+  });
+  window.addEventListener('keyup', e => {
+    if (e.code === 'Space') {
+      spaceHeld = false;
+      if (panning) { panning = false; panStart = null; }
+      workspace.style.cursor = '';
+    }
+  });
+
+  // Pan via workspace scroll when space+drag
+  workspace.addEventListener('pointerdown', e => {
+    if (root.hidden || !spaceHeld) return;
+    e.preventDefault();
+    panning = true;
+    panStart = { x: e.clientX, y: e.clientY, scrollLeft: workspace.scrollLeft, scrollTop: workspace.scrollTop };
+    workspace.style.cursor = 'grabbing';
+    workspace.setPointerCapture(e.pointerId);
+  });
+  workspace.addEventListener('pointermove', e => {
+    if (!panning || !panStart) return;
+    e.preventDefault();
+    workspace.scrollLeft = panStart.scrollLeft - (e.clientX - panStart.x);
+    workspace.scrollTop = panStart.scrollTop - (e.clientY - panStart.y);
+  });
+  workspace.addEventListener('pointerup', e => {
+    if (panning) { panning = false; panStart = null; workspace.style.cursor = spaceHeld ? 'grab' : ''; }
+  });
+
   canvas.addEventListener('pointerdown', e => {
+    if (spaceHeld) return; // don't draw while panning
     canvas.setPointerCapture(e.pointerId); const p = pos(e);
     if (tool === 'poly') {
       if (!pendingPoly) pendingPoly = [p];
