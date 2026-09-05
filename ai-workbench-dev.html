@@ -15,7 +15,7 @@
 :root {
   color-scheme: light dark;
   --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-bottom: 0px;
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
   --brand: #5b7ff5;
@@ -1172,15 +1172,16 @@ input[type="range"].im-range {
   /* 安全区适配 */
   .app-header {
     padding-top: var(--safe-top);
-    height: calc(52px + var(--safe-top));
-  }
-  .app-body {
-    padding-bottom: var(--safe-bottom);
+    height: calc(48px + var(--safe-top));
+    flex-shrink: 0;
   }
   /* 布局：上下堆叠 + 视图切换 */
   .app-body {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
   }
   .param-panel {
     flex: 1;
@@ -1190,6 +1191,7 @@ input[type="range"].im-range {
     padding-left: max(12px, var(--safe-left));
     padding-right: max(12px, var(--safe-right));
     display: none;
+    overflow-y: auto;
   }
   .param-panel.mobile-active { display: flex; }
   .result-panel {
@@ -1198,15 +1200,14 @@ input[type="range"].im-range {
     display: none;
   }
   .result-panel.mobile-active { display: flex; }
-  /* 移动端视图切换栏 */
+  /* 移动端视图切换栏 — flex子元素，不遮挡内容 */
   .mobile-view-switch {
     display: flex !important;
-    position: sticky;
-    top: calc(52px + var(--safe-top));
-    z-index: 15;
+    flex-shrink: 0;
     background: var(--bg-elev);
     border-bottom: 1px solid var(--border);
     padding: 0 max(12px, var(--safe-left));
+    z-index: 15;
   }
   .mobile-view-switch button {
     flex: 1;
@@ -1234,7 +1235,7 @@ input[type="range"].im-range {
   /* 结果区单列 */
   .result-list { grid-template-columns: 1fr !important; gap: 10px; }
   .result-body {
-    padding: 8px max(12px, var(--safe-left)) calc(8px + var(--safe-bottom));
+    padding: 8px max(12px, var(--safe-left));
   }
   /* 结果header紧凑 */
   .result-header {
@@ -1257,7 +1258,7 @@ input[type="range"].im-range {
   .param-panel textarea { min-height: 60px; }
   /* 生成按钮区域适配安全区 */
   .gen-section {
-    padding-bottom: max(10px, var(--safe-bottom));
+    padding-bottom: 10px;
   }
   /* 弹窗移动化 */
   .settings-drawer {
@@ -1269,7 +1270,7 @@ input[type="range"].im-range {
     bottom: 0;
     right: 0;
     transform: translateY(100%);
-    padding: 0 max(16px, var(--safe-left)) max(16px, var(--safe-bottom));
+    padding: 0 max(16px, var(--safe-left));
   }
   .settings-drawer.show { transform: translateY(0); }
   .history-sidebar {
@@ -1285,7 +1286,7 @@ input[type="range"].im-range {
   /* ImageMarker编辑器移动适配 */
   .im-overlay {
     flex-direction: column !important;
-    padding: calc(20px + var(--safe-top)) 8px calc(80px + var(--safe-bottom)) !important;
+    padding: calc(20px + var(--safe-top)) 8px 80px !important;
     gap: 8px !important;
   }
   .im-float-tools {
@@ -1302,7 +1303,7 @@ input[type="range"].im-range {
     max-height: 160px;
   }
   .im-bottom-bar {
-    bottom: calc(8px + var(--safe-bottom)) !important;
+    bottom: 8px !important;
     width: calc(100% - 16px);
   }
   /* 液态玻璃增强 */
@@ -3385,7 +3386,7 @@ const UI = {
     this.bindEvents();
     this.switchTab('image');
     this._renderResultStrip();
-    this.maybeShowGuide();
+
     poller.resumeAll();
     this._bindConnectivity();
     this._startTitleTimer();
