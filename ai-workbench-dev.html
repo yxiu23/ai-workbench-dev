@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#080b14" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
 <title>修的媒体工作台 V61</title>
@@ -15,6 +16,16 @@
 :root {
   color-scheme: light dark;
   --safe-top: env(safe-area-inset-top, 0px);
+  --safe-top-fallback: 0px;
+}
+/* PWA standalone模式：env(safe-area-inset-top)可能返回0，用固定值兜底 */
+@media all and (display-mode: standalone) {
+  :root {
+    --safe-top: 59px; /* 灵动岛机型安全区高度 */
+    --safe-top-fallback: 59px;
+  }
+}
+:root {
   --safe-bottom: 0px;
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
@@ -92,6 +103,7 @@ body {
   font-feature-settings: "kern" 1, "liga" 1;
   font-variant-ligatures: common-ligatures;
   -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 code, pre, .mono, [class*="mono"] {
   font-family: "SF Mono", "Fira Code", "JetBrains Mono", "Cascadia Code", Consolas, "Liberation Mono", Menlo, monospace;
@@ -387,7 +399,7 @@ textarea { resize: vertical; min-height: 80px; }
 }
 .estimate-cost .amount { color: var(--success); font-weight: 600; font-family: var(--font-mono); }
 .generate-btn {
-  flex: 1; height: 46px; border-radius: var(--radius-md); background: var(--brand); color: #fff;
+  flex: 1; height: 46px; border-radius: 24px; background: var(--brand); color: #fff;
   font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;
   transition: all var(--transition); box-shadow: 0 4px 14px rgba(91,127,245,.30); letter-spacing: .03em;
 }
