@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#080b14" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
-<title>修的媒体工作台 V62</title>
+<title>修的媒体工作台 V63</title>
 <style>
 /* ============================================================
    主题变量
@@ -1641,7 +1641,7 @@ body::before {
     <div class="settings-section">
       <h4>关于</h4>
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V62<br>
+        修的媒体工作台 V63<br>
         支持图片、视频、音频生成<br>
         API: api.wuyinkeji.com
       </div>
@@ -3436,7 +3436,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V62';
+      document.title = '修的媒体工作台 V63';
     }
   },
 
@@ -5079,6 +5079,8 @@ const UI = {
           <div class="tc-meta">${type ? `<span class="meta-tag">${typeName(type)}</span>` : ''}<span class="meta-tag">${fmtTime(task.createdAt)}</span><span class="meta-tag" style="font-family:var(--font-mono);opacity:.7">${esc(task.id.slice(0, 8))}</span></div>
         </div>
       </div>
+      ${task.status === 'succeeded' && url && type === 'audio' ? `<div style="padding:0 8px"><audio src="${esc(url)}" controls style="width:100%;height:36px"></audio></div>` : ''}
+      ${task.status === 'succeeded' && url && type === 'video' ? `<div style="padding:0 8px"><video src="${esc(url)}" controls preload="metadata" style="width:100%;max-height:300px;border-radius:8px"></video></div>` : ''}
       ${progressRowHtml}
       ${errorHtml}
       ${actionsHtml ? `<div class="tc-actions">${actionsHtml}</div>` : ''}
