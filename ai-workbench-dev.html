@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#080b14" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
-<title>修的媒体工作台 V61</title>
+<title>修的媒体工作台 V62</title>
 <style>
 /* ============================================================
    主题变量
@@ -1641,7 +1641,7 @@ body::before {
     <div class="settings-section">
       <h4>关于</h4>
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V61<br>
+        修的媒体工作台 V62<br>
         支持图片、视频、音频生成<br>
         API: api.wuyinkeji.com
       </div>
@@ -2493,7 +2493,7 @@ const Api = {
     return this.normalizeResponse(res);
   },
 
-  uploadToR2(file, onProgress) {
+  uploadToR2(file, onProgress, _retryCount = 0) {
     return new Promise((resolve, reject) => {
       const workerUrl = Store.getR2WorkerUrl();
       const token = Store.getR2AuthToken();
@@ -2508,8 +2508,21 @@ const Api = {
           catch { reject(new Error('R2 返回格式错误')); }
         } else { reject(new Error(`R2 上传失败: HTTP ${xhr.status}`)); }
       };
-      xhr.onerror = () => reject(new Error('R2 上传网络错误：网络无法连接到 Worker 域名，若使用 workers.dev 请更换自定义域名'));
-      xhr.ontimeout = () => reject(new Error('R2 上传超时：网络无法连接到 Worker 域名，若使用 workers.dev 请更换自定义域名'));
+      xhr.onerror = () => {
+        if (_retryCount < 2) {
+          const delay = 2000 * (_retryCount + 1);
+          setTimeout(() => { this.uploadToR2(file, onProgress, _retryCount + 1).then(resolve).catch(reject); }, delay);
+        } else {
+          reject(new Error('R2 上传失败（已重试3次），请检查网络或更换自定义域名'));
+        }
+      };
+      xhr.ontimeout = () => {
+        if (_retryCount < 2) {
+          setTimeout(() => { this.uploadToR2(file, onProgress, _retryCount + 1).then(resolve).catch(reject); }, 2000);
+        } else {
+          reject(new Error('R2 上传超时（已重试3次），请检查网络'));
+        }
+      };
       xhr.timeout = 120000;
       const fd = new FormData();
       fd.append('file', file);
@@ -3423,7 +3436,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V61';
+      document.title = '修的媒体工作台 V62';
     }
   },
 
@@ -4204,7 +4217,7 @@ const UI = {
       const url = await Api.uploadToR2(file, pct => this._updateRefProgress(key, item.id, pct));
       item.remote = url; item.uploaded = true;
       this._renderRefGrid(key);
-    } catch (e) { Toast.error(`上传失败: ${e.message}`); item.uploadError = e.message; this._renderRefGrid(key); }
+    } catch (e) { item.uploadError = e.message; this._renderRefGrid(key); Toast.warning(`图片上传失败：${e.message}，点击重试`); }
   },
 
   async _uploadLocalVideo(key, item) {
