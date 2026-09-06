@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#080b14" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
-<title>修的媒体工作台 V65</title>
+<title>修的媒体工作台 V66</title>
 <style>
 /* ============================================================
    主题变量
@@ -1641,7 +1641,7 @@ body::before {
     <div class="settings-section">
       <h4>关于</h4>
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V65<br>
+        修的媒体工作台 V66<br>
         支持图片、视频、音频生成<br>
         API: api.wuyinkeji.com
       </div>
@@ -3436,7 +3436,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V65';
+      document.title = '修的媒体工作台 V66';
     }
   },
 
@@ -4153,46 +4153,14 @@ const UI = {
 
   _addLocalRef(key, file) {
     if (file.size > 10 * 1024 * 1024) { Toast.error('图片不能超过 10MB'); return; }
-    // 压缩图片：长边缩到1024px，JPEG 0.85质量（通常200-500KB）
-    const compressImage = (file) => {
-      return new Promise(resolve => {
-        const reader = new FileReader();
-        reader.onload = e => {
-          const img = new Image();
-          img.onload = () => {
-            const maxDim = 1024;
-            let w = img.width, h = img.height;
-            if (w > maxDim || h > maxDim) {
-              const r = maxDim / Math.max(w, h);
-              w = Math.round(w * r); h = Math.round(h * r);
-            }
-            const canvas = document.createElement('canvas');
-            canvas.width = w; canvas.height = h;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, w, h);
-            canvas.toBlob(blob => {
-              const compressed = new File([blob], file.name.replace(/\.(png|webp)$/i, '.jpg'), { type: 'image/jpeg' });
-              const reader2 = new FileReader();
-              reader2.onload = e2 => resolve({ dataUrl: e2.target.result, file: compressed });
-              reader2.readAsDataURL(compressed);
-            }, 'image/jpeg', 0.85);
-          };
-          img.onerror = () => resolve(null);
-          img.src = e.target.result;
-        };
-        reader.onerror = () => resolve(null);
-        reader.readAsDataURL(file);
-      });
-    };
-    compressImage(file).then(result => {
-      if (!result) { Toast.error('图片加载失败'); return; }
-      const item = { id: genId(), kind: 'local', src: result.dataUrl, name: result.file.name, uploaded: false, remote: null };
+    const reader = new FileReader();
+    reader.onload = e => {
+      const item = { id: genId(), kind: 'local', src: e.target.result, name: file.name, uploaded: false, remote: null };
       this._getRefs(key).push(item);
       this._renderRefGrid(key);
       this._uploadLocalImage(key, item);
-      const savedSize = file.size - result.file.size;
-      if (savedSize > 100000) Toast.info(`图片已压缩：${(file.size/1024/1024).toFixed(1)}MB → ${(result.file.size/1024/1024).toFixed(1)}MB`);
-    });
+    };
+    reader.readAsDataURL(file);
   },
 
   _addLocalVideoRef(key, file) {
@@ -4410,7 +4378,99 @@ const UI = {
   },
 
   async _collectParamsAsync() {
-    return this._collectParamsSync();
+    const model = this.state.model;
+    if (!model) return {};
+    const body = {};
+    const inactiveRefParams = new Set();
+    if (model.refGroups) {
+      const activeMode = this.state.refMode?.[this.state.modelKey] || model.refGroups.modes[0].value;
+      model.refGroups.modes.forEach(m => { if (m.value !== activeMode) m.params.forEach(k => inactiveRefParams.add(k)); });
+    }
+    for (const p of model.params) {
+      if (inactiveRefParams.has(p.key)) continue;
+      if (p.type === 'ref-image') {
+        body[p.key] = await this._collectRefImageAsync(p.key);
+      } else if (p.type === 'ref-video') {
+        body[p.key] = await this._collectRefVideoAsync(p.key);
+      } else if (p.type === 'ref-audio') {
+        body[p.key] = await this._collectRefAudioAsync(p.key);
+      } else {
+        const el = $(`[data-key="${p.key}"]`);
+        if (el) body[p.key] = el.value;
+        else if (!inactiveRefParams.has(p.key)) body[p.key] = p.default ?? '';
+      }
+    }
+    return body;
+  },
+
+  async _collectRefImageAsync(key) {
+    const refs = this._getRefs(key);
+    if (refs.length === 0) return null;
+    // 等待未上传的本地图片上传完成
+    const pending = refs.filter(r => r.kind === 'local' && !r.uploaded && !r.uploadError);
+    if (pending.length > 0) {
+      Toast.info('等待参考图上传完成...');
+      let waited = 0;
+      while (pending.some(r => !r.uploaded && !r.uploadError) && waited < 60000) {
+        await new Promise(r => setTimeout(r, 1000));
+        waited += 1000;
+      }
+    }
+    // 检查上传失败的
+    const failed = refs.filter(r => r.kind === 'local' && r.uploadError);
+    if (failed.length > 0) throw new Error('参考图上传失败，请删除失败的参考图或重新上传');
+    // 收集URL（与V32一致：url用src，local用remote）
+    const urls = refs.map(r => r.kind === 'url' ? r.src : r.remote).filter(u => u && /^https?:\/\//.test(u));
+    const param = this.state.model.params.find(p => p.key === key);
+    if (!param) return null;
+    if (param.output === 'single') return urls[0] || '';
+    if (param.output === 'csv') return urls.join(',');
+    if (param.output === 'array') return urls;
+    return urls[0] || '';
+  },
+
+  async _collectRefVideoAsync(key) {
+    const refs = this._getRefs(key);
+    if (refs.length === 0) return null;
+    const pending = refs.filter(r => r.kind === 'local-video' && !r.uploaded && !r.uploadError);
+    if (pending.length > 0) {
+      Toast.info('等待参考视频上传完成...');
+      let waited = 0;
+      while (pending.some(r => !r.uploaded && !r.uploadError) && waited < 120000) {
+        await new Promise(r => setTimeout(r, 1000));
+        waited += 1000;
+      }
+    }
+    const failed = refs.filter(r => r.kind === 'local-video' && r.uploadError);
+    if (failed.length > 0) throw new Error('参考视频上传失败，请删除或重新上传');
+    const urls = refs.map(r => r.remote).filter(u => u && /^https?:\/\//.test(u));
+    const param = this.state.model.params.find(p => p.key === key);
+    if (!param) return null;
+    if (param.output === 'single') return urls[0] || '';
+    if (param.output === 'csv') return urls.join(',');
+    return urls[0] || '';
+  },
+
+  async _collectRefAudioAsync(key) {
+    const refs = this._getRefs(key);
+    if (refs.length === 0) return null;
+    const pending = refs.filter(r => r.kind === 'local-audio' && !r.uploaded && !r.uploadError);
+    if (pending.length > 0) {
+      Toast.info('等待参考音频上传完成...');
+      let waited = 0;
+      while (pending.some(r => !r.uploaded && !r.uploadError) && waited < 120000) {
+        await new Promise(r => setTimeout(r, 1000));
+        waited += 1000;
+      }
+    }
+    const failed = refs.filter(r => r.kind === 'local-audio' && r.uploadError);
+    if (failed.length > 0) throw new Error('参考音频上传失败，请删除或重新上传');
+    const urls = refs.map(r => r.remote).filter(u => u && /^https?:\/\//.test(u));
+    const param = this.state.model.params.find(p => p.key === key);
+    if (!param) return null;
+    if (param.output === 'single') return urls[0] || '';
+    if (param.output === 'csv') return urls.join(',');
+    return urls[0] || '';
   },
 
   /* ---------- ESTIMATE ---------- */
@@ -4437,7 +4497,7 @@ const UI = {
     const btn = $('#generateBtn');
     btn.disabled = true; $('#generateBtnText').textContent = '提交中...';
     try {
-      const body = this._collectParamsSync();
+      const body = await this._collectParamsAsync();
       const v = normalizeAndValidateApiBody(this.state.model, body);
       if (!v.ok) { Toast.error(v.error); return; }
       const prompt = body.prompt || body.text || '';
