@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#080b14" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
-<title>修的媒体工作台 V64</title>
+<title>修的媒体工作台 V65</title>
 <style>
 /* ============================================================
    主题变量
@@ -1641,7 +1641,7 @@ body::before {
     <div class="settings-section">
       <h4>关于</h4>
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V64<br>
+        修的媒体工作台 V65<br>
         支持图片、视频、音频生成<br>
         API: api.wuyinkeji.com
       </div>
@@ -3436,7 +3436,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V64';
+      document.title = '修的媒体工作台 V65';
     }
   },
 
@@ -4153,14 +4153,46 @@ const UI = {
 
   _addLocalRef(key, file) {
     if (file.size > 10 * 1024 * 1024) { Toast.error('图片不能超过 10MB'); return; }
-    const reader = new FileReader();
-    reader.onload = e => {
-      const item = { id: genId(), kind: 'local', src: e.target.result, name: file.name, uploaded: false, remote: null };
+    // 压缩图片：长边缩到1024px，JPEG 0.85质量（通常200-500KB）
+    const compressImage = (file) => {
+      return new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = new Image();
+          img.onload = () => {
+            const maxDim = 1024;
+            let w = img.width, h = img.height;
+            if (w > maxDim || h > maxDim) {
+              const r = maxDim / Math.max(w, h);
+              w = Math.round(w * r); h = Math.round(h * r);
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            canvas.toBlob(blob => {
+              const compressed = new File([blob], file.name.replace(/\.(png|webp)$/i, '.jpg'), { type: 'image/jpeg' });
+              const reader2 = new FileReader();
+              reader2.onload = e2 => resolve({ dataUrl: e2.target.result, file: compressed });
+              reader2.readAsDataURL(compressed);
+            }, 'image/jpeg', 0.85);
+          };
+          img.onerror = () => resolve(null);
+          img.src = e.target.result;
+        };
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(file);
+      });
+    };
+    compressImage(file).then(result => {
+      if (!result) { Toast.error('图片加载失败'); return; }
+      const item = { id: genId(), kind: 'local', src: result.dataUrl, name: result.file.name, uploaded: false, remote: null };
       this._getRefs(key).push(item);
       this._renderRefGrid(key);
       this._uploadLocalImage(key, item);
-    };
-    reader.readAsDataURL(file);
+      const savedSize = file.size - result.file.size;
+      if (savedSize > 100000) Toast.info(`图片已压缩：${(file.size/1024/1024).toFixed(1)}MB → ${(result.file.size/1024/1024).toFixed(1)}MB`);
+    });
   },
 
   _addLocalVideoRef(key, file) {
