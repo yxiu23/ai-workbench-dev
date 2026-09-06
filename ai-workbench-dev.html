@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#080b14" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
-<title>修的媒体工作台 V63</title>
+<title>修的媒体工作台 V64</title>
 <style>
 /* ============================================================
    主题变量
@@ -1641,7 +1641,7 @@ body::before {
     <div class="settings-section">
       <h4>关于</h4>
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V63<br>
+        修的媒体工作台 V64<br>
         支持图片、视频、音频生成<br>
         API: api.wuyinkeji.com
       </div>
@@ -3436,7 +3436,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V63';
+      document.title = '修的媒体工作台 V64';
     }
   },
 
@@ -4310,6 +4310,11 @@ const UI = {
 
   _collectRefImage(key) {
     const refs = this._getRefs(key);
+    // 检查是否有未上传完成的本地图片
+    const hasUploading = refs.some(r => (r.kind === 'local') && !r.uploaded && !r.uploadError);
+    if (hasUploading) throw new Error('参考图正在上传中，请等待上传完成后再生成');
+    const hasFailed = refs.some(r => (r.kind === 'local') && r.uploadError);
+    if (hasFailed) throw new Error('参考图上传失败，请删除失败的参考图或重新上传');
     const urls = refs.map(r => r.remote || r.src).filter(u => /^https?:\/\//.test(u));
     const param = this.state.model.params.find(p => p.key === key);
     if (!param) return null;
@@ -4332,6 +4337,10 @@ const UI = {
 
   _collectRefAudio(key) {
     const refs = this._getRefs(key);
+    const hasUploading = refs.some(r => (r.kind === 'local-audio') && !r.uploaded && !r.uploadError);
+    if (hasUploading) throw new Error('参考音频正在上传中，请等待上传完成后再生成');
+    const hasFailed = refs.some(r => (r.kind === 'local-audio') && r.uploadError);
+    if (hasFailed) throw new Error('参考音频上传失败，请删除失败的参考音频或重新上传');
     const urls = refs.map(r => r.remote).filter(Boolean);
     if (!urls.every(u => /^https?:\/\//.test(u))) throw new Error('本地音频需上传完成后才能使用');
     const param = this.state.model.params.find(p => p.key === key);
