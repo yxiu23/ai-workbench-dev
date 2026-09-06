@@ -3314,17 +3314,20 @@ const Workflow = {
       else if (section === '模型') { if (trimmed) result.modelName = trimmed; }
       else if (section === '提示词') { if (trimmed && trimmed !== '（空）') result.prompt += (result.prompt ? '\n' : '') + line; }
       else if (section === '参考素材') {
-        if (/^参考图[：:]/.test(trimmed)) refTarget = 'image';
-        else if (/^参考视频[：:]/.test(trimmed)) refTarget = 'video';
-        else if (/^参考音频[：:]/.test(trimmed)) refTarget = 'audio';
-        else if (/^首帧[：:]/.test(trimmed)) { const m = trimmed.replace(/^首帧[：:]\s*/, ''); if (m && m !== '无') result.refs.first = m; refTarget = null; }
-        else if (/^尾帧[：:]/.test(trimmed)) { const m = trimmed.replace(/^尾帧[：:]\s*/, ''); if (m && m !== '无') result.refs.last = m; refTarget = null; }
-        else if (refTarget && /^\d+\.\s*https?:\/\//.test(trimmed)) { result.refs[refTarget].push(trimmed.replace(/^\d+\.\s*/, '')); }
+        // extractUrl: strip optional "N. " prefix, then return the leading http(s) URL token (or null)
+        const extractUrl = s => { const m = String(s || '').trim().replace(/^\d+\.\s*/, ''); return /^https?:\/\/\S+/i.test(m) ? m.match(/^https?:\/\/\S+/i)[0] : null; };
+        if (/^参考图[：:]/.test(trimmed)) { refTarget = 'image'; const u = extractUrl(trimmed.replace(/^参考图[：:]\s*/, '')); if (u) result.refs.image.push(u); }
+        else if (/^参考视频[：:]/.test(trimmed)) { refTarget = 'video'; const u = extractUrl(trimmed.replace(/^参考视频[：:]\s*/, '')); if (u) result.refs.video.push(u); }
+        else if (/^参考音频[：:]/.test(trimmed)) { refTarget = 'audio'; const u = extractUrl(trimmed.replace(/^参考音频[：:]\s*/, '')); if (u) result.refs.audio.push(u); }
+        else if (/^首帧[：:]/.test(trimmed)) { const u = extractUrl(trimmed.replace(/^首帧[：:]\s*/, '')); if (u) result.refs.first = u; refTarget = null; }
+        else if (/^尾帧[：:]/.test(trimmed)) { const u = extractUrl(trimmed.replace(/^尾帧[：:]\s*/, '')); if (u) result.refs.last = u; refTarget = null; }
+        else if (refTarget) { const u = extractUrl(trimmed); if (u) result.refs[refTarget].push(u); }
       }
       else if (section === '生成设置') {
         if (trimmed && trimmed !== '默认') {
-          const idx = trimmed.indexOf(':');
-          if (idx > 0) { const k = trimmed.slice(0, idx).trim(); const v = trimmed.slice(idx+1).trim(); result.fields[k] = v; }
+          // Accept both ASCII ":" and Chinese "：" as the key/value separator
+          const m = trimmed.match(/^([^:：]+)[:：]\s*(.*)$/);
+          if (m) result.fields[m[1].trim()] = m[2].trim();
         }
       }
     }
