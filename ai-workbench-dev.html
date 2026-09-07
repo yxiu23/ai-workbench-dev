@@ -3876,9 +3876,7 @@ const UI = {
     const count = ta.value.length;
     const countEl = ta.parentElement.querySelector('[data-count]');
     if (countEl) {
-      countEl.textContent = `${count}/2000`;
-      countEl.classList.toggle('warn', count >= 1500 && count < 1900);
-      countEl.classList.toggle('danger', count >= 1900);
+      countEl.textContent = `${count}字`;
     }
     this._updateEstimate();
   },
@@ -5770,8 +5768,29 @@ ${items.map(h => {
       if (!model) continue;
       try {
         const body = {};
+        // 收集当前模型的参考图URL，用于复用到批量生成
+        const currentRefs = {};
+        if (this.state.model) {
+          for (const p of this.state.model.params) {
+            if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') {
+              const refs = this._getRefs(p.key);
+              const urls = refs.map(r => r.remote || r.src).filter(u => /^https?:\/\//.test(u));
+              if (urls.length > 0) currentRefs[p.type] = urls;
+            }
+          }
+        }
         for (const p of model.params) {
-          if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') { body[p.key] = ''; }
+          if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') {
+            // 复用同类型的参考图URL
+            const urls = currentRefs[p.type] || [];
+            if (urls.length > 0) {
+              if (p.output === 'single') body[p.key] = urls[0];
+              else if (p.output === 'csv') body[p.key] = urls.join(',');
+              else body[p.key] = urls;
+            } else {
+              body[p.key] = p.output === 'array' ? [] : '';
+            }
+          }
           else if (p.key === 'prompt' || p.key === 'text') { body[p.key] = prompt; }
           else { body[p.key] = p.default ?? ''; }
         }
@@ -5927,9 +5946,22 @@ ${items.map(h => {
 
   _restoreFormFromCache() {
     const cache = this.state.formCache[this.state.modelKey];
-    // Restore prompt from tab-level cache if model-level cache doesn't have it
     const tabPrompt = this.state.formCache[this.state.tab + '_prompt'];
     const tabRefs = this.state.formCache[this.state.tab + '_refs'] || {};
+    
+    // 收集同tab下所有modelKey的缓存ref，用于跨模型恢复
+    const allTabRefs = {};
+    for (const [k, v] of Object.entries(this.state.formCache)) {
+      if (k.startsWith(this.state.tab + '/') && typeof v === 'object') {
+        for (const [refKey, refVal] of Object.entries(v)) {
+          if (Array.isArray(refVal) && refVal.length > 0 && !allTabRefs[refKey]) {
+            allTabRefs[refKey] = refVal;
+          }
+        }
+      }
+    }
+    // 合并 tabRefs 和 allTabRefs（tabRefs优先）
+    const mergedRefs = { ...allTabRefs, ...tabRefs };
     
     // Restore prompt
     const promptParam = this.state.model.params.find(p => p.type === 'textarea');
@@ -5942,10 +5974,10 @@ ${items.map(h => {
       }
     }
     
-    // Restore refs - try model cache first, then tab cache
+    // Restore refs - try model cache → tabRefs → allTabRefs
     for (const p of this.state.model.params) {
       if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') {
-        const refData = (cache && cache[p.key]) || tabRefs[p.key];
+        const refData = (cache && cache[p.key]) || mergedRefs[p.key];
         if (refData && refData.length > 0) {
           this.state.refState[this.state.modelKey] = this.state.refState[this.state.modelKey] || {};
           this.state.refState[this.state.modelKey][p.key] = JSON.parse(JSON.stringify(refData));
