@@ -5206,6 +5206,7 @@ const UI = {
       if (!workerId) throw new Error('任务中心未返回任务 ID');
       // Register with TaskCenter so polling picks it up
       TaskCenter._submitted.set(taskId, { task: { id: taskId }, lastStatus: 'processing', startTime: Date.now(), workerId: String(workerId), isPipeline: true });
+      TaskCenter.startPolling();
       // Initialize pipeline UI state
       this._pipeline.active = { id: taskId, workerId: String(workerId), startedAt: Date.now() };
       this._pipeline.steps = [
