@@ -5227,7 +5227,7 @@ const UI = {
   _PIPELINE_MODULES: [
     {
       id: 'tts', title: '文本→语音', icon: '🎙️', desc: '输入文本合成语音',
-      category: 'audio', provides: 'audioUrl', needs: [], userInput: null,
+      category: 'audio', provides: 'audio', accepts: null, needs: [], userInput: null,
       params: [
         { key: 'text', label: '口播文本', type: 'textarea', required: true, default: '', placeholder: '输入要合成的文本...' },
         { key: 'voice_id', label: '音色', type: 'select', default: 'male-qn-qingse',
@@ -5253,7 +5253,7 @@ const UI = {
     },
     {
       id: 'image_gen', title: '图片生成', icon: '🖼️', desc: 'AI 生成图片(NanoBanana2)',
-      category: 'image', provides: 'imageUrl', needs: [], userInput: null,
+      category: 'image', provides: 'image', accepts: null, needs: [], userInput: null,
       params: [
         { key: 'prompt', label: '提示词', type: 'textarea', required: true, default: '', placeholder: '描述图片...' },
         { key: 'size', label: '分辨率', type: 'select', default: '1K', options: ['1K','2K','4K'] },
@@ -5271,7 +5271,7 @@ const UI = {
     },
     {
       id: 't2v', title: '文本→视频', icon: '🎬', desc: '从提示词生成视频(Wan3.0)',
-      category: 'video', provides: 'videoUrl', needs: [], userInput: null,
+      category: 'video', provides: 'video', accepts: null, needs: [], userInput: null,
       params: [
         { key: 'prompt', label: '提示词', type: 'textarea', required: true, default: '', placeholder: '描述视频...' },
         { key: 'ratio', label: '宽高比', type: 'select', default: '16:9', options: ['16:9','9:16'] },
@@ -5289,7 +5289,7 @@ const UI = {
     },
     {
       id: 'i2v', title: '图片→视频', icon: '🎞️', desc: '从图片生成视频(Veo3.1 Fast)',
-      category: 'video', provides: 'videoUrl',
+      category: 'video', provides: 'video', accepts: 'image',
       needs: ['firstFrameUrl'],
       userInput: { key: 'firstFrameUrl', label: '首帧图片', type: 'ref-image', hint: '无上图步骤时必填' },
       params: [
@@ -5309,7 +5309,7 @@ const UI = {
     },
     {
       id: 'digital_human', title: '数字人', icon: '🧑', desc: '人物视频+音频→口播视频',
-      category: 'video', provides: 'videoUrl',
+      category: 'video', provides: 'video', accepts: 'audio',
       needs: ['audioUrl'],
       userInput: { key: 'videoUrl', label: '人物底片视频', type: 'ref-video', hint: 'mp4 · ≥10秒 · 必填' },
       params: [
@@ -5331,7 +5331,7 @@ const UI = {
     },
     {
       id: 'video_upscale', title: '视频超分', icon: '✨', desc: '提升视频画质',
-      category: 'video', provides: 'videoUrl',
+      category: 'video', provides: 'video', accepts: 'video',
       needs: ['video_url'],
       userInput: { key: 'video_url', label: '原视频', type: 'ref-video', hint: '无上图步骤时必填' },
       params: [],
@@ -5348,7 +5348,7 @@ const UI = {
     },
     {
       id: 'video_package', title: '视频包装', icon: '📦', desc: '模板套件包装视频',
-      category: 'video', provides: 'videoUrl',
+      category: 'video', provides: 'video', accepts: 'video',
       needs: ['video'],
       userInput: { key: 'video', label: '原视频', type: 'ref-video', hint: '无上图步骤时必填' },
       params: [
@@ -5477,8 +5477,8 @@ const UI = {
       const statusBadge = v.ok
         ? '<span class="pl-node-status ok">✓ 就绪</span>'
         : `<span class="pl-node-status err">✗ ${esc(v.error || '未就绪')}</span>`;
-      const needHint = mod.needs && mod.needs.length
-        ? `<span style="font-size:10px;color:var(--text-dim)">需要 ${esc(mod.needs.join(','))}${prev ? ' · 上步提供 ' + esc(prev.provides) : ' · 首步需手动输入'}</span>`
+      const needHint = mod.needs && mod.needs.length && mod.accepts
+        ? `<span style="font-size:10px;color:var(--text-dim)">需要${esc(this._plTypeLabel(mod.accepts))}${prev ? ' · 上步提供' + esc(this._plTypeLabel(prev.provides)) : ' · 首步需手动输入'}</span>`
         : '<span style="font-size:10px;color:var(--text-dim)">无需上步输入</span>';
       return `
         <div class="pl-node ${cls}" data-idx="${i}">
@@ -5574,7 +5574,7 @@ const UI = {
       <div class="pl-config-title">
         <span class="pl-cfg-icon">${mod.icon}</span>
         <span>${esc(mod.title)} · 配置</span>
-        <span style="margin-left:auto;font-size:10px;color:var(--text-dim);font-weight:400">输出: ${esc(mod.provides)}</span>
+        <span style="margin-left:auto;font-size:10px;color:var(--text-dim);font-weight:400">输出: ${esc(this._plTypeLabel(mod.provides))}${mod.accepts ? ' · 需要' + esc(this._plTypeLabel(mod.accepts)) : ''}</span>
       </div>
       ${paramsHtml}
       ${userInputHtml}
@@ -5820,22 +5820,24 @@ const UI = {
         if (!has) return { ok: false, error: '需上传' + mod.userInput.label };
       }
     }
-    // needs 校验: 上一步 provides 必须匹配 needs[0], 或者用户手动上传(替代模式)
-    if (mod.needs && mod.needs.length) {
-      const needKey = mod.needs[0];
+    // needs 校验: 若有 accepts 类型要求, 上一步 provides 必须匹配, 或者用户手动上传(替代模式)
+    if (mod.needs && mod.needs.length && mod.accepts) {
       const hasUserInput = mod.userInput && item._userInput && item._userInput[mod.userInput.key];
       if (hasUserInput) {
         // 替代模式: 用户已上传, 无需上步
-        // 继续校验其他必填项, 但 needs 已满足
       } else if (i === 0) {
-        return { ok: false, error: '需上传' + (mod.userInput ? mod.userInput.label : needKey) };
+        return { ok: false, error: '需上传' + (mod.userInput ? mod.userInput.label : mod.accepts) };
       } else {
         const prev = this._PIPELINE_MODULES.find(m => m.id === p.chain[i - 1].moduleId);
         if (!prev) return { ok: false, error: '无上一步' };
-        if (prev.provides !== needKey) return { ok: false, error: '上步需提供 ' + needKey };
+        if (prev.provides !== mod.accepts) return { ok: false, error: '上步需提供' + this._plTypeLabel(mod.accepts) };
       }
     }
     return { ok: true };
+  },
+
+  _plTypeLabel(t) {
+    return t === 'audio' ? '音频' : t === 'image' ? '图片' : t === 'video' ? '视频' : t;
   },
 
   _validatePipeline() {
