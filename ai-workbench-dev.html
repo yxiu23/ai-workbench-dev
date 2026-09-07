@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#080b14" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
-<title>修的媒体工作台 V27</title>
+<title>修的媒体工作台 V28 · 模块化流水线</title>
 <style>
 /* ============================================================
    主题变量
@@ -578,19 +578,224 @@ textarea { resize: vertical; min-height: 80px; }
 .queue-panel .qp-label { font-size: 11px; color: var(--text-dim); }
 .queue-panel .qp-val { font-size: 14px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
 
+/* V58: 流水线进度条 — 单行横向，4个节点灯 */
+.pipeline-steps {
+  display: flex; align-items: center; gap: 0; margin-bottom: 16px;
+  padding: 10px 16px; background: var(--surface-2); border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+.pipeline-step {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  flex: 1; position: relative; padding: 0 4px;
+}
 /* Connecting line between steps */
+.pipeline-step:not(:last-child)::after {
   content: ''; position: absolute; top: 11px; left: 50%; width: 100%; height: 2px;
   background: var(--border); z-index: 0;
 }
+.pipeline-step.done:not(:last-child)::after { background: var(--success); }
+.pipeline-step.active:not(:last-child)::after { background: linear-gradient(90deg, var(--success) 50%, var(--border) 50%); }
+.pipeline-step .ps-icon {
   width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
   font-size: 10px; font-weight: 700; color: #fff; background: var(--text-dim); flex-shrink: 0;
   z-index: 1; transition: all var(--transition); border: 2px solid var(--surface-2);
 }
+.pipeline-step.active .ps-icon { background: var(--brand); animation: pulse 1.5s ease-in-out infinite; }
+.pipeline-step.done .ps-icon { background: var(--success); }
+.pipeline-step.error .ps-icon { background: var(--danger); }
 @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 var(--brand-press); } 50% { box-shadow: 0 0 0 5px transparent; } }
+.pipeline-step .ps-title { font-size: 11px; font-weight: 500; color: var(--text-muted); white-space: nowrap; transition: color var(--transition); }
+.pipeline-step.active .ps-title { color: var(--brand); font-weight: 600; }
+.pipeline-step.done .ps-title { color: var(--text); }
+.pipeline-step.error .ps-title { color: var(--danger); }
+.pipeline-step .ps-meta { font-size: 9px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
+.pipeline-step .ps-preview { display: none; }
+.pipeline-step .ps-rerun {
   font-size: 9px; padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border);
   background: var(--surface); color: var(--text-muted); cursor: pointer; flex-shrink: 0;
   margin-top: 2px; transition: all var(--transition);
 }
+.pipeline-step .ps-rerun:hover { background: var(--brand-soft); color: var(--brand); border-color: var(--brand); }
+.pipeline-step .ps-body { display: contents; }
+.pipeline-step .ps-progress-bar { display: none; }
+
+/* ============================================================
+   V62: 模块化流水线编排器 (Modular Pipeline Builder)
+   ============================================================ */
+.pl-builder { display: flex; flex-direction: column; gap: 12px; }
+.pl-section {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 10px 12px;
+}
+.pl-section-title {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 600; color: var(--text-muted);
+  text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px;
+}
+.pl-section-title svg { width: 12px; height: 12px; }
+
+/* 模块库 chips */
+.pl-module-lib { display: flex; flex-wrap: wrap; gap: 6px; }
+.pl-module-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 10px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--surface-2);
+  color: var(--text); font-size: 12px; cursor: pointer;
+  transition: all var(--transition); user-select: none;
+}
+.pl-module-chip:hover {
+  border-color: var(--brand); background: var(--brand-soft); color: var(--brand);
+  transform: translateY(-1px);
+}
+.pl-module-chip:active { transform: translateY(0); }
+.pl-module-chip .pl-chip-icon { font-size: 14px; line-height: 1; }
+.pl-module-chip .pl-chip-cat {
+  font-size: 9px; padding: 1px 4px; border-radius: 3px;
+  background: var(--border); color: var(--text-dim); margin-left: 2px;
+}
+.pl-module-chip[data-cat="audio"] .pl-chip-cat { background: rgba(99,102,241,.15); color: #818cf8; }
+.pl-module-chip[data-cat="image"] .pl-chip-cat { background: rgba(16,185,129,.15); color: #34d399; }
+.pl-module-chip[data-cat="video"] .pl-chip-cat { background: rgba(245,158,11,.15); color: #fbbf24; }
+
+/* 预设模板 */
+.pl-presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.pl-preset-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 10px; border-radius: 6px;
+  border: 1px dashed var(--brand); background: var(--brand-soft);
+  color: var(--brand); font-size: 11px; cursor: pointer;
+  transition: all var(--transition);
+}
+.pl-preset-btn:hover { background: var(--brand); color: #fff; }
+.pl-preset-btn .pl-preset-arrow { font-size: 10px; opacity: .7; }
+
+/* 流水线编排链 */
+.pl-chain {
+  display: flex; flex-direction: column; gap: 8px;
+  min-height: 60px;
+}
+.pl-chain-empty {
+  text-align: center; padding: 20px 12px; color: var(--text-dim);
+  font-size: 12px; border: 1px dashed var(--border); border-radius: 6px;
+}
+.pl-node {
+  display: flex; align-items: stretch; gap: 0;
+  border: 1px solid var(--border); border-radius: 8px;
+  background: var(--surface-2); overflow: hidden;
+  transition: all var(--transition);
+}
+.pl-node.selected { border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand-soft); }
+.pl-node.invalid { border-color: var(--danger); }
+.pl-node-body {
+  flex: 1; display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer;
+}
+.pl-node-icon {
+  width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; background: var(--brand-soft); color: var(--brand);
+}
+.pl-node-info { flex: 1; min-width: 0; }
+.pl-node-title { font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 6px; }
+.pl-node-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-node-status {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 10px; padding: 1px 6px; border-radius: 999px; flex-shrink: 0;
+}
+.pl-node-status.ok { background: rgba(16,185,129,.15); color: #10b981; }
+.pl-node-status.warn { background: rgba(245,158,11,.15); color: #f59e0b; }
+.pl-node-status.err { background: rgba(239,68,68,.15); color: #ef4444; }
+.pl-node-actions { display: flex; flex-direction: column; border-left: 1px solid var(--border); }
+.pl-node-btn {
+  width: 28px; flex: 1; display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; cursor: pointer; color: var(--text-dim);
+  transition: all var(--transition); font-size: 12px;
+}
+.pl-node-btn:hover { background: var(--surface); color: var(--brand); }
+.pl-node-btn.del:hover { background: var(--danger-soft); color: var(--danger); }
+.pl-node-btn svg { width: 12px; height: 12px; }
+.pl-node-btn:disabled { opacity: .3; cursor: not-allowed; }
+
+/* 模块配置面板 */
+.pl-config {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-md); padding: 12px;
+}
+.pl-config-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border);
+}
+.pl-config-title .pl-cfg-icon { font-size: 16px; }
+.pl-config-empty {
+  text-align: center; padding: 16px; color: var(--text-dim); font-size: 12px;
+}
+.pl-config-row { margin-bottom: 10px; }
+.pl-config-row:last-child { margin-bottom: 0; }
+.pl-config-label {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 11px; font-weight: 500; color: var(--text-muted); margin-bottom: 4px;
+}
+.pl-config-label .pl-cfg-hint { font-size: 10px; color: var(--text-dim); font-weight: 400; }
+.pl-config-row input[type="text"],
+.pl-config-row input[type="url"],
+.pl-config-row textarea,
+.pl-config-row select {
+  width: 100%; padding: 6px 8px; font-size: 12px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--text); transition: border-color var(--transition);
+}
+.pl-config-row input:focus,
+.pl-config-row textarea:focus,
+.pl-config-row select:focus { outline: none; border-color: var(--brand); }
+.pl-config-row textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
+.pl-config-row input[type="range"] { width: 100%; }
+.pl-config-range-val { font-size: 11px; color: var(--brand); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* 用户上传输入(底片等) */
+.pl-user-input {
+  background: var(--surface-2); border: 1px dashed var(--border);
+  border-radius: 6px; padding: 8px; margin-top: 4px;
+}
+.pl-user-input.has-file { border-style: solid; border-color: var(--success); }
+.pl-user-input-row { display: flex; align-items: center; gap: 8px; }
+.pl-user-input-preview {
+  width: 48px; height: 48px; border-radius: 6px; object-fit: cover;
+  background: var(--surface); flex-shrink: 0; border: 1px solid var(--border);
+}
+.pl-user-input-info { flex: 1; min-width: 0; font-size: 11px; color: var(--text-muted); }
+.pl-user-input-info .pl-ui-name { color: var(--text); font-weight: 500; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-user-input-info .pl-ui-status { font-size: 10px; margin-top: 2px; }
+.pl-user-input-info .pl-ui-status.uploading { color: var(--brand); }
+.pl-user-input-info .pl-ui-status.done { color: var(--success); }
+.pl-user-input-info .pl-ui-status.error { color: var(--danger); }
+.pl-user-input-btn {
+  padding: 4px 8px; font-size: 11px; border-radius: 4px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  cursor: pointer; transition: all var(--transition); white-space: nowrap;
+}
+.pl-user-input-btn:hover { border-color: var(--brand); color: var(--brand); }
+
+/* 流水线总览(提交前) */
+.pl-overview {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 8px 10px; background: var(--surface-2); border-radius: 6px;
+  font-size: 11px; color: var(--text-muted);
+}
+.pl-overview .pl-ov-item { display: inline-flex; align-items: center; gap: 4px; }
+.pl-overview .pl-ov-item strong { color: var(--text); font-weight: 600; }
+.pl-overview .pl-ov-sep { color: var(--text-dim); }
+
+/* 进度跟踪(运行中) — 复用 .pipeline-steps */
+.pl-running-info {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+  background: var(--brand-soft); border-radius: 6px; font-size: 12px; color: var(--brand);
+  margin-bottom: 8px;
+}
+.pl-running-info .pl-ri-spinner {
+  width: 12px; height: 12px; border: 2px solid var(--brand); border-top-color: transparent;
+  border-radius: 50%; animation: pl-spin 0.8s linear infinite;
+}
+@keyframes pl-spin { to { transform: rotate(360deg); } }
 
 /* ============================================================
    任务卡 / 结果卡 (紧凑 2 列)
@@ -743,25 +948,15 @@ textarea { resize: vertical; min-height: 80px; }
 .compare-bar .compare-show { background: var(--brand); color: #fff; }
 .compare-bar .compare-clear { color: var(--text-muted); }
 .compare-grid {
-  position: fixed; inset: 0; z-index: 200; display: none;
-  background: rgba(0,0,0,.55); backdrop-filter: blur(12px);
-  align-items: center; justify-content: center; padding: 20px;
+  position: fixed; inset: 0; z-index: 60; background: var(--overlay); display: none;
+  align-items: center; justify-content: center; padding: 40px; backdrop-filter: blur(8px);
 }
 .compare-grid.show { display: flex; }
-.compare-grid-inner {
-  display: flex; gap: 8px; max-width: 100%; max-height: 90vh;
-  overflow-x: auto; overflow-y: hidden; padding: 10px;
-  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.2) transparent;
-}
-.compare-grid-inner::-webkit-scrollbar { height: 6px; }
-.compare-grid-inner::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 3px; }
-.compare-cell { position: relative; border-radius: var(--radius-md); overflow: hidden; border: 2px solid transparent; transition: border-color .2s; flex-shrink: 0; }
-.compare-cell:hover { border-color: var(--brand); }
-.compare-cell.active { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
-.compare-cell img, .compare-cell video { max-height: 80vh; max-width: 40vw; object-fit: contain; display: block; }
+.compare-grid-inner { display: flex; gap: 12px; max-width: 100%; max-height: 100%; }
+.compare-cell { position: relative; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); }
+.compare-cell img, .compare-cell video { max-width: 100%; max-height: 80vh; display: block; }
 .compare-cell .compare-label { position: absolute; top: 8px; left: 8px; padding: 2px 8px; border-radius: 4px; background: rgba(0,0,0,.6); color: #fff; font-size: 11px; }
-.compare-close { position: absolute; top: 16px; right: 20px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,.1); color: #fff; font-size: 24px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .2s; }
-.compare-close:hover { background: rgba(255,255,255,.2); }
+.compare-close { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; color: var(--text); font-size: 20px; }
 
 /* ============================================================
    历史侧栏
@@ -1470,20 +1665,18 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
 .fp-modal-foot button:hover { opacity: .9; }
 
 /* ============================================================
+   V27 — Tippy 主题
    ============================================================ */
-  background: var(--bg-elev);
+.tippy-box[data-theme~='translucent'] {
+  background: var(--surface);
   border: 1px solid var(--border);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter: var(--glass-blur);
   color: var(--text);
   font-size: 12px;
-  font-weight: 500;
-  line-height: 1.5;
-  padding: 2px 4px;
-  box-shadow: 0 4px 24px rgba(0,0,0,.12), 0 1px 4px rgba(0,0,0,.06);
-  border-radius: 10px;
-  transition: transform .2s cubic-bezier(.34,.72,.24,1), opacity .2s ease;
+  box-shadow: var(--shadow-md);
+  border-radius: 8px;
 }
+.tippy-box[data-theme~='translucent'] > .tippy-arrow { color: var(--surface); }
 
 /* ============================================================
    V27 — 对比模式 Slider 增强
@@ -1600,9 +1793,10 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
     </div>
 
     <!-- 参数表单容器 (由 JS 动态渲染) -->
-    <div id="paramForm" style="display:flex;flex-direction:column;gap:14px;"></div>
-    <div id="pipelinePanel" style="display:none;flex-direction:column;gap:14px;padding:14px;overflow-y:auto;"></div>
+    <div id="paramForm" style="display:flex !important;flex-direction:column;gap:14px;"></div>
 
+    <!-- V56: 流水线面板 (pipeline tab) -->
+    <div id="pipelinePanel" style="display:none;flex-direction:column;gap:14px;"></div>
 
     <!-- 生成操作区 -->
     <div class="generate-section">
@@ -1615,10 +1809,10 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
         </button>
       </div>
       <div class="workflow-row">
-        <button class="workflow-btn" id="batchGenBtn" title="批量生成：同提示词提交到多个模型 (Ctrl/⌘+G)">
+        <button class="workflow-btn" id="batchGenBtn" data-tooltip="批量生成：同提示词提交到多个模型 (Ctrl/⌘+G)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>批量生成
         </button>
-        <button class="workflow-btn" id="batchExportBtn" title="批量导出所有成功结果 URL / ZIP (Ctrl/⌘+B)">
+        <button class="workflow-btn" id="batchExportBtn" data-tooltip="批量导出所有成功结果 URL / ZIP (Ctrl/⌘+B)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>批量导出
         </button>
       </div>
@@ -1781,7 +1975,7 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
     <div class="settings-section">
       <h4>关于</h4>
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V27<br>
+        修的媒体工作台 V28 · 模块化流水线<br>
         支持图片、视频、音频生成<br>
         API: api.wuyinkeji.com
       </div>
@@ -2035,6 +2229,8 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
 <script src="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/filepond-plugin-file-validate-type@1.2.8/dist/filepond-plugin-file-validate-type.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/dist/tippy-bundle.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dexie@4.0.10/dist/dexie.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
@@ -2795,9 +2991,6 @@ const Api = {
   },
 
   // P0-2: 升级 http:// 的 OSS/aliyuncs 域名为 https://，避免混合内容拦截
-  _uploadCache: new Map(),
-  getCachedUpload(dataUrl) { return this._uploadCache.get(dataUrl); },
-  setCachedUpload(dataUrl, url) { this._uploadCache.set(dataUrl, url); if (this._uploadCache.size > 100) { const first = this._uploadCache.keys().next().value; this._uploadCache.delete(first); } },
   fixUrl(url) {
     if (typeof url !== 'string') return url;
     return url.replace(/^http:\/\/(wywxopenai\.oss[^/]+|[^/]*aliyuncs\.com)\//i, 'https://$1/');
@@ -3372,6 +3565,7 @@ TaskCenter.on('progress', payload => {
       const phase = payload.phase || payload.status || '处理中';
       UI.updateTaskCardPhase(payload.taskId, phase);
     }
+    // V56: update pipeline step UI if this is a pipeline progress event
     if (UI._updatePipelineFromEvent && payload.steps) {
       UI._updatePipelineFromEvent(payload);
     }
@@ -3650,6 +3844,9 @@ const UI = {
   _currentModelId: null,
   _titleTimer: null,
   _generating: false,
+  // V56: Pipeline state — tracks the active pipeline task and step progress
+  _pipeline: { active: null, steps: [] },
+  // V27: Preload cache for results — keyed by URL, FIFO eviction at 5 entries
   _preloadCache: new Map(),
   // V27: History cloud sync debounce timer
   _historySyncTimer: null,
@@ -3695,6 +3892,34 @@ const UI = {
         if (typeof FilePondPluginFileValidateType !== 'undefined') FilePond.registerPlugin(FilePondPluginFileValidateType);
       } catch (e) { console.warn('[V27] FilePond plugin register failed:', e); }
     }
+    // 3) 初始化 Tippy 工具提示
+    this._initTooltips();
+    // 4) 文件加载完毕后再次初始化（防止 CDN 延迟）
+    window.addEventListener('load', () => {
+      this._initTooltips();
+      // 重新渲染当前 ref 网格以激活 Sortable
+      if (this.state && this.state.model) {
+        (this.state.model.params || []).forEach(p => {
+          if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') {
+            try { this._renderRefGrid(p.key); } catch {}
+          }
+        });
+      }
+    });
+  },
+
+  /* V27 — Tippy 工具提示 */
+  _initTooltips() {
+    if (typeof tippy === 'undefined') return;
+    try {
+      tippy('[data-tooltip]', {
+        content: (el) => el.dataset.tooltip || '',
+        theme: 'translucent',
+        arrow: true,
+        delay: [200, 0],
+        allowHTML: false
+      });
+    } catch (e) { /* ignore */ }
   },
 
   /* V27 — FilePond 文件选择模态 */
@@ -3823,7 +4048,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V27';
+      document.title = '修的媒体工作台 V28';
     }
   },
 
@@ -4028,11 +4253,10 @@ const UI = {
     this._saveFormToCache();
     this.state.tab = tab;
     $$('#tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+    // V56: Pipeline tab — render pipeline panel, hide model/param form
     if (tab === 'pipeline') {
       $('#paramForm').style.display = 'none';
       $('#pipelinePanel').style.display = 'flex';
-      $('#pipelinePanel').style.flexDirection = 'column';
-      $('#pipelinePanel').style.gap = '14px';
       $('.model-select-wrap').style.display = 'none';
       this.state.model = null;
       this.state.modelKey = 'pipeline';
@@ -4128,7 +4352,9 @@ const UI = {
     this._renderAllRefGrids();
     this._updateEstimate();
     this.renderPresets();
-      },
+    // V27 — 重新初始化 Tippy 工具提示（新表单元素）
+    this._initTooltips();
+  },
 
   _buildRefModeSection(model) {
     const wrap = document.createElement('div');
@@ -4624,13 +4850,9 @@ const UI = {
 
   async _uploadLocalImage(key, item) {
     try {
-      // 检查缓存：如果这张图已经上传过，直接复用URL
-      const cached = Api.getCachedUpload(item.src);
-      if (cached) { item.remote = cached; item.uploaded = true; this._renderRefGrid(key); Toast.info('参考图已缓存，跳过上传'); return; }
       const blob = Api.dataUrlToBlob(item.src);
       const file = new File([blob], item.name, { type: blob.type });
       const url = await Api.uploadToR2(file, pct => this._updateRefProgress(key, item.id, pct));
-      Api.setCachedUpload(item.src, url); // 缓存上传结果
       item.remote = url; item.uploaded = true;
       this._renderRefGrid(key);
     } catch (e) { item.uploadError = e.message; this._renderRefGrid(key); Toast.warning(`图片上传失败：${e.message}，点击重试`); }
@@ -4885,7 +5107,7 @@ const UI = {
   /* ---------- ESTIMATE ---------- */
   _updateEstimate() {
     if (this.state.tab === 'pipeline') { this._updatePipelineEstimate(); return; }
-        if (!this.state.model) { $('#estimateCost').textContent = '预计 —'; return; }
+    if (!this.state.model) { $('#estimateCost').textContent = '预计 —'; return; }
     let body;
     try { body = this._collectParamsSync(); } catch { $('#estimateCost').textContent = '预计 —'; return; }
     const est = calcEstimate(this.state.model, body);
@@ -4896,7 +5118,11 @@ const UI = {
 
   /* ---------- GENERATE ---------- */
   async handleGenerate() {
+    // V56: Pipeline tab uses its own submit flow
     if (this.state.tab === 'pipeline') return this._submitPipeline();
+    const key = Store.getApiKey();
+    if (!key) { Toast.error('请先在设置中填入 API Key'); this._openSettings(); return; }
+    if (!this._checkBudget()) return;
     if (this._generating) { Toast.warning('正在生成中，请稍候'); return; }
     this._generating = true;
     const btn = $('#generateBtn');
@@ -4964,178 +5190,693 @@ const UI = {
     }
   },
 
+  _buildCurrentTask() {
+    try {
+      if (this.state.tab === 'pipeline' || !this.state.model) return null;
+      const body = this._collectParamsSync();
+      const prompt = body.prompt || body.text || '';
+      return { model: this.state.model, body, prompt };
+    } catch { return null; }
+  },
+
+  /* ---------- V62: 模块化流水线 (Modular Pipeline) ----------
+   * 重写自 V56 固定流水线。每个步骤是独立模块，用户可勾选/排序/配置。
+   * 模块契约:
+   *   - provides: 输出类型 ('audioUrl'|'imageUrl'|'videoUrl')
+   *   - needs:    需要从上一步 resultUrl 填充的 body key 数组
+   *   - userInput: 可选, 用户单独上传的输入 (如数字人底片视频)
+   *   - buildStep(state, userInput) → { type, model, modelType, endpoint, body, needs }
+   *   - estimateCost(state) → number
+   * Worker 契约 (worker-base.js startPipelineStep):
+   *   step.needs = ['audioUrl'] ⇒ prevStep.resultUrl 写入 step.body.audioUrl
+   * 因此 needs 只能引用上一步的单一 resultUrl (线性链)。
+   */
   _PIPELINE_VOICES: [
-    { id: 'zh_female_qingxin', label: '清新女声' },
-    { id: 'zh_male_xiaoming', label: '小明男声' },
-    { id: 'zh_female_linjia', label: '邻家女声' },
-    { id: 'zh_male_yangguang', label: '阳光男声' },
-    { id: 'zh_female_mengmeng', label: '萌萌女声' },
-    { id: 'zh_male_chengshu', label: '成熟男声' },
-    { id: 'zh_female_wenrou', label: '温柔女声' },
-    { id: 'zh_male_zhishang', label: '知性男声' }
-  ],
-  _PIPELINE_PACKAGES: [
-    { id: 'product_intro', label: '产品介绍' },
-    { id: 'short_drama', label: '短剧片段' },
-    { id: 'news_anchor', label: '新闻播报' },
-    { id: 'live_promo', label: '直播带货' },
-    { id: 'tutorial', label: '教程讲解' }
-  ],
-  _PIPELINE_STEP_DEFS: [
-    { key: 'tts', title: '文本→音频', costPerChar: 0.0006 },
-    { key: 'digital_human', title: '数字人', costPerSec: 0.02 },
-    { key: 'package', title: '包装模板', costPerSec: 0.02 },
-    { key: 'compose', title: '成品合成', costPerSec: 0 }
+    { id: 'male-qn-qingse', label: '青涩男声' },
+    { id: 'male-qn-jingying', label: '精英男声' },
+    { id: 'male-qn-badao', label: '霸道男声' },
+    { id: 'male-qn-chengshu', label: '成熟男声' },
+    { id: 'female-shaonv', label: '少女女声' },
+    { id: 'female-yujie', label: '御姐女声' },
+    { id: 'female-chengshu', label: '成熟女声' },
+    { id: 'female-wenrou', label: '温柔女声' },
+    { id: 'presenter_male', label: '主持人男声' },
+    { id: 'presenter_female', label: '主持人女声' }
   ],
 
+  _PIPELINE_MODULES: [
+    {
+      id: 'tts', title: '文本→语音', icon: '🎙️', desc: '输入文本合成语音',
+      category: 'audio', provides: 'audioUrl', needs: [], userInput: null,
+      params: [
+        { key: 'text', label: '口播文本', type: 'textarea', required: true, default: '', placeholder: '输入要合成的文本...' },
+        { key: 'voice_id', label: '音色', type: 'select', default: 'male-qn-qingse',
+          options: [
+            { value: 'male-qn-qingse', label: '青涩男声' }, { value: 'male-qn-jingying', label: '精英男声' },
+            { value: 'male-qn-badao', label: '霸道男声' }, { value: 'male-qn-chengshu', label: '成熟男声' },
+            { value: 'female-shaonv', label: '少女女声' }, { value: 'female-yujie', label: '御姐女声' },
+            { value: 'female-chengshu', label: '成熟女声' }, { value: 'female-wenrou', label: '温柔女声' },
+            { value: 'presenter_male', label: '主持人男声' }, { value: 'presenter_female', label: '主持人女声' }
+          ]
+        },
+        { key: 'speed', label: '语速', type: 'range', default: 1, min: 0.5, max: 2, step: 0.1, unit: 'x' }
+      ],
+      buildStep(state) {
+        return {
+          type: 'tts', model: 'audio_tts', modelType: 'audio',
+          endpoint: '/api/async/audio_tts',
+          body: { text: state.text || '', voice_id: state.voice_id, speed: parseFloat(state.speed) || 1, vol: 1, language_boost: 'auto' },
+          needs: []
+        };
+      },
+      estimateCost(state) { return (state.text || '').length * 0.0006; }
+    },
+    {
+      id: 'image_gen', title: '图片生成', icon: '🖼️', desc: 'AI 生成图片(NanoBanana2)',
+      category: 'image', provides: 'imageUrl', needs: [], userInput: null,
+      params: [
+        { key: 'prompt', label: '提示词', type: 'textarea', required: true, default: '', placeholder: '描述图片...' },
+        { key: 'size', label: '分辨率', type: 'select', default: '1K', options: ['1K','2K','4K'] },
+        { key: 'aspectRatio', label: '比例', type: 'select', default: 'auto', options: ['auto','1:1','16:9','9:16','4:3','3:4','3:2','2:3'] }
+      ],
+      buildStep(state) {
+        return {
+          type: 'image_gen', model: 'nanoBanana2', modelType: 'image',
+          endpoint: '/api/async/image_nanoBanana2',
+          body: { prompt: state.prompt || '', size: state.size || '1K', aspectRatio: state.aspectRatio || 'auto' },
+          needs: []
+        };
+      },
+      estimateCost() { return 0.1; }
+    },
+    {
+      id: 't2v', title: '文本→视频', icon: '🎬', desc: '从提示词生成视频(Wan3.0)',
+      category: 'video', provides: 'videoUrl', needs: [], userInput: null,
+      params: [
+        { key: 'prompt', label: '提示词', type: 'textarea', required: true, default: '', placeholder: '描述视频...' },
+        { key: 'ratio', label: '宽高比', type: 'select', default: '16:9', options: ['16:9','9:16'] },
+        { key: 'duration', label: '时长', type: 'range', default: 5, min: 4, max: 30, step: 1, unit: 's' }
+      ],
+      buildStep(state) {
+        return {
+          type: 't2v', model: 'wan3', modelType: 'video',
+          endpoint: '/api/async/video_wan_3.0',
+          body: { prompt: state.prompt || '', ratio: state.ratio || '16:9', duration: parseInt(state.duration) || 5, generate_audio: 'true' },
+          needs: []
+        };
+      },
+      estimateCost(state) { return (parseInt(state.duration) || 5) * 0.3; }
+    },
+    {
+      id: 'i2v', title: '图片→视频', icon: '🎞️', desc: '从图片生成视频(Veo3.1 Fast)',
+      category: 'video', provides: 'videoUrl',
+      needs: ['firstFrameUrl'],
+      userInput: { key: 'firstFrameUrl', label: '首帧图片', type: 'ref-image', hint: '无上图步骤时必填' },
+      params: [
+        { key: 'prompt', label: '提示词', type: 'textarea', required: true, default: '', placeholder: '描述视频动态...' },
+        { key: 'size', label: '清晰度', type: 'select', default: '720p', options: ['720p','1080p'] }
+      ],
+      buildStep(state, userInput) {
+        const u = userInput && userInput.firstFrameUrl;
+        return {
+          type: 'i2v', model: 'veo3_fast', modelType: 'video',
+          endpoint: '/api/async/video_veo3.1_fast',
+          body: { prompt: state.prompt || '', aspectRatio: '16:9', size: state.size || '720p', firstFrameUrl: u || null },
+          needs: u ? [] : ['firstFrameUrl']
+        };
+      },
+      estimateCost() { return 0.5; }
+    },
+    {
+      id: 'digital_human', title: '数字人', icon: '🧑', desc: '人物视频+音频→口播视频',
+      category: 'video', provides: 'videoUrl',
+      needs: ['audioUrl'],
+      userInput: { key: 'videoUrl', label: '人物底片视频', type: 'ref-video', hint: 'mp4 · ≥10秒 · 必填' },
+      params: [
+        { key: 'videoName', label: '任务名称', type: 'text', default: '数字人_' + Date.now() }
+      ],
+      buildStep(state, userInput) {
+        return {
+          type: 'digital_human', model: 'digital_humans', modelType: 'video',
+          endpoint: '/api/async/video_digital_humans',
+          body: {
+            videoName: state.videoName || ('数字人_' + Date.now()),
+            audioUrl: null,
+            videoUrl: (userInput && userInput.videoUrl) || ''
+          },
+          needs: ['audioUrl']
+        };
+      },
+      estimateCost() { return 0.5; }
+    },
+    {
+      id: 'video_upscale', title: '视频超分', icon: '✨', desc: '提升视频画质',
+      category: 'video', provides: 'videoUrl',
+      needs: ['video_url'],
+      userInput: { key: 'video_url', label: '原视频', type: 'ref-video', hint: '无上图步骤时必填' },
+      params: [],
+      buildStep(state, userInput) {
+        const u = userInput && userInput.video_url;
+        return {
+          type: 'video_upscale', model: 'video_upscaling', modelType: 'video',
+          endpoint: '/api/async/video_processing',
+          body: { video_url: u || null },
+          needs: u ? [] : ['video_url']
+        };
+      },
+      estimateCost() { return 0.5; }
+    },
+    {
+      id: 'video_package', title: '视频包装', icon: '📦', desc: '模板套件包装视频',
+      category: 'video', provides: 'videoUrl',
+      needs: ['video'],
+      userInput: { key: 'video', label: '原视频', type: 'ref-video', hint: '无上图步骤时必填' },
+      params: [
+        { key: 'template_id', label: '模板', type: 'select', default: '1',
+          options: Array.from({ length: 30 }, (_, i) => ({ value: String(i + 1), label: '模板 ' + (i + 1) })) }
+      ],
+      buildStep(state, userInput) {
+        const u = userInput && userInput.video;
+        return {
+          type: 'video_package', model: 'video_package', modelType: 'video',
+          endpoint: '/api/async/video_package',
+          body: { video: u || null, template_id: state.template_id || '1' },
+          needs: u ? [] : ['video']
+        };
+      },
+      estimateCost() { return 0.3; }
+    }
+  ],
+
+  _PIPELINE_PRESETS: [
+    { id: 'digital_human', title: '数字人口播', icon: '🧑', desc: '文本→语音→数字人', modules: ['tts', 'digital_human'] },
+    { id: 'i2v_upscale', title: '图生视频+超分', icon: '✨', desc: '图片→视频→超分', modules: ['image_gen', 'i2v', 'video_upscale'] },
+    { id: 't2v_package', title: '文生视频+包装', icon: '📦', desc: '文本→视频→包装', modules: ['t2v', 'video_package'] },
+    { id: 'full_broadcast', title: '完整口播流水线', icon: '🎯', desc: '语音→数字人→包装', modules: ['tts', 'digital_human', 'video_package'] }
+  ],
+
+  // 渲染流水线主面板
   _renderPipelineForm() {
     const panel = $('#pipelinePanel');
     if (!panel) return;
-    const state = this.state.pipeline = this.state.pipeline || {};
-    state.tts = state.tts || '';
-    state.voice = state.voice || this._PIPELINE_VOICES[0].id;
-    state.speed = state.speed != null ? state.speed : 1.0;
-    state.package = state.package || this._PIPELINE_PACKAGES[0].id;
-    state.baseImage = state.baseImage || '';
+    // 初始化模块化状态
+    if (!this.state.pipeline || !Array.isArray(this.state.pipeline.chain)) {
+      this.state.pipeline = { chain: [], selectedIdx: -1 };
+    }
+    const p = this.state.pipeline;
     panel.innerHTML = `
-      <div class="param-group" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px 12px">
-        <div class="field-row"><div class="field-label">口播文本<span class="field-hint">TTS 输入</span></div>
-          <textarea id="plTts" placeholder="输入要合成的口播文本..." style="min-height:80px;font-size:13px;line-height:1.6;resize:vertical">${esc(state.tts)}</textarea>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="param-group" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px 12px">
-          <div class="field-label">音色</div>
-          <select id="plVoice">${this._PIPELINE_VOICES.map(v => `<option value="${esc(v.id)}" ${v.id === state.voice ? 'selected' : ''}>${esc(v.label)}</option>`).join('')}</select>
-        </div>
-        <div class="param-group" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px 12px">
-          <div class="field-row"><div class="field-label">语速<span class="field-val" id="plSpeedVal">${state.speed.toFixed(1)}×</span></div>
-            <div class="range-row"><input type="range" id="plSpeed" min="0.5" max="2" step="0.1" value="${state.speed}"></div>
+      <div class="pl-builder">
+        ${this._pipeline.active ? `
+          <div class="pl-running-info">
+            <div class="pl-ri-spinner"></div>
+            <span>流水线运行中 · 任务 ID <strong>${esc(this._pipeline.active.id)}</strong></span>
           </div>
-        </div>
+          <div class="pipeline-steps" id="plSteps"></div>
+        ` : `
+          <div class="pl-section">
+            <div class="pl-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              快捷模板
+            </div>
+            <div class="pl-presets" id="plPresets"></div>
+          </div>
+          <div class="pl-section">
+            <div class="pl-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+              模块库 (点击添加)
+            </div>
+            <div class="pl-module-lib" id="plModuleLib"></div>
+          </div>
+          <div class="pl-section">
+            <div class="pl-section-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="6" y1="9" x2="6" y2="15"/><line x1="18" y1="6" x2="18" y2="18"/><circle cx="18" cy="6" r="3"/><circle cx="18" cy="18" r="3"/></svg>
+              流水线编排
+            </div>
+            <div class="pl-chain" id="plChain"></div>
+          </div>
+          <div class="pl-config" id="plConfig"></div>
+          <div class="pl-overview" id="plOverview"></div>
+        `}
       </div>
-      <div class="param-group" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px 12px">
-        <div class="field-label">包装模板</div>
-        <select id="plPackage">${this._PIPELINE_PACKAGES.map(p => `<option value="${esc(p.id)}" ${p.id === state.package ? 'selected' : ''}>${esc(p.label)}</option>`).join('')}</select>
-      </div>
-      <div class="param-group" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px 12px">
-        <div class="field-label">底片选择<span class="field-hint">数字人形象视频（≥10秒）</span></div>
-        <div class="ref-grid" id="plBaseGrid" data-ref-grid="plBase" style="margin-top:6px"></div>
-        <input type="file" id="plFileInput" accept="image/*,video/*" style="display:none">
-      </div>
-      <div class="pipeline-steps" id="plSteps"></div>
     `;
-    // Bind events
-    $('#plTts').addEventListener('input', e => { state.tts = e.target.value; this._updatePipelineEstimate(); });
-    $('#plVoice').addEventListener('change', e => { state.voice = e.target.value; });
-    $('#plSpeed').addEventListener('input', e => { state.speed = parseFloat(e.target.value); $('#plSpeedVal').textContent = state.speed.toFixed(1) + '×'; });
-    $('#plPackage').addEventListener('change', e => { state.package = e.target.value; this._updatePipelineEstimate(); });
-    // 底片上传：复用ref-grid展示逻辑
-    this._renderPipelineBaseGrid();
-    $('#plFileInput').addEventListener('change', async e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const isVideo = /^video\//.test(file.type);
-      try {
-        Toast.info('底片上传中...');
-        if (isVideo) {
-          if (file.size > 100 * 1024 * 1024) { Toast.error('视频不能超过 100MB'); return; }
-          const url = URL.createObjectURL(file);
-          state._baseLocal = { src: url, name: file.name, file, uploaded: false, remote: null, uploadError: null };
-          this._renderPipelineBaseGrid();
-          const r2url = await Api.uploadToR2(file);
-          state._baseLocal.remote = r2url; state._baseLocal.uploaded = true; state.baseImage = r2url;
-          this._renderPipelineBaseGrid();
-          Toast.success('底片已上传');
-        } else {
-          if (file.size > 10 * 1024 * 1024) { Toast.error('图片不能超过 10MB'); return; }
-          const reader = new FileReader();
-          reader.onload = async ev => {
-            state._baseLocal = { src: ev.target.result, name: file.name, uploaded: false, remote: null, uploadError: null };
-            this._renderPipelineBaseGrid();
-            try {
-              const r2url = await Api.uploadToR2(file);
-              state._baseLocal.remote = r2url; state._baseLocal.uploaded = true; state.baseImage = r2url;
-              this._renderPipelineBaseGrid();
-              Toast.success('底片已上传');
-            } catch (err) { state._baseLocal.uploadError = err.message; this._renderPipelineBaseGrid(); Toast.error('上传失败: ' + err.message); }
-          };
-          reader.readAsDataURL(file);
-        }
-      } catch (err) { Toast.error('上传失败: ' + err.message); }
-      e.target.value = '';
-    });
-    this._renderPipelineSteps();
+    if (this._pipeline.active) {
+      this._renderPipelineSteps();
+      return;
+    }
+    this._renderPipelinePresets();
+    this._renderPipelineModuleLib();
+    this._renderPipelineChain();
+    this._renderPipelineConfig();
+    this._renderPipelineOverview();
     this._updatePipelineEstimate();
   },
 
-  _updatePipelineEstimate() {
-    const state = this.state.pipeline || {};
-    const charLen = (state.tts || '').length;
-    // Assume ~3 chars/sec for Chinese TTS — rough duration estimate
-    const estDuration = Math.max(1, Math.ceil(charLen / 3));
-    const ttsCost = charLen * 0.0006;
-    const videoCost = estDuration * 0.02;
-    const packageCost = estDuration * 0.02;
-    const total = ttsCost + videoCost + packageCost;
-    const el = $('#estimateCost');
-    if (el) el.innerHTML = `预计 <span class="amount">¥${total.toFixed(4)}</span> · 文本 ${charLen}字 × ¥0.0006 + 视频 ${estDuration}s × ¥0.02 + 包装 ${estDuration}s × ¥0.02`;
+  _renderPipelinePresets() {
+    const wrap = $('#plPresets');
+    if (!wrap) return;
+    wrap.innerHTML = this._PIPELINE_PRESETS.map(p => `
+      <button class="pl-preset-btn" data-preset="${esc(p.id)}" type="button">
+        <span>${p.icon}</span><span>${esc(p.title)}</span>
+        <span class="pl-preset-arrow">${esc(p.desc)}</span>
+      </button>
+    `).join('');
+    wrap.querySelectorAll('[data-preset]').forEach(btn => {
+      btn.addEventListener('click', () => this._applyPipelinePreset(btn.dataset.preset));
+    });
   },
 
-  _renderPipelineBaseGrid() {
-    const grid = $('#plBaseGrid');
-    if (!grid) return;
-    const state = this.state.pipeline || {};
-    const base = state._baseLocal;
-    // 如果已有底片（URL或本地上传）
-    if (base && (base.src || base.remote)) {
-      const isUploading = !base.uploaded && !base.uploadError;
-      const isUploadError = !!base.uploadError;
-      let badge = '';
-      if (isUploading) badge = '<span class="ref-badge uploading">上传中</span>';
-      else if (isUploadError) badge = '<span class="ref-badge" style="background:var(--danger-soft);color:var(--danger)">失败</span>';
-      const localBadge = (!base.uploaded && !isUploadError) ? '<span class="ref-badge local">本地</span>' : (isUploadError ? badge : '');
-      const progressHtml = isUploading ? '<div class="ref-upload-progress"><div class="ref-upload-bar" style="width:0%"></div></div><span class="ref-upload-pct">0%</span>' : '';
-      const isVideo = /\.(mp4|webm|mov|avi)(\?|$)/i.test(base.src || base.remote || '');
-      const media = isVideo ? `<video src="${esc(base.src || base.remote)}" muted></video>` : `<img src="${esc(base.src || base.remote)}" loading="lazy" referrerpolicy="no-referrer">`;
-      grid.innerHTML = `<div class="ref-item ${isVideo ? 'ref-item-video' : ''}">${media}${localBadge}${progressHtml}<button class="ref-del" id="plBaseDel">×</button><button class="ref-copy" id="plBaseCopy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>`;
-      $('#plBaseDel').addEventListener('click', () => {
-        if (base.src && base.src.startsWith('blob:')) URL.revokeObjectURL(base.src);
-        state._baseLocal = null; state.baseImage = '';
-        this._renderPipelineBaseGrid();
+  _renderPipelineModuleLib() {
+    const wrap = $('#plModuleLib');
+    if (!wrap) return;
+    wrap.innerHTML = this._PIPELINE_MODULES.map(m => `
+      <button class="pl-module-chip" data-cat="${esc(m.category)}" data-module="${esc(m.id)}" type="button" title="${esc(m.desc)}">
+        <span class="pl-chip-icon">${m.icon}</span>
+        <span>${esc(m.title)}</span>
+        <span class="pl-chip-cat">${esc(m.category === 'audio' ? '音' : m.category === 'image' ? '图' : '视')}</span>
+      </button>
+    `).join('');
+    wrap.querySelectorAll('[data-module]').forEach(btn => {
+      btn.addEventListener('click', () => this._addPipelineModule(btn.dataset.module));
+    });
+  },
+
+  _renderPipelineChain() {
+    const wrap = $('#plChain');
+    if (!wrap) return;
+    const p = this.state.pipeline;
+    if (!p.chain.length) {
+      wrap.innerHTML = `<div class="pl-chain-empty">尚无模块。点击上方模块库或快捷模板开始编排。</div>`;
+      return;
+    }
+    wrap.innerHTML = p.chain.map((item, i) => {
+      const mod = this._PIPELINE_MODULES.find(m => m.id === item.moduleId);
+      if (!mod) return '';
+      const prev = i > 0 ? this._PIPELINE_MODULES.find(m => m.id === p.chain[i - 1].moduleId) : null;
+      const v = this._validatePipelineStep(i);
+      const cls = (p.selectedIdx === i ? 'selected ' : '') + (v.ok ? '' : 'invalid');
+      const statusBadge = v.ok
+        ? '<span class="pl-node-status ok">✓ 就绪</span>'
+        : `<span class="pl-node-status err">✗ ${esc(v.error || '未就绪')}</span>`;
+      const needHint = mod.needs && mod.needs.length
+        ? `<span style="font-size:10px;color:var(--text-dim)">需要 ${esc(mod.needs.join(','))}${prev ? ' · 上步提供 ' + esc(prev.provides) : ' · 首步需手动输入'}</span>`
+        : '<span style="font-size:10px;color:var(--text-dim)">无需上步输入</span>';
+      return `
+        <div class="pl-node ${cls}" data-idx="${i}">
+          <div class="pl-node-body" data-action="select" data-idx="${i}">
+            <div class="pl-node-icon">${mod.icon}</div>
+            <div class="pl-node-info">
+              <div class="pl-node-title">${esc(mod.title)} <span style="font-size:10px;color:var(--text-dim);font-weight:400">#${i + 1}</span></div>
+              <div class="pl-node-desc">${esc(mod.desc)} · ${needHint}</div>
+            </div>
+            ${statusBadge}
+          </div>
+          <div class="pl-node-actions">
+            <button class="pl-node-btn" data-action="up" data-idx="${i}" type="button" ${i === 0 ? 'disabled' : ''} title="上移">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+            </button>
+            <button class="pl-node-btn" data-action="down" data-idx="${i}" type="button" ${i === p.chain.length - 1 ? 'disabled' : ''} title="下移">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <button class="pl-node-btn del" data-action="del" data-idx="${i}" type="button" title="删除">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+    wrap.querySelectorAll('[data-action]').forEach(el => {
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const idx = parseInt(el.dataset.idx, 10);
+        const action = el.dataset.action;
+        if (action === 'select') this._selectPipelineModule(idx);
+        else if (action === 'up') this._movePipelineModule(idx, -1);
+        else if (action === 'down') this._movePipelineModule(idx, 1);
+        else if (action === 'del') this._removePipelineModule(idx);
       });
-      $('#plBaseCopy').addEventListener('click', () => {
-        if (base.remote) copy(base.remote).then(ok => ok ? Toast.success('URL 已复制') : Toast.error('复制失败'));
-        else Toast.warning('底片正在上传中');
-      });
-    } else if (state.baseImage) {
-      // 只有URL，没有本地文件
-      const isVideo = /\.(mp4|webm|mov|avi)(\?|$)/i.test(state.baseImage);
-      const media = isVideo ? `<video src="${esc(state.baseImage)}" muted></video>` : `<img src="${esc(state.baseImage)}" loading="lazy" referrerpolicy="no-referrer">`;
-      grid.innerHTML = `<div class="ref-item ${isVideo ? 'ref-item-video' : ''}">${media}<button class="ref-del" id="plBaseDel">×</button><button class="ref-copy" id="plBaseCopy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>`;
-      $('#plBaseDel').addEventListener('click', () => { state.baseImage = ''; this._renderPipelineBaseGrid(); });
-      $('#plBaseCopy').addEventListener('click', () => copy(state.baseImage).then(ok => ok ? Toast.success('URL 已复制') : Toast.error('复制失败')));
-    } else {
-      // 空状态：显示添加按钮（与其他模式一致的ref-add样式）
-      grid.innerHTML = `<div class="ref-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加</div>`;
-      grid.querySelector('.ref-add').addEventListener('click', () => $('#plFileInput').click());
+    });
+  },
+
+  _renderPipelineConfig() {
+    const wrap = $('#plConfig');
+    if (!wrap) return;
+    const p = this.state.pipeline;
+    const idx = p.selectedIdx;
+    if (idx < 0 || idx >= p.chain.length) {
+      wrap.innerHTML = `<div class="pl-config-empty">点击上方任一模块卡片以配置参数</div>`;
+      return;
+    }
+    const item = p.chain[idx];
+    const mod = this._PIPELINE_MODULES.find(m => m.id === item.moduleId);
+    if (!mod) { wrap.innerHTML = ''; return; }
+
+    // 渲染参数表单
+    const paramsHtml = (mod.params || []).map(param => {
+      const val = item.state[param.key] != null ? item.state[param.key] : (param.default != null ? param.default : '');
+      const id = 'plcfg_' + param.key;
+      if (param.type === 'textarea') {
+        return `<div class="pl-config-row">
+          <div class="pl-config-label">${esc(param.label)}${param.required ? ' <span style="color:var(--danger)">*</span>' : ''}</div>
+          <textarea id="${id}" placeholder="${esc(param.placeholder || '')}">${esc(val)}</textarea>
+        </div>`;
+      }
+      if (param.type === 'select') {
+        const opts = (param.options || []).map(o => {
+          const v = typeof o === 'string' ? o : o.value;
+          const l = typeof o === 'string' ? o : o.label;
+          return `<option value="${esc(v)}" ${String(val) === String(v) ? 'selected' : ''}>${esc(l)}</option>`;
+        }).join('');
+        return `<div class="pl-config-row">
+          <div class="pl-config-label">${esc(param.label)}${param.required ? ' <span style="color:var(--danger)">*</span>' : ''}</div>
+          <select id="${id}">${opts}</select>
+        </div>`;
+      }
+      if (param.type === 'range') {
+        return `<div class="pl-config-row">
+          <div class="pl-config-label">${esc(param.label)} <span class="pl-cfg-hint"><span id="${id}_val">${val}${param.unit || ''}</span></span></div>
+          <input type="range" id="${id}" min="${param.min}" max="${param.max}" step="${param.step}" value="${val}">
+        </div>`;
+      }
+      // text / url
+      return `<div class="pl-config-row">
+        <div class="pl-config-label">${esc(param.label)}${param.required ? ' <span style="color:var(--danger)">*</span>' : ''}</div>
+        <input type="text" id="${id}" placeholder="${esc(param.placeholder || '')}" value="${esc(val)}">
+      </div>`;
+    }).join('');
+
+    // 渲染用户上传输入(如果有)
+    let userInputHtml = '';
+    if (mod.userInput) {
+      userInputHtml = this._renderPipelineUserInputRow(idx, mod);
+    }
+
+    wrap.innerHTML = `
+      <div class="pl-config-title">
+        <span class="pl-cfg-icon">${mod.icon}</span>
+        <span>${esc(mod.title)} · 配置</span>
+        <span style="margin-left:auto;font-size:10px;color:var(--text-dim);font-weight:400">输出: ${esc(mod.provides)}</span>
+      </div>
+      ${paramsHtml}
+      ${userInputHtml}
+    `;
+
+    // 绑定参数事件
+    (mod.params || []).forEach(param => {
+      const id = 'plcfg_' + param.key;
+      const el = $('#' + id);
+      if (!el) return;
+      if (param.type === 'range') {
+        el.addEventListener('input', () => {
+          item.state[param.key] = parseFloat(el.value);
+          const valEl = $('#' + id + '_val');
+          if (valEl) valEl.textContent = el.value + (param.unit || '');
+          this._updatePipelineEstimate();
+        });
+      } else if (param.type === 'textarea' || param.type === 'text' || param.type === 'url') {
+        el.addEventListener('input', () => {
+          item.state[param.key] = el.value;
+          this._updatePipelineEstimate();
+          // 实时更新编排链描述
+          this._renderPipelineChain();
+        });
+      } else if (param.type === 'select') {
+        el.addEventListener('change', () => {
+          item.state[param.key] = el.value;
+          this._updatePipelineEstimate();
+        });
+      }
+    });
+
+    // 绑定用户上传按钮
+    if (mod.userInput) {
+      const uploadBtn = $('#plUserInputUpload');
+      const fileInput = $('#plUserInputFile');
+      const clearBtn = $('#plUserInputClear');
+      if (uploadBtn && fileInput) {
+        uploadBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+          const f = e.target.files[0];
+          if (f) this._uploadPipelineUserInput(idx, f);
+          e.target.value = '';
+        });
+      }
+      if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+          if (item._userInput) delete item._userInput[mod.userInput.key];
+          this._renderPipelineConfig();
+          this._renderPipelineChain();
+          this._renderPipelineOverview();
+        });
+      }
     }
   },
 
+  _renderPipelineUserInputRow(idx, mod) {
+    const item = this.state.pipeline.chain[idx];
+    const ui = mod.userInput;
+    const val = item._userInput && item._userInput[ui.key];
+    const has = !!val;
+    const accept = ui.type === 'ref-video' ? 'video/*' : 'image/*';
+    let preview = '';
+    let statusText = '未上传';
+    let statusCls = '';
+    if (has) {
+      const isVideo = /\.(mp4|webm|mov|avi)(\?|$)/i.test(val);
+      if (isVideo) {
+        preview = `<video class="pl-user-input-preview" src="${esc(val)}" muted></video>`;
+      } else {
+        preview = `<img class="pl-user-input-preview" src="${esc(val)}" loading="lazy" referrerpolicy="no-referrer">`;
+      }
+      statusText = '已上传';
+      statusCls = 'done';
+    } else if (item._uploading) {
+      statusText = '上传中...';
+      statusCls = 'uploading';
+      preview = `<div class="pl-user-input-preview" style="display:flex;align-items:center;justify-content:center;font-size:18px">⏳</div>`;
+    } else if (item._uploadError) {
+      statusText = '失败: ' + item._uploadError;
+      statusCls = 'error';
+    }
+    return `
+      <div class="pl-config-row">
+        <div class="pl-config-label">${esc(ui.label)} <span class="pl-cfg-hint">${esc(ui.hint || '')}</span></div>
+        <div class="pl-user-input ${has ? 'has-file' : ''}">
+          <div class="pl-user-input-row">
+            ${preview || `<div class="pl-user-input-preview" style="display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:18px">+</div>`}
+            <div class="pl-user-input-info">
+              <div class="pl-ui-name">${has ? esc(ui.label + ' · 已就绪') : esc(ui.label)}</div>
+              <div class="pl-ui-status ${statusCls}">${esc(statusText)}</div>
+            </div>
+            <button class="pl-user-input-btn" id="plUserInputUpload" type="button">${has ? '更换' : '上传'}</button>
+            ${has ? '<button class="pl-user-input-btn" id="plUserInputClear" type="button">清除</button>' : ''}
+          </div>
+          <input type="file" id="plUserInputFile" accept="${accept}" style="display:none">
+        </div>
+      </div>
+    `;
+  },
+
+  _renderPipelineOverview() {
+    const wrap = $('#plOverview');
+    if (!wrap) return;
+    const p = this.state.pipeline;
+    const v = this._validatePipeline();
+    const stepCount = p.chain.length;
+    const totalCost = p.chain.reduce((sum, item) => {
+      const mod = this._PIPELINE_MODULES.find(m => m.id === item.moduleId);
+      return sum + (mod ? (mod.estimateCost(item.state) || 0) : 0);
+    }, 0);
+    const validIcon = v.ok ? '✓' : '✗';
+    const validColor = v.ok ? 'var(--success)' : 'var(--danger)';
+    wrap.innerHTML = `
+      <div class="pl-ov-item"><span style="color:${validColor}">${validIcon}</span> <strong>${stepCount}</strong> 步</div>
+      <span class="pl-ov-sep">·</span>
+      <div class="pl-ov-item">预估 <strong>¥${totalCost.toFixed(4)}</strong></div>
+      <span class="pl-ov-sep">·</span>
+      <div class="pl-ov-item" style="color:${validColor}">${esc(v.ok ? '校验通过' : (v.error || '校验失败'))}</div>
+    `;
+  },
+
+  _addPipelineModule(moduleId) {
+    const mod = this._PIPELINE_MODULES.find(m => m.id === moduleId);
+    if (!mod) return;
+    const p = this.state.pipeline;
+    // 初始化模块默认状态
+    const state = {};
+    (mod.params || []).forEach(param => {
+      state[param.key] = param.default != null ? param.default : (param.type === 'range' ? param.min : '');
+    });
+    p.chain.push({ moduleId, state, _userInput: {} });
+    p.selectedIdx = p.chain.length - 1;
+    this._renderPipelineChain();
+    this._renderPipelineConfig();
+    this._renderPipelineOverview();
+    this._updatePipelineEstimate();
+  },
+
+  _removePipelineModule(idx) {
+    const p = this.state.pipeline;
+    if (idx < 0 || idx >= p.chain.length) return;
+    p.chain.splice(idx, 1);
+    if (p.selectedIdx >= p.chain.length) p.selectedIdx = p.chain.length - 1;
+    this._renderPipelineChain();
+    this._renderPipelineConfig();
+    this._renderPipelineOverview();
+    this._updatePipelineEstimate();
+  },
+
+  _movePipelineModule(idx, dir) {
+    const p = this.state.pipeline;
+    const newIdx = idx + dir;
+    if (newIdx < 0 || newIdx >= p.chain.length) return;
+    const tmp = p.chain[idx];
+    p.chain[idx] = p.chain[newIdx];
+    p.chain[newIdx] = tmp;
+    if (p.selectedIdx === idx) p.selectedIdx = newIdx;
+    else if (p.selectedIdx === newIdx) p.selectedIdx = idx;
+    this._renderPipelineChain();
+    this._renderPipelineConfig();
+    this._renderPipelineOverview();
+  },
+
+  _selectPipelineModule(idx) {
+    this.state.pipeline.selectedIdx = idx;
+    this._renderPipelineChain();
+    this._renderPipelineConfig();
+  },
+
+  _applyPipelinePreset(presetId) {
+    const preset = this._PIPELINE_PRESETS.find(p => p.id === presetId);
+    if (!preset) return;
+    const p = this.state.pipeline;
+    p.chain = preset.modules.map(moduleId => {
+      const mod = this._PIPELINE_MODULES.find(m => m.id === moduleId);
+      const state = {};
+      (mod.params || []).forEach(param => {
+        state[param.key] = param.default != null ? param.default : (param.type === 'range' ? param.min : '');
+      });
+      return { moduleId, state, _userInput: {} };
+    });
+    p.selectedIdx = p.chain.length - 1;
+    this._renderPipelineChain();
+    this._renderPipelineConfig();
+    this._renderPipelineOverview();
+    this._updatePipelineEstimate();
+    Toast.info('已应用模板: ' + preset.title);
+  },
+
+  async _uploadPipelineUserInput(idx, file) {
+    const p = this.state.pipeline;
+    const item = p.chain[idx];
+    if (!item) return;
+    const mod = this._PIPELINE_MODULES.find(m => m.id === item.moduleId);
+    if (!mod || !mod.userInput) return;
+    const ui = mod.userInput;
+    const isVideo = ui.type === 'ref-video';
+    const sizeLimit = isVideo ? 100 * 1024 * 1024 : 10 * 1024 * 1024;
+    if (file.size > sizeLimit) {
+      Toast.error((isVideo ? '视频' : '图片') + '不能超过 ' + (isVideo ? '100MB' : '10MB'));
+      return;
+    }
+    item._uploading = true;
+    item._uploadError = null;
+    this._renderPipelineConfig();
+    try {
+      const r2url = await Api.uploadToR2(file);
+      item._userInput = item._userInput || {};
+      item._userInput[ui.key] = r2url;
+      item._uploading = false;
+      Toast.success(ui.label + ' 已上传');
+    } catch (err) {
+      item._uploading = false;
+      item._uploadError = err.message;
+      Toast.error('上传失败: ' + err.message);
+    }
+    this._renderPipelineConfig();
+    this._renderPipelineChain();
+    this._renderPipelineOverview();
+  },
+
+  // 校验单步: 返回 { ok, error }
+  _validatePipelineStep(i) {
+    const p = this.state.pipeline;
+    const item = p.chain[i];
+    if (!item) return { ok: false, error: '无模块' };
+    const mod = this._PIPELINE_MODULES.find(m => m.id === item.moduleId);
+    if (!mod) return { ok: false, error: '模块不存在' };
+    // 必填参数
+    for (const param of (mod.params || [])) {
+      if (param.required) {
+        const val = item.state[param.key];
+        if (!val || !String(val).trim()) return { ok: false, error: '缺 ' + param.label };
+      }
+    }
+    // needs 校验: 上一步 provides 必须匹配 needs[0], 或者用户手动上传
+    if (mod.needs && mod.needs.length) {
+      const needKey = mod.needs[0];
+      const hasUserInput = mod.userInput && item._userInput && item._userInput[mod.userInput.key];
+      if (hasUserInput) {
+        return { ok: true };
+      }
+      if (i === 0) return { ok: false, error: '需上传' + (mod.userInput ? mod.userInput.label : needKey) };
+      const prev = this._PIPELINE_MODULES.find(m => m.id === p.chain[i - 1].moduleId);
+      if (!prev) return { ok: false, error: '无上一步' };
+      if (prev.provides !== needKey) return { ok: false, error: '上步需提供 ' + needKey };
+    }
+    return { ok: true };
+  },
+
+  _validatePipeline() {
+    const p = this.state.pipeline;
+    if (!p.chain.length) return { ok: false, error: '请至少添加一个模块' };
+    for (let i = 0; i < p.chain.length; i++) {
+      const v = this._validatePipelineStep(i);
+      if (!v.ok) {
+        const mod = this._PIPELINE_MODULES.find(m => m.id === p.chain[i].moduleId);
+        return { ok: false, error: `第${i + 1}步「${mod ? mod.title : '?'}」${v.error}` };
+      }
+    }
+    return { ok: true };
+  },
+
+  _updatePipelineEstimate() {
+    const p = this.state.pipeline;
+    if (!p || !p.chain) { const el = $('#estimateCost'); if (el) el.textContent = '预计 —'; return; }
+    const total = p.chain.reduce((sum, item) => {
+      const mod = this._PIPELINE_MODULES.find(m => m.id === item.moduleId);
+      return sum + (mod ? (mod.estimateCost(item.state) || 0) : 0);
+    }, 0);
+    const el = $('#estimateCost');
+    if (el) {
+      const v = this._validatePipeline();
+      const label = p.chain.map(item => {
+        const mod = this._PIPELINE_MODULES.find(m => m.id === item.moduleId);
+        return mod ? mod.title : '?';
+      }).join(' → ');
+      el.innerHTML = `预计 <span class="amount">¥${total.toFixed(4)}</span> · ${p.chain.length}步 · ${esc(label)}${v.ok ? '' : ' · <span style="color:var(--danger)">' + esc(v.error) + '</span>'}`;
+    }
+  },
+
+  // 渲染运行中的进度(复用 .pipeline-steps 样式)
   _renderPipelineSteps() {
     const wrap = $('#plSteps');
     if (!wrap) return;
     const steps = this._pipeline.steps || [];
-    const defs = this._PIPELINE_STEP_DEFS;
-    wrap.innerHTML = defs.map((def, i) => {
-      const st = steps[i] || { status: 'pending' };
+    if (!steps.length) { wrap.innerHTML = ''; return; }
+    // 用 chain 中的模块标题作为节点名
+    const p = this.state.pipeline;
+    const chain = (p && p.chain) || [];
+    wrap.innerHTML = steps.map((st, i) => {
+      const mod = chain[i] ? this._PIPELINE_MODULES.find(m => m.id === chain[i].moduleId) : null;
+      const title = mod ? mod.title : ('步骤 ' + (i + 1));
+      const icon = mod ? mod.icon : (i + 1);
       const cls = st.status === 'done' ? 'done' : st.status === 'active' ? 'active' : st.status === 'error' ? 'error' : '';
-      const icon = st.status === 'done' ? '✓' : st.status === 'active' ? '…' : st.status === 'error' ? '!' : String(i + 1);
-      const meta = st.elapsed ? fmtDur(st.elapsed) : (st.status === 'pending' ? '等待' : '处理中');
+      const psIcon = st.status === 'done' ? '✓' : st.status === 'active' ? '…' : st.status === 'error' ? '!' : icon;
+      const meta = st.elapsed ? fmtDur(st.elapsed) : (st.status === 'pending' ? '等待' : st.status === 'active' ? '处理中' : st.status === 'error' ? '失败' : '');
       const rerunBtn = st.status === 'done' ? `<button class="ps-rerun" data-rerun-step="${i}">重跑</button>` : '';
       return `<div class="pipeline-step ${cls}">
-        <div class="ps-icon">${icon}</div>
-        <div class="ps-title">${esc(def.title)}</div>
+        <div class="ps-icon">${psIcon}</div>
+        <div class="ps-title">${esc(title)}</div>
         <div class="ps-meta">${meta}</div>
         ${rerunBtn}
       </div>`;
@@ -5146,9 +5887,11 @@ const UI = {
   },
 
   async _submitPipeline() {
-    const state = this.state.pipeline = this.state.pipeline || {};
-    if (!state.tts || !state.tts.trim()) { Toast.warning('请输入口播文本'); return; }
-    if (!state.baseImage) { Toast.warning('请选择底片'); return; }
+    const p = this.state.pipeline;
+    if (!p || !p.chain || !p.chain.length) { Toast.warning('请至少添加一个模块'); return; }
+    // 校验
+    const v = this._validatePipeline();
+    if (!v.ok) { Toast.error(v.error); return; }
     if (!TaskCenter.isAvailable()) {
       Toast.warning('流水线需要任务中心支持，请先在设置中配置任务中心');
       this._openSettings();
@@ -5159,36 +5902,23 @@ const UI = {
     const btn = $('#generateBtn');
     btn.disabled = true; $('#generateBtnText').textContent = '提交中...';
     try {
-      const taskId = genId();
-      // 构建流水线步骤数组（Worker要求steps非空）
-      const steps = [
-        {
-          seq: 1, type: 'tts', model: 'audio_tts', modelType: 'audio',
-          endpoint: '/api/async/audio_tts',
-          body: { text: state.tts, voice_id: state.voice, speed: state.speed, vol: 1, language_boost: 'auto' },
-          needs: []
-        },
-        {
-          seq: 2, type: 'digitalHuman', model: 'digital_humans', modelType: 'video',
-          endpoint: '/api/async/video_digital_humans',
-          body: { videoName: '口播_' + Date.now(), audioUrl: null, videoUrl: state.baseImage },
-          needs: ['audioUrl']
-        },
-        {
-          seq: 3, type: 'package', model: 'video_package', modelType: 'video',
-          endpoint: '/api/async/video_package',
-          body: { video: null, template_id: state.package },
-          needs: ['rawVideoUrl']
-        }
-      ];
+      // 从模块构建 steps 数组
+      const steps = p.chain.map((item, i) => {
+        const mod = this._PIPELINE_MODULES.find(m => m.id === item.moduleId);
+        const step = mod.buildStep(item.state, item._userInput || {});
+        step.seq = i + 1;
+        return step;
+      });
+      const prompt = p.chain.map(item => {
+        const s = item.state || {};
+        return s.text || s.prompt || '';
+      }).filter(Boolean).join(' | ');
       const payload = {
         kind: 'pipeline',
-        steps: steps,
-        prompt: state.tts,
-        baseImage: state.baseImage
+        steps,
+        prompt,
       };
-      // Submit via TaskCenter with pipeline kind
-      // Use direct fetch to keep payload control
+      const taskId = genId();
       const url = TaskCenter.workerUrl + '/task?token=' + encodeURIComponent(TaskCenter.token);
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 20000);
@@ -5202,27 +5932,23 @@ const UI = {
       const text = await res.text();
       let data; try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }
       if (!res.ok) throw new Error(data.error || data.message || `HTTP ${res.status}`);
-      const workerId = data.id || data.taskId || data.task?.id;
+      const workerId = data.id || data.taskId || data.task?.id || (data.task && data.task.id);
       if (!workerId) throw new Error('任务中心未返回任务 ID');
-      // Register with TaskCenter so polling picks it up
+      // 注册到 TaskCenter 以便轮询
       TaskCenter._submitted.set(taskId, { task: { id: taskId }, lastStatus: 'processing', startTime: Date.now(), workerId: String(workerId), isPipeline: true });
-      TaskCenter.startPolling();
-      // Initialize pipeline UI state
+      // 初始化进度UI
       this._pipeline.active = { id: taskId, workerId: String(workerId), startedAt: Date.now() };
-      this._pipeline.steps = [
-        { status: 'active', startedAt: Date.now() },
-        { status: 'pending' },
-        { status: 'pending' },
-        { status: 'pending' }
-      ];
+      this._pipeline.steps = p.chain.map((_, i) => ({ status: i === 0 ? 'active' : 'pending', startedAt: i === 0 ? Date.now() : null }));
+      // 切换到运行视图
+      this._renderPipelineForm();
       this._renderPipelineSteps();
       Toast.success('流水线已提交到任务中心');
-      // Save to history as a pipeline task
+      // 加入历史
       const fakeTask = {
         id: taskId,
-        model: { id: 'pipeline', name: '流水线', type: 'video', price: '组合计费' },
+        model: { id: 'pipeline', name: '流水线(' + p.chain.length + '步)', type: 'video', price: '组合计费' },
         body: payload,
-        prompt: state.tts,
+        prompt,
         status: 'processing',
         createdAt: Date.now(),
         apiId: workerId,
@@ -5242,7 +5968,7 @@ const UI = {
     }
   },
 
-  // Update pipeline step UI from a worker progress event
+  // 从 worker 进度事件更新流水线步骤UI
   _updatePipelineFromEvent(payload) {
     if (!this._pipeline.active) return;
     const steps = payload.steps || [];
@@ -5275,16 +6001,6 @@ const UI = {
         Toast.error('重跑请求失败');
       }
     } catch (e) { Toast.error('重跑失败: ' + e.message); }
-  },
-
-
-  _buildCurrentTask() {
-    try {
-      if (!this.state.model) return null;
-      const body = this._collectParamsSync();
-      const prompt = body.prompt || body.text || '';
-      return { model: this.state.model, body, prompt };
-    } catch { return null; }
   },
 
   /* ---------- TASK RESULTS ---------- */
@@ -5393,7 +6109,7 @@ const UI = {
   async _syncHistoryFromCloud() {
     try {
       if (!TaskCenter.isAvailable()) return;
-      const url = TaskCenter.workerUrl + '/userdata?key=history&token=' + encodeURIComponent(TaskCenter.token);
+      const url = TaskCenter.workerUrl + '/userdata?history&token=' + encodeURIComponent(TaskCenter.token);
       const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
       if (!res.ok) return;
       const data = await res.json();
@@ -5424,7 +6140,7 @@ const UI = {
     if (!TaskCenter.isAvailable()) return;
     try {
       const history = Store.getHistory();
-      const url = TaskCenter.workerUrl + '/userdata?key=history&token=' + encodeURIComponent(TaskCenter.token);
+      const url = TaskCenter.workerUrl + '/userdata?history&token=' + encodeURIComponent(TaskCenter.token);
       await fetch(url, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -5550,7 +6266,9 @@ const UI = {
         }
       });
     }
-      },
+    // V27 — 结果列表渲染后初始化 Tippy
+    this._initTooltips();
+  },
 
   _bulkDeleteByFilter() {
     const tasks = Store.getTasks();
@@ -6419,6 +7137,56 @@ ${items.map(h => {
   },
 
   /* ---------- BATCH GENERATION ---------- */
+  _openBatchGenerate() {
+    const promptTa = $('[data-key="prompt"], [data-key="text"]');
+    const prompt = promptTa?.value?.trim() || '';
+    if (!prompt) { Toast.warning('请先输入提示词'); promptTa?.focus(); return; }
+    // Collect all models across tabs
+    const allModels = [];
+    ['image', 'video', 'audio'].forEach(tab => { MODELS[tab].forEach(m => allModels.push({ ...m, tab })); });
+    const renderList = (filter = '') => {
+      const f = filter.toLowerCase();
+      const filtered = filter ? allModels.filter(m => m.name.toLowerCase().includes(f) || m.id.toLowerCase().includes(f) || m.desc?.toLowerCase().includes(f)) : allModels;
+      return filtered.map(m => `<label class="batch-model-item" data-mid="${esc(m.id)}" data-tab="${esc(m.tab)}"><input type="checkbox" data-batch-mid="${esc(m.id)}" data-batch-tab="${esc(m.tab)}" style="width:auto;margin:0"><div class="bm-info"><div class="bm-name">${esc(m.name)} <span class="bm-type">${typeName(m.tab)}</span></div><div class="bm-desc">${esc(trunc(m.desc || '', 50))}</div><div class="bm-price">${esc(m.price)}</div></div></label>`).join('');
+    };
+    // V56: Batch queue options — mode radio + priority field
+    const queueAvailable = TaskCenter.isAvailable();
+    const modeHtml = `<div style="margin-bottom:10px;padding:10px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border-soft)">
+      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="radio" name="batchMode" value="immediate" checked style="width:auto;margin:0">立即生成</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;${queueAvailable ? '' : 'opacity:.5'}"><input type="radio" name="batchMode" value="queue" ${queueAvailable ? '' : 'disabled'} style="width:auto;margin:0">排队生成${queueAvailable ? '' : ' <span style="color:var(--text-dim)">(需任务中心)</span>'}</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-left:auto">优先级
+          <input type="number" id="batchPriority" min="1" max="10" value="5" style="width:60px;padding:4px 6px;font-size:12px;text-align:center">
+        </label>
+      </div>
+      <div id="queueStatus" style="font-size:11px;color:var(--text-dim);margin-top:6px"></div>
+    </div>`;
+    const html = `<div style="margin-bottom:10px;padding:10px;background:var(--brand-soft);border-radius:8px;font-size:12px;color:var(--text)"><strong>批量生成</strong>：使用当前提示词「${esc(trunc(prompt, 40))}」同时提交到多个模型。<br><span style="color:var(--text-dim)">勾选下方模型，点击「开始批量生成」。将使用各模型默认参数。</span></div>${modeHtml}<div class="history-search" style="padding:0 0 10px"><input type="text" id="batchSearchInput" placeholder="搜索模型..." style="font-size:13px"></div><div class="batch-model-list" style="max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:4px">${renderList()}</div>`;
+    this._showModal('批量生成', html, [
+      { label: '全选', fn: () => { $$('#modalBody [data-batch-mid]').forEach(c => c.checked = true); } },
+      { label: '清空', fn: () => { $$('#modalBody [data-batch-mid]').forEach(c => c.checked = false); } },
+      { label: '开始生成', primary: true, fn: () => this._runBatchGenerate(prompt) },
+      { label: '关闭', fn: () => this._closeModal() }
+    ]);
+    const searchInput = $('#batchSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', e => {
+        const list = $('#modalBody .batch-model-list');
+        if (list) list.innerHTML = renderList(e.target.value);
+      });
+    }
+    // V56: refresh queue status when queue mode selected
+    const refreshQueueStatus = async () => {
+      const statusEl = $('#queueStatus');
+      if (!statusEl) return;
+      const mode = (document.querySelector('input[name="batchMode"]:checked') || {}).value;
+      if (mode !== 'queue') { statusEl.textContent = ''; return; }
+      const info = await TaskCenter.listQueued();
+      statusEl.innerHTML = `排队 <strong style="color:var(--brand)">${info.queued}</strong> · 运行 <strong>${info.running}</strong> · 今日已耗 <strong>¥${info.spentToday.toFixed(2)}</strong>`;
+    };
+    document.querySelectorAll('input[name="batchMode"]').forEach(r => r.addEventListener('change', refreshQueueStatus));
+    refreshQueueStatus();
+  },
 
   async _runBatchGenerate(prompt) {
     const checked = $$('#modalBody [data-batch-mid]:checked');
@@ -6598,15 +7366,18 @@ ${items.map(h => {
     const ta = $('[data-key="prompt"], [data-key="text"]');
     if (ta) {
       cache[ta.dataset.key] = ta.value;
+      // Also save prompt per-tab for cross-model persistence
       this.state.formCache[this.state.tab + '_prompt'] = ta.value;
     }
     for (const p of this.state.model.params) {
       if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') {
-        const refs = this._getRefs(p.key);
-        cache[p.key] = { __ref: true, data: JSON.parse(JSON.stringify(refs)) };
-        // 保存到tab级缓存，用param type作为统一key
+        cache[p.key] = JSON.parse(JSON.stringify(this._getRefs(p.key)));
+        // Also save refs per-tab for cross-model persistence
         if (!this.state.formCache[this.state.tab + '_refs']) this.state.formCache[this.state.tab + '_refs'] = {};
-        this.state.formCache[this.state.tab + '_refs'][p.type] = JSON.parse(JSON.stringify(refs));
+        // Find a common ref key (urls/images/first_frame etc.)
+        if (p.key === 'urls' || p.key === 'images' || p.key === 'first_frame' || p.key === 'last_frame' || p.key === 'firstFrameUrl' || p.key === 'lastFrameUrl') {
+          this.state.formCache[this.state.tab + '_refs'][p.key] = JSON.parse(JSON.stringify(this._getRefs(p.key)));
+        }
       }
       else { const el = $(`[data-key="${p.key}"]`); if (el) cache[p.key] = el.value; }
     }
@@ -6617,6 +7388,20 @@ ${items.map(h => {
     const cache = this.state.formCache[this.state.modelKey];
     const tabPrompt = this.state.formCache[this.state.tab + '_prompt'];
     const tabRefs = this.state.formCache[this.state.tab + '_refs'] || {};
+    
+    // 收集同tab下所有modelKey的缓存ref，用于跨模型恢复
+    const allTabRefs = {};
+    for (const [k, v] of Object.entries(this.state.formCache)) {
+      if (k.startsWith(this.state.tab + '/') && typeof v === 'object') {
+        for (const [refKey, refVal] of Object.entries(v)) {
+          if (Array.isArray(refVal) && refVal.length > 0 && !allTabRefs[refKey]) {
+            allTabRefs[refKey] = refVal;
+          }
+        }
+      }
+    }
+    // 合并 tabRefs 和 allTabRefs（tabRefs优先）
+    const mergedRefs = { ...allTabRefs, ...tabRefs };
     
     // Restore prompt
     const promptParam = this.state.model.params.find(p => p.type === 'textarea');
@@ -6629,21 +7414,10 @@ ${items.map(h => {
       }
     }
     
-    // Restore refs - 用param type作为统一key跨模型匹配
-    // NanoBanana2 key='urls' type='ref-image' → tabRefs['ref-image']
-    // GPT-Image-2 key='urls' type='ref-image' → tabRefs['ref-image'] 同一个
-    // Wan3 key='images' type='ref-image' → tabRefs['ref-image'] 同一个
+    // Restore refs - try model cache → tabRefs → allTabRefs
     for (const p of this.state.model.params) {
       if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') {
-        // 1. 先从当前模型缓存找
-        let refData = null;
-        if (cache && cache[p.key]) {
-          refData = cache[p.key].__ref ? cache[p.key].data : (Array.isArray(cache[p.key]) ? cache[p.key] : null);
-        }
-        // 2. 再从tab级缓存按type找（跨模型共享）
-        if ((!refData || refData.length === 0) && tabRefs[p.type]) {
-          refData = tabRefs[p.type];
-        }
+        const refData = (cache && cache[p.key]) || mergedRefs[p.key];
         if (refData && refData.length > 0) {
           this.state.refState[this.state.modelKey] = this.state.refState[this.state.modelKey] || {};
           this.state.refState[this.state.modelKey][p.key] = JSON.parse(JSON.stringify(refData));
@@ -6651,10 +7425,7 @@ ${items.map(h => {
         }
       } else if (p.type !== 'textarea') {
         const el = $(`[data-key="${p.key}"]`);
-        if (el && cache && cache[p.key] != null && typeof cache[p.key] === 'string') {
-          el.value = cache[p.key];
-          this._onFieldChange(p.key, el);
-        }
+        if (el && cache && cache[p.key] != null) { el.value = cache[p.key]; this._onFieldChange(p.key, el); }
       }
     }
   },
