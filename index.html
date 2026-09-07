@@ -18,27 +18,30 @@
   .choice svg { width: 28px; height: 28px; stroke: #5b7ff5; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   .choice-label { font-size: 13px; font-weight: 500; }
   .choice-hint { font-size: 10px; color: #555f7a; }
+  .choice.disabled { cursor: not-allowed; opacity: 0.45; }
+  .choice.disabled:hover { transform: none; border-color: rgba(120,140,200,.15); background: rgba(20,25,40,.55); }
+  .choice.disabled svg { stroke:#555f7a; }
   .remember { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #555f7a; margin-top: 4px; }
   .remember input { accent-color: #5b7ff5; }
-  @media (prefers-color-scheme: light) { html, body { background: #f7f8fc; color: #181c28; } .choice { background: rgba(255,255,255,.8); border-color: #e2e5f0; } .subtitle { color: #545c75; } .remember { color: #9099b0; } }
+  @media (prefers-color-scheme: light) { html, body { background: #f7f8fc; color: #181c28; } .choice { background: rgba(255,255,255,.8); border-color: #e2e5f0; } .subtitle { color: #545c75; } .remember { color: #9099b0; } .choice.disabled svg { stroke:#9099b0; } }
 </style>
 </head>
 <body>
   <div class="logo">AI</div>
   <div class="title">AI 修的媒体工作台</div>
-  <div class="subtitle">选择适合的版本进入（当前仅电脑版可用）</div>
+  <div class="subtitle">选择适合的版本进入（手机版暂未开放）</div>
   <div class="choices" id="choices">
     <a class="choice" href="chrome://doubao-chat/chat/ai-workbench-dev.html" data-ver="desktop">
-      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>
       <span class="choice-label">电脑版</span>
-      <span class="choice-hint">大屏体验</span>
+      <span class="choice-hint">✓ 推荐 · 大屏体验</span>
     </a>
-    <!-- 原手机卡片，暂时复用为电脑版，后续要手机版直接还原 href、data‑ver、文字、svg即可 -->
-    <a class="choice" href="chrome://doubao-chat/chat/ai-workbench-dev.html" data-ver="desktop">
-      <svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-      <span class="choice-label">电脑版</span>
-      <span class="choice-hint">临时入口</span>
-    </a>
+    <!-- 后续恢复手机版：移除disabled类，恢复href="xxx" data-ver="mobile"，hint改为"手机平板" -->
+    <div class="choice disabled" data-ver="mobile">
+      <svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2" /><line x1="11" y1="18" x2="13" y2="18" /></svg>
+      <span class="choice-label">手机版</span>
+      <span class="choice-hint">暂未开放 · 即将上线</span>
+    </div>
   </div>
   <label class="remember"><input type="checkbox" id="rememberChk" checked> 记住选择，下次自动跳转</label>
   <script>
@@ -46,11 +49,12 @@
       var STORAGE_KEY = 'sc_preferred_version';
       var saved = null;
       try { saved = localStorage.getItem(STORAGE_KEY); } catch(e) {}
-      // 如果旧缓存存的是mobile，强制修正为desktop
+      // 清理旧的mobile缓存
       if (saved === 'mobile') {
-        saved = 'desktop';
-        try { localStorage.setItem(STORAGE_KEY, saved); } catch(e){}
+        try { localStorage.removeItem(STORAGE_KEY); } catch(e){}
+        saved = null;
       }
+      // 仅desktop自动跳转
       if (saved === 'desktop') {
         location.replace('chrome://doubao-chat/chat/ai-workbench-dev.html');
         return;
@@ -59,14 +63,23 @@
       document.getElementById('choices').addEventListener('click', function(e) {
         var choice = e.target.closest('.choice');
         if (!choice) return;
-        if (document.getElementById('rememberChk').checked) {
+        // 禁用项直接返回，不跳转不存缓存
+        if(choice.classList.contains('disabled')){
+          e.preventDefault();
+          return;
+        }
+        // a标签才执行存储
+        if (choice.tagName === 'A' && document.getElementById('rememberChk').checked) {
           try { localStorage.setItem(STORAGE_KEY, choice.dataset.ver); } catch(e) {}
         }
       });
-      // 依旧标记推荐，现在全部导向desktop
+      // 默认推荐电脑版
       var rec = 'desktop';
       var recEl = document.querySelector('[data-ver="' + rec + '"]');
-      if (recEl) { recEl.style.borderColor = '#5b7ff5'; recEl.style.boxShadow = '0 0 0 3px rgba(91,127,245,.12)'; var h = recEl.querySelector('.choice-hint'); if (h) h.textContent = '✓ 推荐'; }
+      if (recEl) {
+        recEl.style.borderColor = '#5b7ff5';
+        recEl.style.boxShadow = '0 0 0 3px rgba(91,127,245,.12)';
+      }
     })();
   </script>
 </body>
