@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#080b14" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
-<title>修的媒体工作台 V26.9.7</title>
+<title>修的媒体工作台 V27</title>
 <style>
 /* ============================================================
    主题变量
@@ -1448,7 +1448,129 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
 [data-theme="dark"] .model-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23a8b2ce' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); }
 [data-theme="light"] .model-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23707aa0' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); }
 
+/* ============================================================
+   V27 — FilePond 主题适配
+   ============================================================ */
+.filepond--root { font-family: var(--font-sans) !important; margin: 0 !important; }
+.filepond--drop-label { color: var(--text-muted); }
+.filepond--drop-label label { color: var(--text-muted); }
+.filepond--panel-root { background: var(--surface-2); border: 1px dashed var(--border); border-radius: var(--radius-md) !important; }
+.filepond--item-panel { background: var(--surface); }
+.filepond--dsc { color: var(--text-muted); }
+.filepond--file { color: var(--text); }
+.filepond--file-action-button.filepond--action-process-item { background: var(--brand); }
+[data-theme="dark"] .filepond--item { color: #eef1fb; }
+[data-theme="dark"] .filepond--file-info { color: #eef1fb; }
+.fp-modal-overlay {
+  position: fixed; inset: 0; z-index: 100; background: var(--overlay); backdrop-filter: var(--glass-blur);
+  display: none; align-items: center; justify-content: center; padding: 20px;
+}
+.fp-modal-overlay.show { display: flex; }
+.fp-modal {
+  background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  width: min(640px, 100%); max-height: 90vh; overflow-y: auto; padding: 20px;
+  box-shadow: var(--shadow-lg);
+}
+.fp-modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.fp-modal-head h3 { font-size: 15px; font-weight: 600; color: var(--text); }
+.fp-modal-close {
+  width: 30px; height: 30px; border-radius: 8px; background: var(--surface-2); color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; line-height: 1;
+}
+.fp-modal-close:hover { background: var(--surface-3); color: var(--text); }
+.fp-modal-foot { margin-top: 16px; display: flex; justify-content: flex-end; gap: 8px; }
+.fp-modal-foot button {
+  padding: 8px 16px; border-radius: var(--radius-sm); font-size: 13px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
+}
+.fp-modal-foot button.primary { background: var(--brand); color: #fff; border-color: var(--brand); }
+.fp-modal-foot button:hover { opacity: .9; }
+
+/* ============================================================
+   V27 — Tippy 主题
+   ============================================================ */
+.tippy-box[data-theme~='translucent'] {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  backdrop-filter: var(--glass-blur);
+  color: var(--text);
+  font-size: 12px;
+  box-shadow: var(--shadow-md);
+  border-radius: 8px;
+}
+.tippy-box[data-theme~='translucent'] > .tippy-arrow { color: var(--surface); }
+
+/* ============================================================
+   V27 — 对比模式 Slider 增强
+   ============================================================ */
+.compare-mode-bar {
+  display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+  background: var(--surface); border-radius: var(--radius-sm); margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.compare-mode-bar .cm-label { font-size: 12px; color: var(--text-muted); }
+.compare-mode-bar button {
+  padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted);
+}
+.compare-mode-bar button.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+.compare-slider-wrap {
+  position: relative; width: min(900px, 100%); user-select: none; overflow: hidden;
+  border-radius: var(--radius-md); border: 1px solid var(--border); background: #000;
+}
+.compare-slider-wrap img {
+  display: block; max-width: 100%; max-height: 78vh; user-select: none; pointer-events: none;
+}
+.compare-slider-after {
+  position: absolute; top: 0; left: 0; height: 100%; overflow: hidden;
+  width: 50%; border-right: 2px solid var(--brand);
+}
+.compare-slider-after img { max-width: none; height: 100%; }
+.compare-slider-handle {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 36px; height: 36px; border-radius: 50%; background: var(--brand);
+  display: flex; align-items: center; justify-content: center; color: #fff; cursor: ew-resize;
+  top: 50%; margin-top: -18px; box-shadow: var(--shadow-md); z-index: 5;
+}
+.compare-slider-handle svg { width: 18px; height: 18px; }
+.compare-slider-range {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 100%;
+  position: absolute; top: 0; left: 0; opacity: 0; cursor: ew-resize; margin: 0;
+}
+.compare-label-tag {
+  position: absolute; top: 8px; padding: 2px 8px; border-radius: 4px;
+  background: rgba(0,0,0,.6); color: #fff; font-size: 11px; z-index: 4;
+}
+.compare-label-tag.before { left: 8px; }
+.compare-label-tag.after { right: 8px; }
+
+/* ============================================================
+   V27 — 批量导出 ZIP 选择列表
+   ============================================================ */
+.batch-export-list {
+  max-height: 280px; overflow-y: auto; margin: 10px 0;
+  border: 1px solid var(--border-soft); border-radius: 8px; padding: 6px; background: var(--surface-2);
+}
+.batch-export-item {
+  display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 6px; cursor: pointer;
+  font-size: 12px; color: var(--text-muted);
+}
+.batch-export-item:hover { background: var(--surface-3); }
+.batch-export-item input { margin: 0; }
+.batch-export-item .be-thumb { width: 32px; height: 32px; border-radius: 4px; object-fit: cover; background: var(--surface-3); }
+.batch-export-item .be-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.batch-export-item .be-meta { color: var(--text-dim); font-size: 11px; }
+.batch-export-toolbar { display: flex; gap: 8px; margin-bottom: 8px; }
+.batch-export-toolbar button {
+  padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted);
+}
+.batch-export-progress { font-size: 11px; color: var(--text-muted); margin-top: 8px; min-height: 16px; }
+
 </style>
+<!-- V27 — 第三方库 CSS (FilePond) -->
+<link href="https://cdn.jsdelivr.net/npm/filepond@4.31.0/dist/filepond.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.min.css" rel="stylesheet">
 </head>
 <body>
 
@@ -1509,10 +1631,10 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
         </button>
       </div>
       <div class="workflow-row">
-        <button class="workflow-btn" id="batchGenBtn" title="批量生成：同提示词提交到多个模型">
+        <button class="workflow-btn" id="batchGenBtn" data-tooltip="批量生成：同提示词提交到多个模型 (Ctrl/⌘+G)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>批量生成
         </button>
-        <button class="workflow-btn" id="batchExportBtn" title="批量导出所有成功结果 URL">
+        <button class="workflow-btn" id="batchExportBtn" data-tooltip="批量导出所有成功结果 URL / ZIP (Ctrl/⌘+B)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>批量导出
         </button>
       </div>
@@ -1675,7 +1797,7 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
     <div class="settings-section">
       <h4>关于</h4>
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V26.9.7<br>
+        修的媒体工作台 V27<br>
         支持图片、视频、音频生成<br>
         API: api.wuyinkeji.com
       </div>
@@ -1923,6 +2045,16 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
   撤销回填
 </button>
+
+<!-- V27 — 第三方库 JS (按顺序加载，主脚本之前) -->
+<script src="https://cdn.jsdelivr.net/npm/filepond@4.31.0/dist/filepond.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/filepond-plugin-file-validate-type@1.2.8/dist/filepond-plugin-file-validate-type.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/dist/tippy-bundle.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dexie@4.0.10/dist/dexie.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
 <script>
 'use strict';
@@ -2382,6 +2514,8 @@ const Store = {
     if (arr.length > 500) arr.length = 500;
     storageSet(CONFIG.STORAGE_KEYS.HISTORY, JSON.stringify(arr));
   },
+  // V27: saveHistory — bulk replace history array (used by cloud sync merge)
+  saveHistory(arr) { storageSet(CONFIG.STORAGE_KEYS.HISTORY, JSON.stringify(Array.isArray(arr) ? arr : [])); },
   toggleFavorite(id) {
     const arr = this.getHistory();
     const h = arr.find(x => x.id === id);
@@ -2444,6 +2578,99 @@ const Store = {
   setTaskCenterUrl(v) { storageSet(CONFIG.STORAGE_KEYS.TASK_CENTER_URL, v); },
   getTaskCenterToken() { return storageGet(CONFIG.STORAGE_KEYS.TASK_CENTER_TOKEN); },
   setTaskCenterToken(v) { storageSet(CONFIG.STORAGE_KEYS.TASK_CENTER_TOKEN, v); }
+};
+
+/* ============================================================
+   V27 — Dexie/IndexedDB 封装 (历史 & 任务持久化)
+   仅用于 history/tasks；其它存储仍走 localStorage
+   ============================================================ */
+const IDB = (() => {
+  let DB = null;
+  function ensure() {
+    if (DB) return DB;
+    if (typeof Dexie === 'undefined') return null;
+    try {
+      DB = new Dexie('AiWorkbench');
+      DB.version(1).stores({
+        history: 'id, createdAt, model.type, status',
+        tasks: 'id, createdAt, status'
+      });
+    } catch (e) { console.warn('[V27-IDB] init failed:', e); DB = null; }
+    return DB;
+  }
+  return {
+    available() { return !!ensure(); },
+    async getHistory() {
+      const db = ensure(); if (!db) return null;
+      try { return await db.history.toArray(); } catch { return null; }
+    },
+    async saveHistory(arr) {
+      const db = ensure(); if (!db) return false;
+      try { await db.history.clear(); if (arr && arr.length) await db.history.bulkAdd(arr); return true; } catch (e) { console.warn('[V27-IDB] saveHistory:', e); return false; }
+    },
+    async addHistory(item) {
+      const db = ensure(); if (!db) return false;
+      try { await db.history.put(item); return true; } catch (e) { console.warn('[V27-IDB] addHistory:', e); return false; }
+    },
+    async clearHistory() {
+      const db = ensure(); if (!db) return false;
+      try { await db.history.clear(); return true; } catch { return false; }
+    },
+    async getTasks() {
+      const db = ensure(); if (!db) return null;
+      try { return await db.tasks.toArray(); } catch { return null; }
+    },
+    async saveTasks(arr) {
+      const db = ensure(); if (!db) return false;
+      try { await db.tasks.clear(); if (arr && arr.length) await db.tasks.bulkAdd(arr); return true; } catch (e) { console.warn('[V27-IDB] saveTasks:', e); return false; }
+    },
+    async addTask(item) {
+      const db = ensure(); if (!db) return false;
+      try { await db.tasks.put(item); return true; } catch { return false; }
+    },
+    async delTask(id) {
+      const db = ensure(); if (!db) return false;
+      try { await db.tasks.delete(id); return true; } catch { return false; }
+    }
+  };
+})();
+
+/* Store 扩展：async 包装，优先用 IndexedDB；失败回退 localStorage */
+Store.useIDB = (typeof Dexie !== 'undefined');
+Store._idbReady = false; // 首次异步加载完成后置 true
+
+// 一次性同步 IDB ↔ localStorage（首次启用）
+Store._syncToIDB = async function() {
+  if (!this.useIDB) return;
+  try {
+    const existing = this.getHistory();
+    if (existing && existing.length) {
+      const idbArr = await IDB.getHistory();
+      if (!idbArr || !idbArr.length) await IDB.saveHistory(existing);
+    }
+    const existingTasks = this.getTasks();
+    if (existingTasks && existingTasks.length) {
+      const idbArr = await IDB.getTasks();
+      if (!idbArr || !idbArr.length) await IDB.saveTasks(existingTasks);
+    }
+    this._idbReady = true;
+  } catch (e) { console.warn('[V27-IDB] sync failed:', e); }
+};
+
+// 异步版本（UI 等异步操作可调用）
+Store.getHistoryAsync = async function() {
+  if (this.useIDB) {
+    const arr = await IDB.getHistory();
+    if (arr) return arr;
+  }
+  return this.getHistory();
+};
+Store.getTasksAsync = async function() {
+  if (this.useIDB) {
+    const arr = await IDB.getTasks();
+    if (arr) return arr;
+  }
+  return this.getTasks();
 };
 
 /* ============================================================
@@ -3441,6 +3668,10 @@ const UI = {
   _generating: false,
   // V56: Pipeline state — tracks the active pipeline task and step progress
   _pipeline: { active: null, steps: [] },
+  // V27: Preload cache for results — keyed by URL, FIFO eviction at 5 entries
+  _preloadCache: new Map(),
+  // V27: History cloud sync debounce timer
+  _historySyncTimer: null,
 
   /* ---------- INIT ---------- */
   init() {
@@ -3456,9 +3687,175 @@ const UI = {
     this.renderHistoryBadge();
     this._bindMobileViewSwitch();
     // V56: init TaskCenter (async, non-blocking; falls back to local polling)
+    // V27: after TaskCenter connects, pull cloud history to merge with local
     if (typeof TaskCenter !== 'undefined') {
-      TaskCenter.init().catch(() => {});
+      TaskCenter.init().then(ok => {
+        if (ok && TaskCenter.isAvailable()) {
+          this._syncHistoryFromCloud().catch(() => {});
+        }
+      }).catch(() => {});
     }
+    // V27: 初始化新增 UI 特性
+    this._initV27Features();
+  },
+
+  /* ============================================================
+     V27 — 新增 UI 特性统一初始化
+     ============================================================ */
+  _initV27Features() {
+    // 1) 异步同步 IDB（不阻塞主流程）
+    if (Store.useIDB) {
+      Store._syncToIDB().catch(() => {});
+    }
+    // 2) 注册 FilePond 插件（若已加载）
+    if (typeof FilePond !== 'undefined') {
+      try {
+        if (typeof FilePondPluginImagePreview !== 'undefined') FilePond.registerPlugin(FilePondPluginImagePreview);
+        if (typeof FilePondPluginFileValidateType !== 'undefined') FilePond.registerPlugin(FilePondPluginFileValidateType);
+      } catch (e) { console.warn('[V27] FilePond plugin register failed:', e); }
+    }
+    // 3) 初始化 Tippy 工具提示
+    this._initTooltips();
+    // 4) 文件加载完毕后再次初始化（防止 CDN 延迟）
+    window.addEventListener('load', () => {
+      this._initTooltips();
+      // 重新渲染当前 ref 网格以激活 Sortable
+      if (this.state && this.state.model) {
+        (this.state.model.params || []).forEach(p => {
+          if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') {
+            try { this._renderRefGrid(p.key); } catch {}
+          }
+        });
+      }
+    });
+  },
+
+  /* V27 — Tippy 工具提示 */
+  _initTooltips() {
+    if (typeof tippy === 'undefined') return;
+    try {
+      tippy('[data-tooltip]', {
+        content: (el) => el.dataset.tooltip || '',
+        theme: 'translucent',
+        arrow: true,
+        delay: [200, 0],
+        allowHTML: false
+      });
+    } catch (e) { /* ignore */ }
+  },
+
+  /* V27 — FilePond 文件选择模态 */
+  _openFilePondPicker(opts) {
+    // opts: { key, accept, multiple, title, onAdd(file), maxFiles }
+    if (typeof FilePond === 'undefined') return false; // 不可用，调用方走 fallback
+    const overlay = document.createElement('div');
+    overlay.className = 'fp-modal-overlay show';
+    overlay.innerHTML = `
+      <div class="fp-modal">
+        <div class="fp-modal-head">
+          <h3>${esc(opts.title || '选择文件')}</h3>
+          <div class="fp-modal-close" data-act="close">×</div>
+        </div>
+        <div class="fp-modal-body"></div>
+        <div class="fp-modal-foot">
+          <button data-act="cancel">取消</button>
+          <button class="primary" data-act="done">完成（0）</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    const body = overlay.querySelector('.fp-modal-body');
+    const doneBtn = overlay.querySelector('[data-act="done"]');
+    const input = document.createElement('input');
+    input.type = 'file';
+    if (opts.accept) input.accept = opts.accept;
+    if (opts.multiple) input.multiple = true;
+    body.appendChild(input);
+    const collected = new Map(); // FilePond item id -> native File
+    let pond = null;
+    try {
+      pond = FilePond.create(input, {
+        allowMultiple: !!opts.multiple,
+        maxFiles: opts.maxFiles || (opts.multiple ? 14 : 1),
+        acceptedFileTypes: opts.accept ? opts.accept.split(',').map(s => s.trim().replace('/*', '/')).filter(Boolean) : null,
+        imagePreviewHeight: 80,
+        storeAsFile: true,
+        instantUpload: false,
+        credits: false,
+        labelIdle: '拖放文件或 <span class="filepond--label-action">浏览</span>',
+        labelTapToCancel: '点击取消',
+        labelFileProcessing: '处理中',
+        labelFileLoadError: '加载失败',
+        beforeAddFile: (fileItem) => {
+          // 收集文件，不立即触发回调
+          try {
+            if (fileItem && fileItem.file) {
+              collected.set(fileItem.id, fileItem.file);
+              doneBtn.textContent = `完成（${collected.size}）`;
+            }
+          } catch (e) { console.warn('[V27-FilePond] beforeAddFile:', e); }
+          return true;
+        }
+      });
+      // 监听文件移除事件
+      pond.on = pond.on || (() => {}); // 兜底
+      try { pond.on('removefile', (err, fileItem) => {
+        if (fileItem && fileItem.id) {
+          collected.delete(fileItem.id);
+          doneBtn.textContent = `完成（${collected.size}）`;
+        }
+      }); } catch {}
+    } catch (e) {
+      console.warn('[V27-FilePond] init failed:', e);
+      // 失败回退到原生 input
+      overlay.remove();
+      return false;
+    }
+    const close = () => {
+      try { if (pond) FilePond.destroy(input); } catch {}
+      overlay.remove();
+    };
+    overlay.querySelector('[data-act="close"]').addEventListener('click', close);
+    overlay.querySelector('[data-act="cancel"]').addEventListener('click', close);
+    doneBtn.addEventListener('click', () => {
+      // 点击完成：触发 onAdd 回调
+      const files = Array.from(collected.values());
+      if (files.length && typeof opts.onAdd === 'function') {
+        files.forEach(f => { try { opts.onAdd(f); } catch (e) { console.warn('[V27-FilePond] onAdd:', e); } });
+      }
+      if (typeof opts.onDone === 'function') opts.onDone(files);
+      close();
+    });
+    overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
+    return true;
+  },
+
+  /* V27 — Sortable 初始化（ref-grid 拖拽排序） */
+  _initSortable(grid, key) {
+    if (typeof Sortable === 'undefined') return;
+    if (!grid || grid._sortableInit) return;
+    try {
+      Sortable.create(grid, {
+        animation: 200,
+        filter: '.ref-add, .ref-del, .ref-copy',
+        preventOnFilter: false,
+        draggable: '.ref-item',
+        onEnd: (evt) => {
+          if (evt.oldIndex === evt.newIndex) return;
+          // 仅按 .ref-item 的 DOM 顺序重排数据，不重新渲染（DOM 已是正确顺序）
+          const items = Array.from(grid.querySelectorAll('.ref-item'));
+          const refs = this._getRefs(key);
+          if (!refs || !refs.length) return;
+          const newOrder = items.map(el => refs.find(r => r.id === el.dataset.rid)).filter(Boolean);
+          if (newOrder.length === refs.length) {
+            refs.length = 0;
+            refs.push(...newOrder);
+            this._updateEstimate();
+          }
+        }
+      });
+      grid._sortableInit = true;
+    } catch (e) { console.warn('[V27-Sortable] init failed:', e); }
   },
 
   _startTitleTimer() {
@@ -3473,7 +3870,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V26.9.7';
+      document.title = '修的媒体工作台 V27';
     }
   },
 
@@ -3777,6 +4174,8 @@ const UI = {
     this._renderAllRefGrids();
     this._updateEstimate();
     this.renderPresets();
+    // V27 — 重新初始化 Tippy 工具提示（新表单元素）
+    this._initTooltips();
   },
 
   _buildRefModeSection(model) {
@@ -3842,19 +4241,34 @@ const UI = {
       fileInput.multiple = param.output !== 'single';
       fileInput.style.display = 'none';
       fileInput.addEventListener('change', e => {
-        for (const f of e.target.files) {
-          if (param.type === 'ref-video') this._addLocalVideoRef(key, f);
-          else if (param.type === 'ref-audio') this._addLocalAudioRef(key, f);
-          else this._addLocalRef(key, f);
-        }
+        // V27: Upload multiple selected files in parallel via Promise.all
+        const files = Array.from(e.target.files);
         fileInput.value = '';
+        const uploadPromises = files.map(f => {
+          if (param.type === 'ref-video') return this._addLocalVideoRef(key, f);
+          else if (param.type === 'ref-audio') return this._addLocalAudioRef(key, f);
+          else return this._addLocalRef(key, f);
+        });
+        Promise.all(uploadPromises).catch(() => {});
       });
       refSection.appendChild(fileInput);
       const refGrid = refSection.querySelector('.ref-grid');
       refGrid.addEventListener('click', e => {
         if (e.target.closest('.ref-del') || e.target.closest('.ref-copy') || e.target.closest('.ref-item')) return;
         this.state.activeRefKey = key;
-        fileInput.click();
+        // V27: 优先使用 FilePond 模态；失败回退原生 input
+        const accept = param.type === 'ref-video' ? 'video/*' : param.type === 'ref-audio' ? 'audio/*' : 'image/*';
+        const multiple = param.output !== 'single';
+        const title = param.type === 'ref-video' ? '选择视频' : param.type === 'ref-audio' ? '选择音频' : '选择图片';
+        const used = this._openFilePondPicker({
+          key, accept, multiple, title,
+          onAdd: (f) => {
+            if (param.type === 'ref-video') this._addLocalVideoRef(key, f);
+            else if (param.type === 'ref-audio') this._addLocalAudioRef(key, f);
+            else this._addLocalRef(key, f);
+          }
+        });
+        if (!used) fileInput.click();
       });
       refGrid.addEventListener('pointerdown', () => { this.state.activeRefKey = key; }, true);
     });
@@ -3965,12 +4379,15 @@ const UI = {
     fileInput.multiple = p.output !== 'single';
     fileInput.style.display = 'none';
     fileInput.addEventListener('change', e => {
-      for (const f of e.target.files) {
-        if (p.type === 'ref-video') this._addLocalVideoRef(p.key, f);
-        else if (p.type === 'ref-audio') this._addLocalAudioRef(p.key, f);
-        else this._addLocalRef(p.key, f);
-      }
+      // V27: Upload multiple selected files in parallel via Promise.all
+      const files = Array.from(e.target.files);
       fileInput.value = '';
+      const uploadPromises = files.map(f => {
+        if (p.type === 'ref-video') return this._addLocalVideoRef(p.key, f);
+        else if (p.type === 'ref-audio') return this._addLocalAudioRef(p.key, f);
+        else return this._addLocalRef(p.key, f);
+      });
+      Promise.all(uploadPromises).catch(() => {});
     });
     wrap.appendChild(fileInput);
     const grid = wrap.querySelector('.ref-grid');
@@ -4189,35 +4606,41 @@ const UI = {
   },
 
   _addLocalRef(key, file) {
-    if (file.size > 10 * 1024 * 1024) { Toast.error('图片不能超过 10MB'); return; }
-    const reader = new FileReader();
-    reader.onload = e => {
-      const item = { id: genId(), kind: 'local', src: e.target.result, name: file.name, uploaded: false, remote: null };
-      this._getRefs(key).push(item);
-      this._renderRefGrid(key);
-      this._uploadLocalImage(key, item);
-    };
-    reader.readAsDataURL(file);
+    if (file.size > 10 * 1024 * 1024) { Toast.error('图片不能超过 10MB'); return Promise.resolve(); }
+    // V27: Return a Promise that resolves after upload completes, so callers can use Promise.all for parallel uploads
+    return new Promise(resolve => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const item = { id: genId(), kind: 'local', src: e.target.result, name: file.name, uploaded: false, remote: null };
+        this._getRefs(key).push(item);
+        this._renderRefGrid(key);
+        this._uploadLocalImage(key, item).then(resolve, () => resolve());
+      };
+      reader.onerror = () => resolve();
+      reader.readAsDataURL(file);
+    });
   },
 
   _addLocalVideoRef(key, file) {
-    if (file.size > 100 * 1024 * 1024) { Toast.error('视频不能超过 100MB'); return; }
+    if (file.size > 100 * 1024 * 1024) { Toast.error('视频不能超过 100MB'); return Promise.resolve(); }
     const url = URL.createObjectURL(file);
     const item = { id: genId(), kind: 'local-video', src: url, name: file.name, uploaded: false, remote: null, file };
     this._getRefs(key).push(item);
     this._renderRefGrid(key);
     this._updateRefVideoWarn(key);
-    this._uploadLocalVideo(key, item);
+    // V27: Return upload promise for parallel batching
+    return this._uploadLocalVideo(key, item).catch(() => {});
   },
 
   _addLocalAudioRef(key, file) {
-    if (file.size > 50 * 1024 * 1024) { Toast.error('音频不能超过 50MB'); return; }
+    if (file.size > 50 * 1024 * 1024) { Toast.error('音频不能超过 50MB'); return Promise.resolve(); }
     const url = URL.createObjectURL(file);
     const item = { id: genId(), kind: 'local-audio', src: url, name: file.name, uploaded: false, remote: null, file };
     this._getRefs(key).push(item);
     this._renderRefGrid(key);
     this._updateRefAudioWarn(key);
-    this._uploadLocalAudio(key, item);
+    // V27: Return upload promise for parallel batching
+    return this._uploadLocalAudio(key, item).catch(() => {});
   },
 
   _addUrlRef(key, url) {
@@ -4327,6 +4750,8 @@ const UI = {
     grid.querySelectorAll('[data-copy-url]').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); const r = refs.find(x => x.id === btn.dataset.copyUrl); if (r && r.remote) { copy(r.remote).then(ok => ok ? Toast.success('URL 已复制') : Toast.error('复制失败')); } }));
     grid.querySelectorAll('.ref-item').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); const r = refs.find(x => x.id === el.dataset.rid); if (r && r.remote) { if (r.kind.includes('video')) this._openLightbox([r.remote], 0, true); else if (!r.kind.includes('audio')) this._openLightbox([r.remote], 0, false); } }));
     this._updateEstimate();
+    // V27 — Sortable 拖拽排序
+    if (refs.length > 1) this._initSortable(grid, key);
   },
 
   _updateRefVideoWarn(key) {
@@ -4924,17 +5349,28 @@ const UI = {
       this.playSuccessSound();
       this.notifyTaskComplete(task);
       Toast.success(`${task.model.name} 生成完成`);
+      // V27: Preload result blob in background for instant download
+      this._preloadResult(task).catch(() => {});
+      // V27: Auto-archive result to R2 for permanent storage (only if TaskCenter available)
+      if (task.result?.url && TaskCenter.isAvailable()) {
+        this._archiveResult(task).catch(() => {});
+      }
+      // V27: Debounced history sync to cloud
+      this._scheduleHistorySync();
     } else if (result.status === 'failed') {
       task.status = 'failed';
       task.error = result.error;
       task.completedAt = Date.now();
       Store.addHistory({ id: task.id, model: task.model, prompt: task.prompt, body: task.body, status: 'failed', error: result.error, createdAt: task.createdAt, completedAt: task.completedAt });
       Toast.error(`${task.model.name} 生成失败`);
+      // V27: Debounced history sync to cloud (sync failure status too)
+      this._scheduleHistorySync();
     } else if (result.status === 'timeout') {
       task.status = 'timeout';
       task.completedAt = Date.now();
       Store.addHistory({ id: task.id, model: task.model, prompt: task.prompt, body: task.body, status: 'timeout', createdAt: task.createdAt, completedAt: task.completedAt });
       Toast.warning(`${task.model.name} 生成超时`);
+      this._scheduleHistorySync();
     }
     const remaining = tasks.filter(t => t.id !== taskId);
     Store.saveTasks(remaining);
@@ -4944,26 +5380,144 @@ const UI = {
     this._renderResultStrip();
     this.renderHistoryBadge();
     this._updateTitle();
-    // V56: async generate thumbnail after successful result
-    if (task.result?.url && !task.result.thumbUrl) {
+    // V27: Thumbnail generation wiring — skip audio (no visual thumbnail)
+    if (task.result?.url && task.model?.type !== 'audio') {
       ThumbService.ensureThumb(task).then(thumbUrl => {
         if (thumbUrl && thumbUrl !== task.result.url) {
           task.result.thumbUrl = thumbUrl;
-          // Update persisted history record
+          // Update in store (active task list — may already be removed, hence the guard)
+          const tasksArr = Store.getTasks();
+          const t = tasksArr.find(x => x.id === task.id);
+          if (t) { t.result = task.result; Store.saveTasks(tasksArr); }
+          // Update in history
           const hist = Store.getHistory();
           const h = hist.find(x => x.id === task.id);
-          if (h) {
-            h.result = h.result || {};
-            h.result.thumbUrl = thumbUrl;
-            storageSet(CONFIG.STORAGE_KEYS.HISTORY, JSON.stringify(hist));
-          }
+          if (h) { h.result = task.result; Store.saveHistory(hist); }
           this._updateTaskCard(task);
           this._renderResultStrip();
           // Refresh history sidebar if open
           if ($('#historySidebar')?.classList.contains('show')) this.renderHistory();
         }
-      }).catch(() => {});
+      }).catch(() => {}); // silent fail
     }
+  },
+
+  /* ---------- V27: Result Preload ---------- */
+  // Background-fetch result blob and cache in _preloadCache (keyed by URL) for instant download.
+  // FIFO eviction at 5 entries to bound memory usage.
+  async _preloadResult(task) {
+    try {
+      const url = task.result?.url;
+      if (!url) return;
+      // Don't preload data: URLs or local blob URLs
+      if (!/^https?:\/\//.test(url)) return;
+      // Already cached
+      if (this._preloadCache.has(url)) return;
+      const res = await fetch(url, { mode: 'cors' });
+      if (!res.ok) return;
+      const blob = await res.blob();
+      // LRU-ish eviction: keep at most 5 entries (oldest first by insertion order)
+      while (this._preloadCache.size >= 5) {
+        const firstKey = this._preloadCache.keys().next().value;
+        if (firstKey === undefined) break;
+        this._preloadCache.delete(firstKey);
+      }
+      this._preloadCache.set(url, blob);
+    } catch (e) { /* silent fail */ }
+  },
+
+  /* ---------- V27: History R2 Sync ---------- */
+  // Debounced upload of local history to cloud (30s after last change).
+  _scheduleHistorySync() {
+    if (!TaskCenter.isAvailable()) return;
+    clearTimeout(this._historySyncTimer);
+    this._historySyncTimer = setTimeout(() => {
+      this._syncHistoryToCloud().catch(() => {});
+    }, 30000);
+  },
+
+  // Pull cloud history and merge with local (union by id, prefer newer completedAt).
+  async _syncHistoryFromCloud() {
+    try {
+      if (!TaskCenter.isAvailable()) return;
+      const url = TaskCenter.workerUrl + '/userdata?history&token=' + encodeURIComponent(TaskCenter.token);
+      const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.data) return;
+      const local = Store.getHistory();
+      const cloud = Array.isArray(data.data) ? data.data : [];
+      const merged = this._mergeHistory(local, cloud);
+      Store.saveHistory(merged);
+      this._renderTaskList();
+    } catch (e) { /* silent fail */ }
+  },
+
+  // Union local + cloud by id; prefer the record with newer completedAt.
+  _mergeHistory(local, cloud) {
+    const map = new Map();
+    for (const h of [...local, ...cloud]) {
+      if (!h || !h.id) continue;
+      const existing = map.get(h.id);
+      if (!existing || (h.completedAt || 0) > (existing.completedAt || 0)) {
+        map.set(h.id, h);
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  },
+
+  // Upload local history to cloud (limited to 500 most recent).
+  async _syncHistoryToCloud() {
+    if (!TaskCenter.isAvailable()) return;
+    try {
+      const history = Store.getHistory();
+      const url = TaskCenter.workerUrl + '/userdata?history&token=' + encodeURIComponent(TaskCenter.token);
+      await fetch(url, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(history.slice(0, 500))
+      });
+    } catch (e) { /* silent fail */ }
+  },
+
+  /* ---------- V27: Result Auto-Archive to R2 ---------- */
+  // Copy the temporary result URL to permanent R2 storage via the Worker /archive endpoint.
+  // On success, replace task.result.url with the permanent URL (original kept in .originalUrl).
+  async _archiveResult(task) {
+    try {
+      const url = task.result?.url;
+      if (!url) return;
+      // Skip if already archived (URL points to R2 worker domain)
+      const workerBase = Store.getR2WorkerUrl();
+      if (workerBase && url.startsWith(workerBase.replace(/\/$/, ''))) return;
+      // Skip data/blob URLs
+      if (!/^https?:\/\//.test(url)) return;
+      const ext = url.match(/\.(png|jpe?g|webp|mp4|mp3|wav|webm)(\?|$)/i)?.[1]?.toLowerCase() || 'png';
+      const archiveUrl = TaskCenter.workerUrl + '/archive?token=' + encodeURIComponent(TaskCenter.token) + '&url=' + encodeURIComponent(url) + '&ext=' + ext;
+      const res = await fetch(archiveUrl, { method: 'POST', signal: AbortSignal.timeout(60000) });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.ok && data.url) {
+        // Replace result URL with permanent R2 URL
+        task.result.originalUrl = task.result.url;
+        task.result.url = data.url;
+        // Update store (active task list — may already be removed, hence the guard)
+        const tasks = Store.getTasks();
+        const t = tasks.find(x => x.id === task.id);
+        if (t) { t.result = task.result; Store.saveTasks(tasks); }
+        // Update history
+        const hist = Store.getHistory();
+        const h = hist.find(x => x.id === task.id);
+        if (h) { h.result = task.result; Store.saveHistory(hist); }
+        // Re-key preload cache so subsequent downloads still hit cache
+        if (this._preloadCache.has(task.result.originalUrl)) {
+          const blob = this._preloadCache.get(task.result.originalUrl);
+          this._preloadCache.delete(task.result.originalUrl);
+          this._preloadCache.set(task.result.url, blob);
+        }
+        this._updateTaskCard(task);
+      }
+    } catch (e) { /* silent fail */ }
   },
 
   updateTaskCardPhase(taskId, phase) {
@@ -5043,6 +5597,8 @@ const UI = {
         }
       });
     }
+    // V27 — 结果列表渲染后初始化 Tippy
+    this._initTooltips();
   },
 
   _bulkDeleteByFilter() {
@@ -5381,6 +5937,21 @@ const UI = {
 
   async _downloadFile(url, name) {
     if (!url) return;
+    // V27: Check preloaded cache first — instant download if blob already fetched
+    const cached = this._preloadCache?.get(url);
+    if (cached) {
+      try {
+        const objUrl = URL.createObjectURL(cached);
+        const a = document.createElement('a');
+        a.href = objUrl;
+        a.download = name || 'download';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(objUrl), 1000);
+        return;
+      } catch (e) { /* fall through to fetch */ }
+    }
     try {
       const res = await fetch(url, { mode: 'cors' });
       if (!res.ok) throw new Error('fetch failed: HTTP ' + res.status);
@@ -5457,8 +6028,98 @@ const UI = {
   _showCompareGrid() {
     if (!this.state.compareList.length) return;
     const inner = $('#compareGridInner');
-    inner.innerHTML = this.state.compareList.map((t, i) => `<div class="compare-cell"><span class="compare-label">${esc(t.model?.name || '')} #${i+1}</span><img src="${esc(t.result?.url)}"></div>`).join('');
+    const list = this.state.compareList;
+    // V27 — 默认并排模式，2 张图时提供 Slider 模式
+    const hasSliderMode = list.length === 2;
+    let modeBar = '';
+    if (hasSliderMode) {
+      modeBar = `<div class="compare-mode-bar">
+        <span class="cm-label">对比模式：</span>
+        <button data-cm-mode="side" class="active">并排</button>
+        <button data-cm-mode="slider">滑块对比</button>
+      </div>`;
+    }
+    inner.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:1200px">
+      ${modeBar}
+      <div id="compareContent" style="display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap">${this._renderCompareSide(list)}</div>
+    </div>`;
     $('#compareGrid').classList.add('show');
+    // V27 — 绑定模式切换
+    if (hasSliderMode) {
+      inner.querySelectorAll('[data-cm-mode]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          inner.querySelectorAll('[data-cm-mode]').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const mode = btn.dataset.cmMode;
+          const content = $('#compareContent');
+          if (!content) return;
+          if (mode === 'slider') {
+            content.style.flexDirection = 'column';
+            content.innerHTML = this._renderCompareSlider(list);
+            this._bindCompareSlider();
+          } else {
+            content.style.flexDirection = 'row';
+            content.innerHTML = this._renderCompareSide(list);
+          }
+        });
+      });
+    }
+  },
+
+  /* V27 — 并排对比渲染 */
+  _renderCompareSide(list) {
+    return list.map((t, i) => `<div class="compare-cell"><span class="compare-label">${esc(t.model?.name || '')} #${i+1}</span><img src="${esc(t.result?.url)}"></div>`).join('');
+  },
+
+  /* V27 — 滑块对比渲染（仅 2 张图） */
+  _renderCompareSlider(list) {
+    const a = list[0], b = list[1];
+    return `<div class="compare-slider-wrap" id="cmpSliderWrap">
+      <span class="compare-label-tag before">${esc(a.model?.name || '前')}</span>
+      <span class="compare-label-tag after">${esc(b.model?.name || '后')}</span>
+      <img id="cmpSliderBefore" src="${esc(a.result?.url)}" alt="before">
+      <div class="compare-slider-after" id="cmpSliderAfter">
+        <img id="cmpSliderAfterImg" src="${esc(b.result?.url)}" alt="after">
+      </div>
+      <div class="compare-slider-handle" id="cmpSliderHandle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/><polyline points="9 18 15 12 9 6" transform="translate(6 0)"/></svg>
+      </div>
+      <input type="range" min="0" max="100" value="50" class="compare-slider-range" id="cmpSliderRange" aria-label="对比滑块">
+    </div>`;
+  },
+
+  /* V27 — 滑块对比交互绑定 */
+  _bindCompareSlider() {
+    const wrap = $('#cmpSliderWrap');
+    const after = $('#cmpSliderAfter');
+    const handle = $('#cmpSliderHandle');
+    const range = $('#cmpSliderRange');
+    if (!wrap || !after || !handle || !range) return;
+    const update = (pct) => {
+      pct = Math.max(0, Math.min(100, pct));
+      after.style.width = pct + '%';
+      handle.style.left = pct + '%';
+    };
+    range.addEventListener('input', (e) => update(parseFloat(e.target.value)));
+    // 也支持直接拖拽 handle
+    let dragging = false;
+    const startDrag = (e) => { dragging = true; e.preventDefault(); };
+    const moveDrag = (e) => {
+      if (!dragging) return;
+      const rect = wrap.getBoundingClientRect();
+      const x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+      const pct = (x / rect.width) * 100;
+      update(pct);
+      range.value = pct;
+    };
+    const endDrag = () => { dragging = false; };
+    handle.addEventListener('mousedown', startDrag);
+    handle.addEventListener('touchstart', startDrag, { passive: false });
+    document.addEventListener('mousemove', moveDrag);
+    document.addEventListener('touchmove', moveDrag, { passive: false });
+    document.addEventListener('mouseup', endDrag);
+    document.addEventListener('touchend', endDrag);
+    update(50);
   },
 
   /* ---------- LIGHTBOX ---------- */
@@ -5685,13 +6346,89 @@ const UI = {
     const audioCount = succeeded.filter(h => h.model?.type === 'audio').length;
     let html = `<div style="margin-bottom:12px;padding:12px;background:var(--surface-2);border-radius:8px"><div style="font-size:13px;color:var(--text)"><strong>${succeeded.length}</strong> 个成功结果 · <strong>${sizeKB} KB</strong></div><div style="font-size:11px;color:var(--text-dim);margin-top:4px">图片 ${imageCount} · 视频 ${videoCount} · 音频 ${audioCount}</div></div>`;
     html += `<div style="max-height:200px;overflow-y:auto;background:var(--surface-2);border-radius:8px;padding:10px;font-family:var(--font-mono);font-size:11px;color:var(--text-muted);line-height:1.6;white-space:pre-wrap;word-break:break-all">${esc(text)}</div>`;
+    // V27 — ZIP 选择列表
+    if (typeof JSZip !== 'undefined') {
+      html += `<div style="margin-top:14px;font-size:12px;color:var(--text-muted);margin-bottom:6px">导出 ZIP：勾选要打包的文件</div>`;
+      html += `<div class="batch-export-toolbar"><button data-be-all>全选</button><button data-be-none>取消</button><button data-be-img>仅图片</button></div>`;
+      html += `<div class="batch-export-list" id="beList">${succeeded.map((h, i) => {
+        const type = h.model?.type || 'image';
+        const thumb = type === 'image' ? `<img class="be-thumb" src="${esc(h.result.url)}" loading="lazy" referrerpolicy="no-referrer">` : `<div class="be-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:10px">${type === 'video' ? 'V' : 'A'}</div>`;
+        return `<label class="batch-export-item" data-be-idx="${i}"><input type="checkbox" checked data-be-check="${i}">${thumb}<span class="be-name">${esc((h.model?.name || '') + ' · ' + (h.prompt || '').slice(0, 40))}</span><span class="be-meta">${type}</span></label>`;
+      }).join('')}</div>`;
+      html += `<div class="batch-export-progress" id="beProgress"></div>`;
+    }
     this._showModal('批量导出结果', html, [
       { label: '复制 URL', primary: true, fn: async () => { const ok = await copy(text); Toast[ok ? 'success' : 'error'](ok ? `已复制 ${urls.length} 个 URL` : '复制失败'); } },
       { label: '下载 txt', fn: () => { const blob = new Blob([text], { type: 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `results_${Date.now()}.txt`; a.click(); URL.revokeObjectURL(a.href); Toast.success('已下载 txt'); } },
       { label: 'HTML 画廊', fn: () => this._downloadHtmlGallery(succeeded) },
       { label: 'JSON 数据', fn: () => { const data = JSON.stringify(succeeded.map(h => ({ id: h.id, model: h.model?.name, modelId: h.model?.id, type: h.model?.type, prompt: h.prompt, body: h.body, status: h.status, resultUrl: h.result?.url, createdAt: h.createdAt, completedAt: h.completedAt, cost: h.cost })), null, 2); const blob = new Blob([data], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `results_${Date.now()}.json`; a.click(); URL.revokeObjectURL(a.href); Toast.success('已下载 JSON'); } },
+      { label: '下载 ZIP', fn: () => this._downloadZip(succeeded) },
       { label: '关闭', fn: () => this._closeModal() }
     ]);
+    // V27 — 绑定选择列表交互
+    if (typeof JSZip !== 'undefined') {
+      const list = $('#beList');
+      const toolbar = list?.previousElementSibling;
+      toolbar?.querySelector('[data-be-all]')?.addEventListener('click', () => list.querySelectorAll('input[type=checkbox]').forEach(c => c.checked = true));
+      toolbar?.querySelector('[data-be-none]')?.addEventListener('click', () => list.querySelectorAll('input[type=checkbox]').forEach(c => c.checked = false));
+      toolbar?.querySelector('[data-be-img]')?.addEventListener('click', () => list.querySelectorAll('label').forEach((lab, i) => {
+        const h = succeeded[i]; const c = lab.querySelector('input'); if (c) c.checked = h?.model?.type === 'image';
+      }));
+    }
+  },
+
+  /* V27 — ZIP 下载（基于勾选列表） */
+  async _downloadZip(allItems) {
+    if (typeof JSZip === 'undefined') { Toast.warning('JSZip 未加载，无法打包 ZIP'); return; }
+    const checks = document.querySelectorAll('#beList input[type=checkbox]');
+    const selected = checks.length ? allItems.filter((_, i) => checks[i]?.checked) : allItems;
+    if (!selected.length) { Toast.warning('请至少勾选一项'); return; }
+    const prog = $('#beProgress');
+    const setProg = (msg) => { if (prog) prog.textContent = msg; };
+    setProg('准备打包...');
+    const zip = new JSZip();
+    const usedNames = new Set();
+    const ts = Date.now();
+    let okCount = 0, failCount = 0;
+    for (let i = 0; i < selected.length; i++) {
+      const h = selected[i];
+      setProg(`下载 ${i + 1}/${selected.length}：${(h.model?.name || '').slice(0, 20)}...`);
+      try {
+        const res = await fetch(h.result.url, { mode: 'cors', credentials: 'omit' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const blob = await res.blob();
+        const type = h.model?.type || 'image';
+        const ext = type === 'video' ? 'mp4' : type === 'audio' ? 'mp3' : (blob.type.split('/')[1] || 'bin').split(';')[0];
+        const modelId = (h.model?.id || 'model').replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 24);
+        let baseName = `${modelId}_${new Date(h.createdAt || ts).toISOString().slice(0, 19).replace(/[:T]/g, '-')}.${ext}`;
+        let name = baseName, n = 1;
+        while (usedNames.has(name)) { name = baseName.replace(/\.([^.]+)$/, `_${n}.$1`); n++; }
+        usedNames.add(name);
+        zip.file(name, blob);
+        okCount++;
+      } catch (e) {
+        console.warn('[V27-ZIP] fetch failed:', h.result.url, e);
+        failCount++;
+      }
+    }
+    if (!okCount) { setProg('打包失败：没有可下载的文件'); Toast.error('所有文件下载失败（可能因 CORS 限制）'); return; }
+    setProg('压缩中...');
+    try {
+      const blob = await zip.generateAsync({ type: 'blob', compression: 'STORE' }, (meta) => {
+        setProg(`压缩 ${meta.percent.toFixed(0)}%`);
+      });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `results_${ts}.zip`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      setProg(`完成：成功 ${okCount} · 失败 ${failCount}`);
+      Toast.success(`已下载 ZIP（${okCount} 个文件${failCount ? `，${failCount} 个失败` : ''}）`);
+    } catch (e) {
+      console.error('[V27-ZIP] generate failed:', e);
+      setProg('压缩失败');
+      Toast.error('ZIP 压缩失败：' + e.message);
+    }
   },
 
   _downloadHtmlGallery(items) {
@@ -6101,8 +6838,12 @@ ${items.map(h => {
         return;
       }
       e.preventDefault();
-      for (const f of imageFiles) this._addLocalRef(targetKey, f);
-      for (const f of videoFiles) this._addLocalVideoRef(targetKey, f);
+      // V27: Upload pasted images & videos in parallel via Promise.all
+      const pastePromises = [
+        ...imageFiles.map(f => this._addLocalRef(targetKey, f)),
+        ...videoFiles.map(f => this._addLocalVideoRef(targetKey, f))
+      ];
+      Promise.all(pastePromises).catch(() => {});
       if (text.trim() && /^https?:\/\/\S+$/i.test(text.trim())) this._addUrlRef(targetKey, text.trim());
     });
   },
@@ -6154,10 +6895,19 @@ ${items.map(h => {
       if (!param) return;
       const url = e.dataTransfer.getData('text/plain');
       if (url && /^https?:\/\//.test(url)) { this._addUrlRef(key, url); return; }
-      for (const f of e.dataTransfer.files) {
-        if (param.type === 'ref-video' && f.type.startsWith('video/')) this._addLocalVideoRef(key, f);
-        else if (param.type === 'ref-image' && f.type.startsWith('image/')) this._addLocalRef(key, f);
-      }
+      // V27: Upload dropped files in parallel via Promise.all; also handle ref-audio drops
+      const dropPromises = Array.from(e.dataTransfer.files)
+        .filter(f =>
+          (param.type === 'ref-video' && f.type.startsWith('video/')) ||
+          (param.type === 'ref-image' && f.type.startsWith('image/')) ||
+          (param.type === 'ref-audio' && f.type.startsWith('audio/'))
+        )
+        .map(f => {
+          if (param.type === 'ref-video') return this._addLocalVideoRef(key, f);
+          if (param.type === 'ref-audio') return this._addLocalAudioRef(key, f);
+          return this._addLocalRef(key, f);
+        });
+      Promise.all(dropPromises).catch(() => {});
     });
   },
 
@@ -6697,4 +7447,4 @@ document.addEventListener('DOMContentLoaded', () => UI.init());
 </script>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
