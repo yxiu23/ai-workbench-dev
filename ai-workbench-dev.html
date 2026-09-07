@@ -5811,17 +5811,29 @@ const UI = {
         if (!val || !String(val).trim()) return { ok: false, error: '缺 ' + param.label };
       }
     }
-    // needs 校验: 上一步 provides 必须匹配 needs[0], 或者用户手动上传
+    // userInput 校验: 若 userInput.key 不在 needs 中(附加输入), 则必须上传
+    // 若 userInput.key 在 needs 中(替代输入), 则可由上步提供或用户上传
+    if (mod.userInput) {
+      const isAlternative = mod.needs && mod.needs.includes(mod.userInput.key);
+      if (!isAlternative) {
+        const has = item._userInput && item._userInput[mod.userInput.key];
+        if (!has) return { ok: false, error: '需上传' + mod.userInput.label };
+      }
+    }
+    // needs 校验: 上一步 provides 必须匹配 needs[0], 或者用户手动上传(替代模式)
     if (mod.needs && mod.needs.length) {
       const needKey = mod.needs[0];
       const hasUserInput = mod.userInput && item._userInput && item._userInput[mod.userInput.key];
       if (hasUserInput) {
-        return { ok: true };
+        // 替代模式: 用户已上传, 无需上步
+        // 继续校验其他必填项, 但 needs 已满足
+      } else if (i === 0) {
+        return { ok: false, error: '需上传' + (mod.userInput ? mod.userInput.label : needKey) };
+      } else {
+        const prev = this._PIPELINE_MODULES.find(m => m.id === p.chain[i - 1].moduleId);
+        if (!prev) return { ok: false, error: '无上一步' };
+        if (prev.provides !== needKey) return { ok: false, error: '上步需提供 ' + needKey };
       }
-      if (i === 0) return { ok: false, error: '需上传' + (mod.userInput ? mod.userInput.label : needKey) };
-      const prev = this._PIPELINE_MODULES.find(m => m.id === p.chain[i - 1].moduleId);
-      if (!prev) return { ok: false, error: '无上一步' };
-      if (prev.provides !== needKey) return { ok: false, error: '上步需提供 ' + needKey };
     }
     return { ok: true };
   },
