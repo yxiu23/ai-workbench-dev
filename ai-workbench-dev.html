@@ -1599,7 +1599,6 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
     <!-- 参数表单容器 (由 JS 动态渲染) -->
     <div id="paramForm" style="display:flex;flex-direction:column;gap:14px;"></div>
 
-    <!-- V56: 流水线面板 (pipeline tab) -->
 
     <!-- 生成操作区 -->
     <div class="generate-section">
@@ -3369,7 +3368,6 @@ TaskCenter.on('progress', payload => {
       const phase = payload.phase || payload.status || '处理中';
       UI.updateTaskCardPhase(payload.taskId, phase);
     }
-    // V56: update pipeline step UI if this is a pipeline progress event
     if (UI._updatePipelineFromEvent && payload.steps) {
       UI._updatePipelineFromEvent(payload);
     }
@@ -3648,7 +3646,6 @@ const UI = {
   _currentModelId: null,
   _titleTimer: null,
   _generating: false,
-  // V56: Pipeline state — tracks the active pipeline task and step progress
   _preloadCache: new Map(),
   // V27: History cloud sync debounce timer
   _historySyncTimer: null,
@@ -4970,7 +4967,6 @@ const UI = {
       if (!workerId) throw new Error('任务中心未返回任务 ID');
       // Register with TaskCenter so polling picks it up
       TaskCenter._submitted.set(taskId, { task: { id: taskId }, lastStatus: 'processing', startTime: Date.now(), workerId: String(workerId), isPipeline: true });
-      // Initialize pipeline UI state
                     { status: 'active', startedAt: Date.now() },
         { status: 'pending' },
         { status: 'pending' },
@@ -4978,10 +4974,8 @@ const UI = {
       ];
       this._renderPipelineSteps();
       Toast.success('流水线已提交到任务中心');
-      // Save to history as a pipeline task
       const fakeTask = {
         id: taskId,
-        model: { id: 'pipeline', name: '流水线', type: 'video', price: '组合计费' },
         body: payload,
         prompt: state.tts,
         status: 'processing',
@@ -5003,7 +4997,6 @@ const UI = {
     }
   },
 
-  // Update pipeline step UI from a worker progress event
 
   async _rerunPipelineStep(stepIdx) {
     if (!    if (!TaskCenter.isAvailable()) { Toast.warning('任务中心未连接'); return; }
