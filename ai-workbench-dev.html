@@ -1490,15 +1490,25 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
    V27 — Tippy 主题
    ============================================================ */
 .tippy-box[data-theme~='translucent'] {
-  background: var(--surface);
+  background: var(--bg-elev);
   border: 1px solid var(--border);
-  backdrop-filter: var(--glass-blur);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
   color: var(--text);
   font-size: 12px;
-  box-shadow: var(--shadow-md);
-  border-radius: 8px;
+  font-weight: 500;
+  line-height: 1.5;
+  padding: 2px 4px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.12), 0 1px 4px rgba(0,0,0,.06);
+  border-radius: 10px;
+  transition: transform .2s cubic-bezier(.34,.72,.24,1), opacity .2s ease;
 }
-.tippy-box[data-theme~='translucent'] > .tippy-arrow { color: var(--surface); }
+.tippy-box[data-theme~='translucent'] > .tippy-content { padding: 6px 10px; }
+.tippy-box[data-theme~='translucent'] > .tippy-arrow { color: var(--bg-elev); transform: scale(.85); }
+.tippy-box[data-theme~='translucent'][data-placement^='top'] > .tippy-arrow { bottom: -6px; }
+.tippy-box[data-theme~='translucent'][data-placement^='bottom'] > .tippy-arrow { top: -6px; }
+.tippy-box[data-theme~='translucent'][data-placement^='left'] > .tippy-arrow { right: -6px; }
+.tippy-box[data-theme~='translucent'][data-placement^='right'] > .tippy-arrow { left: -6px; }
 
 /* ============================================================
    V27 — 对比模式 Slider 增强
@@ -2813,6 +2823,9 @@ const Api = {
   },
 
   // P0-2: 升级 http:// 的 OSS/aliyuncs 域名为 https://，避免混合内容拦截
+  _uploadCache: new Map(),
+  getCachedUpload(dataUrl) { return this._uploadCache.get(dataUrl); },
+  setCachedUpload(dataUrl, url) { this._uploadCache.set(dataUrl, url); if (this._uploadCache.size > 100) { const first = this._uploadCache.keys().next().value; this._uploadCache.delete(first); } },
   fixUrl(url) {
     if (typeof url !== 'string') return url;
     return url.replace(/^http:\/\/(wywxopenai\.oss[^/]+|[^/]*aliyuncs\.com)\//i, 'https://$1/');
@@ -4672,9 +4685,13 @@ const UI = {
 
   async _uploadLocalImage(key, item) {
     try {
+      // 检查缓存：如果这张图已经上传过，直接复用URL
+      const cached = Api.getCachedUpload(item.src);
+      if (cached) { item.remote = cached; item.uploaded = true; this._renderRefGrid(key); Toast.info('参考图已缓存，跳过上传'); return; }
       const blob = Api.dataUrlToBlob(item.src);
       const file = new File([blob], item.name, { type: blob.type });
       const url = await Api.uploadToR2(file, pct => this._updateRefProgress(key, item.id, pct));
+      Api.setCachedUpload(item.src, url); // 缓存上传结果
       item.remote = url; item.uploaded = true;
       this._renderRefGrid(key);
     } catch (e) { item.uploadError = e.message; this._renderRefGrid(key); Toast.warning(`图片上传失败：${e.message}，点击重试`); }
@@ -5081,6 +5098,17 @@ const UI = {
         <div class="ref-grid" id="plBaseGrid" data-ref-grid="plBase" style="margin-top:6px"></div>
         <input type="file" id="plFileInput" accept="image/*,video/*" style="display:none">
       </div>
+      <div class="param-group" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px 12px">
+        <div class="field-label">流水线模块<span class="field-hint">勾选要执行的步骤，按顺序执行</span></div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px" id="plModules">
+          ${this._PIPELINE_MODULES.map(m => `<label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;padding:6px 8px;border-radius:6px;background:var(--surface-2)">
+            <input type="checkbox" data-module="${m.id}" ${['tts','digitalHuman','package'].includes(m.id) ? 'checked' : ''} style="width:auto;margin:0">
+            <span style="font-size:14px">${m.icon}</span>
+            <span>${m.title}</span>
+            <span style="color:var(--text-dim);font-size:10px;margin-left:auto">${m.type}</span>
+          </label>`).join('')}
+        </div>
+      </div>
       <div class="pipeline-steps" id="plSteps"></div>
     `;
     // Bind events
@@ -5090,6 +5118,13 @@ const UI = {
     $('#plPackage').addEventListener('change', e => { state.package = e.target.value; this._updatePipelineEstimate(); });
     // 底片上传：复用ref-grid展示逻辑
     this._renderPipelineBaseGrid();
+    // 模块选择
+    document.querySelectorAll('[data-module]').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const modules = Array.from(document.querySelectorAll('[data-module]:checked')).map(c => c.dataset.module);
+        state.modules = modules;
+      });
+    });
     $('#plFileInput').addEventListener('change', async e => {
       const file = e.target.files[0];
       if (!file) return;
@@ -5219,26 +5254,22 @@ const UI = {
     try {
       const taskId = genId();
       // 构建流水线步骤数组（Worker要求steps非空）
-      const steps = [
-        {
-          seq: 1, type: 'tts', model: 'audio_tts', modelType: 'audio',
-          endpoint: '/api/async/audio_tts',
-          body: { text: state.tts, voice_id: state.voice, speed: state.speed, vol: 1, language_boost: 'auto' },
-          needs: []
-        },
-        {
-          seq: 2, type: 'digitalHuman', model: 'digital_humans', modelType: 'video',
-          endpoint: '/api/async/video_digital_humans',
-          body: { videoName: '口播_' + Date.now(), audioUrl: null, videoUrl: state.baseImage },
-          needs: ['audioUrl']
-        },
-        {
-          seq: 3, type: 'package', model: 'video_package', modelType: 'video',
-          endpoint: '/api/async/video_package',
-          body: { video: null, template_id: state.package },
-          needs: ['rawVideoUrl']
-        }
-      ];
+      // 模块化流水线：根据用户选择的模块构建steps
+      const selectedModules = state.modules || ['tts', 'digitalHuman', 'package'];
+      const steps = selectedModules.map((modId, i) => {
+        const mod = this._PIPELINE_MODULES.find(m => m.id === modId);
+        if (!mod) return null;
+        return {
+          seq: i + 1,
+          type: mod.id,
+          model: mod.id === 'tts' ? 'audio_tts' : mod.id === 'digitalHuman' ? 'digital_humans' : mod.id === 'package' ? 'video_package' : 'video_processing',
+          modelType: mod.type,
+          endpoint: mod.endpoint,
+          body: mod.buildBody(state, {}),
+          needs: mod.needs,
+          provides: mod.provides || null
+        };
+      }).filter(Boolean);
       const payload = {
         kind: 'pipeline',
         steps: steps,
@@ -5440,7 +5471,7 @@ const UI = {
   async _syncHistoryFromCloud() {
     try {
       if (!TaskCenter.isAvailable()) return;
-      const url = TaskCenter.workerUrl + '/userdata?history&token=' + encodeURIComponent(TaskCenter.token);
+      const url = TaskCenter.workerUrl + '/userdata?key=history&token=' + encodeURIComponent(TaskCenter.token);
       const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
       if (!res.ok) return;
       const data = await res.json();
@@ -5471,7 +5502,7 @@ const UI = {
     if (!TaskCenter.isAvailable()) return;
     try {
       const history = Store.getHistory();
-      const url = TaskCenter.workerUrl + '/userdata?history&token=' + encodeURIComponent(TaskCenter.token);
+      const url = TaskCenter.workerUrl + '/userdata?key=history&token=' + encodeURIComponent(TaskCenter.token);
       await fetch(url, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
