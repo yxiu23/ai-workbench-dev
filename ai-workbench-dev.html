@@ -191,7 +191,7 @@ textarea { resize: vertical; min-height: 80px; }
 .model-select {
   width: 100%; padding: 8px 32px 8px 10px; font-size: 14px; font-weight: 600; color: var(--text);
   background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%239aa5c0' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org字/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%239aa5c0' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 10px center; -webkit-appearance: none; appearance: none;
   outline: none; transition: border-color var(--transition);
 }
@@ -218,7 +218,7 @@ textarea { resize: vertical; min-height: 80px; }
 .prompt-actions select {
   width: auto; min-width: 110px; padding: 5px 24px 5px 8px; font-size: 12px;
   background: var(--surface-2); border-radius: var(--radius-sm); cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%239aa5c0' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org字/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%239aa5c0' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 8px center; -webkit-appearance: none; appearance: none;
 }
 .preset-trigger {
@@ -465,7 +465,7 @@ textarea { resize: vertical; min-height: 80px; }
 .sort-select {
   padding: 6px 24px 6px 8px; font-size: 12px; width: auto; min-width: 110px;
   background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%239aa5c0' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org字/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%239aa5c0' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 8px center; -webkit-appearance: none; appearance: none;
   color: var(--text-muted); transition: all var(--transition);
 }
@@ -1378,7 +1378,7 @@ input[type="range"].im-range {
 body::before {
   content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
   opacity: .015; mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org字/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
 }
 .param-panel, .result-panel { position: relative; z-index: 1; }
 
@@ -3852,11 +3852,11 @@ const UI = {
           <button class="prompt-save-btn" id="savePresetBtn" title="保存为预设">＋</button>
         </div>
       </div>
-      <textarea data-key="${esc(key)}" placeholder="${esc(promptParam.placeholder || '描述你想要生成的内容...')}" maxlength="2000">${esc(defVal)}</textarea>
+      <textarea data-key="${esc(key)}" placeholder="${esc(promptParam.placeholder || '描述你想要生成的内容...')}" >${esc(defVal)}</textarea>
       <div class="prompt-tools">
         <button class="tool-btn" data-action="recent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>最近</button>
         <button class="tool-btn" data-action="clear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>清空</button>
-        <span class="prompt-count" data-count>0/2000</span>
+        <span class="prompt-count" data-count>0字</span>
       </div>
       <div class="prompt-history-list" id="phList"></div>
     `;
