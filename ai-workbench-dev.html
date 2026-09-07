@@ -578,16 +578,6 @@ textarea { resize: vertical; min-height: 80px; }
 .queue-panel .qp-label { font-size: 11px; color: var(--text-dim); }
 .queue-panel .qp-val { font-size: 14px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
 
-/* V58: 流水线进度条 — 单行横向，4个节点灯 */
-.pipeline-steps {
-  display: flex; align-items: center; gap: 0; margin-bottom: 16px;
-  padding: 10px 16px; background: var(--surface-2); border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-}
-.pipeline-step {
-  display: flex; flex-direction: column; align-items: center; gap: 4px;
-  flex: 1; position: relative; padding: 0 4px;
-}
 /* Connecting line between steps */
 .pipeline-step:not(:last-child)::after {
   content: ''; position: absolute; top: 11px; left: 50%; width: 100%; height: 2px;
@@ -771,7 +761,7 @@ textarea { resize: vertical; min-height: 80px; }
 .compare-bar .compare-clear { color: var(--text-muted); }
 .compare-grid {
   position: fixed; inset: 0; z-index: 200; display: none;
-  background: rgba(0,0,0,.92); backdrop-filter: blur(8px);
+  background: rgba(0,0,0,.55); backdrop-filter: blur(12px);
   align-items: center; justify-content: center; padding: 20px;
 }
 .compare-grid.show { display: flex; }
@@ -1614,9 +1604,6 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
       <button class="tab" data-tab="audio">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1v-7h3v5zM3 19a2 2 0 0 0 2 2h1v-7H3v5z"/></svg>音频
       </button>
-      <button class="tab" data-tab="pipeline">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="6" r="2"/><circle cx="5" cy="18" r="2"/><circle cx="19" cy="12" r="2"/><line x1="7" y1="6" x2="17" y2="11"/><line x1="7" y1="18" x2="17" y2="13"/></svg>流水线
-      </button>
     </div>
 
     <!-- 模型选择 -->
@@ -1630,7 +1617,6 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
     <div id="paramForm" style="display:flex;flex-direction:column;gap:14px;"></div>
 
     <!-- V56: 流水线面板 (pipeline tab) -->
-    <div id="pipelinePanel" style="display:none;flex-direction:column;gap:14px;padding:14px;overflow-y:auto;"></div>
 
     <!-- 生成操作区 -->
     <div class="generate-section">
@@ -3680,8 +3666,6 @@ const UI = {
   _titleTimer: null,
   _generating: false,
   // V56: Pipeline state — tracks the active pipeline task and step progress
-  _pipeline: { active: null, steps: [] },
-  // V27: Preload cache for results — keyed by URL, FIFO eviction at 5 entries
   _preloadCache: new Map(),
   // V27: History cloud sync debounce timer
   _historySyncTimer: null,
@@ -4055,25 +4039,19 @@ const UI = {
 
   /* ---------- TABS ---------- */
   switchTab(tab) {
-    if (!MODELS[tab] && tab !== 'pipeline') return;
+    if (!MODELS[tab]) return;
     this._saveFormToCache();
     this.state.tab = tab;
     $$('#tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-    // V56: Pipeline tab — render pipeline panel, hide model/param form
-    if (tab === 'pipeline') {
-      $('#paramForm').style.display = 'none';
-      $('#pipelinePanel').style.display = 'flex'; $('#pipelinePanel').style.flexDirection = 'column'; $('#pipelinePanel').style.gap = '14px';
-      $('.model-select-wrap').style.display = 'none';
-      this.state.model = null;
-      this.state.modelKey = 'pipeline';
-      this._renderPipelineForm();
-      return;
+    $('#paramForm').style.display = 'flex';
+    $('#paramForm').style.flexDirection = 'column';
+    $('#paramForm').style.gap = '14px';
+    $('.model-select-wrap').style.display = '';
     }
     $('#paramForm').style.display = 'flex';
     $('#paramForm').style.flexDirection = 'column';
     $('#paramForm').style.gap = '14px';
-    $('#pipelinePanel').style.display = 'none';
-    $('.model-select-wrap').style.display = '';
+        $('.model-select-wrap').style.display = '';
     const model = MODELS[tab][0];
     this.state.model = model;
     this.state.modelKey = `${tab}/${model.id}`;
@@ -4914,8 +4892,7 @@ const UI = {
 
   /* ---------- ESTIMATE ---------- */
   _updateEstimate() {
-    if (this.state.tab === 'pipeline') { this._updatePipelineEstimate(); return; }
-    if (!this.state.model) { $('#estimateCost').textContent = '预计 —'; return; }
+        if (!this.state.model) { $('#estimateCost').textContent = '预计 —'; return; }
     let body;
     try { body = this._collectParamsSync(); } catch { $('#estimateCost').textContent = '预计 —'; return; }
     const est = calcEstimate(this.state.model, body);
@@ -4926,11 +4903,6 @@ const UI = {
 
   /* ---------- GENERATE ---------- */
   async handleGenerate() {
-    // V56: Pipeline tab uses its own submit flow
-    if (this.state.tab === 'pipeline') return this._submitPipeline();
-    const key = Store.getApiKey();
-    if (!key) { Toast.error('请先在设置中填入 API Key'); this._openSettings(); return; }
-    if (!this._checkBudget()) return;
     if (this._generating) { Toast.warning('正在生成中，请稍候'); return; }
     this._generating = true;
     const btn = $('#generateBtn');
@@ -5000,262 +4972,13 @@ const UI = {
 
   _buildCurrentTask() {
     try {
-      if (this.state.tab === 'pipeline' || !this.state.model) return null;
+      if (!this.state.model) return null;
       const body = this._collectParamsSync();
       const prompt = body.prompt || body.text || '';
       return { model: this.state.model, body, prompt };
     } catch { return null; }
   },
 
-  /* ---------- V56: PIPELINE ---------- */
-  _PIPELINE_VOICES: [
-    { id: 'zh_female_qingxin', label: '清新女声' },
-    { id: 'zh_male_xiaoming', label: '小明男声' },
-    { id: 'zh_female_linjia', label: '邻家女声' },
-    { id: 'zh_male_yangguang', label: '阳光男声' },
-    { id: 'zh_female_mengmeng', label: '萌萌女声' },
-    { id: 'zh_male_chengshu', label: '成熟男声' },
-    { id: 'zh_female_wenrou', label: '温柔女声' },
-    { id: 'zh_male_zhishang', label: '知性男声' }
-  ],
-  _PIPELINE_PACKAGES: [
-    { id: 'product_intro', label: '产品介绍' },
-    { id: 'short_drama', label: '短剧片段' },
-    { id: 'news_anchor', label: '新闻播报' },
-    { id: 'live_promo', label: '直播带货' },
-    { id: 'tutorial', label: '教程讲解' }
-  ],
-  _PIPELINE_STEP_DEFS: [
-    { key: 'tts', title: '文本→音频', costPerChar: 0.0006 },
-    { key: 'digital_human', title: '数字人', costPerSec: 0.02 },
-    { key: 'package', title: '包装模板', costPerSec: 0.02 },
-    { key: 'compose', title: '成品合成', costPerSec: 0 }
-  ],
-
-  _renderPipelineForm() {
-    const panel = $('#pipelinePanel');
-    if (!panel) return;
-    const state = this.state.pipeline = this.state.pipeline || {};
-    state.tts = state.tts || '';
-    state.voice = state.voice || this._PIPELINE_VOICES[0].id;
-    state.speed = state.speed != null ? state.speed : 1.0;
-    state.package = state.package || this._PIPELINE_PACKAGES[0].id;
-    state.baseImage = state.baseImage || '';
-    panel.innerHTML = `
-      <div class="param-group" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px 12px">
-        <div class="field-row"><div class="field-label">口播文本<span class="field-hint">TTS 输入</span></div>
-          <textarea id="plTts" placeholder="输入要合成的口播文本..." style="min-height:80px;font-size:13px;line-height:1.6;resize:vertical">${esc(state.tts)}</textarea>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="param-group" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px 12px">
-          <div class="field-label">音色</div>
-          <select id="plVoice">${this._PIPELINE_VOICES.map(v => `<option value="${esc(v.id)}" ${v.id === state.voice ? 'selected' : ''}>${esc(v.label)}</option>`).join('')}</select>
-        </div>
-        <div class="param-group" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px 12px">
-          <div class="field-row"><div class="field-label">语速<span class="field-val" id="plSpeedVal">${state.speed.toFixed(1)}×</span></div>
-            <div class="range-row"><input type="range" id="plSpeed" min="0.5" max="2" step="0.1" value="${state.speed}"></div>
-          </div>
-        </div>
-      </div>
-      <div class="param-group" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px 12px">
-        <div class="field-label">包装模板</div>
-        <select id="plPackage">${this._PIPELINE_PACKAGES.map(p => `<option value="${esc(p.id)}" ${p.id === state.package ? 'selected' : ''}>${esc(p.label)}</option>`).join('')}</select>
-      </div>
-      <div class="param-group" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px 12px">
-        <div class="field-label">底片选择<span class="field-hint">数字人形象视频（≥10秒）</span></div>
-        <div class="ref-grid" id="plBaseGrid" data-ref-grid="plBase" style="margin-top:6px"></div>
-        <input type="file" id="plFileInput" accept="image/*,video/*" style="display:none">
-      </div>
-      <div class="param-group" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:10px 12px">
-        <div class="field-label">流水线模块<span class="field-hint">勾选要执行的步骤，按顺序执行</span></div>
-        <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px" id="plModules">
-          ${this._PIPELINE_MODULES.map(m => `<label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;padding:6px 8px;border-radius:6px;background:var(--surface-2)">
-            <input type="checkbox" data-module="${m.id}" ${['tts','digitalHuman','package'].includes(m.id) ? 'checked' : ''} style="width:auto;margin:0">
-            <span style="font-size:14px">${m.icon}</span>
-            <span>${m.title}</span>
-            <span style="color:var(--text-dim);font-size:10px;margin-left:auto">${m.type}</span>
-          </label>`).join('')}
-        </div>
-      </div>
-      <div class="pipeline-steps" id="plSteps"></div>
-    `;
-    // Bind events
-    $('#plTts').addEventListener('input', e => { state.tts = e.target.value; this._updatePipelineEstimate(); });
-    $('#plVoice').addEventListener('change', e => { state.voice = e.target.value; });
-    $('#plSpeed').addEventListener('input', e => { state.speed = parseFloat(e.target.value); $('#plSpeedVal').textContent = state.speed.toFixed(1) + '×'; });
-    $('#plPackage').addEventListener('change', e => { state.package = e.target.value; this._updatePipelineEstimate(); });
-    // 底片上传：复用ref-grid展示逻辑
-    this._renderPipelineBaseGrid();
-    // 模块选择
-    document.querySelectorAll('[data-module]').forEach(cb => {
-      cb.addEventListener('change', () => {
-        const modules = Array.from(document.querySelectorAll('[data-module]:checked')).map(c => c.dataset.module);
-        state.modules = modules;
-      });
-    });
-    $('#plFileInput').addEventListener('change', async e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const isVideo = /^video\//.test(file.type);
-      try {
-        Toast.info('底片上传中...');
-        if (isVideo) {
-          if (file.size > 100 * 1024 * 1024) { Toast.error('视频不能超过 100MB'); return; }
-          const url = URL.createObjectURL(file);
-          state._baseLocal = { src: url, name: file.name, file, uploaded: false, remote: null, uploadError: null };
-          this._renderPipelineBaseGrid();
-          const r2url = await Api.uploadToR2(file);
-          state._baseLocal.remote = r2url; state._baseLocal.uploaded = true; state.baseImage = r2url;
-          this._renderPipelineBaseGrid();
-          Toast.success('底片已上传');
-        } else {
-          if (file.size > 10 * 1024 * 1024) { Toast.error('图片不能超过 10MB'); return; }
-          const reader = new FileReader();
-          reader.onload = async ev => {
-            state._baseLocal = { src: ev.target.result, name: file.name, uploaded: false, remote: null, uploadError: null };
-            this._renderPipelineBaseGrid();
-            try {
-              const r2url = await Api.uploadToR2(file);
-              state._baseLocal.remote = r2url; state._baseLocal.uploaded = true; state.baseImage = r2url;
-              this._renderPipelineBaseGrid();
-              Toast.success('底片已上传');
-            } catch (err) { state._baseLocal.uploadError = err.message; this._renderPipelineBaseGrid(); Toast.error('上传失败: ' + err.message); }
-          };
-          reader.readAsDataURL(file);
-        }
-      } catch (err) { Toast.error('上传失败: ' + err.message); }
-      e.target.value = '';
-    });
-    this._renderPipelineSteps();
-    this._updatePipelineEstimate();
-  },
-
-  _updatePipelineEstimate() {
-    const state = this.state.pipeline || {};
-    const charLen = (state.tts || '').length;
-    // Assume ~3 chars/sec for Chinese TTS — rough duration estimate
-    const estDuration = Math.max(1, Math.ceil(charLen / 3));
-    const ttsCost = charLen * 0.0006;
-    const videoCost = estDuration * 0.02;
-    const packageCost = estDuration * 0.02;
-    const total = ttsCost + videoCost + packageCost;
-    const el = $('#estimateCost');
-    if (el) el.innerHTML = `预计 <span class="amount">¥${total.toFixed(4)}</span> · 文本 ${charLen}字 × ¥0.0006 + 视频 ${estDuration}s × ¥0.02 + 包装 ${estDuration}s × ¥0.02`;
-  },
-
-  _renderPipelineBaseGrid() {
-    const grid = $('#plBaseGrid');
-    if (!grid) return;
-    const state = this.state.pipeline || {};
-    const base = state._baseLocal;
-    // 如果已有底片（URL或本地上传）
-    if (base && (base.src || base.remote)) {
-      const isUploading = !base.uploaded && !base.uploadError;
-      const isUploadError = !!base.uploadError;
-      let badge = '';
-      if (isUploading) badge = '<span class="ref-badge uploading">上传中</span>';
-      else if (isUploadError) badge = '<span class="ref-badge" style="background:var(--danger-soft);color:var(--danger)">失败</span>';
-      const localBadge = (!base.uploaded && !isUploadError) ? '<span class="ref-badge local">本地</span>' : (isUploadError ? badge : '');
-      const progressHtml = isUploading ? '<div class="ref-upload-progress"><div class="ref-upload-bar" style="width:0%"></div></div><span class="ref-upload-pct">0%</span>' : '';
-      const isVideo = /\.(mp4|webm|mov|avi)(\?|$)/i.test(base.src || base.remote || '');
-      const media = isVideo ? `<video src="${esc(base.src || base.remote)}" muted></video>` : `<img src="${esc(base.src || base.remote)}" loading="lazy" referrerpolicy="no-referrer">`;
-      grid.innerHTML = `<div class="ref-item ${isVideo ? 'ref-item-video' : ''}">${media}${localBadge}${progressHtml}<button class="ref-del" id="plBaseDel">×</button><button class="ref-copy" id="plBaseCopy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>`;
-      $('#plBaseDel').addEventListener('click', () => {
-        if (base.src && base.src.startsWith('blob:')) URL.revokeObjectURL(base.src);
-        state._baseLocal = null; state.baseImage = '';
-        this._renderPipelineBaseGrid();
-      });
-      $('#plBaseCopy').addEventListener('click', () => {
-        if (base.remote) copy(base.remote).then(ok => ok ? Toast.success('URL 已复制') : Toast.error('复制失败'));
-        else Toast.warning('底片正在上传中');
-      });
-    } else if (state.baseImage) {
-      // 只有URL，没有本地文件
-      const isVideo = /\.(mp4|webm|mov|avi)(\?|$)/i.test(state.baseImage);
-      const media = isVideo ? `<video src="${esc(state.baseImage)}" muted></video>` : `<img src="${esc(state.baseImage)}" loading="lazy" referrerpolicy="no-referrer">`;
-      grid.innerHTML = `<div class="ref-item ${isVideo ? 'ref-item-video' : ''}">${media}<button class="ref-del" id="plBaseDel">×</button><button class="ref-copy" id="plBaseCopy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>`;
-      $('#plBaseDel').addEventListener('click', () => { state.baseImage = ''; this._renderPipelineBaseGrid(); });
-      $('#plBaseCopy').addEventListener('click', () => copy(state.baseImage).then(ok => ok ? Toast.success('URL 已复制') : Toast.error('复制失败')));
-    } else {
-      // 空状态：显示添加按钮（与其他模式一致的ref-add样式）
-      grid.innerHTML = `<div class="ref-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加</div>`;
-      grid.querySelector('.ref-add').addEventListener('click', () => $('#plFileInput').click());
-    }
-  },
-
-  _renderPipelineSteps() {
-    const wrap = $('#plSteps');
-    if (!wrap) return;
-    const steps = this._pipeline.steps || [];
-    const defs = this._PIPELINE_STEP_DEFS;
-    wrap.innerHTML = defs.map((def, i) => {
-      const st = steps[i] || { status: 'pending' };
-      const cls = st.status === 'done' ? 'done' : st.status === 'active' ? 'active' : st.status === 'error' ? 'error' : '';
-      const icon = st.status === 'done' ? '✓' : st.status === 'active' ? '…' : st.status === 'error' ? '!' : String(i + 1);
-      const meta = st.elapsed ? fmtDur(st.elapsed) : (st.status === 'pending' ? '等待' : '处理中');
-      const rerunBtn = st.status === 'done' ? `<button class="ps-rerun" data-rerun-step="${i}">重跑</button>` : '';
-      return `<div class="pipeline-step ${cls}">
-        <div class="ps-icon">${icon}</div>
-        <div class="ps-title">${esc(def.title)}</div>
-        <div class="ps-meta">${meta}</div>
-        ${rerunBtn}
-      </div>`;
-    }).join('');
-    wrap.querySelectorAll('[data-rerun-step]').forEach(btn => {
-      btn.addEventListener('click', () => this._rerunPipelineStep(parseInt(btn.dataset.rerunStep, 10)));
-    });
-  },
-
-  async _submitPipeline() {
-    const state = this.state.pipeline = this.state.pipeline || {};
-    if (!state.tts || !state.tts.trim()) { Toast.warning('请输入口播文本'); return; }
-    if (!state.baseImage) { Toast.warning('请选择底片'); return; }
-    if (!TaskCenter.isAvailable()) {
-      Toast.warning('流水线需要任务中心支持，请先在设置中配置任务中心');
-      this._openSettings();
-      return;
-    }
-    if (this._generating) { Toast.warning('正在生成中，请稍候'); return; }
-    this._generating = true;
-    const btn = $('#generateBtn');
-    btn.disabled = true; $('#generateBtnText').textContent = '提交中...';
-    try {
-      const taskId = genId();
-      // 构建流水线步骤数组（Worker要求steps非空）
-      // 模块化流水线：根据用户选择的模块构建steps
-      const selectedModules = state.modules || ['tts', 'digitalHuman', 'package'];
-      const steps = selectedModules.map((modId, i) => {
-        const mod = this._PIPELINE_MODULES.find(m => m.id === modId);
-        if (!mod) return null;
-        return {
-          seq: i + 1,
-          type: mod.id,
-          model: mod.id === 'tts' ? 'audio_tts' : mod.id === 'digitalHuman' ? 'digital_humans' : mod.id === 'package' ? 'video_package' : 'video_processing',
-          modelType: mod.type,
-          endpoint: mod.endpoint,
-          body: mod.buildBody(state, {}),
-          needs: mod.needs,
-          provides: mod.provides || null
-        };
-      }).filter(Boolean);
-      const payload = {
-        kind: 'pipeline',
-        steps: steps,
-        prompt: state.tts,
-        baseImage: state.baseImage
-      };
-      // Submit via TaskCenter with pipeline kind
-      // Use direct fetch to keep payload control
-      const url = TaskCenter.workerUrl + '/task?token=' + encodeURIComponent(TaskCenter.token);
-      const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), 20000);
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        signal: ctrl.signal
-      });
       clearTimeout(t);
       const text = await res.text();
       let data; try { data = text ? JSON.parse(text) : {}; } catch { data = { raw: text }; }
@@ -5265,9 +4988,7 @@ const UI = {
       // Register with TaskCenter so polling picks it up
       TaskCenter._submitted.set(taskId, { task: { id: taskId }, lastStatus: 'processing', startTime: Date.now(), workerId: String(workerId), isPipeline: true });
       // Initialize pipeline UI state
-      this._pipeline.active = { id: taskId, workerId: String(workerId), startedAt: Date.now() };
-      this._pipeline.steps = [
-        { status: 'active', startedAt: Date.now() },
+                    { status: 'active', startedAt: Date.now() },
         { status: 'pending' },
         { status: 'pending' },
         { status: 'pending' }
@@ -5300,33 +5021,14 @@ const UI = {
   },
 
   // Update pipeline step UI from a worker progress event
-  _updatePipelineFromEvent(payload) {
-    if (!this._pipeline.active) return;
-    const steps = payload.steps || [];
-    if (!steps.length) return;
-    this._pipeline.steps = steps.map((s, i) => {
-      const prev = this._pipeline.steps[i] || {};
-      return {
-        status: s.status || 'pending',
-        startedAt: s.startedAt || prev.startedAt,
-        elapsed: s.elapsed,
-        result: s.result || prev.result
-      };
-    });
-    this._renderPipelineSteps();
-  },
 
   async _rerunPipelineStep(stepIdx) {
-    if (!this._pipeline.active) { Toast.warning('当前没有运行的流水线'); return; }
-    if (!TaskCenter.isAvailable()) { Toast.warning('任务中心未连接'); return; }
+    if (!    if (!TaskCenter.isAvailable()) { Toast.warning('任务中心未连接'); return; }
     try {
-      const url = TaskCenter.workerUrl + '/task/' + encodeURIComponent(this._pipeline.active.workerId) + '/rerun?token=' + encodeURIComponent(TaskCenter.token) + '&step=' + stepIdx;
-      const res = await fetch(url, { method: 'POST' });
+      const url = TaskCenter.workerUrl + '/task/' + encodeURIComponent(      const res = await fetch(url, { method: 'POST' });
       if (res.ok) {
         Toast.success(`已请求重跑第 ${stepIdx + 1} 步`);
-        if (this._pipeline.steps[stepIdx]) {
-          this._pipeline.steps[stepIdx] = { status: 'active', startedAt: Date.now() };
-          this._renderPipelineSteps();
+        if (                    this._renderPipelineSteps();
         }
       } else {
         Toast.error('重跑请求失败');
@@ -6466,56 +6168,6 @@ ${items.map(h => {
   },
 
   /* ---------- BATCH GENERATION ---------- */
-  _openBatchGenerate() {
-    const promptTa = $('[data-key="prompt"], [data-key="text"]');
-    const prompt = promptTa?.value?.trim() || '';
-    if (!prompt) { Toast.warning('请先输入提示词'); promptTa?.focus(); return; }
-    // Collect all models across tabs
-    const allModels = [];
-    ['image', 'video', 'audio'].forEach(tab => { MODELS[tab].forEach(m => allModels.push({ ...m, tab })); });
-    const renderList = (filter = '') => {
-      const f = filter.toLowerCase();
-      const filtered = filter ? allModels.filter(m => m.name.toLowerCase().includes(f) || m.id.toLowerCase().includes(f) || m.desc?.toLowerCase().includes(f)) : allModels;
-      return filtered.map(m => `<label class="batch-model-item" data-mid="${esc(m.id)}" data-tab="${esc(m.tab)}"><input type="checkbox" data-batch-mid="${esc(m.id)}" data-batch-tab="${esc(m.tab)}" style="width:auto;margin:0"><div class="bm-info"><div class="bm-name">${esc(m.name)} <span class="bm-type">${typeName(m.tab)}</span></div><div class="bm-desc">${esc(trunc(m.desc || '', 50))}</div><div class="bm-price">${esc(m.price)}</div></div></label>`).join('');
-    };
-    // V56: Batch queue options — mode radio + priority field
-    const queueAvailable = TaskCenter.isAvailable();
-    const modeHtml = `<div style="margin-bottom:10px;padding:10px;background:var(--surface-2);border-radius:8px;border:1px solid var(--border-soft)">
-      <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer"><input type="radio" name="batchMode" value="immediate" checked style="width:auto;margin:0">立即生成</label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;${queueAvailable ? '' : 'opacity:.5'}"><input type="radio" name="batchMode" value="queue" ${queueAvailable ? '' : 'disabled'} style="width:auto;margin:0">排队生成${queueAvailable ? '' : ' <span style="color:var(--text-dim)">(需任务中心)</span>'}</label>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;margin-left:auto">优先级
-          <input type="number" id="batchPriority" min="1" max="10" value="5" style="width:60px;padding:4px 6px;font-size:12px;text-align:center">
-        </label>
-      </div>
-      <div id="queueStatus" style="font-size:11px;color:var(--text-dim);margin-top:6px"></div>
-    </div>`;
-    const html = `<div style="margin-bottom:10px;padding:10px;background:var(--brand-soft);border-radius:8px;font-size:12px;color:var(--text)"><strong>批量生成</strong>：使用当前提示词「${esc(trunc(prompt, 40))}」同时提交到多个模型。<br><span style="color:var(--text-dim)">勾选下方模型，点击「开始批量生成」。将使用各模型默认参数。</span></div>${modeHtml}<div class="history-search" style="padding:0 0 10px"><input type="text" id="batchSearchInput" placeholder="搜索模型..." style="font-size:13px"></div><div class="batch-model-list" style="max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:4px">${renderList()}</div>`;
-    this._showModal('批量生成', html, [
-      { label: '全选', fn: () => { $$('#modalBody [data-batch-mid]').forEach(c => c.checked = true); } },
-      { label: '清空', fn: () => { $$('#modalBody [data-batch-mid]').forEach(c => c.checked = false); } },
-      { label: '开始生成', primary: true, fn: () => this._runBatchGenerate(prompt) },
-      { label: '关闭', fn: () => this._closeModal() }
-    ]);
-    const searchInput = $('#batchSearchInput');
-    if (searchInput) {
-      searchInput.addEventListener('input', e => {
-        const list = $('#modalBody .batch-model-list');
-        if (list) list.innerHTML = renderList(e.target.value);
-      });
-    }
-    // V56: refresh queue status when queue mode selected
-    const refreshQueueStatus = async () => {
-      const statusEl = $('#queueStatus');
-      if (!statusEl) return;
-      const mode = (document.querySelector('input[name="batchMode"]:checked') || {}).value;
-      if (mode !== 'queue') { statusEl.textContent = ''; return; }
-      const info = await TaskCenter.listQueued();
-      statusEl.innerHTML = `排队 <strong style="color:var(--brand)">${info.queued}</strong> · 运行 <strong>${info.running}</strong> · 今日已耗 <strong>¥${info.spentToday.toFixed(2)}</strong>`;
-    };
-    document.querySelectorAll('input[name="batchMode"]').forEach(r => r.addEventListener('change', refreshQueueStatus));
-    refreshQueueStatus();
-  },
 
   async _runBatchGenerate(prompt) {
     const checked = $$('#modalBody [data-batch-mid]:checked');
