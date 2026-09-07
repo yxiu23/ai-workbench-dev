@@ -770,15 +770,25 @@ textarea { resize: vertical; min-height: 80px; }
 .compare-bar .compare-show { background: var(--brand); color: #fff; }
 .compare-bar .compare-clear { color: var(--text-muted); }
 .compare-grid {
-  position: fixed; inset: 0; z-index: 60; background: var(--overlay); display: none;
-  align-items: center; justify-content: center; padding: 40px; backdrop-filter: blur(8px);
+  position: fixed; inset: 0; z-index: 200; display: none;
+  background: rgba(0,0,0,.92); backdrop-filter: blur(8px);
+  align-items: center; justify-content: center; padding: 20px;
 }
 .compare-grid.show { display: flex; }
-.compare-grid-inner { display: flex; gap: 12px; max-width: 100%; max-height: 100%; }
-.compare-cell { position: relative; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); }
-.compare-cell img, .compare-cell video { max-width: 100%; max-height: 80vh; display: block; }
+.compare-grid-inner {
+  display: flex; gap: 8px; max-width: 100%; max-height: 90vh;
+  overflow-x: auto; overflow-y: hidden; padding: 10px;
+  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.2) transparent;
+}
+.compare-grid-inner::-webkit-scrollbar { height: 6px; }
+.compare-grid-inner::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 3px; }
+.compare-cell { position: relative; border-radius: var(--radius-md); overflow: hidden; border: 2px solid transparent; transition: border-color .2s; flex-shrink: 0; }
+.compare-cell:hover { border-color: var(--brand); }
+.compare-cell.active { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+.compare-cell img, .compare-cell video { max-height: 85vh; max-width: 45vw; object-fit: contain; display: block; }
 .compare-cell .compare-label { position: absolute; top: 8px; left: 8px; padding: 2px 8px; border-radius: 4px; background: rgba(0,0,0,.6); color: #fff; font-size: 11px; }
-.compare-close { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; color: var(--text); font-size: 20px; }
+.compare-close { position: absolute; top: 16px; right: 20px; width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,.1); color: #fff; font-size: 24px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .2s; }
+.compare-close:hover { background: rgba(255,255,255,.2); }
 
 /* ============================================================
    历史侧栏
@@ -1617,7 +1627,7 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
     </div>
 
     <!-- 参数表单容器 (由 JS 动态渲染) -->
-    <div id="paramForm" style="display:flex !important;flex-direction:column;gap:14px;"></div>
+    <div id="paramForm" style="display:flex;flex-direction:column;gap:14px;"></div>
 
     <!-- V56: 流水线面板 (pipeline tab) -->
     <div id="pipelinePanel" style="display:none;flex-direction:column;gap:14px;padding:14px;overflow-y:auto;"></div>
@@ -6685,18 +6695,15 @@ ${items.map(h => {
     const ta = $('[data-key="prompt"], [data-key="text"]');
     if (ta) {
       cache[ta.dataset.key] = ta.value;
-      // Also save prompt per-tab for cross-model persistence
       this.state.formCache[this.state.tab + '_prompt'] = ta.value;
     }
     for (const p of this.state.model.params) {
       if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') {
-        cache[p.key] = JSON.parse(JSON.stringify(this._getRefs(p.key)));
-        // Also save refs per-tab for cross-model persistence
+        const refs = this._getRefs(p.key);
+        cache[p.key] = { __ref: true, data: JSON.parse(JSON.stringify(refs)) };
+        // 保存到tab级缓存，用param type作为统一key
         if (!this.state.formCache[this.state.tab + '_refs']) this.state.formCache[this.state.tab + '_refs'] = {};
-        // Find a common ref key (urls/images/first_frame etc.)
-        if (p.key === 'urls' || p.key === 'images' || p.key === 'first_frame' || p.key === 'last_frame' || p.key === 'firstFrameUrl' || p.key === 'lastFrameUrl') {
-          this.state.formCache[this.state.tab + '_refs'][p.key] = JSON.parse(JSON.stringify(this._getRefs(p.key)));
-        }
+        this.state.formCache[this.state.tab + '_refs'][p.type] = JSON.parse(JSON.stringify(refs));
       }
       else { const el = $(`[data-key="${p.key}"]`); if (el) cache[p.key] = el.value; }
     }
@@ -6707,20 +6714,6 @@ ${items.map(h => {
     const cache = this.state.formCache[this.state.modelKey];
     const tabPrompt = this.state.formCache[this.state.tab + '_prompt'];
     const tabRefs = this.state.formCache[this.state.tab + '_refs'] || {};
-    
-    // 收集同tab下所有modelKey的缓存ref，用于跨模型恢复
-    const allTabRefs = {};
-    for (const [k, v] of Object.entries(this.state.formCache)) {
-      if (k.startsWith(this.state.tab + '/') && typeof v === 'object') {
-        for (const [refKey, refVal] of Object.entries(v)) {
-          if (Array.isArray(refVal) && refVal.length > 0 && !allTabRefs[refKey]) {
-            allTabRefs[refKey] = refVal;
-          }
-        }
-      }
-    }
-    // 合并 tabRefs 和 allTabRefs（tabRefs优先）
-    const mergedRefs = { ...allTabRefs, ...tabRefs };
     
     // Restore prompt
     const promptParam = this.state.model.params.find(p => p.type === 'textarea');
@@ -6733,10 +6726,21 @@ ${items.map(h => {
       }
     }
     
-    // Restore refs - try model cache → tabRefs → allTabRefs
+    // Restore refs - 用param type作为统一key跨模型匹配
+    // NanoBanana2 key='urls' type='ref-image' → tabRefs['ref-image']
+    // GPT-Image-2 key='urls' type='ref-image' → tabRefs['ref-image'] 同一个
+    // Wan3 key='images' type='ref-image' → tabRefs['ref-image'] 同一个
     for (const p of this.state.model.params) {
       if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') {
-        const refData = (cache && cache[p.key]) || mergedRefs[p.key];
+        // 1. 先从当前模型缓存找
+        let refData = null;
+        if (cache && cache[p.key]) {
+          refData = cache[p.key].__ref ? cache[p.key].data : (Array.isArray(cache[p.key]) ? cache[p.key] : null);
+        }
+        // 2. 再从tab级缓存按type找（跨模型共享）
+        if ((!refData || refData.length === 0) && tabRefs[p.type]) {
+          refData = tabRefs[p.type];
+        }
         if (refData && refData.length > 0) {
           this.state.refState[this.state.modelKey] = this.state.refState[this.state.modelKey] || {};
           this.state.refState[this.state.modelKey][p.key] = JSON.parse(JSON.stringify(refData));
@@ -6744,7 +6748,10 @@ ${items.map(h => {
         }
       } else if (p.type !== 'textarea') {
         const el = $(`[data-key="${p.key}"]`);
-        if (el && cache && cache[p.key] != null) { el.value = cache[p.key]; this._onFieldChange(p.key, el); }
+        if (el && cache && cache[p.key] != null && typeof cache[p.key] === 'string') {
+          el.value = cache[p.key];
+          this._onFieldChange(p.key, el);
+        }
       }
     }
   },
