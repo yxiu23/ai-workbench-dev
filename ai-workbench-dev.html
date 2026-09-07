@@ -1487,9 +1487,7 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
 .fp-modal-foot button:hover { opacity: .9; }
 
 /* ============================================================
-   V27 — Tippy 主题
    ============================================================ */
-.tippy-box[data-theme~='translucent'] {
   background: var(--bg-elev);
   border: 1px solid var(--border);
   backdrop-filter: blur(16px) saturate(180%);
@@ -1503,12 +1501,6 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
   border-radius: 10px;
   transition: transform .2s cubic-bezier(.34,.72,.24,1), opacity .2s ease;
 }
-.tippy-box[data-theme~='translucent'] > .tippy-content { padding: 6px 10px; }
-.tippy-box[data-theme~='translucent'] > .tippy-arrow { color: var(--bg-elev); transform: scale(.85); }
-.tippy-box[data-theme~='translucent'][data-placement^='top'] > .tippy-arrow { bottom: -6px; }
-.tippy-box[data-theme~='translucent'][data-placement^='bottom'] > .tippy-arrow { top: -6px; }
-.tippy-box[data-theme~='translucent'][data-placement^='left'] > .tippy-arrow { right: -6px; }
-.tippy-box[data-theme~='translucent'][data-placement^='right'] > .tippy-arrow { left: -6px; }
 
 /* ============================================================
    V27 — 对比模式 Slider 增强
@@ -1628,7 +1620,7 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
     <div id="paramForm" style="display:flex !important;flex-direction:column;gap:14px;"></div>
 
     <!-- V56: 流水线面板 (pipeline tab) -->
-    <div id="pipelinePanel" style="display:none;flex-direction:column;gap:14px;"></div>
+    <div id="pipelinePanel" style="display:none;flex-direction:column;gap:14px;padding:14px;overflow-y:auto;"></div>
 
     <!-- 生成操作区 -->
     <div class="generate-section">
@@ -1641,10 +1633,10 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
         </button>
       </div>
       <div class="workflow-row">
-        <button class="workflow-btn" id="batchGenBtn" data-tooltip="批量生成：同提示词提交到多个模型 (Ctrl/⌘+G)">
+        <button class="workflow-btn" id="batchGenBtn" title="批量生成：同提示词提交到多个模型 (Ctrl/⌘+G)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>批量生成
         </button>
-        <button class="workflow-btn" id="batchExportBtn" data-tooltip="批量导出所有成功结果 URL / ZIP (Ctrl/⌘+B)">
+        <button class="workflow-btn" id="batchExportBtn" title="批量导出所有成功结果 URL / ZIP (Ctrl/⌘+B)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>批量导出
         </button>
       </div>
@@ -2061,8 +2053,6 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
 <script src="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/filepond-plugin-file-validate-type@1.2.8/dist/filepond-plugin-file-validate-type.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/dist/tippy-bundle.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dexie@4.0.10/dist/dexie.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 
@@ -3727,35 +3717,6 @@ const UI = {
         if (typeof FilePondPluginFileValidateType !== 'undefined') FilePond.registerPlugin(FilePondPluginFileValidateType);
       } catch (e) { console.warn('[V27] FilePond plugin register failed:', e); }
     }
-    // 3) 初始化 Tippy 工具提示
-    this._initTooltips();
-    // 4) 文件加载完毕后再次初始化（防止 CDN 延迟）
-    window.addEventListener('load', () => {
-      this._initTooltips();
-      // 重新渲染当前 ref 网格以激活 Sortable
-      if (this.state && this.state.model) {
-        (this.state.model.params || []).forEach(p => {
-          if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') {
-            try { this._renderRefGrid(p.key); } catch {}
-          }
-        });
-      }
-    });
-  },
-
-  /* V27 — Tippy 工具提示 */
-  _initTooltips() {
-    if (typeof tippy === 'undefined') return;
-    try {
-      tippy('[data-tooltip]', {
-        content: (el) => el.dataset.tooltip || '',
-        theme: 'translucent',
-        arrow: true,
-        delay: [200, 0],
-        allowHTML: false
-      });
-    } catch (e) { /* ignore */ }
-  },
 
   /* V27 — FilePond 文件选择模态 */
   _openFilePondPicker(opts) {
@@ -4091,7 +4052,7 @@ const UI = {
     // V56: Pipeline tab — render pipeline panel, hide model/param form
     if (tab === 'pipeline') {
       $('#paramForm').style.display = 'none';
-      $('#pipelinePanel').style.display = 'flex';
+      $('#pipelinePanel').style.display = 'flex'; $('#pipelinePanel').style.flexDirection = 'column'; $('#pipelinePanel').style.gap = '14px';
       $('.model-select-wrap').style.display = 'none';
       this.state.model = null;
       this.state.modelKey = 'pipeline';
@@ -4187,9 +4148,7 @@ const UI = {
     this._renderAllRefGrids();
     this._updateEstimate();
     this.renderPresets();
-    // V27 — 重新初始化 Tippy 工具提示（新表单元素）
-    this._initTooltips();
-  },
+      },
 
   _buildRefModeSection(model) {
     const wrap = document.createElement('div');
@@ -5628,9 +5587,7 @@ const UI = {
         }
       });
     }
-    // V27 — 结果列表渲染后初始化 Tippy
-    this._initTooltips();
-  },
+      },
 
   _bulkDeleteByFilter() {
     const tasks = Store.getTasks();
