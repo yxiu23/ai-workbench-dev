@@ -3646,7 +3646,7 @@ const UI = {
     $$('#tabs .tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
     // V56: Pipeline tab — render pipeline panel, hide model/param form
     if (tab === 'pipeline') {
-      $('#paramForm').style.cssText = 'display:none;';
+      $('#paramForm').style.display = 'none';
       $('#pipelinePanel').style.display = 'flex';
       $('.model-select-wrap').style.display = 'none';
       this.state.model = null;
@@ -3655,6 +3655,8 @@ const UI = {
       return;
     }
     $('#paramForm').style.display = 'flex';
+    $('#paramForm').style.flexDirection = 'column';
+    $('#paramForm').style.gap = '14px';
     $('#pipelinePanel').style.display = 'none';
     $('.model-select-wrap').style.display = '';
     const model = MODELS[tab][0];
@@ -3670,7 +3672,7 @@ const UI = {
     const sel = $('#modelSelect');
     if (sel) {
       const models = MODELS[this.state.tab];
-      sel.innerHTML = models.map(mm => `<option value="${esc(mm.id)}" ${mm.id === m.id ? 'selected' : ''}>${esc(mm.name)} · ${esc(mm.price)}</option>`).join('');
+      sel.innerHTML = models.map(mm => `<option value="${esc(mm.id)}" ${mm.id === m.id ? 'selected' : ''}>${esc(mm.name)}</option>`).join('');
     }
     $('#modelMeta').innerHTML = `<span class="tag type-${m.type}">${typeName(m.type)}</span><span class="tag price">${m.price}</span>${m.desc ? `<span class="tag desc-tag">${esc(m.desc)}</span>` : ''}`;
     const descEl = $('#modelDesc');
