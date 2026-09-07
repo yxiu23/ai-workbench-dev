@@ -579,35 +579,18 @@ textarea { resize: vertical; min-height: 80px; }
 .queue-panel .qp-val { font-size: 14px; font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
 
 /* Connecting line between steps */
-.pipeline-step:not(:last-child)::after {
   content: ''; position: absolute; top: 11px; left: 50%; width: 100%; height: 2px;
   background: var(--border); z-index: 0;
 }
-.pipeline-step.done:not(:last-child)::after { background: var(--success); }
-.pipeline-step.active:not(:last-child)::after { background: linear-gradient(90deg, var(--success) 50%, var(--border) 50%); }
-.pipeline-step .ps-icon {
   width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
   font-size: 10px; font-weight: 700; color: #fff; background: var(--text-dim); flex-shrink: 0;
   z-index: 1; transition: all var(--transition); border: 2px solid var(--surface-2);
 }
-.pipeline-step.active .ps-icon { background: var(--brand); animation: pulse 1.5s ease-in-out infinite; }
-.pipeline-step.done .ps-icon { background: var(--success); }
-.pipeline-step.error .ps-icon { background: var(--danger); }
 @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 var(--brand-press); } 50% { box-shadow: 0 0 0 5px transparent; } }
-.pipeline-step .ps-title { font-size: 11px; font-weight: 500; color: var(--text-muted); white-space: nowrap; transition: color var(--transition); }
-.pipeline-step.active .ps-title { color: var(--brand); font-weight: 600; }
-.pipeline-step.done .ps-title { color: var(--text); }
-.pipeline-step.error .ps-title { color: var(--danger); }
-.pipeline-step .ps-meta { font-size: 9px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
-.pipeline-step .ps-preview { display: none; }
-.pipeline-step .ps-rerun {
   font-size: 9px; padding: 1px 5px; border-radius: 3px; border: 1px solid var(--border);
   background: var(--surface); color: var(--text-muted); cursor: pointer; flex-shrink: 0;
   margin-top: 2px; transition: all var(--transition);
 }
-.pipeline-step .ps-rerun:hover { background: var(--brand-soft); color: var(--brand); border-color: var(--brand); }
-.pipeline-step .ps-body { display: contents; }
-.pipeline-step .ps-progress-bar { display: none; }
 
 /* ============================================================
    任务卡 / 结果卡 (紧凑 2 列)
