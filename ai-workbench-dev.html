@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#080b14" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
-<title>修的媒体工作台 V31 · React Flow 节点图</title>
+<title>修的媒体工作台 V32 · 节点图流水线</title>
 <style>
 /* ============================================================
    主题变量
@@ -645,11 +645,12 @@ textarea { resize: vertical; min-height: 80px; }
 .pipeline-step .ps-progress-bar { display: none; }
 
 /* ============================================================
-   V31: 节点图流水线 (React Flow) — 参考 CORAL AI
-   使用开源 React Flow 库, 主题适配深色/浅色
+   V32: 节点图流水线 (React Flow) — 统一参数面板样式
+   inspector 复用 param-group/field-row/ref-grid 样式
+   节点库移到右侧浮窗, 工作流输入输出节点
    ============================================================ */
 
-/* 流水线布局: 单栏(画布占满) + 节点库浮窗 */
+/* 流水线布局: 单栏(画布占满) */
 .pl-workspace {
   position: relative;
   width: 100%;
@@ -662,7 +663,7 @@ textarea { resize: vertical; min-height: 80px; }
 .pl-toolbar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   padding: 8px 12px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
@@ -673,7 +674,7 @@ textarea { resize: vertical; min-height: 80px; }
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 0 8px;
+  padding: 0 6px;
   border-right: 1px solid var(--border-soft);
 }
 .pl-toolbar-group:last-child { border-right: none; }
@@ -690,8 +691,6 @@ textarea { resize: vertical; min-height: 80px; }
 .pl-tb-btn:hover { background: var(--brand-soft); color: var(--brand); border-color: var(--brand); }
 .pl-tb-btn svg { width: 14px; height: 14px; }
 .pl-tb-btn.danger:hover { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }
-.pl-tb-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); }
-.pl-tb-label { font-size: 11px; color: var(--text-muted); padding: 0 4px; }
 .pl-tb-spacer { flex: 1; }
 .pl-tb-info {
   font-size: 11px;
@@ -706,7 +705,7 @@ textarea { resize: vertical; min-height: 80px; }
 .pl-tb-info .pl-ti-node-count { color: var(--text); font-weight: 600; }
 .pl-tb-info .pl-ti-cost { color: var(--brand); font-weight: 600; }
 
-/* 画布容器 (React Flow) */
+/* 画布容器 */
 .pl-canvas-container {
   flex: 1;
   position: relative;
@@ -718,16 +717,16 @@ textarea { resize: vertical; min-height: 80px; }
   height: 100%;
 }
 
-/* 节点库浮窗 (画布上方左侧) */
+/* 节点库浮窗 (画布右侧, 完整显示所有节点) */
 .pl-palette {
   position: absolute;
   top: 12px;
-  left: 12px;
-  width: 220px;
+  right: 12px;
+  width: 200px;
   max-height: calc(100% - 24px);
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
   z-index: 10;
   display: flex;
@@ -745,17 +744,18 @@ textarea { resize: vertical; min-height: 80px; }
   gap: 6px;
   cursor: pointer;
   user-select: none;
+  background: var(--surface-2);
 }
-.pl-palette-header svg { width: 14px; height: 14px; transition: transform var(--transition); }
+.pl-palette-header svg { width: 13px; height: 13px; transition: transform var(--transition); }
 .pl-palette.collapsed .pl-palette-header svg { transform: rotate(-90deg); }
 .pl-palette.collapsed .pl-palette-body { display: none; }
 .pl-palette-body {
   overflow-y: auto;
-  padding: 6px;
   flex: 1;
+  padding: 6px;
 }
 .pl-palette-search {
-  padding: 6px 8px;
+  padding: 6px 6px 8px;
   border-bottom: 1px solid var(--border-soft);
   position: sticky;
   top: 0;
@@ -767,7 +767,7 @@ textarea { resize: vertical; min-height: 80px; }
   padding: 5px 8px;
   font-size: 12px;
   border: 1px solid var(--border);
-  border-radius: 5px;
+  border-radius: var(--radius-sm);
   background: var(--surface-2);
   color: var(--text);
 }
@@ -776,7 +776,7 @@ textarea { resize: vertical; min-height: 80px; }
   padding: 4px 0;
 }
 .pl-palette-cat-title {
-  padding: 4px 8px;
+  padding: 4px 6px;
   font-size: 10px;
   font-weight: 600;
   color: var(--text-dim);
@@ -797,227 +797,32 @@ textarea { resize: vertical; min-height: 80px; }
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 8px;
+  padding: 6px 8px;
   cursor: grab;
   font-size: 12px;
   color: var(--text);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border: 1px solid transparent;
   transition: all var(--transition);
   user-select: none;
 }
 .pl-palette-item:hover {
-  background: var(--brand-soft);
-  border-color: var(--brand);
+  background: var(--surface-2);
+  border-color: var(--border);
 }
 .pl-palette-item:active { cursor: grabbing; }
 .pl-palette-item .pl-pi-icon {
-  width: 24px; height: 24px;
+  width: 22px; height: 22px;
   display: flex; align-items: center; justify-content: center;
   border-radius: 5px;
   flex-shrink: 0;
 }
-.pl-palette-item .pl-pi-icon svg { width: 14px; height: 14px; }
+.pl-palette-item .pl-pi-icon svg { width: 13px; height: 13px; }
 .pl-palette-item[data-cat="text"] .pl-pi-icon { background: rgba(59,110,245,.12); color: #3b6ef5; }
 .pl-palette-item[data-cat="image"] .pl-pi-icon { background: rgba(16,185,129,.12); color: #10b981; }
 .pl-palette-item[data-cat="video"] .pl-pi-icon { background: rgba(245,158,11,.12); color: #f59e0b; }
 .pl-palette-item[data-cat="audio"] .pl-pi-icon { background: rgba(139,92,246,.12); color: #8b5cf6; }
 .pl-palette-item .pl-pi-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pl-palette-item .pl-pi-desc { font-size: 10px; color: var(--text-dim); }
-
-/* 节点配置面板 (画布右侧浮窗) */
-.pl-inspector {
-  flex: 1;
-  min-height: 0;
-  display: none;
-  flex-direction: column;
-  overflow: hidden;
-}
-.pl-inspector.show { display: flex; }
-.pl-inspector-header {
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--border-soft);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.pl-inspector-header .pl-ih-icon {
-  width: 28px; height: 28px;
-  border-radius: 6px;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-}
-.pl-inspector-header .pl-ih-icon svg { width: 15px; height: 15px; }
-.pl-inspector-header[data-cat="text"] .pl-ih-icon { background: rgba(59,110,245,.12); color: #3b6ef5; }
-.pl-inspector-header[data-cat="image"] .pl-ih-icon { background: rgba(16,185,129,.12); color: #10b981; }
-.pl-inspector-header[data-cat="video"] .pl-ih-icon { background: rgba(245,158,11,.12); color: #f59e0b; }
-.pl-inspector-header[data-cat="audio"] .pl-ih-icon { background: rgba(139,92,246,.12); color: #8b5cf6; }
-.pl-inspector-header .pl-ih-title {
-  flex: 1;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-}
-.pl-inspector-header .pl-ih-close {
-  width: 24px; height: 24px;
-  border: none;
-  background: transparent;
-  color: var(--text-dim);
-  cursor: pointer;
-  border-radius: 5px;
-  display: flex; align-items: center; justify-content: center;
-}
-.pl-inspector-header .pl-ih-close:hover { background: var(--surface-2); color: var(--text); }
-.pl-inspector-header .pl-ih-close svg { width: 13px; height: 13px; }
-.pl-inspector-body {
-  padding: 12px;
-  overflow-y: auto;
-  flex: 1;
-}
-.pl-inspector-empty {
-  text-align: center;
-  padding: 24px 12px;
-  color: var(--text-dim);
-  font-size: 12px;
-}
-.pl-inspector-empty svg { width: 36px; height: 36px; opacity: .3; margin-bottom: 8px; }
-
-/* 配置行 */
-.pl-cfg-row { margin-bottom: 12px; }
-.pl-cfg-row:last-child { margin-bottom: 0; }
-.pl-cfg-label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--text-muted);
-  margin-bottom: 4px;
-}
-.pl-cfg-label .pl-cfg-hint { font-size: 10px; color: var(--text-dim); font-weight: 400; }
-.pl-cfg-row input[type="text"],
-.pl-cfg-row input[type="url"],
-.pl-cfg-row textarea,
-.pl-cfg-row select {
-  width: 100%;
-  padding: 7px 9px;
-  font-size: 12px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  color: var(--text);
-  transition: border-color var(--transition);
-  font-family: inherit;
-}
-.pl-cfg-row input:focus,
-.pl-cfg-row textarea:focus,
-.pl-cfg-row select:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand-soft); }
-.pl-cfg-row textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
-.pl-cfg-row input[type="range"] { width: 100%; accent-color: var(--brand); }
-.pl-cfg-range-val { font-size: 11px; color: var(--brand); font-weight: 600; font-variant-numeric: tabular-nums; }
-
-/* 用户上传区 */
-.pl-upload-box {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px;
-  background: var(--surface-2);
-  border: 1px dashed var(--border);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all var(--transition);
-}
-.pl-upload-box:hover { border-color: var(--brand); background: var(--brand-soft); }
-.pl-upload-box.has-file { border-style: solid; border-color: var(--success); }
-.pl-upload-box .pl-ub-preview {
-  width: 44px; height: 44px;
-  border-radius: 5px;
-  object-fit: cover;
-  background: var(--surface);
-  flex-shrink: 0;
-}
-.pl-upload-box .pl-ub-placeholder {
-  width: 44px; height: 44px;
-  border-radius: 5px;
-  background: var(--surface);
-  display: flex; align-items: center; justify-content: center;
-  color: var(--text-dim);
-  flex-shrink: 0;
-}
-.pl-upload-box .pl-ub-placeholder svg { width: 18px; height: 18px; }
-.pl-upload-box .pl-ub-info { flex: 1; min-width: 0; }
-.pl-upload-box .pl-ub-name { font-size: 12px; color: var(--text); font-weight: 500; }
-.pl-upload-box .pl-ub-status { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
-.pl-upload-box .pl-ub-status.done { color: var(--success); }
-.pl-upload-box .pl-ub-status.uploading { color: var(--brand); }
-.pl-upload-box .pl-ub-actions { display: flex; gap: 4px; }
-.pl-upload-box .pl-ub-btn {
-  padding: 4px 8px;
-  font-size: 11px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  border-radius: 4px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.pl-upload-box .pl-ub-btn:hover { border-color: var(--brand); color: var(--brand); }
-
-/* 素材篮缩略图网格 */
-.pl-basket-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-  margin-top: 6px;
-}
-.pl-basket-item {
-  position: relative;
-  aspect-ratio: 1;
-  border-radius: 5px;
-  overflow: hidden;
-  border: 2px solid transparent;
-  cursor: pointer;
-  background: var(--surface-2);
-}
-.pl-basket-item.selected { border-color: var(--brand); }
-.pl-basket-item img { width: 100%; height: 100%; object-fit: cover; }
-.pl-basket-item .pl-bi-check {
-  position: absolute;
-  top: 2px; right: 2px;
-  width: 16px; height: 16px;
-  background: var(--brand);
-  border-radius: 50%;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-}
-.pl-basket-item.selected .pl-bi-check { display: flex; }
-.pl-basket-item .pl-bi-check svg { width: 10px; height: 10px; }
-.pl-basket-empty { font-size: 11px; color: var(--text-dim); padding: 12px; text-align: center; }
-
-/* Agent 对话框 */
-.pl-agent-chat {
-  max-height: 220px;
-  overflow-y: auto;
-  padding: 8px;
-  background: var(--surface-2);
-  border-radius: 6px;
-  margin-bottom: 8px;
-  font-size: 11px;
-  line-height: 1.5;
-}
-.pl-agent-msg {
-  padding: 6px 8px;
-  margin-bottom: 4px;
-  border-radius: 5px;
-  word-break: break-word;
-}
-.pl-agent-msg.user { background: var(--brand-soft); color: var(--brand); }
-.pl-agent-msg.assistant { background: var(--surface); color: var(--text); border: 1px solid var(--border-soft); }
-.pl-agent-msg.system { background: rgba(245,158,11,.1); color: #f59e0b; font-size: 10px; }
-.pl-agent-msg .pl-am-role { font-size: 9px; opacity: .6; margin-bottom: 2px; text-transform: uppercase; }
 
 /* 运行状态条 */
 .pl-run-bar {
@@ -1047,13 +852,204 @@ textarea { resize: vertical; min-height: 80px; }
 }
 @keyframes pl-spin { to { transform: rotate(360deg); } }
 
+/* ===== 节点配置面板 (复用 param-group/field-row 样式) ===== */
+.pl-inspector {
+  flex: 1;
+  min-height: 0;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+.pl-inspector.show { display: flex; }
+/* 节点标题头 (类似模型选择区) */
+.pl-inspector-header {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.pl-inspector-header .pl-ih-icon {
+  width: 30px; height: 30px;
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.pl-inspector-header .pl-ih-icon svg { width: 16px; height: 16px; }
+.pl-inspector-header[data-cat="text"] .pl-ih-icon { background: rgba(59,110,245,.12); color: #3b6ef5; }
+.pl-inspector-header[data-cat="image"] .pl-ih-icon { background: rgba(16,185,129,.12); color: #10b981; }
+.pl-inspector-header[data-cat="video"] .pl-ih-icon { background: rgba(245,158,11,.12); color: #f59e0b; }
+.pl-inspector-header[data-cat="audio"] .pl-ih-icon { background: rgba(139,92,246,.12); color: #8b5cf6; }
+.pl-inspector-header[data-cat="utility"] .pl-ih-icon { background: rgba(107,114,128,.12); color: #6b7280; }
+.pl-inspector-header .pl-ih-title {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.pl-inspector-header .pl-ih-status {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.pl-inspector-header .pl-ih-status.ok { background: rgba(16,185,129,.15); color: #10b981; }
+.pl-inspector-header .pl-ih-status.err { background: rgba(239,68,68,.15); color: #ef4444; }
+.pl-inspector-header .pl-ih-status.pending { background: var(--surface-2); color: var(--text-dim); }
+.pl-inspector-body {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.pl-inspector-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+.pl-inspector-empty svg { width: 36px; height: 36px; opacity: .3; margin-bottom: 8px; }
+
+/* 配置行 (复用 field-row 样式) */
+.pl-cfg-group {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+.pl-cfg-row { display: flex; flex-direction: column; gap: 6px; }
+.pl-cfg-row + .pl-cfg-row { margin-top: 12px; }
+.pl-cfg-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.pl-cfg-label .pl-cfg-hint { font-size: 10px; color: var(--text-dim); }
+.pl-cfg-label .pl-cfg-val { font-size: 11px; color: var(--brand); font-family: var(--font-mono); font-weight: 600; }
+.pl-cfg-row input[type="text"],
+.pl-cfg-row input[type="url"],
+.pl-cfg-row textarea,
+.pl-cfg-row select {
+  width: 100%;
+  padding: 7px 9px;
+  font-size: 13px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  transition: border-color var(--transition);
+  font-family: inherit;
+}
+.pl-cfg-row input:focus,
+.pl-cfg-row textarea:focus,
+.pl-cfg-row select:focus { outline: none; border-color: var(--brand); }
+.pl-cfg-row textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+.pl-cfg-row input[type="range"] {
+  flex: 1; -webkit-appearance: none; appearance: none;
+  height: 4px; background: linear-gradient(90deg, var(--surface-3), var(--surface-2));
+  border-radius: 2px; padding: 0; accent-color: var(--brand);
+}
+
+/* 上传区 (复用 ref-section 样式) */
+.pl-upload-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+.pl-upload-label {
+  font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.pl-upload-label .pl-ul-hint { font-size: 10px; color: var(--text-dim); font-weight: 400; }
+.pl-upload-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 6px;
+}
+.pl-upload-item {
+  position: relative; aspect-ratio: 1; border-radius: var(--radius-sm); overflow: hidden;
+  border: 1px solid var(--border); background: var(--surface-2);
+}
+.pl-upload-item img, .pl-upload-item video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pl-upload-item .pl-up-del {
+  position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 4px;
+  background: rgba(0,0,0,.6); color: #fff; display: flex; align-items: center; justify-content: center;
+  font-size: 12px; opacity: 0; transition: opacity var(--transition); cursor: pointer; border: none;
+}
+.pl-upload-item:hover .pl-up-del { opacity: 1; }
+.pl-upload-item .pl-up-del:hover { background: var(--danger); }
+.pl-upload-add {
+  aspect-ratio: 1; border: 2px dashed var(--border); border-radius: var(--radius-sm);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  color: var(--text-dim); cursor: pointer; transition: all var(--transition); font-size: 11px;
+  background: transparent;
+}
+.pl-upload-add:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-soft); }
+.pl-upload-add svg { width: 20px; height: 20px; }
+
+/* 素材篮 (复用 ref-grid) */
+.pl-basket-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+.pl-basket-item {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 2px solid transparent;
+  cursor: pointer;
+  background: var(--surface-2);
+}
+.pl-basket-item.selected { border-color: var(--brand); }
+.pl-basket-item img { width: 100%; height: 100%; object-fit: cover; }
+.pl-basket-item .pl-bi-check {
+  position: absolute; top: 2px; right: 2px;
+  width: 16px; height: 16px;
+  background: var(--brand); border-radius: 50%;
+  display: none; align-items: center; justify-content: center; color: #fff;
+}
+.pl-basket-item.selected .pl-bi-check { display: flex; }
+.pl-basket-item .pl-bi-check svg { width: 10px; height: 10px; }
+
+/* Agent 对话框 */
+.pl-agent-chat {
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 8px;
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pl-agent-msg {
+  padding: 6px 9px;
+  border-radius: var(--radius-sm);
+  word-break: break-word;
+}
+.pl-agent-msg.user { background: var(--brand-soft); color: var(--brand); }
+.pl-agent-msg.assistant { background: var(--surface); color: var(--text); border: 1px solid var(--border-soft); }
+.pl-agent-msg.system { background: rgba(245,158,11,.1); color: #f59e0b; font-size: 11px; }
+.pl-agent-msg .pl-am-role { font-size: 9px; opacity: .6; margin-bottom: 2px; text-transform: uppercase; }
+
 /* ===== React Flow 主题适配 ===== */
 .react-flow {
   background: var(--bg);
 }
-.react-flow__background {
-  background-color: var(--bg);
-}
+.react-flow__background { background-color: var(--bg); }
 .react-flow__attribution { display: none; }
 .react-flow__controls {
   box-shadow: var(--shadow-md);
@@ -1066,30 +1062,13 @@ textarea { resize: vertical; min-height: 80px; }
   border-bottom: 1px solid var(--border-soft);
   color: var(--text-muted);
   fill: var(--text-muted);
-  width: 30px;
-  height: 30px;
+  width: 30px; height: 30px;
 }
-.react-flow__controls-button:hover {
-  background: var(--surface-2);
-  color: var(--brand);
-  fill: var(--brand);
-}
-.react-flow__minimap {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  box-shadow: var(--shadow-md);
-}
-.react-flow__edge-path {
-  stroke-width: 2;
-}
-.react-flow__edge.selected .react-flow__edge-path {
-  stroke: var(--brand);
-  stroke-width: 3;
-}
+.react-flow__controls-button:hover { background: var(--surface-2); color: var(--brand); fill: var(--brand); }
+.react-flow__edge-path { stroke-width: 2; }
+.react-flow__edge.selected .react-flow__edge-path { stroke: var(--brand); stroke-width: 3; }
 .react-flow__handle {
-  width: 10px;
-  height: 10px;
+  width: 10px; height: 10px;
   border: 2px solid var(--surface);
   border-radius: 50%;
   cursor: crosshair;
@@ -1100,13 +1079,12 @@ textarea { resize: vertical; min-height: 80px; }
 .react-flow__handle[data-type="image"] { background: #10b981; }
 .react-flow__handle[data-type="video"] { background: #f59e0b; }
 .react-flow__handle[data-type="audio"] { background: #8b5cf6; }
-.react-flow__handle.connectionindicator:hover { transform: scale(1.4); }
 
-/* React Flow 自定义节点样式 */
+/* React Flow 自定义节点 */
 .pl-rf-node {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
   width: 200px;
   font-size: 12px;
@@ -1123,41 +1101,31 @@ textarea { resize: vertical; min-height: 80px; }
   50% { box-shadow: 0 0 0 6px transparent; }
 }
 .pl-rf-node-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 10px;
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 10px;
   border-bottom: 1px solid var(--border-soft);
   background: var(--surface-2);
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
   cursor: grab;
 }
 .pl-rf-node-header:active { cursor: grabbing; }
 .pl-rf-node-header .pl-rfnh-icon {
   width: 20px; height: 20px;
   display: flex; align-items: center; justify-content: center;
-  border-radius: 4px;
-  flex-shrink: 0;
+  border-radius: 4px; flex-shrink: 0;
 }
 .pl-rf-node-header .pl-rfnh-icon svg { width: 13px; height: 13px; }
 .pl-rf-node[data-cat="text"] .pl-rfnh-icon { background: rgba(59,110,245,.12); color: #3b6ef5; }
 .pl-rf-node[data-cat="image"] .pl-rfnh-icon { background: rgba(16,185,129,.12); color: #10b981; }
 .pl-rf-node[data-cat="video"] .pl-rfnh-icon { background: rgba(245,158,11,.12); color: #f59e0b; }
 .pl-rf-node[data-cat="audio"] .pl-rfnh-icon { background: rgba(139,92,246,.12); color: #8b5cf6; }
+.pl-rf-node[data-cat="utility"] .pl-rfnh-icon { background: rgba(107,114,128,.12); color: #6b7280; }
 .pl-rf-node-header .pl-rfnh-title {
-  flex: 1;
-  font-weight: 600;
-  font-size: 12px;
-  color: var(--text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  flex: 1; font-weight: 600; font-size: 12px; color: var(--text);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .pl-rf-node-header .pl-rfnh-status {
-  font-size: 9px;
-  padding: 1px 5px;
-  border-radius: 3px;
-  flex-shrink: 0;
+  font-size: 9px; padding: 1px 5px; border-radius: 3px; flex-shrink: 0;
 }
 .pl-rf-node-header .pl-rfnh-status.ok { background: rgba(16,185,129,.15); color: #10b981; }
 .pl-rf-node-header .pl-rfnh-status.err { background: rgba(239,68,68,.15); color: #ef4444; }
@@ -1165,78 +1133,36 @@ textarea { resize: vertical; min-height: 80px; }
 .pl-rf-node-header .pl-rfnh-status.running { background: rgba(59,110,245,.15); color: var(--brand); }
 .pl-rf-node-header .pl-rfnh-status.done { background: rgba(16,185,129,.15); color: #10b981; }
 .pl-rf-node-body {
-  padding: 8px 10px;
-  font-size: 11px;
-  color: var(--text-muted);
-  line-height: 1.4;
-  position: relative;
+  padding: 8px 10px; font-size: 11px; color: var(--text-muted); line-height: 1.4; position: relative;
 }
 .pl-rf-node-body .pl-rfnb-preview {
-  font-size: 10px;
-  color: var(--text-dim);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin-bottom: 4px;
+  font-size: 10px; color: var(--text-dim);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 4px;
 }
 .pl-rf-node-body .pl-rfnb-thumb {
-  width: 100%;
-  height: 64px;
-  border-radius: 4px;
-  object-fit: cover;
-  background: var(--surface-2);
-  margin-top: 4px;
+  width: 100%; height: 64px; border-radius: 4px; object-fit: cover;
+  background: var(--surface-2); margin-top: 4px;
 }
-.pl-rf-node-ports {
-  padding: 4px 0;
-}
-.pl-rf-node-ports-section {
-  padding: 4px 10px;
-  border-top: 1px solid var(--border-soft);
-}
+.pl-rf-node-ports { padding: 4px 0; }
+.pl-rf-node-ports-section { padding: 4px 10px; border-top: 1px solid var(--border-soft); }
 .pl-rf-node-ports-section.empty { display: none; }
 .pl-rf-port-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 0;
-  font-size: 10px;
-  position: relative;
+  display: flex; align-items: center; gap: 6px; padding: 2px 0; font-size: 10px; position: relative;
 }
 .pl-rf-port-row.input { justify-content: flex-start; }
 .pl-rf-port-row.output { justify-content: flex-end; }
-.pl-rf-port-label {
-  font-size: 10px;
-  color: var(--text-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+.pl-rf-port-label { font-size: 10px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* 删除按钮 (节点右上角) */
+/* 删除按钮 */
 .pl-rf-node-del {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 18px;
-  height: 18px;
-  border: none;
-  background: var(--danger-soft);
-  color: var(--danger);
-  border-radius: 4px;
-  cursor: pointer;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 5;
-  opacity: 0;
-  transition: opacity var(--transition);
+  position: absolute; top: 6px; right: 6px;
+  width: 18px; height: 18px;
+  border: none; background: var(--danger-soft); color: var(--danger);
+  border-radius: 4px; cursor: pointer;
+  display: none; align-items: center; justify-content: center;
+  z-index: 5; opacity: 0; transition: opacity var(--transition);
 }
-.pl-rf-node:hover .pl-rf-node-del,
-.pl-rf-node.selected .pl-rf-node-del {
-  display: flex;
-  opacity: 1;
-}
+.pl-rf-node:hover .pl-rf-node-del, .pl-rf-node.selected .pl-rf-node-del { display: flex; opacity: 1; }
 .pl-rf-node-del:hover { background: var(--danger); color: #fff; }
 .pl-rf-node-del svg { width: 11px; height: 11px; }
 
@@ -1245,47 +1171,6 @@ textarea { resize: vertical; min-height: 80px; }
 .react-flow__edge[data-type="image"] .react-flow__edge-path { stroke: #10b981; }
 .react-flow__edge[data-type="video"] .react-flow__edge-path { stroke: #f59e0b; }
 .react-flow__edge[data-type="audio"] .react-flow__edge-path { stroke: #8b5cf6; }
-
-/* 拓扑错误提示 */
-.pl-topo-error {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--danger-soft);
-  border: 1px solid var(--danger);
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 11px;
-  color: var(--danger);
-  display: none;
-  align-items: center;
-  gap: 6px;
-  z-index: 10;
-  max-width: 80%;
-}
-.pl-topo-error.show { display: flex; }
-.pl-topo-error svg { width: 13px; height: 13px; flex-shrink: 0; }
-
-/* Agent 对话框 */
-.pl-agent-chat {
-  max-height: 200px;
-  overflow-y: auto;
-  padding: 6px 8px;
-  background: var(--surface-2);
-  border-radius: 6px;
-  margin-bottom: 6px;
-  font-size: 11px;
-}
-.pl-agent-msg {
-  padding: 4px 6px;
-  margin-bottom: 3px;
-  border-radius: 4px;
-}
-.pl-agent-msg.user { background: var(--brand-soft); color: var(--brand); }
-.pl-agent-msg.assistant { background: var(--surface); color: var(--text); }
-.pl-agent-msg.system { background: rgba(245,158,11,.1); color: #f59e0b; font-size: 10px; }
-
 /* ============================================================
    任务卡 / 结果卡 (紧凑 2 列)
    ============================================================ */
@@ -2516,7 +2401,7 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
     <div class="settings-section">
       <h4>关于</h4>
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V31 · React Flow 节点图<br>
+        修的媒体工作台 V32 · 节点图流水线<br>
         支持图片、视频、音频生成<br>
         API: api.wuyinkeji.com
       </div>
@@ -4610,7 +4495,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V31';
+      document.title = '修的媒体工作台 V32';
     }
   },
 
@@ -6110,10 +5995,48 @@ const UI = {
         const text = data.text_override || '';
         return text.length * 0.0006;
       }
+    },
+
+    // === 工作流输入输出节点 ===
+    'workflow-input': {
+      label: '工作流输入', iconKey: 'plus', category: 'utility',
+      inputs: [],
+      outputs: [
+        { id: 'text', type: 'text', label: '文本' },
+        { id: 'image', type: 'image', label: '图片', multiple: true },
+        { id: 'video', type: 'video', label: '视频' },
+        { id: 'audio', type: 'audio', label: '音频' }
+      ],
+      params: [
+        { key: 'name', label: '输入名称', type: 'text', required: true, default: '输入1', placeholder: '如: 提示词/参考图...' },
+        { key: 'description', label: '描述', type: 'textarea', required: false, default: '', placeholder: '描述此输入的用途...' }
+      ],
+      buildBody(data) { return { name: data.name || '输入', description: data.description || '' }; },
+      estimateCost() { return 0; },
+      isSource: true,
+      isWorkflowIO: true
+    },
+    'workflow-output': {
+      label: '工作流输出', iconKey: 'check', category: 'utility',
+      inputs: [
+        { id: 'image', type: 'image', label: '图片', multiple: true },
+        { id: 'video', type: 'video', label: '视频' },
+        { id: 'audio', type: 'audio', label: '音频' },
+        { id: 'text', type: 'text', label: '文本' }
+      ],
+      outputs: [],
+      params: [
+        { key: 'name', label: '输出名称', type: 'text', required: true, default: '输出1', placeholder: '如: 最终视频/成品图...' },
+        { key: 'description', label: '描述', type: 'textarea', required: false, default: '', placeholder: '描述此输出的用途...' }
+      ],
+      buildBody(data) { return { name: data.name || '输出', description: data.description || '' }; },
+      estimateCost() { return 0; },
+      isWorkflowIO: true
     }
   },
 
   _PL_LIB_CATEGORIES: [
+    { id: 'utility', label: '工作流', items: ['workflow-input', 'workflow-output'] },
     { id: 'text', label: '文本', items: ['text-input', 'agent'] },
     { id: 'image', label: '图像', items: ['image-input', 'text-to-image', 'asset-basket'] },
     { id: 'video', label: '视频', items: ['video-input', 'text-to-video', 'image-to-video', 'digital-human', 'video-upscale', 'video-package'] },
@@ -6550,11 +6473,10 @@ const UI = {
     const p = this.state.pipeline;
     const nodeId = p.selectedNodeId;
     if (!nodeId) {
-      // 显示空状态提示
       wrap.classList.add('show');
       wrap.innerHTML = `<div class="pl-inspector-empty">
         ${this._plIcon('plus')}
-        <div>点击画布上的节点以配置参数</div>
+        <div>点击画布节点查看参数</div>
       </div>`;
       return;
     }
@@ -6563,7 +6485,7 @@ const UI = {
       wrap.classList.add('show');
       wrap.innerHTML = `<div class="pl-inspector-empty">
         ${this._plIcon('plus')}
-        <div>点击画布上的节点以配置参数</div>
+        <div>点击画布节点查看参数</div>
       </div>`;
       return;
     }
@@ -6571,13 +6493,19 @@ const UI = {
     if (!def) { wrap.classList.remove('show'); return; }
     wrap.classList.add('show');
 
-    // 参数表单
+    // 节点状态
+    const status = node.status || 'idle';
+    const statusMap = { idle: { cls: 'pending', text: '就绪' }, running: { cls: 'ok', text: '运行中' }, done: { cls: 'ok', text: '完成' }, error: { cls: 'err', text: '失败' } };
+    const st = statusMap[status] || statusMap.idle;
+
+    // 参数表单 (复用 field-row 样式, 包在 param-group 里)
     const paramsHtml = (def.params || []).map(param => {
       const val = node.data[param.key] != null ? node.data[param.key] : (param.default != null ? param.default : '');
       const id = 'plcfg_' + param.key;
+      const requiredMark = param.required ? ' <span style="color:var(--danger)">*</span>' : '';
       if (param.type === 'textarea') {
         return `<div class="pl-cfg-row">
-          <div class="pl-cfg-label">${esc(param.label)}${param.required ? ' <span style="color:var(--danger)">*</span>' : ''}</div>
+          <div class="pl-cfg-label">${esc(param.label)}${requiredMark}</div>
           <textarea id="${id}" placeholder="${esc(param.placeholder || '')}">${esc(val)}</textarea>
         </div>`;
       }
@@ -6588,25 +6516,25 @@ const UI = {
           return `<option value="${esc(v)}" ${String(val) === String(v) ? 'selected' : ''}>${esc(l)}</option>`;
         }).join('');
         return `<div class="pl-cfg-row">
-          <div class="pl-cfg-label">${esc(param.label)}</div>
+          <div class="pl-cfg-label">${esc(param.label)}${requiredMark}</div>
           <select id="${id}">${opts}</select>
         </div>`;
       }
       if (param.type === 'range') {
         return `<div class="pl-cfg-row">
-          <div class="pl-cfg-label">${esc(param.label)} <span class="pl-cfg-hint"><span id="${id}_val">${val}${param.unit || ''}</span></span></div>
+          <div class="pl-cfg-label">${esc(param.label)} <span class="pl-cfg-val"><span id="${id}_val">${val}${param.unit || ''}</span></span></div>
           <input type="range" id="${id}" min="${param.min}" max="${param.max}" step="${param.step}" value="${val}">
         </div>`;
       }
       return `<div class="pl-cfg-row">
-        <div class="pl-cfg-label">${esc(param.label)}</div>
+        <div class="pl-cfg-label">${esc(param.label)}${requiredMark}</div>
         <input type="text" id="${id}" placeholder="${esc(param.placeholder || '')}" value="${esc(val)}">
       </div>`;
     }).join('');
 
     // 用户上传
-    let userInputHtml = '';
-    if (def.userInput) userInputHtml = this._renderInspectorUpload(node, def);
+    let uploadHtml = '';
+    if (def.userInput) uploadHtml = this._renderInspectorUpload(node, def);
     // 素材篮
     let basketHtml = '';
     if (def.isBasket) basketHtml = this._renderInspectorBasket(node);
@@ -6614,22 +6542,20 @@ const UI = {
     let agentHtml = '';
     if (def.isAgent) agentHtml = this._renderInspectorAgent(node);
 
-    // 端口信息
-    const inputsInfo = (def.inputs || []).map(i => `<div style="font-size:10px;color:var(--text-dim)">← ${esc(i.label)} (${this._plTypeLabel(i.type)})${i.multiple ? ' ×' : ''}</div>`).join('');
-    const outputsInfo = (def.outputs || []).map(o => `<div style="font-size:10px;color:var(--text-dim)">→ ${esc(o.label)} (${this._plTypeLabel(o.type)})${o.multiple ? ' ×' : ''}</div>`).join('');
+    // 组装: 标题头 + 参数组 + 上传组 + 素材篮 + Agent
+    let body = '';
+    if (agentHtml) body += agentHtml;
+    if (paramsHtml) body += `<div class="pl-cfg-group">${paramsHtml}</div>`;
+    if (uploadHtml) body += uploadHtml;
+    if (basketHtml) body += basketHtml;
 
     wrap.innerHTML = `
       <div class="pl-inspector-header" data-cat="${esc(def.category)}">
         <span class="pl-ih-icon">${this._plIcon(def.iconKey)}</span>
         <span class="pl-ih-title">${esc(def.label)}</span>
+        <span class="pl-ih-status ${st.cls}">${st.text}</span>
       </div>
-      <div class="pl-inspector-body">
-        ${inputsInfo || outputsInfo ? `<div class="pl-cfg-row" style="padding:6px 8px;background:var(--surface-2);border-radius:6px;font-size:10px">${inputsInfo}${outputsInfo}</div>` : ''}
-        ${agentHtml}
-        ${paramsHtml}
-        ${userInputHtml}
-        ${basketHtml}
-      </div>
+      <div class="pl-inspector-body">${body}</div>
     `;
 
     // 绑定参数
@@ -6663,18 +6589,20 @@ const UI = {
     });
     // 用户上传
     if (def.userInput) {
-      $('#plUploadBox')?.addEventListener('click', () => $('#plUploadFile')?.click());
+      $('#plUploadAdd')?.addEventListener('click', () => $('#plUploadFile')?.click());
       $('#plUploadFile')?.addEventListener('change', (e) => {
         const f = e.target.files[0];
         if (f) this._uploadPipelineNodeFile(node, def, f);
         e.target.value = '';
       });
-      $('#plUploadClear')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        delete node.data._userInput;
-        this._renderPipelineInspector();
-        this._renderReactFlow();
-        this._savePipelineGraph();
+      document.querySelectorAll('.pl-up-del').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          delete node.data._userInput;
+          this._renderPipelineInspector();
+          this._renderReactFlow();
+          this._savePipelineGraph();
+        });
       });
     }
     // 素材篮
@@ -6688,26 +6616,18 @@ const UI = {
     const val = node.data._userInput && node.data._userInput[ui.key];
     const has = !!val;
     const accept = ui.type === 'ref-video' ? 'video/*' : 'image/*';
-    let preview = '';
-    let statusText = '点击上传';
+    let itemHtml = '';
     if (has) {
       const isVideo = /\.(mp4|webm|mov|avi)(\?|$)/i.test(val);
-      if (isVideo) preview = `<video class="pl-ub-preview" src="${esc(val)}" muted></video>`;
-      else preview = `<img class="pl-ub-preview" src="${esc(val)}" loading="lazy" referrerpolicy="no-referrer">`;
-      statusText = '已上传';
+      const media = isVideo
+        ? `<video src="${esc(val)}" muted></video>`
+        : `<img src="${esc(val)}" loading="lazy" referrerpolicy="no-referrer">`;
+      itemHtml = `<div class="pl-upload-item">${media}<button class="pl-up-del" title="删除">×</button></div>`;
     }
-    return `<div class="pl-cfg-row">
-      <div class="pl-cfg-label">${esc(ui.label)}</div>
-      <div class="pl-upload-box ${has ? 'has-file' : ''}" id="plUploadBox">
-        ${preview || `<div class="pl-ub-placeholder">${this._plIcon('plus')}</div>`}
-        <div class="pl-ub-info">
-          <div class="pl-ub-name">${esc(ui.label)}</div>
-          <div class="pl-ub-status ${has ? 'done' : ''}">${esc(statusText)}</div>
-        </div>
-        <div class="pl-ub-actions">
-          ${has ? '<button class="pl-ub-btn" id="plUploadClear" type="button">清除</button>' : ''}
-        </div>
-      </div>
+    const addBtn = `<button class="pl-upload-add" id="plUploadAdd" type="button">${this._plIcon('plus')}<span>添加</span></button>`;
+    return `<div class="pl-upload-section">
+      <div class="pl-upload-label">${esc(ui.label)}${ui.hint ? `<span class="pl-ul-hint">${esc(ui.hint)}</span>` : ''}</div>
+      <div class="pl-upload-grid">${itemHtml}${addBtn}</div>
       <input type="file" id="plUploadFile" accept="${accept}" style="display:none">
     </div>`;
   },
@@ -6718,9 +6638,9 @@ const UI = {
     if (!node.data._selected) node.data._selected = [];
     const selected = node.data._selected;
     if (!upstreamImages.length) {
-      return `<div class="pl-cfg-row">
-        <div class="pl-cfg-label">素材篮</div>
-        <div class="pl-basket-empty">暂无上游图片。请将上游图片节点连到此节点的"图片"端口。</div>
+      return `<div class="pl-upload-section">
+        <div class="pl-upload-label">素材篮</div>
+        <div style="text-align:center;padding:16px 8px;color:var(--text-dim);font-size:12px">暂无上游图片</div>
       </div>`;
     }
     const items = upstreamImages.map((url) => {
@@ -6730,10 +6650,9 @@ const UI = {
         <div class="pl-bi-check">${this._plIcon('check')}</div>
       </div>`;
     }).join('');
-    return `<div class="pl-cfg-row">
-      <div class="pl-cfg-label">素材篮 <span class="pl-cfg-hint">${selected.length}/${upstreamImages.length} 已选</span></div>
+    return `<div class="pl-upload-section">
+      <div class="pl-upload-label">素材篮 <span class="pl-ul-hint">${selected.length}/${upstreamImages.length} 已选</span></div>
       <div class="pl-basket-grid">${items}</div>
-      <div style="font-size:10px;color:var(--text-dim);margin-top:6px">点击勾选要传给下游的图片</div>
     </div>`;
   },
 
