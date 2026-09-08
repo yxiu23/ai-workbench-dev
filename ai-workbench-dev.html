@@ -13,6 +13,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&display=swap">
+<!-- V68 taskE: FilePond 上传组件 + 图片预览插件 -->
+<link href="https://cdn.jsdelivr.net/npm/filepond@4.31.0/dist/filepond.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.min.css" rel="stylesheet">
 <style>
 /* ============================================================
    主题变量
@@ -1845,6 +1848,16 @@ body.is-generating .orb-a {
   .cmp-toolbar .cmp-mode { padding: 5px 10px; }
 }
 
+/* ============================================================
+   V68 taskE: FilePond 主题适配
+   ============================================================ */
+.filepond--root { font-family: inherit; }
+.filepond--panel-root { background-color: var(--surface-2); border: 1px dashed var(--border); border-radius: var(--radius-sm); }
+.filepond--drop-label { color: var(--text-muted); }
+.filepond--drop-label svg { fill: var(--text-dim); }
+.filepond--item-panel { background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.filepond--file-action-button.filepond--file-action-button { background-color: var(--surface-2); color: var(--text-muted); }
+
 </style>
 </head>
 <body>
@@ -2336,6 +2349,14 @@ body.is-generating .orb-a {
   撤销回填
 </button>
 
+<!-- V35 taskD: Dexie.js (IndexedDB) — 替代/补充 localStorage 用于历史记录与缩略图缓存 -->
+<script src="https://cdn.jsdelivr.net/npm/dexie@4.0.10/dist/dexie.min.js"></script>
+<!-- V68 taskE: FilePond 上传组件 + 图片预览/类型校验插件 + SortableJS 拖拽排序 -->
+<script src="https://cdn.jsdelivr.net/npm/filepond@4.31.0/dist/filepond.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/filepond-plugin-file-validate-type@1.2.8/dist/filepond-plugin-file-validate-type.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+
 <script>
 'use strict';
 
@@ -2776,6 +2797,30 @@ const Toast = {
 /* ============================================================
    Store
    ============================================================ */
+/* V35 taskD: IDB (Dexie) 封装 — 历史记录/任务/缩略图三级存储
+   window._thumbDB 暴露给 ThumbService（任务 C 已以 if(window._thumbDB) 守护） */
+const IDB = (() => {
+  let db = null;
+  try {
+    if (typeof Dexie !== 'undefined') {
+      db = new Dexie('ai_workbench_db');
+      db.version(1).stores({
+        history: 'id, createdAt, completedAt',
+        tasks: 'id, createdAt',
+        thumbs: 'url'  // 给 ThumbService 用
+      });
+      window._thumbDB = db;  // 暴露给 ThumbService
+    }
+  } catch (e) { console.warn('IDB init failed', e); }
+  return {
+    db,
+    async getHistory() { try { return await db.history.toArray(); } catch { return []; } },
+    async saveHistory(arr) { try { await db.history.bulkPut(arr); } catch {} },
+    async getTasks() { try { return await db.tasks.toArray(); } catch { return []; } },
+    async saveTasks(arr) { try { await db.tasks.bulkPut(arr); } catch {} }
+  };
+})();
+
 const Store = {
   getApiKey() { return sessionGet(CONFIG.STORAGE_KEYS.API_KEY) || storageGet(CONFIG.STORAGE_KEYS.API_KEY); },
   setApiKey(key) { sessionSet(CONFIG.STORAGE_KEYS.API_KEY, key); storageSet(CONFIG.STORAGE_KEYS.API_KEY, key); },
@@ -2794,6 +2839,8 @@ const Store = {
     if (arr.length > 500) arr.length = 500;
     storageSet(CONFIG.STORAGE_KEYS.HISTORY, JSON.stringify(arr));
   },
+  // V35: 整条历史覆盖写（供结果归档等场景批量更新）
+  saveHistory(arr) { storageSet(CONFIG.STORAGE_KEYS.HISTORY, JSON.stringify(arr || [])); },
   toggleFavorite(id) {
     const arr = this.getHistory();
     const h = arr.find(x => x.id === id);
@@ -2855,13 +2902,24 @@ const Store = {
   getTaskCenterUrl() { return storageGet(CONFIG.STORAGE_KEYS.TASK_CENTER_URL); },
   setTaskCenterUrl(v) { storageSet(CONFIG.STORAGE_KEYS.TASK_CENTER_URL, v); },
   getTaskCenterToken() { return storageGet(CONFIG.STORAGE_KEYS.TASK_CENTER_TOKEN); },
-  setTaskCenterToken(v) { storageSet(CONFIG.STORAGE_KEYS.TASK_CENTER_TOKEN, v); }
+  setTaskCenterToken(v) { storageSet(CONFIG.STORAGE_KEYS.TASK_CENTER_TOKEN, v); },
+
+  /* V35 taskD: IndexedDB 优先 — 异步包装层，localStorage 作为 fallback */
+  useIDB: typeof Dexie !== 'undefined',
+  async getHistoryAsync() { return this.useIDB ? await IDB.getHistory() : this.getHistory(); },
+  async getTasksAsync() { return this.useIDB ? await IDB.getTasks() : this.getTasks(); },
+  async saveHistoryAsync(arr) { if (this.useIDB) await IDB.saveHistory(arr); this.saveHistory(arr); },
+  async saveTasksAsync(arr) { if (this.useIDB) await IDB.saveTasks(arr); this.saveTasks(arr); }
 };
 
 /* ============================================================
    Api
    ============================================================ */
 const Api = {
+  // 上传缓存：key = cacheScope|file.name|file.size|file.lastModified, value = R2 url
+  // 避免同一文件重复上传（同 tab、同 param.type 下复用），节省带宽
+  _uploadCache: new Map(),
+
   async request(method, path, body, opts = {}) {
     const key = Store.getApiKey();
     if (!key && !opts.skipAuth) throw new Error('no_api_key: 请先在设置中填入 API Key');
@@ -2939,7 +2997,13 @@ const Api = {
     return this.normalizeResponse(res);
   },
 
-  uploadToR2(file, onProgress, _retryCount = 0) {
+  uploadToR2(file, onProgress, _retryCount = 0, _cacheScope = '') {
+    // 缓存 key: cacheScope(=param.type, 用于 tab 级隔离) + 文件名 + 大小 + 修改时间
+    const cacheKey = _cacheScope + '|' + file.name + '|' + file.size + '|' + (file.lastModified || 0);
+    if (this._uploadCache.has(cacheKey)) {
+      // 缓存命中：直接返回已上传的 R2 URL，跳过 XHR
+      return Promise.resolve(this._uploadCache.get(cacheKey));
+    }
     return new Promise((resolve, reject) => {
       const workerUrl = Store.getR2WorkerUrl();
       const token = Store.getR2AuthToken();
@@ -2950,21 +3014,31 @@ const Api = {
       xhr.upload.onprogress = e => { if (e.lengthComputable && onProgress) onProgress(e.loaded / e.total); };
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          try { const d = JSON.parse(xhr.responseText); const fileUrl = d.url || d.fileUrl || d.publicUrl; if (fileUrl) resolve(fileUrl); else reject(new Error('R2 返回缺少 URL')); }
+          try {
+            const d = JSON.parse(xhr.responseText);
+            const fileUrl = d.url || d.fileUrl || d.publicUrl;
+            if (fileUrl) {
+              // 上传成功：写入缓存，后续相同文件直接复用
+              this._uploadCache.set(cacheKey, fileUrl);
+              resolve(fileUrl);
+            } else {
+              reject(new Error('R2 返回缺少 URL'));
+            }
+          }
           catch { reject(new Error('R2 返回格式错误')); }
         } else { reject(new Error(`R2 上传失败: HTTP ${xhr.status}`)); }
       };
       xhr.onerror = () => {
         if (_retryCount < 2) {
           const delay = 2000 * (_retryCount + 1);
-          setTimeout(() => { this.uploadToR2(file, onProgress, _retryCount + 1).then(resolve).catch(reject); }, delay);
+          setTimeout(() => { this.uploadToR2(file, onProgress, _retryCount + 1, _cacheScope).then(resolve).catch(reject); }, delay);
         } else {
           reject(new Error('R2 上传失败（已重试3次），请检查网络或更换自定义域名'));
         }
       };
       xhr.ontimeout = () => {
         if (_retryCount < 2) {
-          setTimeout(() => { this.uploadToR2(file, onProgress, _retryCount + 1).then(resolve).catch(reject); }, 2000);
+          setTimeout(() => { this.uploadToR2(file, onProgress, _retryCount + 1, _cacheScope).then(resolve).catch(reject); }, 2000);
         } else {
           reject(new Error('R2 上传超时（已重试3次），请检查网络'));
         }
@@ -3064,6 +3138,7 @@ const ThumbService = {
   _queue: [],
   _activeCount: 0,
   _timestamps: [],
+  _memCache: new Map(),  // V57: key = source url, value = thumbUrl (in-memory LRU-ish)
 
   async makeThumb(source, type) {
     // type: 'image' | 'video'
@@ -3156,24 +3231,60 @@ const ThumbService = {
 
   async ensureThumb(record) {
     // record: { id?, result: { url, thumbUrl }, model: { type } }
+    // V57: 三级读取 — 内存缓存 → IndexedDB 持久缓存 → R2 thumbUrl → 生成新缩略图
     try {
       const result = record.result || {};
-      if (!result.url) return null;
-      if (result.thumbUrl) return result.thumbUrl;
+      const url = result.url;
+      if (!url) return null;
+
+      // 1. 内存缓存命中 → 直接返回
+      if (this._memCache.has(url)) return this._memCache.get(url);
+
+      // 2. IndexedDB 持久缓存命中 → 填充内存并返回
+      //    (window._thumbDB 由任务 D 创建的 Dexie 实例，未就绪时跳过)
+      if (window._thumbDB) {
+        try {
+          const cached = await window._thumbDB.thumbs.get(url);
+          if (cached && cached.thumbUrl) {
+            this._memCache.set(url, cached.thumbUrl);
+            return cached.thumbUrl;
+          }
+        } catch (e) { /* swallow */ }
+      }
+
+      // 3. 已有 R2 缩略图链接 → 直接复用并填充两层缓存
+      if (result.thumbUrl) {
+        this._memCache.set(url, result.thumbUrl);
+        if (window._thumbDB) {
+          try { await window._thumbDB.thumbs.put({ url, thumbUrl: result.thumbUrl, ts: Date.now() }); } catch (e) { /* swallow */ }
+        }
+        return result.thumbUrl;
+      }
+
       // Skip if R2 not configured (can't upload thumb)
       const workerUrl = Store.getR2WorkerUrl();
       const token = Store.getR2AuthToken();
-      if (!workerUrl || !token) return result.url; // graceful degradation
+      if (!workerUrl || !token) return url; // graceful degradation
+      // 音频类型跳过缩略图
       const type = (record.model?.type === 'video') ? 'video'
                  : (record.model?.type === 'audio') ? null
                  : 'image';
-      if (!type) return result.url; // audio has no thumbnail
-      const blob = await this.makeThumb(result.url, type);
-      if (!blob) return result.url; // graceful degradation
+      if (!type) return url; // audio has no thumbnail
+
+      // 4. 生成新缩略图 → canvas 压缩 → 上传 R2 → 双层缓存
+      const blob = await this.makeThumb(url, type);
+      if (!blob) return url; // graceful degradation
       const thumbFile = new File([blob], 'thumb_' + (record.id || Date.now()) + '.webp', { type: 'image/webp' });
       // Upload to R2 thumb/ subdirectory by appending &dir=thumb
       const thumbUrl = await this._uploadThumb(thumbFile);
-      return thumbUrl || result.url;
+      if (!thumbUrl) return url; // graceful degradation
+      // 存内存缓存
+      this._memCache.set(url, thumbUrl);
+      // 存 IndexedDB 持久缓存（速创链接失效后仍可命中）
+      if (window._thumbDB) {
+        try { await window._thumbDB.thumbs.put({ url, thumbUrl, ts: Date.now() }); } catch (e) { /* swallow */ }
+      }
+      return thumbUrl;
     } catch (e) {
       console.warn('[ThumbService] ensureThumb failed:', e);
       return record.result?.url || null;
@@ -3952,6 +4063,8 @@ const UI = {
   _generating: false,
   // V56: Pipeline state — tracks the active pipeline task and step progress
   _pipeline: { active: null, steps: [] },
+  // V35: 结果预加载缓存 — key = 原始url, value = { blob, r2url, timestamp }
+  _preloadCache: new Map(),
 
   /* ---------- INIT ---------- */
   init() {
@@ -3971,6 +4084,51 @@ const UI = {
     if (typeof TaskCenter !== 'undefined') {
       TaskCenter.init().catch(() => {});
     }
+    // V35: 启动时从云端拉取历史
+    if (TaskCenter.isAvailable()) {
+      this._syncHistoryFromCloud().catch(() => {});
+    }
+  },
+
+  /* ---------- V35 taskD: 历史记录 R2 同步 ---------- */
+  // 30s 防抖上传
+  _scheduleHistorySync() {
+    clearTimeout(this._historySyncTimer);
+    this._historySyncTimer = setTimeout(() => this._syncHistoryToCloud(), 30000);
+  },
+  async _syncHistoryToCloud() {
+    if (!TaskCenter.isAvailable()) return;
+    try {
+      const hist = Store.getHistory();
+      // 取最近 500 条
+      const top = hist.slice(0, 500);
+      await fetch(TaskCenter.workerUrl + '/userdata?key=history&token=' + encodeURIComponent(TaskCenter.token), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(top)
+      });
+    } catch (e) { /* silent */ }
+  },
+  async _syncHistoryFromCloud() {
+    if (!TaskCenter.isAvailable()) return;
+    try {
+      const res = await fetch(TaskCenter.workerUrl + '/userdata?key=history&token=' + encodeURIComponent(TaskCenter.token));
+      const data = await res.json();
+      if (data.ok && data.data && Array.isArray(data.data)) {
+        const local = Store.getHistory();
+        const merged = this._mergeHistory(local, data.data);
+        Store.saveHistory(merged);
+      }
+    } catch (e) { /* silent */ }
+  },
+  _mergeHistory(local, cloud) {
+    // union by id, prefer newer completedAt, sort by createdAt desc
+    const map = new Map();
+    [...cloud, ...local].forEach(h => {
+      const ex = map.get(h.id);
+      if (!ex || (h.completedAt || 0) > (ex.completedAt || 0)) map.set(h.id, h);
+    });
+    return Array.from(map.values()).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   },
 
   _startTitleTimer() {
@@ -4356,11 +4514,12 @@ const UI = {
       fileInput.multiple = param.output !== 'single';
       fileInput.style.display = 'none';
       fileInput.addEventListener('change', e => {
-        for (const f of e.target.files) {
-          if (param.type === 'ref-video') this._addLocalVideoRef(key, f);
-          else if (param.type === 'ref-audio') this._addLocalAudioRef(key, f);
-          else this._addLocalRef(key, f);
-        }
+        // 并行添加多个本地参考文件（_addLocalRef/Video/Audio 内部异步触发 R2 上传）
+        Promise.all(Array.from(e.target.files).map(f => {
+          if (param.type === 'ref-video') return this._addLocalVideoRef(key, f);
+          else if (param.type === 'ref-audio') return this._addLocalAudioRef(key, f);
+          else return this._addLocalRef(key, f);
+        }));
         fileInput.value = '';
       });
       refSection.appendChild(fileInput);
@@ -4368,6 +4527,20 @@ const UI = {
       refGrid.addEventListener('click', e => {
         if (e.target.closest('.ref-del') || e.target.closest('.ref-copy') || e.target.closest('.ref-item')) return;
         this.state.activeRefKey = key;
+        // V68 taskE: 优先使用 FilePond 弹窗，加载失败/不可用时 fallback 到原生 fileInput
+        const acceptType = param.type === 'ref-video' ? 'video/*' : param.type === 'ref-audio' ? 'audio/*' : 'image/*';
+        const title = param.type === 'ref-video' ? '添加参考视频' : param.type === 'ref-audio' ? '添加参考音频' : '添加参考图';
+        const handleFiles = files => Promise.all(files.map(f => {
+          if (param.type === 'ref-video') return this._addLocalVideoRef(key, f);
+          else if (param.type === 'ref-audio') return this._addLocalAudioRef(key, f);
+          else return this._addLocalRef(key, f);
+        }));
+        if (typeof FilePond !== 'undefined' && this._openFilePondPicker({
+          accept: acceptType, multiple: param.output !== 'single', title,
+          onSelect: handleFiles
+        })) {
+          return; // FilePond 已弹窗
+        }
         fileInput.click();
       });
       refGrid.addEventListener('pointerdown', () => { this.state.activeRefKey = key; }, true);
@@ -4479,11 +4652,12 @@ const UI = {
     fileInput.multiple = p.output !== 'single';
     fileInput.style.display = 'none';
     fileInput.addEventListener('change', e => {
-      for (const f of e.target.files) {
-        if (p.type === 'ref-video') this._addLocalVideoRef(p.key, f);
-        else if (p.type === 'ref-audio') this._addLocalAudioRef(p.key, f);
-        else this._addLocalRef(p.key, f);
-      }
+      // 并行添加多个本地参考文件（_addLocalRef/Video/Audio 内部异步触发 R2 上传）
+      Promise.all(Array.from(e.target.files).map(f => {
+        if (p.type === 'ref-video') return this._addLocalVideoRef(p.key, f);
+        else if (p.type === 'ref-audio') return this._addLocalAudioRef(p.key, f);
+        else return this._addLocalRef(p.key, f);
+      }));
       fileInput.value = '';
     });
     wrap.appendChild(fileInput);
@@ -4491,6 +4665,20 @@ const UI = {
     grid.addEventListener('click', e => {
       if (e.target.closest('.ref-del') || e.target.closest('.ref-copy') || e.target.closest('.ref-item')) return;
       this.state.activeRefKey = p.key;
+      // V68 taskE: 优先使用 FilePond 弹窗，加载失败/不可用时 fallback 到原生 fileInput
+      const acceptType = p.type === 'ref-video' ? 'video/*' : p.type === 'ref-audio' ? 'audio/*' : 'image/*';
+      const title = p.type === 'ref-video' ? '添加参考视频' : p.type === 'ref-audio' ? '添加参考音频' : '添加参考图';
+      const handleFiles = files => Promise.all(files.map(f => {
+        if (p.type === 'ref-video') return this._addLocalVideoRef(p.key, f);
+        else if (p.type === 'ref-audio') return this._addLocalAudioRef(p.key, f);
+        else return this._addLocalRef(p.key, f);
+      }));
+      if (typeof FilePond !== 'undefined' && this._openFilePondPicker({
+        accept: acceptType, multiple: p.output !== 'single', title,
+        onSelect: handleFiles
+      })) {
+        return; // FilePond 已弹窗
+      }
       fileInput.click();
     });
     grid.addEventListener('pointerdown', () => { this.state.activeRefKey = p.key; }, true);
@@ -4765,7 +4953,8 @@ const UI = {
     try {
       const blob = Api.dataUrlToBlob(item.src);
       const file = new File([blob], item.name, { type: blob.type });
-      const url = await Api.uploadToR2(file, pct => this._updateRefProgress(key, item.id, pct));
+      // 传入 param.type='ref-image' 作为 tab 级缓存隔离作用域
+      const url = await Api.uploadToR2(file, pct => this._updateRefProgress(key, item.id, pct), 0, 'ref-image');
       item.remote = url; item.uploaded = true;
       this._renderRefGrid(key);
     } catch (e) { item.uploadError = e.message; this._renderRefGrid(key); Toast.warning(`图片上传失败：${e.message}，点击重试`); }
@@ -4773,7 +4962,8 @@ const UI = {
 
   async _uploadLocalVideo(key, item) {
     try {
-      const url = await Api.uploadToR2(item.file, pct => this._updateRefProgress(key, item.id, pct));
+      // 传入 param.type='ref-video' 作为 tab 级缓存隔离作用域
+      const url = await Api.uploadToR2(item.file, pct => this._updateRefProgress(key, item.id, pct), 0, 'ref-video');
       item.remote = url; item.uploaded = true;
       this._renderRefGrid(key);
       this._updateRefVideoWarn(key);
@@ -4782,7 +4972,8 @@ const UI = {
 
   async _uploadLocalAudio(key, item) {
     try {
-      const url = await Api.uploadToR2(item.file, pct => this._updateRefProgress(key, item.id, pct));
+      // 传入 param.type='ref-audio' 作为 tab 级缓存隔离作用域
+      const url = await Api.uploadToR2(item.file, pct => this._updateRefProgress(key, item.id, pct), 0, 'ref-audio');
       item.remote = url; item.uploaded = true;
       this._renderRefGrid(key);
       this._updateRefAudioWarn(key);
@@ -4807,6 +4998,69 @@ const UI = {
     for (const p of model.params) {
       if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') this._renderRefGrid(p.key);
     }
+  },
+
+  // V68 taskE: 注册 FilePond 插件（幂等，仅注册一次）
+  _registerFilePondPlugins() {
+    if (this._fpPluginsRegistered) return;
+    if (typeof FilePond === 'undefined') return;
+    try {
+      if (typeof FilePondPluginImagePreview !== 'undefined') FilePond.registerPlugin(FilePondPluginImagePreview);
+      if (typeof FilePondPluginFileValidateType !== 'undefined') FilePond.registerPlugin(FilePondPluginFileValidateType);
+    } catch (e) { console.warn('[FilePond] registerPlugin failed', e); }
+    this._fpPluginsRegistered = true;
+  },
+
+  // V68 taskE: 打开 FilePond 弹窗选文件，opts: { accept, multiple, title, onSelect(files) -> Promise|void }
+  // 返回 true 表示已弹出（FilePond 可用），false 表示调用方应 fallback 到原生 input
+  _openFilePondPicker(opts) {
+    if (typeof FilePond === 'undefined') return false;
+    this._registerFilePondPlugins();
+    const close = () => { try { FilePond.destroy(fp); } catch (_) {} if (modal.parentNode) modal.remove(); };
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay show';
+    modal.innerHTML = `
+      <div class="modal-content" style="max-width:500px">
+        <div class="modal-header">
+          <h3>${esc(opts.title || '上传文件')}</h3>
+          <button class="modal-close" id="fpClose" type="button">×</button>
+        </div>
+        <div class="modal-body">
+          <input type="file" id="fpInput" accept="${esc(opts.accept || 'image/*')}" ${opts.multiple !== false ? 'multiple' : ''}>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" id="fpCancel" type="button">取消</button>
+          <button class="btn-primary" id="fpConfirm" type="button">添加</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    let fp;
+    try {
+      fp = FilePond.create(modal.querySelector('#fpInput'), {
+        allowMultiple: opts.multiple !== false,
+        instantUpload: false,
+        server: null,
+        credits: false,
+        labelIdle: '拖放文件或 <span class="filepond--label-action">浏览</span>'
+      });
+    } catch (e) {
+      console.warn('[FilePond] init failed', e);
+      modal.remove();
+      return false;
+    }
+
+    modal.querySelector('#fpClose').addEventListener('click', close);
+    modal.querySelector('#fpCancel').addEventListener('click', close);
+    modal.addEventListener('click', e => { if (e.target === modal) close(); });
+    modal.querySelector('#fpConfirm').addEventListener('click', async () => {
+      const files = fp.getFiles().map(f => f.file).filter(Boolean);
+      if (files.length === 0) { Toast.info('请先选择文件'); return; }
+      try { await opts.onSelect?.(files); } catch (e) { console.warn('[FilePond] onSelect error', e); }
+      close();
+    });
+    return true;
   },
 
   _renderRefGrid(key) {
@@ -4841,6 +5095,29 @@ const UI = {
     grid.querySelectorAll('[data-copy-url]').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); const r = refs.find(x => x.id === btn.dataset.copyUrl); if (r && r.remote) { copy(r.remote).then(ok => ok ? Toast.success('URL 已复制') : Toast.error('复制失败')); } }));
     grid.querySelectorAll('.ref-item').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); const r = refs.find(x => x.id === el.dataset.rid); if (r && r.remote) { if (r.kind.includes('video')) this._openLightbox([r.remote], 0, true); else if (!r.kind.includes('audio')) this._openLightbox([r.remote], 0, false); } }));
     this._updateEstimate();
+    // V68 taskE: SortableJS 拖拽排序（仅在 2+ 个 ref-item 时启用）
+    const refItems = grid.querySelectorAll('.ref-item');
+    if (typeof Sortable !== 'undefined' && refItems.length > 1) {
+      // 先销毁旧实例，避免重复绑定
+      if (grid._sortableInst) { try { grid._sortableInst.destroy(); } catch (_) {} grid._sortableInst = null; }
+      try {
+        grid._sortableInst = Sortable.create(grid, {
+          animation: 150,
+          draggable: '.ref-item',
+          filter: '.ref-add',
+          onEnd: (evt) => {
+            if (evt.oldIndex === evt.newIndex) return;
+            const arr = this._getRefs(key);
+            // draggable='.ref-item' 限定后，oldIndex/newIndex 是 .ref-item 集合内的索引，对齐 refs 数组
+            if (!arr[evt.oldIndex]) return;
+            const moved = arr.splice(evt.oldIndex, 1)[0];
+            arr.splice(evt.newIndex, 0, moved);
+            // 重新渲染（会重建 Sortable 实例，使数据与 DOM 一致）
+            this._renderRefGrid(key);
+          }
+        });
+      } catch (e) { console.warn('[Sortable] init failed', e); }
+    }
   },
 
   _updateRefVideoWarn(key) {
@@ -5425,6 +5702,66 @@ const UI = {
   },
 
   /* ---------- TASK RESULTS ---------- */
+  // V35: 预加载结果 blob + 后台转存 R2（速创临时 URL → R2 永久链接）
+  async _preloadResult(task) {
+    const url = task.result?.url;
+    if (!url || this._preloadCache.has(url)) return;
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      this._preloadCache.set(url, { blob, timestamp: Date.now() });
+      // FIFO 淘汰: 最多保留 5 个
+      if (this._preloadCache.size > 5) {
+        const firstKey = this._preloadCache.keys().next().value;
+        this._preloadCache.delete(firstKey);
+      }
+      // 转存 R2（TaskCenter 可用时）
+      if (typeof TaskCenter !== 'undefined' && TaskCenter.isAvailable()) {
+        this._archiveResult(task).catch(() => {});
+      }
+    } catch (e) { /* silent */ }
+  },
+
+  // V35: 把速创结果 URL 转存到 R2 results/ 目录，主链接替换为 R2 永久链接
+  async _archiveResult(task) {
+    const url = task.result?.url;
+    if (!url) return;
+    // 跳过已是 R2 链接的
+    if (url.startsWith(TaskCenter.workerUrl)) return;
+    // 跳过 data:/blob:
+    if (/^(data:|blob:)/.test(url)) return;
+    // 提取扩展名
+    const ext = (url.match(/\.(png|jpg|jpeg|webp|mp4|mp3|wav|webm)(\?|$)/i) || [,'png'])[1].toLowerCase();
+    try {
+      const res = await fetch(TaskCenter.workerUrl + '/archive?url=' + encodeURIComponent(url) + '&ext=' + ext + '&token=' + encodeURIComponent(TaskCenter.token), { method: 'POST' });
+      const data = await res.json();
+      if (data.ok && data.url) {
+        // 保存原始速创 URL 作为备用
+        task.result.originalUrl = url;
+        // 替换主链接为 R2 永久链接
+        task.result.url = data.url;
+        // 同步更新 Store 中的活动任务记录
+        const tasks = Store.getTasks();
+        const t = tasks.find(x => x.id === task.id);
+        if (t) { t.result = task.result; Store.saveTasks(tasks); }
+        // 同步更新历史记录
+        const hist = Store.getHistory();
+        const h = hist.find(x => x.id === task.id);
+        if (h) { h.result = task.result; Store.saveHistory(hist); }
+        // 重新映射 preloadCache 的 key（原 URL → R2 URL）
+        if (this._preloadCache.has(url)) {
+          const entry = this._preloadCache.get(url);
+          this._preloadCache.delete(url);
+          this._preloadCache.set(data.url, entry);
+        }
+        // 刷新 UI 卡片显示新链接
+        this._updateTaskCard(task);
+        this._renderResultStrip();
+        if ($('#historySidebar')?.classList.contains('show')) this.renderHistory();
+      }
+    } catch (e) { /* silent */ }
+  },
+
   onTaskResult(taskId, result) {
     const tasks = Store.getTasks();
     const task = tasks.find(t => t.id === taskId);
@@ -5440,6 +5777,10 @@ const UI = {
       this.notifyTaskComplete(task);
       Toast.success(`${task.model.name} 生成完成`);
       this._celebrate(task);
+      // V35: 预加载结果 blob + 自动转存 R2
+      this._preloadResult(task).catch(() => {});
+      // V35: 历史 R2 同步 (30s 防抖)
+      this._scheduleHistorySync();
     } else if (result.status === 'failed') {
       task.status = 'failed';
       task.error = result.error;
@@ -5900,9 +6241,16 @@ const UI = {
   async _downloadFile(url, name) {
     if (!url) return;
     try {
-      const res = await fetch(url, { mode: 'cors' });
-      if (!res.ok) throw new Error('fetch failed: HTTP ' + res.status);
-      const blob = await res.blob();
+      // V35: 优先用预加载缓存的 blob，避免重复 fetch（速创临时 URL 可能已失效）
+      let blob = null;
+      if (this._preloadCache.has(url)) {
+        blob = this._preloadCache.get(url).blob;
+      }
+      if (!blob) {
+        const res = await fetch(url, { mode: 'cors' });
+        if (!res.ok) throw new Error('fetch failed: HTTP ' + res.status);
+        blob = await res.blob();
+      }
       const objUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = objUrl;
@@ -6735,8 +7083,9 @@ ${items.map(h => {
         return;
       }
       e.preventDefault();
-      for (const f of imageFiles) this._addLocalRef(targetKey, f);
-      for (const f of videoFiles) this._addLocalVideoRef(targetKey, f);
+      // 并行添加粘贴的图片/视频到参考图（_addLocalRef/Video 内部异步触发 R2 上传）
+      Promise.all(imageFiles.map(f => this._addLocalRef(targetKey, f)));
+      Promise.all(videoFiles.map(f => this._addLocalVideoRef(targetKey, f)));
       if (text.trim() && /^https?:\/\/\S+$/i.test(text.trim())) this._addUrlRef(targetKey, text.trim());
     });
   },
@@ -6788,10 +7137,12 @@ ${items.map(h => {
       if (!param) return;
       const url = e.dataTransfer.getData('text/plain');
       if (url && /^https?:\/\//.test(url)) { this._addUrlRef(key, url); return; }
-      for (const f of e.dataTransfer.files) {
-        if (param.type === 'ref-video' && f.type.startsWith('video/')) this._addLocalVideoRef(key, f);
-        else if (param.type === 'ref-image' && f.type.startsWith('image/')) this._addLocalRef(key, f);
-      }
+      // 并行添加拖拽文件到参考图（_addLocalRef/Video 内部异步触发 R2 上传）
+      Promise.all(Array.from(e.dataTransfer.files).map(f => {
+        if (param.type === 'ref-video' && f.type.startsWith('video/')) return this._addLocalVideoRef(key, f);
+        else if (param.type === 'ref-image' && f.type.startsWith('image/')) return this._addLocalRef(key, f);
+        return null;
+      }));
     });
   },
 
