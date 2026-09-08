@@ -6351,113 +6351,129 @@ const UI = {
 
     const nodeTypes = { custom: CustomNode };
 
-    // 转换数据格式: 内部 → React Flow
-    const p = this.state.pipeline;
-    const rfNodes = p.nodes.map(n => ({
-      id: n.id,
-      type: 'custom',
-      position: n.position,
-      data: { ...n.data, _type: n.type, _status: n.status }
-    }));
-    const rfEdges = p.edges.map(e => ({
-      id: e.id,
-      source: e.source, sourceHandle: e.sourceHandle,
-      target: e.target, targetHandle: e.targetHandle,
-      type: 'smoothstep',
-      animated: false,
-      style: { stroke: self._PL_PORT_COLORS[self._getEdgeType(e)] || '#3b6ef5', strokeWidth: 2 },
-      data: { type: self._getEdgeType(e) }
-    }));
-
-    const onNodesChange = (changes) => {
-      p.nodes = applyNodeChanges(changes, p.nodes.map(n => ({
+    // 包装组件: 使用 React state 管理节点/边
+    const { useState, useCallback, useRef } = React;
+    const PipelineApp = () => {
+      const p0 = self.state.pipeline;
+      const [rfNodes, setRfNodes] = useState(p0.nodes.map(n => ({
         id: n.id, type: 'custom', position: n.position,
         data: { ...n.data, _type: n.type, _status: n.status }
-      }))).map(rfn => ({
-        id: rfn.id, type: rfn.data._type, position: rfn.position,
-        data: { ...rfn.data }, status: rfn.data._status
-      }));
-      self._savePipelineGraph();
-    };
-    const onEdgesChange = (changes) => {
-      p.edges = applyEdgeChanges(changes, rfEdges);
-      self._savePipelineGraph();
-    };
-    const onConnect = (conn) => {
-      // 校验类型
-      const sourceNode = p.nodes.find(n => n.id === conn.source);
-      const targetNode = p.nodes.find(n => n.id === conn.target);
-      if (!sourceNode || !targetNode) return;
-      const sDef = self._PL_NODE_TYPES[sourceNode.type];
-      const tDef = self._PL_NODE_TYPES[targetNode.type];
-      const sPort = (sDef.outputs || []).find(o => o.id === conn.sourceHandle);
-      const tPort = (tDef.inputs || []).find(i => i.id === conn.targetHandle);
-      if (!sPort || !tPort) return;
-      if (sPort.type !== tPort.type) {
-        Toast.error(`类型不匹配: ${self._plTypeLabel(sPort.type)} → ${self._plTypeLabel(tPort.type)}`);
-        return;
-      }
-      // 单输入端口替换
-      if (!tPort.multiple) {
-        p.edges = p.edges.filter(e => !(e.target === conn.target && e.targetHandle === conn.targetHandle));
-      }
-      const edge = {
-        id: self._plGenId('e'),
-        source: conn.source, sourceHandle: conn.sourceHandle,
-        target: conn.target, targetHandle: conn.targetHandle
-      };
-      p.edges.push(edge);
-      self._renderReactFlow();
-      self._savePipelineGraph();
-    };
-    const onNodeClick = (e, node) => {
-      p.selectedNodeId = node.id;
-      self._renderPipelineInspector();
-    };
-    const onPaneClick = () => {
-      p.selectedNodeId = null;
-      self._renderPipelineInspector();
-    };
-    const onInit = (instance) => {
-      self._plRfInstance = instance;
-      setTimeout(() => instance.fitView({ padding: 0.3 }), 100);
-    };
-    const onDrop = (e) => {
-      e.preventDefault();
-      const type = e.dataTransfer.getData('application/pl-node-type');
-      if (!type) return;
-      const bounds = container.getBoundingClientRect();
-      const position = instance.project({ x: e.clientX - bounds.left, y: e.clientY - bounds.top });
-      self._addPipelineNode(type, position.x, position.y);
-    };
-    const onDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; };
-    const onNodeDragStop = (e, node) => {
-      const n = p.nodes.find(x => x.id === node.id);
-      if (n) { n.position = node.position; self._savePipelineGraph(); }
-    };
+      })));
+      const [rfEdges, setRfEdges] = useState(p0.edges.map(e => ({
+        id: e.id, source: e.source, sourceHandle: e.sourceHandle,
+        target: e.target, targetHandle: e.targetHandle,
+        type: 'smoothstep', animated: false,
+        style: { stroke: self._PL_PORT_COLORS[self._getEdgeType(e)] || '#3b6ef5', strokeWidth: 2 },
+        data: { type: self._getEdgeType(e) }
+      })));
+      const rfInstance = useRef(null);
 
-    // 渲染 React Flow
-    if (self._plRfRoot) {
-      try { ReactDOM.unmountComponentAtNode(container); } catch {}
-    }
-    self._plRfRoot = ReactDOM.createRoot(container);
-    self._plRfRoot.render(
-      h(ReactFlow, {
-        nodes: rfNodes,
-        edges: rfEdges,
-        nodeTypes: nodeTypes,
-        onNodesChange,
-        onEdgesChange,
-        onConnect,
-        onNodeClick,
-        onPaneClick,
-        onInit,
-        onDrop,
-        onDragOver,
-        onNodeDragStop,
-        fitView: true,
-        snapToGrid: true,
-        snapGrid: [16, 16],
+      const syncToInternal = useCallback((nodes, edges) => {
+        const p = self.state.pipeline;
+        p.nodes = nodes.map(n => ({
+          id: n.id, type: n.data._type, position: n.position,
+          data: { ...n.data }, status: n.data._status
+        }));
+        p.edges = edges.map(e => ({
+          id: e.id, source: e.source, sourceHandle: e.sourceHandle,
+          target: e.target, targetHandle: e.targetHandle
+        }));
+        self._savePipelineGraph();
+      }, []);
+
+      const onNodesChange = useCallback((changes) => {
+        setRfNodes(prev => {
+          const next = applyNodeChanges(changes, prev);
+          syncToInternal(next, rfEdges);
+          return next;
+        });
+      }, [rfEdges, syncToInternal]);
+
+      const onEdgesChange = useCallback((changes) => {
+        setRfEdges(prev => {
+          const next = applyEdgeChanges(changes, prev);
+          syncToInternal(rfNodes, next);
+          return next;
+        });
+      }, [rfNodes, syncToInternal]);
+
+      const onConnect = useCallback((conn) => {
+        const p = self.state.pipeline;
+        const sourceNode = p.nodes.find(n => n.id === conn.source);
+        const targetNode = p.nodes.find(n => n.id === conn.target);
+        if (!sourceNode || !targetNode) return;
+        const sDef = self._PL_NODE_TYPES[sourceNode.type];
+        const tDef = self._PL_NODE_TYPES[targetNode.type];
+        const sPort = (sDef.outputs || []).find(o => o.id === conn.sourceHandle);
+        const tPort = (tDef.inputs || []).find(i => i.id === conn.targetHandle);
+        if (!sPort || !tPort) return;
+        if (sPort.type !== tPort.type) {
+          Toast.error(`类型不匹配: ${self._plTypeLabel(sPort.type)} → ${self._plTypeLabel(tPort.type)}`);
+          return;
+        }
+        if (!tPort.multiple) {
+          setRfEdges(prev => prev.filter(e => !(e.target === conn.target && e.targetHandle === conn.targetHandle)));
+        }
+        const newEdge = {
+          id: self._plGenId('e'),
+          source: conn.source, sourceHandle: conn.sourceHandle,
+          target: conn.target, targetHandle: conn.targetHandle,
+          type: 'smoothstep', animated: false,
+          style: { stroke: self._PL_PORT_COLORS[sPort.type] || '#3b6ef5', strokeWidth: 2 },
+          data: { type: sPort.type }
+        };
+        setRfEdges(prev => {
+          const next = [...prev, newEdge];
+          syncToInternal(rfNodes, next);
+          return next;
+        });
+      }, [rfNodes, syncToInternal]);
+
+      const onNodeClick = useCallback((e, node) => {
+        self.state.pipeline.selectedNodeId = node.id;
+        self._renderPipelineInspector();
+      }, []);
+
+      const onPaneClick = useCallback(() => {
+        self.state.pipeline.selectedNodeId = null;
+        self._renderPipelineInspector();
+      }, []);
+
+      const onInit = useCallback((instance) => {
+        rfInstance.current = instance;
+        self._plRfInstance = instance;
+        setTimeout(() => instance.fitView({ padding: 0.3 }), 100);
+      }, []);
+
+      const onDrop = useCallback((e) => {
+        e.preventDefault();
+        const type = e.dataTransfer.getData('application/pl-node-type');
+        if (!type || !rfInstance.current) return;
+        const bounds = container.getBoundingClientRect();
+        const position = rfInstance.current.project({ x: e.clientX - bounds.left, y: e.clientY - bounds.top });
+        self._addPipelineNode(type, position.x, position.y);
+      }, []);
+
+      const onDragOver = useCallback((e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; }, []);
+
+      const onNodeDragStop = useCallback((e, node) => {
+        setRfNodes(prev => {
+          const next = prev.map(n => n.id === node.id ? { ...n, position: node.position } : n);
+          syncToInternal(next, rfEdges);
+          return next;
+        });
+      }, [rfEdges, syncToInternal]);
+
+      // 暴露 setRfNodes/setRfEdges 给外部 (供 _addPipelineNode 等使用)
+      self._plSetRfNodes = setRfNodes;
+      self._plSetRfEdges = setRfEdges;
+      self._plSyncToInternal = syncToInternal;
+
+      return h(ReactFlow, {
+        nodes: rfNodes, edges: rfEdges, nodeTypes,
+        onNodesChange, onEdgesChange, onConnect,
+        onNodeClick, onPaneClick, onInit, onDrop, onDragOver, onNodeDragStop,
+        fitView: true, snapToGrid: true, snapGrid: [16, 16],
         deleteKeyCode: ['Delete', 'Backspace'],
         multiSelectionKeyCode: ['Meta', 'Control'],
         connectionLineType: 'smoothstep'
@@ -6472,28 +6488,33 @@ const UI = {
           },
           maskColor: 'rgba(0,0,0,0.1)'
         })
-      )
-    );
+      );
+    };
+
+    // 渲染
+    if (self._plRfRoot) {
+      try { ReactDOM.unmountComponentAtNode(container); } catch {}
+    }
+    self._plRfRoot = ReactDOM.createRoot(container);
+    self._plRfRoot.render(h(PipelineApp));
   },
 
   _renderReactFlow() {
-    // 重新渲染 React Flow (节点/边变化时)
-    if (this._plRfInstance) {
-      const p = this.state.pipeline;
-      const rfNodes = p.nodes.map(n => ({
-        id: n.id, type: 'custom', position: n.position,
-        data: { ...n.data, _type: n.type, _status: n.status }
-      }));
-      const rfEdges = p.edges.map(e => ({
-        id: e.id, source: e.source, sourceHandle: e.sourceHandle,
-        target: e.target, targetHandle: e.targetHandle,
-        type: 'smoothstep',
-        style: { stroke: this._PL_PORT_COLORS[this._getEdgeType(e)] || '#3b6ef5', strokeWidth: 2 },
-        data: { type: this._getEdgeType(e) }
-      }));
-      this._plRfInstance.setNodes(rfNodes);
-      this._plRfInstance.setEdges(rfEdges);
-    }
+    // 通过 setRfNodes/setRfEdges 更新 React state (受控模式)
+    const p = this.state.pipeline;
+    const rfNodes = p.nodes.map(n => ({
+      id: n.id, type: 'custom', position: n.position,
+      data: { ...n.data, _type: n.type, _status: n.status }
+    }));
+    const rfEdges = p.edges.map(e => ({
+      id: e.id, source: e.source, sourceHandle: e.sourceHandle,
+      target: e.target, targetHandle: e.targetHandle,
+      type: 'smoothstep',
+      style: { stroke: this._PL_PORT_COLORS[this._getEdgeType(e)] || '#3b6ef5', strokeWidth: 2 },
+      data: { type: this._getEdgeType(e) }
+    }));
+    if (this._plSetRfNodes) this._plSetRfNodes(rfNodes);
+    if (this._plSetRfEdges) this._plSetRfEdges(rfEdges);
     this._renderPipelineInspector();
     this._renderPipelineToolbar();
   },
