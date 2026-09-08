@@ -956,7 +956,7 @@ async function handleUpload(request, env, dir) {
     // magic byte) with U+FFFD, irrecoverably corrupting the file. We operate
     // entirely on Uint8Array: headers are decoded as latin1 (lossless for all
     // 256 byte values), and the file body is sliced directly as bytes.
-    return await parseMultipartBinary(requestClone, env, ct);
+    return await parseMultipartBinary(requestClone, env, ct, safeDir);
   }
 
   // Raw body upload (no multipart) — treat entire body as the file.
@@ -991,7 +991,7 @@ async function handleUpload(request, env, dir) {
  * @param {string} ct         The original Content-Type header value.
  * @returns {Promise<Response>}
  */
-async function parseMultipartBinary(request, env, ct) {
+async function parseMultipartBinary(request, env, ct, safeDir) {
   const boundary = /boundary=(?:"([^"]+)"|([^;]+))/i.exec(ct);
   if (!boundary) return jsonResponse(400, { error: 'No boundary in content-type' });
   const bndStr = '--' + (boundary[1] || boundary[2]).trim();
