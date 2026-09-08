@@ -1248,10 +1248,19 @@ input[type="range"].im-range {
     font-size: 15px;
   }
   .param-panel textarea { min-height: 60px; }
-  /* 生成按钮区域紧贴底部 */
-  .gen-section {
-    padding-bottom: 0px;
+  /* V26.9.12: 移动端生成按钮贴底悬浮 */
+  .generate-section {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(180deg, transparent 0%, var(--bg-elev) 30%);
+    padding: 12px max(12px, var(--safe-left)) calc(8px + var(--safe-bottom));
+    margin-top: auto;
+    z-index: 10;
   }
+  .generate-section .workflow-row { display: none; }
+  .estimate-cost { margin-bottom: 2px; }
   /* 弹窗移动化 */
   .settings-drawer {
     width: 100vw;
