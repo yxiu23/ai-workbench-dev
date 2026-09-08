@@ -1670,10 +1670,11 @@ body.is-generating .orb-a {
 }
 .lb-stage {
   display: flex; flex-direction: column; align-items: center; gap: 16px;
-  max-width: min(92vw, 1100px); animation: fade-in .32s ease;
+  max-width: min(92vw, 1200px); animation: fade-in .32s ease;
 }
 /* 装裱：留白卡纸 + 细框 + 底部投影，像挂在虚拟墙面上 */
 .lb-wall {
+  display: inline-block; /* V26.9.9: 跟随图片实际尺寸，让边框/留白贴合内容 */
   padding: clamp(12px, 2.6vw, 24px);
   background: linear-gradient(180deg, #faf7ef 0%, #f1ede2 100%);
   border-radius: 3px;
@@ -1690,17 +1691,17 @@ body.is-generating .orb-a {
     0 34px 68px -20px rgba(0,0,0,.78),
     0 14px 28px -10px rgba(0,0,0,.55);
 }
-.lb-frame { position: relative; line-height: 0; }
+.lb-frame { position: relative; line-height: 0; display: inline-block; } /* V26.9.9: 跟随图片尺寸 */
 .lb-frame::before {
   content: ''; position: absolute; inset: -7px; pointer-events: none;
   border: 1px solid rgba(28,32,44,.38); border-radius: 1px;
 }
 .lb-wall.audio .lb-frame::before { border-color: rgba(215,222,240,.16); }
 .lightbox .lb-art {
-  max-width: min(76vw, 880px); max-height: 68vh;
+  max-width: min(90vw, 1200px); max-height: 80vh;
   display: block; border-radius: 2px; background: #0a0d16;
+  width: auto; height: auto; object-fit: contain; /* V26.9.9: 竖图限高、长图限宽，按比例缩放 */
 }
-.lightbox .lb-art.is-tall { max-height: 74vh; }
 /* 排印精致的元数据卡 */
 .lb-meta {
   min-width: min(72vw, 480px); max-width: 88vw;
@@ -1739,7 +1740,7 @@ body.is-generating .orb-a {
 @media (max-width: 1024px) {
   .brand-mark .brand-name { font-size: 13px; letter-spacing: .1em; }
   .param-panel { padding-top: 14px; }
-  .lightbox .lb-art { max-width: 82vw; max-height: 56vh; }
+  .lightbox .lb-art { max-width: 88vw; max-height: 65vh; }
   .lb-meta { min-width: 78vw; padding: 10px 14px 9px; }
   .lb-meta-prompt { -webkit-line-clamp: 1; }
   .lb-stage { gap: 12px; }
@@ -1823,10 +1824,11 @@ body.is-generating .orb-a {
 .weather-badge {
   display: inline-flex; align-items: center; gap: 3px;
   font-size: 13px; margin-right: 4px; vertical-align: middle;
+  line-height: 1; /* V26.9.9: 大图标不撑高行高 */
   opacity: 0; animation: weather-fade-in 0.6s ease 0.3s forwards;
 }
 @keyframes weather-fade-in { to { opacity: 1; } }
-.weather-icon { font-size: 20px; }
+.weather-icon { font-size: 40px; } /* V26.9.9: 再放大一倍（20→40） */
 .weather-temp { font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .weather-sunny .weather-icon { animation: weather-spin 8s linear infinite; display: inline-block; }
 @keyframes weather-spin { to { transform: rotate(360deg); } }
@@ -1841,7 +1843,7 @@ body.is-generating .orb-a {
 }
 
 /* V38: lightbox 原图加载（模糊预览 + 加载圈） */
-.lb-img-wrap { position: relative; line-height: 0; }
+.lb-img-wrap { position: relative; line-height: 0; display: inline-block; } /* V26.9.9: 跟随图片尺寸 */
 .lb-art-blur { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; filter: blur(4px); transition: opacity .3s; }
 .lb-art-main { position: relative; transition: opacity .3s; }
 .lb-loading {
@@ -6186,7 +6188,9 @@ const UI = {
     if (!url) return null;
     const tasks = Store.getTasks();
     const hist = Store.getHistory();
-    return [...tasks, ...hist.filter(h => !tasks.find(t => t.id === h.id))].find(t => t.result?.url === url) || null;
+    const all = [...tasks, ...hist.filter(h => !tasks.find(t => t.id === h.id))];
+    // V26.9.9: 同时匹配 thumbUrl / originalUrl，避免传入缩略图 URL 或归档前旧 URL 时找不到记录
+    return all.find(t => t.result?.url === url || t.result?.thumbUrl === url || t.result?.originalUrl === url) || null;
   },
 
   _renderLightbox() {
@@ -6205,7 +6209,8 @@ const UI = {
     } else {
       // V38: 模糊缩略图预览 + 加载圈 + 原图就绪刷新
       const thumbUrl = rec?.result?.thumbUrl;
-      const origUrl = url;
+      // V26.9.9: 传入的 url 可能是 thumbUrl 或归档前的速创旧链接，这里强制用记录里的原图 URL（优先 R2 永久链接）
+      const origUrl = rec?.result?.url || url;
       const hasThumb = thumbUrl && thumbUrl !== origUrl;
       mediaHtml = `<div class="lb-img-wrap">
         ${hasThumb ? `<img class="lb-art lb-art-blur" src="${esc(thumbUrl)}" referrerpolicy="no-referrer">` : ''}
