@@ -165,9 +165,9 @@ textarea { resize: vertical; min-height: 80px; }
   display: grid; grid-template-columns: minmax(380px, 480px) 1fr;
   flex: 1; min-height: 0; overflow: hidden;
 }
-/* V30: 流水线模式 — param-panel 显示节点配置, result-panel(画布)占满 */
+/* V30: 流水线模式 — param-panel保持原宽, 显示节点配置, result-panel(画布)占满 */
 .app-body.pipeline-mode {
-  grid-template-columns: 300px 1fr;
+  grid-template-columns: minmax(380px, 480px) 1fr;
 }
 .app-body.pipeline-mode .param-panel {
   overflow: hidden;
@@ -179,7 +179,6 @@ textarea { resize: vertical; min-height: 80px; }
   display: flex !important;
 }
 .app-body.pipeline-mode .generate-section {
-  margin-top: auto;
   flex-shrink: 0;
 }
 .app-body.pipeline-mode .generate-section .workflow-row {
@@ -6277,6 +6276,11 @@ const UI = {
     const { ReactFlow, Background, Controls, MiniMap, Handle, Position, addEdge, applyNodeChanges, applyEdgeChanges, MarkerType } = window.ReactFlow;
     const h = React.createElement;
     const self = this;
+    // 辅助: 将SVG字符串转为React元素 (避免被当作文本转义)
+    const iconEl = (svgStr, extraProps) => h('span', { 
+      ...(extraProps||{}), 
+      dangerouslySetInnerHTML: { __html: svgStr } 
+    });
 
     // 自定义节点组件
     const CustomNode = ({ id, data, selected }) => {
@@ -6322,7 +6326,7 @@ const UI = {
         if (/\.(mp4|webm)(\?|$)/i.test(url)) {
           thumbEl = h('video', { className: 'pl-rfnb-thumb', src: url, muted: true });
         } else if (/\.(mp3|wav)(\?|$)/i.test(url)) {
-          thumbEl = h('div', { className: 'pl-rfnb-thumb', style: { display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand)' } }, self._plIcon('tts'));
+          thumbEl = h('div', { className: 'pl-rfnb-thumb', style: { display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand)' } }, iconEl(self._plIcon('tts')));
         } else {
           thumbEl = h('img', { className: 'pl-rfnb-thumb', src: url, loading: 'lazy', referrerPolicy: 'no-referrer' });
         }
@@ -6332,12 +6336,12 @@ const UI = {
         className: 'pl-rf-node-del',
         onClick: (e) => { e.stopPropagation(); self._removePipelineNode(id); },
         title: '删除节点'
-      }, self._plIcon('x'));
+      }, iconEl(self._plIcon('x')));
 
       return h('div', { className: nodeCls, 'data-cat': def.category, 'data-node-id': id },
         delBtn,
         h('div', { className: 'pl-rf-node-header' },
-          h('span', { className: 'pl-rfnh-icon' }, self._plIcon(def.iconKey)),
+          iconEl(self._plIcon(def.iconKey), { className: 'pl-rfnh-icon' }),
           h('span', { className: 'pl-rfnh-title' }, def.label),
           h('span', { className: 'pl-rfnh-status ' + statusBadge.cls }, statusBadge.text)
         ),
