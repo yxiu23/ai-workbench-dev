@@ -1819,6 +1819,27 @@ body.is-generating .orb-a {
 .filepond--item-panel { background-color: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); }
 .filepond--file-action-button.filepond--file-action-button { background-color: var(--surface-2); color: var(--text-muted); }
 
+/* V37: 天气动效 */
+.weather-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 13px; margin-right: 8px; vertical-align: middle;
+  opacity: 0; animation: weather-fade-in 0.6s ease 0.3s forwards;
+}
+@keyframes weather-fade-in { to { opacity: 1; } }
+.weather-icon { font-size: 15px; }
+.weather-temp { font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.weather-sunny .weather-icon { animation: weather-spin 8s linear infinite; display: inline-block; }
+@keyframes weather-spin { to { transform: rotate(360deg); } }
+.weather-rain .weather-icon { animation: weather-bounce 1s ease-in-out infinite; display: inline-block; }
+@keyframes weather-bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+.weather-snow .weather-icon { animation: weather-float 2s ease-in-out infinite; display: inline-block; }
+@keyframes weather-float { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-3px) rotate(10deg); } }
+.weather-storm .weather-icon { animation: weather-shake 0.5s ease-in-out infinite; display: inline-block; }
+@keyframes weather-shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-1px); } 75% { transform: translateX(1px); } }
+@media (prefers-reduced-motion: reduce) {
+  .weather-icon { animation: none !important; }
+}
+
 </style>
 </head>
 <body>
@@ -1979,33 +2000,7 @@ body.is-generating .orb-a {
     <button class="modal-close" id="settingsClose">×</button>
   </div>
   <div class="settings-body">
-    <div class="settings-section">
-      <h4>API 配置</h4>
-      <div class="input-group">
-        <label>速创 API Key</label>
-        <div class="input-row">
-          <input type="password" id="apiKeyInput" placeholder="sk-...">
-          <button id="testKeyBtn">测试</button>
-        </div>
-      </div>
-    </div>
-    <div class="settings-section">
-      <h4>R2 图床配置</h4>
-      <div class="input-group">
-        <label>Worker URL <span id="r2WorkerSaved" style="font-size:10px;color:var(--success);margin-left:6px;opacity:0;transition:opacity 200ms">已保存</span></label>
-        <div style="font-size:11px;color:var(--text-dim);line-height:1.5;margin-bottom:6px">建议使用自定义域名，workers.dev 在大陆可能无法直连；输入即自动保存</div>
-        <div class="input-row">
-          <input type="text" id="r2WorkerUrlInput" placeholder="https://your-custom-domain.com 或 https://your-worker.workers.dev" autocomplete="off" autocapitalize="off" spellcheck="false">
-        </div>
-      </div>
-      <div class="input-group">
-        <label>Auth Token <span id="r2TokenSaved" style="font-size:10px;color:var(--success);margin-left:6px;opacity:0;transition:opacity 200ms">已保存</span></label>
-        <div class="input-row">
-          <input type="password" id="r2AuthTokenInput" placeholder="token" autocomplete="off" spellcheck="false">
-          <button id="testR2Btn">测试</button>
-        </div>
-      </div>
-    </div>
+    <!-- V37: 偏好开关 -->
     <div class="settings-section">
       <h4>偏好</h4>
       <div class="settings-toggle">
@@ -2022,47 +2017,59 @@ body.is-generating .orb-a {
         </div>
         <div class="toggle-switch on" id="soundToggle"></div>
       </div>
+      <div class="settings-toggle">
+        <div>
+          <div class="toggle-label">每 ¥10 提醒</div>
+          <div class="toggle-sub">今日累计每跨过 ¥10 时提示</div>
+        </div>
+        <div class="toggle-switch" id="spendAlertToggle"></div>
+      </div>
     </div>
+    <!-- V37: API 密钥 (无 h4, placeholder 提示) -->
     <div class="settings-section">
-      <h4>每日预算</h4>
       <div class="input-group">
-        <label>预算上限（元）· 设为 0 表示不限制</label>
         <div class="input-row">
-          <input type="number" id="budgetInput" min="0" step="0.1" placeholder="如 10.0">
-          <button id="saveBudgetBtn">保存</button>
+          <input type="password" id="apiKeyInput" placeholder="速创 API Key (sk-...)" autocomplete="off" spellcheck="false">
+          <button id="testKeyBtn">测试</button>
         </div>
       </div>
-      <div id="budgetStatus" style="font-size:12px;color:var(--text-muted);padding:8px 0"></div>
     </div>
+    <!-- V37: R2 图床 (无 h4, placeholder 提示) -->
     <div class="settings-section">
-      <h4>任务中心（可选）</h4>
-      <div style="font-size:11px;color:var(--text-dim);line-height:1.5;margin-bottom:8px">配置任务中心 Worker 后，任务将通过任务中心提交与轮询；未配置时使用本地直连模式。</div>
       <div class="input-group">
-        <label>Worker URL</label>
         <div class="input-row">
-          <input type="text" id="taskCenterUrlInput" placeholder="https://your-task-center.workers.dev" autocomplete="off" autocapitalize="off" spellcheck="false">
+          <input type="text" id="r2WorkerUrlInput" placeholder="R2 Worker URL" autocomplete="off" autocapitalize="off" spellcheck="false">
         </div>
       </div>
       <div class="input-group">
-        <label>Token</label>
         <div class="input-row">
-          <input type="password" id="taskCenterTokenInput" placeholder="token" autocomplete="off" spellcheck="false">
+          <input type="password" id="r2AuthTokenInput" placeholder="R2 Auth Token" autocomplete="off" spellcheck="false">
+          <button id="testR2Btn">测试</button>
+        </div>
+      </div>
+    </div>
+    <!-- V37: 任务中心 (无 h4, placeholder 提示) -->
+    <div class="settings-section">
+      <div class="input-group">
+        <div class="input-row">
+          <input type="text" id="taskCenterUrlInput" placeholder="任务中心 Worker URL" autocomplete="off" autocapitalize="off" spellcheck="false">
+        </div>
+      </div>
+      <div class="input-group">
+        <div class="input-row">
+          <input type="password" id="taskCenterTokenInput" placeholder="任务中心 Token" autocomplete="off" spellcheck="false">
           <button id="testTaskCenterBtn">测试</button>
         </div>
       </div>
       <div id="taskCenterStatus" style="font-size:12px;color:var(--text-muted);padding:4px 0"></div>
     </div>
-    <div class="settings-section">
-      <h4>关于</h4>
+    <!-- V37: 关于 (分隔线 + 居中) -->
+    <hr style="border:none;border-top:1px solid var(--border);margin:20px 0 16px">
+    <div class="settings-section" style="text-align:center">
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V68<br>
-        支持图片、视频、音频生成<br>
+        修的媒体工作台 V37<br>
         API: api.wuyinkeji.com
       </div>
-      <button class="workflow-btn" id="switchMobileBtn" style="width:100%;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-        切换到移动版
-      </button>
     </div>
   </div>
 </aside>
@@ -2341,6 +2348,7 @@ const CONFIG = {
     R2_AUTH_TOKEN: 'sc_r2_auth_token',
     GUIDE_DISMISSED: 'sc_guide_dismissed',
     BUDGET: 'sc_budget',
+    SPEND_ALERT: 'sc_spend_alert',
     TASK_CENTER_URL: 'sc_task_center_url',
     TASK_CENTER_TOKEN: 'sc_task_center_token'
   },
@@ -2857,6 +2865,9 @@ const Store = {
   dismissGuide() { storageSet(CONFIG.STORAGE_KEYS.GUIDE_DISMISSED, '1'); },
   getBudget() { const v = parseFloat(storageGet(CONFIG.STORAGE_KEYS.BUDGET, '0')); return isNaN(v) ? 0 : v; },
   setBudget(v) { storageSet(CONFIG.STORAGE_KEYS.BUDGET, String(v || 0)); },
+  // V37: 每 ¥10 提醒开关
+  getSpendAlert() { return storageGet(CONFIG.STORAGE_KEYS.SPEND_ALERT, '0') === '1'; },
+  setSpendAlert(on) { storageSet(CONFIG.STORAGE_KEYS.SPEND_ALERT, on ? '1' : '0'); },
   getTodaySpend() {
     const todayStart = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime();
     return this.getHistory().filter(h => h.status === 'succeeded' && h.createdAt >= todayStart).reduce((s, h) => s + (h.cost || 0), 0);
@@ -4038,12 +4049,68 @@ const UI = {
     AmbientFX.setGenerating(Store.getTasks().some(t => t.status === 'processing'));
     // V56: init TaskCenter (async, non-blocking; falls back to local polling)
     if (typeof TaskCenter !== 'undefined') {
-      TaskCenter.init().catch(() => {});
+      TaskCenter.init().then(() => {
+        // V37: TaskCenter 就绪后拉取云端历史
+        if (TaskCenter.isAvailable()) {
+          this._syncHistoryFromCloud().then(() => {
+            // 拉取后重新渲染历史侧栏和结果列表
+            this._renderTaskList();
+            this.renderHistoryBadge();
+            if ($('#historySidebar')?.classList.contains('show')) this.renderHistory();
+          }).catch(() => {});
+        }
+      }).catch(() => {});
     }
-    // V35: 启动时从云端拉取历史
-    if (TaskCenter.isAvailable()) {
-      this._syncHistoryFromCloud().catch(() => {});
-    }
+    // V37: 加载镇江京口天气动效
+    this._loadWeather();
+  },
+
+  /* ---------- V37: 天气动效 ---------- */
+  async _loadWeather() {
+    try {
+      const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=32.2&longitude=119.45&current_weather=true');
+      const data = await res.json();
+      const code = data.current_weather?.weathercode;
+      const temp = data.current_weather?.temperature;
+      this._renderWeather(code, temp);
+    } catch (e) { /* silent */ }
+  },
+  _renderWeather(code, temp) {
+    const mark = document.querySelector('.brand-mark');
+    if (!mark) return;
+    // WMO 天气代码映射: https://open-meteo.com/en/docs
+    const map = {
+      0: { icon: '☀️', anim: 'sunny', text: '晴' },
+      1: { icon: '🌤️', anim: 'sunny', text: '少云' },
+      2: { icon: '⛅', anim: 'cloudy', text: '多云' },
+      3: { icon: '☁️', anim: 'cloudy', text: '阴' },
+      45: { icon: '🌫️', anim: 'fog', text: '雾' },
+      48: { icon: '🌫️', anim: 'fog', text: '雾凇' },
+      51: { icon: '🌦️', anim: 'rain', text: '小雨' },
+      53: { icon: '🌦️', anim: 'rain', text: '中雨' },
+      55: { icon: '🌧️', anim: 'rain', text: '大雨' },
+      61: { icon: '🌧️', anim: 'rain', text: '小雨' },
+      63: { icon: '🌧️', anim: 'rain', text: '中雨' },
+      65: { icon: '🌧️', anim: 'rain', text: '大雨' },
+      71: { icon: '🌨️', anim: 'snow', text: '小雪' },
+      73: { icon: '🌨️', anim: 'snow', text: '中雪' },
+      75: { icon: '❄️', anim: 'snow', text: '大雪' },
+      80: { icon: '🌦️', anim: 'rain', text: '阵雨' },
+      81: { icon: '🌧️', anim: 'rain', text: '阵雨' },
+      82: { icon: '⛈️', anim: 'rain', text: '暴雨' },
+      95: { icon: '⛈️', anim: 'storm', text: '雷暴' },
+      96: { icon: '⛈️', anim: 'storm', text: '雷暴冰雹' },
+      99: { icon: '⛈️', anim: 'storm', text: '雷暴冰雹' }
+    };
+    const w = map[code] || { icon: '🌡️', anim: '', text: '' };
+    const old = mark.querySelector('.weather-badge');
+    if (old) old.remove();
+    const badge = document.createElement('span');
+    badge.className = 'weather-badge weather-' + w.anim;
+    const tempStr = (typeof temp === 'number' && !isNaN(temp)) ? `${Math.round(temp)}°` : '';
+    badge.innerHTML = `<span class="weather-icon">${w.icon}</span><span class="weather-temp">${tempStr}</span>`;
+    badge.title = `镇江京口 · ${w.text}${tempStr ? ' · ' + Math.round(temp) + '°C' : ''}`;
+    mark.insertBefore(badge, mark.firstChild);
   },
 
   /* ---------- V35 taskD: 历史记录 R2 同步 ---------- */
@@ -4140,7 +4207,7 @@ const UI = {
       const saved = $('#r2TokenSaved');
       if (saved) { saved.style.opacity = '1'; clearTimeout(this._r2TokenSavedTimer); this._r2TokenSavedTimer = setTimeout(() => { saved.style.opacity = '0'; }, 1200); }
     });
-    $('#saveBudgetBtn').addEventListener('click', () => { const v = parseFloat($('#budgetInput').value || '0'); Store.setBudget(v); this._updateBudgetStatus(); Toast.success(v > 0 ? `已设置每日预算 ¥${v.toFixed(2)}` : '已取消预算限制'); });
+    // V37: 每日预算 section 已移除，绑定去掉（避免 #saveBudgetBtn 不存在导致报错）
     // V56: Task Center settings bindings
     $('#taskCenterUrlInput').addEventListener('input', e => Store.setTaskCenterUrl(e.target.value));
     $('#taskCenterTokenInput').addEventListener('input', e => Store.setTaskCenterToken(e.target.value));
@@ -4166,6 +4233,8 @@ const UI = {
     });
     $('#themeToggle').addEventListener('click', () => this.toggleTheme());
     $('#soundToggle').addEventListener('click', () => this.toggleSound());
+    // V37: 每 ¥10 提醒 toggle
+    $('#spendAlertToggle').addEventListener('click', () => this.toggleSpendAlert());
     $('#themeBtn').addEventListener('click', () => this.toggleTheme());
     $('#soundBtn').addEventListener('click', () => this.toggleSound());
 
@@ -4194,7 +4263,9 @@ const UI = {
     $('#lightbox').addEventListener('click', e => { if (e.target === $('#lightbox')) this._closeLightbox(); });
 
     $('#clearScreenBtn').addEventListener('click', () => this._clearScreen());
-    $('#switchMobileBtn').addEventListener('click', () => { try { localStorage.setItem('sc_preferred_version', 'mobile'); } catch(e) {} location.href = 'ai-workbench-mobile-dev.html'; });
+    // V37: switchMobileBtn 已从设置中移除（如保留则原行为不变）
+    const _swMobile = $('#switchMobileBtn');
+    if (_swMobile) _swMobile.addEventListener('click', () => { try { localStorage.setItem('sc_preferred_version', 'mobile'); } catch(e) {} location.href = 'ai-workbench-mobile-dev.html'; });
     $('#compareShow').addEventListener('click', () => this._showCompareGrid());
     $('#compareClear').addEventListener('click', () => { this.state.compareList = []; this._renderCompareBar(); });
     $('#compareGridClose').addEventListener('click', () => $('#compareGrid').classList.remove('show'));
@@ -5555,6 +5626,19 @@ const UI = {
         }
       });
     }
+    // V37: 后台预加载缩略图（可见卡片后续 10 个，加速后续浏览）
+    this._preloadThumbs();
+  },
+
+  // V37: 后台预加载缩略图 — 提前把前 10 条带 url 的记录的缩略图读入内存/IDB
+  _preloadThumbs() {
+    if (typeof ThumbService === 'undefined') return;
+    try {
+      const tasks = Store.getTasks().filter(t => t.result?.url && t.model?.type !== 'audio');
+      tasks.slice(0, 10).forEach(t => {
+        ThumbService.ensureThumb(t).catch(() => {});
+      });
+    } catch (e) { /* silent */ }
   },
 
   _bulkDeleteByFilter() {
@@ -6124,6 +6208,29 @@ const UI = {
         ${meta}
         ${n > 1 ? `<div class="lb-count">${pos} / ${n}</div>` : ''}
       </div>`;
+    // V37: 滚轮缩放 + 双击重置 + 拖拽平移（仅图片）
+    const img = !isVideo && !isAudio ? $('#lbContent').querySelector('img.lb-art') : null;
+    if (img) {
+      let scale = 1, x = 0, y = 0;
+      const apply = () => { img.style.transform = `translate(${x}px,${y}px) scale(${scale})`; img.style.transformOrigin = 'center center'; };
+      img.style.willChange = 'transform';
+      img.addEventListener('wheel', e => {
+        e.preventDefault();
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        scale = Math.max(0.2, Math.min(5, scale * delta));
+        apply();
+      }, { passive: false });
+      img.addEventListener('dblclick', () => { scale = 1; x = 0; y = 0; apply(); });
+      // 拖拽平移
+      let dragging = false, sx = 0, sy = 0;
+      img.addEventListener('mousedown', e => { dragging = true; sx = e.clientX - x; sy = e.clientY - y; img.style.cursor = 'grabbing'; e.preventDefault(); });
+      const onMove = e => { if (dragging) { x = e.clientX - sx; y = e.clientY - sy; apply(); } };
+      const onUp = () => { if (dragging) { dragging = false; img.style.cursor = ''; } };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      // 清理函数挂到 img 上，lightbox 关闭时由 _closeLightbox 调用
+      img._v37Cleanup = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+    }
   },
   _lbNav(dir) {
     const n = this.state.lightboxList.length;
@@ -6137,7 +6244,7 @@ const UI = {
     this._renderLightbox();
   },
 
-  _closeLightbox() { $('#lightbox').classList.remove('show'); $('#lbContent').innerHTML = ''; },
+  _closeLightbox() { $('#lightbox').classList.remove('show'); const c = $('#lbContent'); const img = c && c.querySelector('img.lb-art'); if (img && img._v37Cleanup) { try { img._v37Cleanup(); } catch (e) {} } c.innerHTML = ''; },
 
   /* ---------- HISTORY ---------- */
   renderHistoryBadge() {
@@ -6531,12 +6638,12 @@ ${items.map(h => {
     $('#apiKeyInput').value = Store.getApiKey();
     $('#r2WorkerUrlInput').value = Store.getR2WorkerUrl();
     $('#r2AuthTokenInput').value = Store.getR2AuthToken();
-    $('#budgetInput').value = Store.getBudget() || '';
     $('#taskCenterUrlInput').value = Store.getTaskCenterUrl() || '';
     $('#taskCenterTokenInput').value = Store.getTaskCenterToken() || '';
     $('#themeToggle').classList.toggle('on', Store.getTheme() === 'dark');
     $('#soundToggle').classList.toggle('on', Store.getSound());
-    this._updateBudgetStatus();
+    // V37: 每 ¥10 提醒开关初始状态
+    $('#spendAlertToggle').classList.toggle('on', Store.getSpendAlert());
     // V56: update Task Center status badge
     const tcStatus = $('#taskCenterStatus');
     if (tcStatus) tcStatus.innerHTML = TaskCenter.isAvailable()
@@ -6561,17 +6668,27 @@ ${items.map(h => {
   },
 
   _checkBudget() {
-    const budget = Store.getBudget();
-    if (budget <= 0) return true;
-    const spent = Store.getTodaySpend();
-    if (spent >= budget) {
-      Toast.error(`已达每日预算上限（¥${budget.toFixed(2)}），已消费 ¥${spent.toFixed(2)}`);
-      return false;
-    }
-    if (spent >= budget * 0.8) {
-      Toast.warning(`今日消费已达预算 80%（¥${spent.toFixed(2)} / ¥${budget.toFixed(2)}）`);
+    // V37: 每日预算 section 已移除；保留每 ¥10 提醒逻辑
+    if (Store.getSpendAlert()) {
+      const spent = Store.getTodaySpend();
+      const threshold = Math.floor(spent / 10) * 10;
+      const lastKey = 'sc_last_alert_threshold_' + new Date().toDateString();
+      let last = 0;
+      try { last = parseInt(localStorage.getItem(lastKey) || '0', 10) || 0; } catch (e) {}
+      if (threshold > last && threshold > 0) {
+        try { localStorage.setItem(lastKey, String(threshold)); } catch (e) {}
+        Toast.warning(`今日累计已消费 ¥${threshold.toFixed(2)}+`);
+      }
     }
     return true;
+  },
+
+  // V37: 每 ¥10 提醒 toggle 切换
+  toggleSpendAlert() {
+    const on = !Store.getSpendAlert();
+    Store.setSpendAlert(on);
+    $('#spendAlertToggle').classList.toggle('on', on);
+    Toast.info(on ? '已开启每 ¥10 提醒' : '已关闭每 ¥10 提醒');
   },
 
   _closeSettings() { $('#settingsDrawer').classList.remove('show'); $('#settingsOverlay').classList.remove('show'); },
