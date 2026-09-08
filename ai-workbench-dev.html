@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#080b14" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
-<title>修的媒体工作台 V28 · 模块化流水线</title>
+<title>修的媒体工作台 V29 · 模块化流水线</title>
 <style>
 /* ============================================================
    主题变量
@@ -620,7 +620,7 @@ textarea { resize: vertical; min-height: 80px; }
 .pipeline-step .ps-progress-bar { display: none; }
 
 /* ============================================================
-   V62: 模块化流水线编排器 (Modular Pipeline Builder)
+   V29: 模块化流水线编排器 (SVG图标/拖拽排序/添加框/预设弹窗)
    ============================================================ */
 .pl-builder { display: flex; flex-direction: column; gap: 12px; }
 .pl-section {
@@ -634,50 +634,57 @@ textarea { resize: vertical; min-height: 80px; }
 }
 .pl-section-title svg { width: 12px; height: 12px; }
 
-/* 模块库 chips */
-.pl-module-lib { display: flex; flex-wrap: wrap; gap: 6px; }
-.pl-module-chip {
+/* 顶部操作行: 预设模板按钮 + 添加模块按钮 (照抄其他模式 preset-trigger 样式) */
+.pl-top-actions {
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+}
+.pl-action-btn {
   display: inline-flex; align-items: center; gap: 5px;
-  padding: 5px 10px; border-radius: 999px;
+  padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted);
+  transition: all var(--transition); font-weight: 500;
+}
+.pl-action-btn:hover { color: var(--brand); border-color: var(--brand); background: var(--brand-soft); }
+.pl-action-btn svg { width: 14px; height: 14px; }
+.pl-action-btn.primary { background: var(--brand); color: #fff; border-color: var(--brand); }
+.pl-action-btn.primary:hover { background: var(--brand-press); color: #fff; }
+
+/* 模块库弹窗 (modal 内的模块列表) */
+.pl-module-list { display: flex; flex-direction: column; gap: 6px; padding: 4px 0; }
+.pl-module-option {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border-radius: var(--radius-sm); cursor: pointer; transition: all var(--transition);
   border: 1px solid var(--border); background: var(--surface-2);
-  color: var(--text); font-size: 12px; cursor: pointer;
-  transition: all var(--transition); user-select: none;
 }
-.pl-module-chip:hover {
-  border-color: var(--brand); background: var(--brand-soft); color: var(--brand);
-  transform: translateY(-1px);
+.pl-module-option:hover { border-color: var(--brand); background: var(--brand-soft); transform: translateX(2px); }
+.pl-module-option .pl-mo-icon {
+  width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--brand-soft); color: var(--brand);
 }
-.pl-module-chip:active { transform: translateY(0); }
-.pl-module-chip .pl-chip-icon { font-size: 14px; line-height: 1; }
-.pl-module-chip .pl-chip-cat {
-  font-size: 9px; padding: 1px 4px; border-radius: 3px;
-  background: var(--border); color: var(--text-dim); margin-left: 2px;
+.pl-module-option .pl-mo-icon svg { width: 18px; height: 18px; }
+.pl-module-option[data-cat="audio"] .pl-mo-icon { background: rgba(99,102,241,.12); color: #818cf8; }
+.pl-module-option[data-cat="image"] .pl-mo-icon { background: rgba(16,185,129,.12); color: #34d399; }
+.pl-module-option[data-cat="video"] .pl-mo-icon { background: rgba(245,158,11,.12); color: #fbbf24; }
+.pl-module-option .pl-mo-info { flex: 1; min-width: 0; }
+.pl-module-option .pl-mo-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.pl-module-option .pl-mo-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.pl-module-option .pl-mo-cat {
+  font-size: 9px; padding: 2px 6px; border-radius: 3px; flex-shrink: 0;
+  background: var(--border); color: var(--text-dim); text-transform: uppercase; letter-spacing: .5px;
 }
-.pl-module-chip[data-cat="audio"] .pl-chip-cat { background: rgba(99,102,241,.15); color: #818cf8; }
-.pl-module-chip[data-cat="image"] .pl-chip-cat { background: rgba(16,185,129,.15); color: #34d399; }
-.pl-module-chip[data-cat="video"] .pl-chip-cat { background: rgba(245,158,11,.15); color: #fbbf24; }
 
-/* 预设模板 */
-.pl-presets { display: flex; flex-wrap: wrap; gap: 6px; }
-.pl-preset-btn {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 6px 10px; border-radius: 6px;
-  border: 1px dashed var(--brand); background: var(--brand-soft);
-  color: var(--brand); font-size: 11px; cursor: pointer;
-  transition: all var(--transition);
-}
-.pl-preset-btn:hover { background: var(--brand); color: #fff; }
-.pl-preset-btn .pl-preset-arrow { font-size: 10px; opacity: .7; }
-
-/* 流水线编排链 */
+/* 流水线编排链 (支持拖拽) */
 .pl-chain {
   display: flex; flex-direction: column; gap: 8px;
   min-height: 60px;
 }
 .pl-chain-empty {
-  text-align: center; padding: 20px 12px; color: var(--text-dim);
-  font-size: 12px; border: 1px dashed var(--border); border-radius: 6px;
+  text-align: center; padding: 24px 12px; color: var(--text-dim);
+  font-size: 12px; border: 1px dashed var(--border); border-radius: 8px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
 }
+.pl-chain-empty svg { width: 32px; height: 32px; opacity: .4; }
 .pl-node {
   display: flex; align-items: stretch; gap: 0;
   border: 1px solid var(--border); border-radius: 8px;
@@ -686,14 +693,30 @@ textarea { resize: vertical; min-height: 80px; }
 }
 .pl-node.selected { border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand-soft); }
 .pl-node.invalid { border-color: var(--danger); }
+.pl-node.dragging { opacity: .4; border-style: dashed; }
+.pl-node.drag-over { border-color: var(--brand); border-style: dashed; box-shadow: 0 0 0 2px var(--brand-soft); }
+/* 拖拽手柄 */
+.pl-node-drag {
+  width: 28px; display: flex; align-items: center; justify-content: center;
+  cursor: grab; color: var(--text-dim); border-right: 1px solid var(--border);
+  flex-shrink: 0; transition: color var(--transition);
+}
+.pl-node-drag:hover { color: var(--brand); }
+.pl-node-drag:active { cursor: grabbing; }
+.pl-node-drag svg { width: 14px; height: 14px; }
 .pl-node-body {
   flex: 1; display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer;
+  min-width: 0;
 }
 .pl-node-icon {
   width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px; background: var(--brand-soft); color: var(--brand);
+  background: var(--brand-soft); color: var(--brand);
 }
+.pl-node-icon svg { width: 16px; height: 16px; }
+.pl-node[data-cat="audio"] .pl-node-icon { background: rgba(99,102,241,.12); color: #818cf8; }
+.pl-node[data-cat="image"] .pl-node-icon { background: rgba(16,185,129,.12); color: #34d399; }
+.pl-node[data-cat="video"] .pl-node-icon { background: rgba(245,158,11,.12); color: #fbbf24; }
 .pl-node-info { flex: 1; min-width: 0; }
 .pl-node-title { font-size: 13px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 6px; }
 .pl-node-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -715,6 +738,16 @@ textarea { resize: vertical; min-height: 80px; }
 .pl-node-btn svg { width: 12px; height: 12px; }
 .pl-node-btn:disabled { opacity: .3; cursor: not-allowed; }
 
+/* 步骤间连接线指示 */
+.pl-connector {
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  padding: 2px 0; color: var(--text-dim); font-size: 10px;
+}
+.pl-connector svg { width: 12px; height: 12px; }
+.pl-connector .pl-conn-label { padding: 1px 6px; background: var(--surface-2); border-radius: 3px; border: 1px solid var(--border); }
+.pl-connector.mismatch { color: var(--danger); }
+.pl-connector.mismatch .pl-conn-label { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }
+
 /* 模块配置面板 */
 .pl-config {
   background: var(--surface); border: 1px solid var(--border);
@@ -725,7 +758,8 @@ textarea { resize: vertical; min-height: 80px; }
   font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px;
   padding-bottom: 8px; border-bottom: 1px solid var(--border);
 }
-.pl-config-title .pl-cfg-icon { font-size: 16px; }
+.pl-config-title .pl-cfg-icon { display: flex; align-items: center; justify-content: center; }
+.pl-config-title .pl-cfg-icon svg { width: 16px; height: 16px; }
 .pl-config-empty {
   text-align: center; padding: 16px; color: var(--text-dim); font-size: 12px;
 }
@@ -750,6 +784,18 @@ textarea { resize: vertical; min-height: 80px; }
 .pl-config-row textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
 .pl-config-row input[type="range"] { width: 100%; }
 .pl-config-range-val { font-size: 11px; color: var(--brand); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* 输入槽位路由选择 (文生图→图生视频的参考图/首尾帧) */
+.pl-route-select {
+  display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px;
+}
+.pl-route-option {
+  padding: 4px 8px; font-size: 11px; border-radius: 4px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--surface-2); color: var(--text-muted);
+  transition: all var(--transition);
+}
+.pl-route-option:hover { border-color: var(--brand); color: var(--brand); }
+.pl-route-option.active { background: var(--brand); color: #fff; border-color: var(--brand); }
 
 /* 用户上传输入(底片等) */
 .pl-user-input {
@@ -935,7 +981,7 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 /* ============================================================
-   对比模式
+   对比模式 (V29 重构: 支持4张/响应式/滑块优化/SVG图标)
    ============================================================ */
 .compare-bar {
   position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
@@ -944,7 +990,8 @@ textarea { resize: vertical; min-height: 80px; }
 }
 .compare-bar.empty { display: none; }
 .compare-bar .compare-count { font-size: 12px; color: var(--text-muted); padding: 0 4px; }
-.compare-bar button { padding: 4px 10px; border-radius: 999px; font-size: 12px; }
+.compare-bar button { padding: 4px 10px; border-radius: 999px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px; }
+.compare-bar button svg { width: 12px; height: 12px; }
 .compare-bar .compare-show { background: var(--brand); color: #fff; }
 .compare-bar .compare-clear { color: var(--text-muted); }
 .compare-grid {
@@ -952,11 +999,88 @@ textarea { resize: vertical; min-height: 80px; }
   align-items: center; justify-content: center; padding: 40px; backdrop-filter: blur(8px);
 }
 .compare-grid.show { display: flex; }
-.compare-grid-inner { display: flex; gap: 12px; max-width: 100%; max-height: 100%; }
-.compare-cell { position: relative; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border); }
-.compare-cell img, .compare-cell video { max-width: 100%; max-height: 80vh; display: block; }
-.compare-cell .compare-label { position: absolute; top: 8px; left: 8px; padding: 2px 8px; border-radius: 4px; background: rgba(0,0,0,.6); color: #fff; font-size: 11px; }
-.compare-close { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; color: var(--text); font-size: 20px; }
+.compare-grid-inner { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; max-width: 1400px; }
+/* 响应式并排网格: 1/2/3/4 列自适应 */
+.compare-side-grid {
+  display: grid; gap: 12px; width: 100%; align-items: stretch;
+  grid-template-columns: 1fr;
+}
+.compare-side-grid[data-count="2"] { grid-template-columns: 1fr 1fr; }
+.compare-side-grid[data-count="3"] { grid-template-columns: 1fr 1fr 1fr; }
+.compare-side-grid[data-count="4"] { grid-template-columns: 1fr 1fr; max-width: 900px; }
+@media (min-width: 768px) {
+  .compare-side-grid[data-count="3"] { grid-template-columns: 1fr 1fr 1fr; }
+  .compare-side-grid[data-count="4"] { grid-template-columns: 1fr 1fr 1fr 1fr; max-width: none; }
+}
+.compare-cell {
+  position: relative; border-radius: var(--radius-md); overflow: hidden;
+  border: 1px solid var(--border); background: #000;
+  display: flex; align-items: center; justify-content: center; min-height: 120px;
+}
+.compare-cell img, .compare-cell video {
+  max-width: 100%; max-height: 80vh; display: block; object-fit: contain;
+  width: 100%; height: auto;
+}
+.compare-cell .compare-label {
+  position: absolute; top: 8px; left: 8px; padding: 3px 8px; border-radius: 4px;
+  background: rgba(0,0,0,.65); color: #fff; font-size: 11px; font-weight: 500;
+  backdrop-filter: blur(4px); z-index: 2;
+}
+.compare-close {
+  position: absolute; top: 16px; right: 16px; width: 36px; height: 36px;
+  border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center;
+  color: var(--text); cursor: pointer; border: 1px solid var(--border);
+  transition: all var(--transition); z-index: 10;
+}
+.compare-close:hover { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); transform: rotate(90deg); }
+.compare-close svg { width: 16px; height: 16px; }
+
+/* V29 — 滑块对比优化: 更细的线/更精致的把手 */
+.compare-mode-bar {
+  display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+  background: var(--surface); border-radius: var(--radius-sm);
+  flex-wrap: wrap; border: 1px solid var(--border);
+}
+.compare-mode-bar .cm-label { font-size: 12px; color: var(--text-muted); }
+.compare-mode-bar button {
+  padding: 4px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted);
+  display: inline-flex; align-items: center; gap: 4px; transition: all var(--transition);
+}
+.compare-mode-bar button svg { width: 12px; height: 12px; }
+.compare-mode-bar button:hover { color: var(--text); border-color: var(--brand); }
+.compare-mode-bar button.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+.compare-slider-wrap {
+  position: relative; width: min(900px, 100%); user-select: none; overflow: hidden;
+  border-radius: var(--radius-md); border: 1px solid var(--border); background: #000;
+}
+.compare-slider-wrap img {
+  display: block; max-width: 100%; max-height: 78vh; user-select: none; pointer-events: none;
+}
+.compare-slider-after {
+  position: absolute; top: 0; left: 0; height: 100%; overflow: hidden;
+  width: 50%; border-right: 1px solid rgba(255,255,255,.6);
+}
+.compare-slider-after img { max-width: none; height: 100%; }
+.compare-slider-handle {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 32px; height: 32px; border-radius: 50%; background: #fff;
+  display: flex; align-items: center; justify-content: center; color: #1a1a1a; cursor: ew-resize;
+  box-shadow: 0 2px 8px rgba(0,0,0,.3); z-index: 5; transition: box-shadow var(--transition);
+}
+.compare-slider-handle:hover { box-shadow: 0 4px 16px rgba(0,0,0,.4); }
+.compare-slider-handle svg { width: 14px; height: 14px; }
+.compare-slider-range {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 100%;
+  position: absolute; top: 0; left: 0; opacity: 0; cursor: ew-resize; margin: 0;
+}
+.compare-label-tag {
+  position: absolute; top: 8px; padding: 3px 8px; border-radius: 4px;
+  background: rgba(0,0,0,.65); color: #fff; font-size: 11px; font-weight: 500;
+  backdrop-filter: blur(4px); z-index: 4;
+}
+.compare-label-tag.before { left: 8px; }
+.compare-label-tag.after { right: 8px; }
 
 /* ============================================================
    历史侧栏
@@ -1679,50 +1803,6 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
 .tippy-box[data-theme~='translucent'] > .tippy-arrow { color: var(--surface); }
 
 /* ============================================================
-   V27 — 对比模式 Slider 增强
-   ============================================================ */
-.compare-mode-bar {
-  display: flex; align-items: center; gap: 8px; padding: 8px 12px;
-  background: var(--surface); border-radius: var(--radius-sm); margin-bottom: 12px;
-  flex-wrap: wrap;
-}
-.compare-mode-bar .cm-label { font-size: 12px; color: var(--text-muted); }
-.compare-mode-bar button {
-  padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;
-  background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted);
-}
-.compare-mode-bar button.active { background: var(--brand); color: #fff; border-color: var(--brand); }
-.compare-slider-wrap {
-  position: relative; width: min(900px, 100%); user-select: none; overflow: hidden;
-  border-radius: var(--radius-md); border: 1px solid var(--border); background: #000;
-}
-.compare-slider-wrap img {
-  display: block; max-width: 100%; max-height: 78vh; user-select: none; pointer-events: none;
-}
-.compare-slider-after {
-  position: absolute; top: 0; left: 0; height: 100%; overflow: hidden;
-  width: 50%; border-right: 2px solid var(--brand);
-}
-.compare-slider-after img { max-width: none; height: 100%; }
-.compare-slider-handle {
-  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-  width: 36px; height: 36px; border-radius: 50%; background: var(--brand);
-  display: flex; align-items: center; justify-content: center; color: #fff; cursor: ew-resize;
-  top: 50%; margin-top: -18px; box-shadow: var(--shadow-md); z-index: 5;
-}
-.compare-slider-handle svg { width: 18px; height: 18px; }
-.compare-slider-range {
-  -webkit-appearance: none; appearance: none; width: 100%; height: 100%;
-  position: absolute; top: 0; left: 0; opacity: 0; cursor: ew-resize; margin: 0;
-}
-.compare-label-tag {
-  position: absolute; top: 8px; padding: 2px 8px; border-radius: 4px;
-  background: rgba(0,0,0,.6); color: #fff; font-size: 11px; z-index: 4;
-}
-.compare-label-tag.before { left: 8px; }
-.compare-label-tag.after { right: 8px; }
-
-/* ============================================================
    V27 — 批量导出 ZIP 选择列表
    ============================================================ */
 .batch-export-list {
@@ -1975,7 +2055,7 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
     <div class="settings-section">
       <h4>关于</h4>
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V28 · 模块化流水线<br>
+        修的媒体工作台 V29 · 模块化流水线<br>
         支持图片、视频、音频生成<br>
         API: api.wuyinkeji.com
       </div>
@@ -2080,14 +2160,22 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
   <div id="contextMenuItems"></div>
 </div>
 
-<!-- 对比模式 -->
+<!-- 对比模式 (V29: SVG图标) -->
 <div class="compare-bar empty" id="compareBar">
   <span class="compare-count" id="compareCount">已选 0</span>
-  <button class="compare-show" id="compareShow">对比</button>
-  <button class="compare-clear" id="compareClear">清除</button>
+  <button class="compare-show" id="compareShow">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
+    对比
+  </button>
+  <button class="compare-clear" id="compareClear">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+    清除
+  </button>
 </div>
 <div class="compare-grid" id="compareGrid">
-  <button class="compare-close" id="compareGridClose">×</button>
+  <button class="compare-close" id="compareGridClose" aria-label="关闭对比">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
   <div class="compare-grid-inner" id="compareGridInner"></div>
 </div>
 
@@ -4048,7 +4136,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V28';
+      document.title = '修的媒体工作台 V29';
     }
   },
 
@@ -5199,18 +5287,47 @@ const UI = {
     } catch { return null; }
   },
 
-  /* ---------- V62: 模块化流水线 (Modular Pipeline) ----------
-   * 重写自 V56 固定流水线。每个步骤是独立模块，用户可勾选/排序/配置。
+  /* ---------- V29: 模块化流水线 (SVG图标/拖拽排序/添加框/路由选择) ----------
+   * 重写自 V28。核心改进:
+   * 1. 全部 SVG 图标 (无 emoji)
+   * 2. 模块库改为弹窗选择 (添加框样式)
+   * 3. 编排链支持 HTML5 拖拽排序
+   * 4. 快捷模板照抄其他模式 preset-trigger 弹窗设计
+   * 5. 模块对接严谨设计: inputSlots 多槽位路由 + 步骤间连接线可视化
+   *
    * 模块契约:
-   *   - provides: 输出类型 ('audioUrl'|'imageUrl'|'videoUrl')
-   *   - needs:    需要从上一步 resultUrl 填充的 body key 数组
-   *   - userInput: 可选, 用户单独上传的输入 (如数字人底片视频)
-   *   - buildStep(state, userInput) → { type, model, modelType, endpoint, body, needs }
+   *   - provides:    输出类型 ('audio'|'image'|'video')
+   *   - inputSlots:  可接受的输入槽位数组 [{key,label,type}]
+   *     · 空数组 = 不接受上步输入 (起始模块)
+   *     · 1 个槽位 = 自动路由
+   *     · 多个槽位 = 用户选择路由 (如 i2v: 首帧/参考图)
+   *   - userInput:   可选, 附加用户上传输入 (如数字人底片视频)
+   *   - buildStep(state, userInput, routeKey) → { type, model, modelType, endpoint, body, needs }
    *   - estimateCost(state) → number
+   *
    * Worker 契约 (worker-base.js startPipelineStep):
    *   step.needs = ['audioUrl'] ⇒ prevStep.resultUrl 写入 step.body.audioUrl
    * 因此 needs 只能引用上一步的单一 resultUrl (线性链)。
    */
+
+  // SVG 图标库 (统一风格, stroke-width=2, 24x24 viewBox)
+  _PL_ICONS: {
+    tts: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>',
+    image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+    film: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg>',
+    i2v: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="14" height="14" rx="2"/><circle cx="8" cy="8" r="1.5"/><polyline points="17 11 21 9 21 15 17 13"/><path d="M3 13l4-3 5 4"/></svg>',
+    user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',
+    sparkles: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.9 5.8a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-1.9a2 2 0 0 0 1.3-1.3L12 3z"/></svg>',
+    package: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+    drag: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/><circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/></svg>',
+    plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+    template: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>',
+    arrow_down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
+    x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+  },
+
   _PIPELINE_VOICES: [
     { id: 'male-qn-qingse', label: '青涩男声' },
     { id: 'male-qn-jingying', label: '精英男声' },
@@ -5226,8 +5343,8 @@ const UI = {
 
   _PIPELINE_MODULES: [
     {
-      id: 'tts', title: '文本→语音', icon: '🎙️', desc: '输入文本合成语音',
-      category: 'audio', provides: 'audio', accepts: null, needs: [], userInput: null,
+      id: 'tts', title: '文本→语音', iconKey: 'tts', desc: '输入文本合成语音(TTS)',
+      category: 'audio', provides: 'audio', inputSlots: [], userInput: null,
       params: [
         { key: 'text', label: '口播文本', type: 'textarea', required: true, default: '', placeholder: '输入要合成的文本...' },
         { key: 'voice_id', label: '音色', type: 'select', default: 'male-qn-qingse',
@@ -5252,8 +5369,8 @@ const UI = {
       estimateCost(state) { return (state.text || '').length * 0.0006; }
     },
     {
-      id: 'image_gen', title: '图片生成', icon: '🖼️', desc: 'AI 生成图片(NanoBanana2)',
-      category: 'image', provides: 'image', accepts: null, needs: [], userInput: null,
+      id: 'image_gen', title: '文生图', iconKey: 'image', desc: 'AI 生成图片 (NanoBanana2)',
+      category: 'image', provides: 'image', inputSlots: [], userInput: null,
       params: [
         { key: 'prompt', label: '提示词', type: 'textarea', required: true, default: '', placeholder: '描述图片...' },
         { key: 'size', label: '分辨率', type: 'select', default: '1K', options: ['1K','2K','4K'] },
@@ -5270,8 +5387,8 @@ const UI = {
       estimateCost() { return 0.1; }
     },
     {
-      id: 't2v', title: '文本→视频', icon: '🎬', desc: '从提示词生成视频(Wan3.0)',
-      category: 'video', provides: 'video', accepts: null, needs: [], userInput: null,
+      id: 't2v', title: '文生视频', iconKey: 'film', desc: '从提示词生成视频 (Wan3.0)',
+      category: 'video', provides: 'video', inputSlots: [], userInput: null,
       params: [
         { key: 'prompt', label: '提示词', type: 'textarea', required: true, default: '', placeholder: '描述视频...' },
         { key: 'ratio', label: '宽高比', type: 'select', default: '16:9', options: ['16:9','9:16'] },
@@ -5288,29 +5405,41 @@ const UI = {
       estimateCost(state) { return (parseInt(state.duration) || 5) * 0.3; }
     },
     {
-      id: 'i2v', title: '图片→视频', icon: '🎞️', desc: '从图片生成视频(Veo3.1 Fast)',
-      category: 'video', provides: 'video', accepts: 'image',
-      needs: ['firstFrameUrl'],
-      userInput: { key: 'firstFrameUrl', label: '首帧图片', type: 'ref-image', hint: '无上图步骤时必填' },
+      // 图生视频: 接受 image 类型输入, 有2个槽位 (首帧/参考图), 用户选择路由
+      id: 'i2v', title: '图生视频', iconKey: 'i2v', desc: '从图片生成视频 (Veo3.1 Fast)',
+      category: 'video', provides: 'video',
+      inputSlots: [
+        { key: 'firstFrameUrl', label: '首帧', type: 'image' },
+        { key: 'urls', label: '参考图', type: 'image' }
+      ],
+      userInput: { key: 'firstFrameUrl', label: '首帧图片', type: 'ref-image', hint: '无上图步骤时可手动上传' },
       params: [
         { key: 'prompt', label: '提示词', type: 'textarea', required: true, default: '', placeholder: '描述视频动态...' },
         { key: 'size', label: '清晰度', type: 'select', default: '720p', options: ['720p','1080p'] }
       ],
-      buildStep(state, userInput) {
-        const u = userInput && userInput.firstFrameUrl;
-        return {
-          type: 'i2v', model: 'veo3_fast', modelType: 'video',
-          endpoint: '/api/async/video_veo3.1_fast',
-          body: { prompt: state.prompt || '', aspectRatio: '16:9', size: state.size || '720p', firstFrameUrl: u || null },
-          needs: u ? [] : ['firstFrameUrl']
-        };
+      buildStep(state, userInput, routeKey) {
+        // routeKey = 'firstFrameUrl' | 'urls' | null
+        const userUpload = userInput && userInput.firstFrameUrl;
+        const body = { prompt: state.prompt || '', aspectRatio: '16:9', size: state.size || '720p' };
+        const needs = [];
+        if (routeKey) {
+          // 上步结果路由到指定槽位
+          body[routeKey] = null;
+          needs.push(routeKey);
+        }
+        if (userUpload && routeKey !== 'firstFrameUrl') {
+          // 用户上传的首帧优先(除非路由已指向首帧)
+          body.firstFrameUrl = userUpload;
+        }
+        return { type: 'i2v', model: 'veo3_fast', modelType: 'video', endpoint: '/api/async/video_veo3.1_fast', body, needs };
       },
       estimateCost() { return 0.5; }
     },
     {
-      id: 'digital_human', title: '数字人', icon: '🧑', desc: '人物视频+音频→口播视频',
-      category: 'video', provides: 'video', accepts: 'audio',
-      needs: ['audioUrl'],
+      // 数字人: 接受 audio 类型输入 (单槽位), 附加 userInput 底片视频
+      id: 'digital_human', title: '数字人', iconKey: 'user', desc: '人物视频+音频→口播视频',
+      category: 'video', provides: 'video',
+      inputSlots: [{ key: 'audioUrl', label: '音频', type: 'audio' }],
       userInput: { key: 'videoUrl', label: '人物底片视频', type: 'ref-video', hint: 'mp4 · ≥10秒 · 必填' },
       params: [
         { key: 'videoName', label: '任务名称', type: 'text', default: '数字人_' + Date.now() }
@@ -5330,10 +5459,11 @@ const UI = {
       estimateCost() { return 0.5; }
     },
     {
-      id: 'video_upscale', title: '视频超分', icon: '✨', desc: '提升视频画质',
-      category: 'video', provides: 'video', accepts: 'video',
-      needs: ['video_url'],
-      userInput: { key: 'video_url', label: '原视频', type: 'ref-video', hint: '无上图步骤时必填' },
+      // 视频超分: 接受 video 类型输入 (单槽位), 可手动上传替代
+      id: 'video_upscale', title: '视频超分', iconKey: 'sparkles', desc: '提升视频画质',
+      category: 'video', provides: 'video',
+      inputSlots: [{ key: 'video_url', label: '原视频', type: 'video' }],
+      userInput: { key: 'video_url', label: '原视频', type: 'ref-video', hint: '无上步时可手动上传' },
       params: [],
       buildStep(state, userInput) {
         const u = userInput && userInput.video_url;
@@ -5347,10 +5477,11 @@ const UI = {
       estimateCost() { return 0.5; }
     },
     {
-      id: 'video_package', title: '视频包装', icon: '📦', desc: '模板套件包装视频',
-      category: 'video', provides: 'video', accepts: 'video',
-      needs: ['video'],
-      userInput: { key: 'video', label: '原视频', type: 'ref-video', hint: '无上图步骤时必填' },
+      // 视频包装: 接受 video 类型输入 (单槽位), 可手动上传替代
+      id: 'video_package', title: '视频包装', iconKey: 'package', desc: '模板套件包装视频',
+      category: 'video', provides: 'video',
+      inputSlots: [{ key: 'video', label: '原视频', type: 'video' }],
+      userInput: { key: 'video', label: '原视频', type: 'ref-video', hint: '无上步时可手动上传' },
       params: [
         { key: 'template_id', label: '模板', type: 'select', default: '1',
           options: Array.from({ length: 30 }, (_, i) => ({ value: String(i + 1), label: '模板 ' + (i + 1) })) }
@@ -5369,11 +5500,19 @@ const UI = {
   ],
 
   _PIPELINE_PRESETS: [
-    { id: 'digital_human', title: '数字人口播', icon: '🧑', desc: '文本→语音→数字人', modules: ['tts', 'digital_human'] },
-    { id: 'i2v_upscale', title: '图生视频+超分', icon: '✨', desc: '图片→视频→超分', modules: ['image_gen', 'i2v', 'video_upscale'] },
-    { id: 't2v_package', title: '文生视频+包装', icon: '📦', desc: '文本→视频→包装', modules: ['t2v', 'video_package'] },
-    { id: 'full_broadcast', title: '完整口播流水线', icon: '🎯', desc: '语音→数字人→包装', modules: ['tts', 'digital_human', 'video_package'] }
+    { id: 'digital_human', title: '数字人口播', desc: '文本→语音→数字人', modules: ['tts', 'digital_human'] },
+    { id: 'i2v_upscale', title: '图生视频+超分', desc: '文生图→图生视频→超分', modules: ['image_gen', 'i2v', 'video_upscale'] },
+    { id: 't2v_package', title: '文生视频+包装', desc: '文本→视频→包装', modules: ['t2v', 'video_package'] },
+    { id: 'full_broadcast', title: '完整口播流水线', desc: '语音→数字人→包装', modules: ['tts', 'digital_human', 'video_package'] }
   ],
+
+  // 获取模块的 SVG 图标字符串
+  _plIcon(key) { return this._PL_ICONS[key] || this._PL_ICONS.plus; },
+
+  // 类型中文化
+  _plTypeLabel(t) {
+    return t === 'audio' ? '音频' : t === 'image' ? '图片' : t === 'video' ? '视频' : t;
+  },
 
   // 渲染流水线主面板
   _renderPipelineForm() {
@@ -5393,27 +5532,17 @@ const UI = {
           </div>
           <div class="pipeline-steps" id="plSteps"></div>
         ` : `
-          <div class="pl-section">
-            <div class="pl-section-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-              快捷模板
-            </div>
-            <div class="pl-presets" id="plPresets"></div>
+          <div class="pl-top-actions">
+            <button class="pl-action-btn" id="plPresetTrigger" type="button">
+              ${this._plIcon('template')}
+              <span>快捷模板</span>
+            </button>
+            <button class="pl-action-btn primary" id="plAddModuleBtn" type="button">
+              ${this._plIcon('plus')}
+              <span>添加模块</span>
+            </button>
           </div>
-          <div class="pl-section">
-            <div class="pl-section-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-              模块库 (点击添加)
-            </div>
-            <div class="pl-module-lib" id="plModuleLib"></div>
-          </div>
-          <div class="pl-section">
-            <div class="pl-section-title">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="6" y1="9" x2="6" y2="15"/><line x1="18" y1="6" x2="18" y2="18"/><circle cx="18" cy="6" r="3"/><circle cx="18" cy="18" r="3"/></svg>
-              流水线编排
-            </div>
-            <div class="pl-chain" id="plChain"></div>
-          </div>
+          <div class="pl-chain" id="plChain"></div>
           <div class="pl-config" id="plConfig"></div>
           <div class="pl-overview" id="plOverview"></div>
         `}
@@ -5423,67 +5552,143 @@ const UI = {
       this._renderPipelineSteps();
       return;
     }
-    this._renderPipelinePresets();
-    this._renderPipelineModuleLib();
+    // 绑定顶部操作按钮
+    $('#plPresetTrigger')?.addEventListener('click', () => this._openPresetPicker());
+    $('#plAddModuleBtn')?.addEventListener('click', () => this._openModulePicker());
     this._renderPipelineChain();
     this._renderPipelineConfig();
     this._renderPipelineOverview();
     this._updatePipelineEstimate();
   },
 
-  _renderPipelinePresets() {
-    const wrap = $('#plPresets');
-    if (!wrap) return;
-    wrap.innerHTML = this._PIPELINE_PRESETS.map(p => `
-      <button class="pl-preset-btn" data-preset="${esc(p.id)}" type="button">
-        <span>${p.icon}</span><span>${esc(p.title)}</span>
-        <span class="pl-preset-arrow">${esc(p.desc)}</span>
-      </button>
+  // 模块库弹窗 (照抄其他模式 preset-picker 设计)
+  _openModulePicker() {
+    const modulesHtml = this._PIPELINE_MODULES.map(m => `
+      <div class="pl-module-option history-item" data-module="${esc(m.id)}" data-cat="${esc(m.category)}">
+        <div class="pl-mo-icon">${this._plIcon(m.iconKey)}</div>
+        <div class="pl-mo-info">
+          <div class="pl-mo-title">${esc(m.title)}</div>
+          <div class="pl-mo-desc">${esc(m.desc)}</div>
+        </div>
+        <span class="pl-mo-cat">${esc(this._plTypeLabel(m.category))}</span>
+      </div>
     `).join('');
-    wrap.querySelectorAll('[data-preset]').forEach(btn => {
-      btn.addEventListener('click', () => this._applyPipelinePreset(btn.dataset.preset));
+    const searchHtml = `
+      <div class="history-search" style="padding:8px 12px;border-bottom:1px solid var(--border-soft)">
+        <input type="text" id="plModuleSearch" placeholder="搜索模块..." style="font-size:13px">
+      </div>
+      <div class="pl-module-list" style="padding:8px 12px;max-height:60vh;overflow-y:auto" id="plModuleList">
+        ${modulesHtml}
+      </div>
+    `;
+    this._showModal('选择模块', searchHtml);
+    // 绑定点击
+    $$('#modalBody [data-module]').forEach(el => {
+      el.addEventListener('click', () => {
+        this._addPipelineModule(el.dataset.module);
+        this._closeModal();
+      });
+    });
+    // 绑定搜索
+    const searchInput = $('#plModuleSearch');
+    if (searchInput) {
+      searchInput.addEventListener('input', e => {
+        const f = e.target.value.toLowerCase();
+        $$('#modalBody [data-module]').forEach(el => {
+          const m = this._PIPELINE_MODULES.find(x => x.id === el.dataset.module);
+          if (!m) return;
+          const match = m.title.toLowerCase().includes(f) || m.desc.toLowerCase().includes(f) || m.category.includes(f);
+          el.style.display = match ? '' : 'none';
+        });
+      });
+      setTimeout(() => searchInput.focus(), 100);
+    }
+  },
+
+  // 快捷模板弹窗 (照抄 preset-picker 设计)
+  _openPresetPicker() {
+    const presetsHtml = this._PIPELINE_PRESETS.map(p => {
+      const moduleLabels = p.modules.map(mid => {
+        const m = this._PIPELINE_MODULES.find(x => x.id === mid);
+        return m ? m.title : '?';
+      }).join(' → ');
+      return `
+        <div class="history-item" data-preset="${esc(p.id)}" style="padding:10px 12px">
+          <div class="h-thumb" style="width:36px;height:36px;background:var(--brand-soft);color:var(--brand);display:flex;align-items:center;justify-content:center">
+            <div style="width:18px;height:18px">${this._plIcon('template')}</div>
+          </div>
+          <div class="h-info">
+            <div class="h-model">${esc(p.title)}</div>
+            <div class="h-prompt">${esc(moduleLabels)}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+    const html = `
+      <div style="padding:8px 12px;max-height:60vh;overflow-y:auto">
+        <div style="font-size:11px;font-weight:600;color:var(--text-dim);margin:8px 0 4px;text-transform:uppercase;letter-spacing:.5px">快捷模板（${this._PIPELINE_PRESETS.length}）</div>
+        ${presetsHtml}
+      </div>
+    `;
+    this._showModal('快捷模板', html);
+    $$('#modalBody [data-preset]').forEach(el => {
+      el.addEventListener('click', () => {
+        this._applyPipelinePreset(el.dataset.preset);
+        this._closeModal();
+      });
     });
   },
 
-  _renderPipelineModuleLib() {
-    const wrap = $('#plModuleLib');
-    if (!wrap) return;
-    wrap.innerHTML = this._PIPELINE_MODULES.map(m => `
-      <button class="pl-module-chip" data-cat="${esc(m.category)}" data-module="${esc(m.id)}" type="button" title="${esc(m.desc)}">
-        <span class="pl-chip-icon">${m.icon}</span>
-        <span>${esc(m.title)}</span>
-        <span class="pl-chip-cat">${esc(m.category === 'audio' ? '音' : m.category === 'image' ? '图' : '视')}</span>
-      </button>
-    `).join('');
-    wrap.querySelectorAll('[data-module]').forEach(btn => {
-      btn.addEventListener('click', () => this._addPipelineModule(btn.dataset.module));
-    });
-  },
-
+  // 渲染编排链 (支持拖拽 + 步骤间连接线)
   _renderPipelineChain() {
     const wrap = $('#plChain');
     if (!wrap) return;
     const p = this.state.pipeline;
     if (!p.chain.length) {
-      wrap.innerHTML = `<div class="pl-chain-empty">尚无模块。点击上方模块库或快捷模板开始编排。</div>`;
+      wrap.innerHTML = `<div class="pl-chain-empty">
+        ${this._plIcon('plus')}
+        <span>尚无模块。点击上方"添加模块"或"快捷模板"开始编排。</span>
+      </div>`;
       return;
     }
-    wrap.innerHTML = p.chain.map((item, i) => {
+    let html = '';
+    p.chain.forEach((item, i) => {
       const mod = this._PIPELINE_MODULES.find(m => m.id === item.moduleId);
-      if (!mod) return '';
-      const prev = i > 0 ? this._PIPELINE_MODULES.find(m => m.id === p.chain[i - 1].moduleId) : null;
+      if (!mod) return;
       const v = this._validatePipelineStep(i);
       const cls = (p.selectedIdx === i ? 'selected ' : '') + (v.ok ? '' : 'invalid');
       const statusBadge = v.ok
-        ? '<span class="pl-node-status ok">✓ 就绪</span>'
-        : `<span class="pl-node-status err">✗ ${esc(v.error || '未就绪')}</span>`;
-      const needHint = mod.needs && mod.needs.length && mod.accepts
-        ? `<span style="font-size:10px;color:var(--text-dim)">需要${esc(this._plTypeLabel(mod.accepts))}${prev ? ' · 上步提供' + esc(this._plTypeLabel(prev.provides)) : ' · 首步需手动输入'}</span>`
-        : '<span style="font-size:10px;color:var(--text-dim)">无需上步输入</span>';
-      return `
-        <div class="pl-node ${cls}" data-idx="${i}">
+        ? '<span class="pl-node-status ok">就绪</span>'
+        : `<span class="pl-node-status err">${esc(v.error || '未就绪')}</span>`;
+      // 连接线: 显示上步 provides → 本步 accepts 的类型匹配
+      let connectorHtml = '';
+      if (i > 0) {
+        const prev = this._PIPELINE_MODULES.find(m => m.id === p.chain[i - 1].moduleId);
+        if (prev && mod.inputSlots && mod.inputSlots.length) {
+          const routeKey = item._routeKey || mod.inputSlots[0].key;
+          const slot = mod.inputSlots.find(s => s.key === routeKey) || mod.inputSlots[0];
+          const match = prev.provides === slot.type;
+          connectorHtml = `<div class="pl-connector ${match ? '' : 'mismatch'}">
+            ${this._plIcon('arrow_down')}
+            <span class="pl-conn-label">${esc(this._plTypeLabel(prev.provides))} → ${esc(slot.label)}</span>
+          </div>`;
+        } else if (prev) {
+          // 无 inputSlots 但有上步 (不连接)
+          connectorHtml = `<div class="pl-connector mismatch">
+            ${this._plIcon('warn')}
+            <span class="pl-conn-label">无输入对接</span>
+          </div>`;
+        }
+      }
+      const needHint = mod.inputSlots && mod.inputSlots.length
+        ? `需要${mod.inputSlots.map(s => esc(s.label)).join('/')}`
+        : '起始模块';
+      html += connectorHtml;
+      html += `
+        <div class="pl-node ${cls}" data-cat="${esc(mod.category)}" data-idx="${i}" draggable="true">
+          <div class="pl-node-drag" data-drag-handle title="拖拽排序">${this._plIcon('drag')}</div>
           <div class="pl-node-body" data-action="select" data-idx="${i}">
-            <div class="pl-node-icon">${mod.icon}</div>
+            <div class="pl-node-icon">${this._plIcon(mod.iconKey)}</div>
             <div class="pl-node-info">
               <div class="pl-node-title">${esc(mod.title)} <span style="font-size:10px;color:var(--text-dim);font-weight:400">#${i + 1}</span></div>
               <div class="pl-node-desc">${esc(mod.desc)} · ${needHint}</div>
@@ -5498,12 +5703,14 @@ const UI = {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
             </button>
             <button class="pl-node-btn del" data-action="del" data-idx="${i}" type="button" title="删除">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+              ${this._plIcon('x')}
             </button>
           </div>
         </div>
       `;
-    }).join('');
+    });
+    wrap.innerHTML = html;
+    // 绑定点击事件
     wrap.querySelectorAll('[data-action]').forEach(el => {
       el.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -5515,8 +5722,62 @@ const UI = {
         else if (action === 'del') this._removePipelineModule(idx);
       });
     });
+    // 绑定拖拽
+    this._bindPipelineDragSort(wrap);
   },
 
+  // 拖拽排序绑定 (HTML5 drag-and-drop)
+  _bindPipelineDragSort(wrap) {
+    let dragIdx = null;
+    const nodes = wrap.querySelectorAll('.pl-node');
+    nodes.forEach(node => {
+      // dragstart 只在拖拽手柄上触发 (整个node可拖,但手柄是视觉提示)
+      node.addEventListener('dragstart', (e) => {
+        dragIdx = parseInt(node.dataset.idx, 10);
+        node.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', String(dragIdx));
+      });
+      node.addEventListener('dragend', () => {
+        node.classList.remove('dragging');
+        wrap.querySelectorAll('.pl-node').forEach(n => n.classList.remove('drag-over'));
+        dragIdx = null;
+      });
+      node.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const idx = parseInt(node.dataset.idx, 10);
+        if (idx !== dragIdx) node.classList.add('drag-over');
+      });
+      node.addEventListener('dragleave', () => {
+        node.classList.remove('drag-over');
+      });
+      node.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const dropIdx = parseInt(node.dataset.idx, 10);
+        if (dragIdx === null || dragIdx === dropIdx) return;
+        this._reorderPipelineChain(dragIdx, dropIdx);
+      });
+    });
+  },
+
+  // 重新排序 (拖拽)
+  _reorderPipelineChain(fromIdx, toIdx) {
+    const p = this.state.pipeline;
+    if (fromIdx < 0 || fromIdx >= p.chain.length || toIdx < 0 || toIdx >= p.chain.length) return;
+    const [moved] = p.chain.splice(fromIdx, 1);
+    p.chain.splice(toIdx, 0, moved);
+    // 保持选中项跟随
+    if (p.selectedIdx === fromIdx) p.selectedIdx = toIdx;
+    else if (fromIdx < p.selectedIdx && toIdx >= p.selectedIdx) p.selectedIdx--;
+    else if (fromIdx > p.selectedIdx && toIdx <= p.selectedIdx) p.selectedIdx++;
+    this._renderPipelineChain();
+    this._renderPipelineConfig();
+    this._renderPipelineOverview();
+    this._updatePipelineEstimate();
+  },
+
+  // 渲染配置面板
   _renderPipelineConfig() {
     const wrap = $('#plConfig');
     if (!wrap) return;
@@ -5530,7 +5791,26 @@ const UI = {
     const mod = this._PIPELINE_MODULES.find(m => m.id === item.moduleId);
     if (!mod) { wrap.innerHTML = ''; return; }
 
-    // 渲染参数表单
+    // 输入槽位路由选择 (多槽位时)
+    let routeHtml = '';
+    if (mod.inputSlots && mod.inputSlots.length > 1) {
+      const prev = idx > 0 ? this._PIPELINE_MODULES.find(m => m.id === p.chain[idx - 1].moduleId) : null;
+      const prevType = prev ? prev.provides : null;
+      const currentRoute = item._routeKey || mod.inputSlots[0].key;
+      const slotsHtml = mod.inputSlots.map(slot => {
+        const match = prevType === slot.type;
+        const active = currentRoute === slot.key;
+        return `<button class="pl-route-option ${active ? 'active' : ''}" data-route="${esc(slot.key)}" ${match ? '' : 'disabled'} title="${match ? '' : '上步类型不匹配'}">
+          ${esc(slot.label)}${match ? ' ✓' : ' ✗'}
+        </button>`;
+      }).join('');
+      routeHtml = `<div class="pl-config-row">
+        <div class="pl-config-label">输入路由 <span class="pl-cfg-hint">选择上步结果填入哪个槽位</span></div>
+        <div class="pl-route-select" id="plRouteSelect">${slotsHtml}</div>
+      </div>`;
+    }
+
+    // 参数表单
     const paramsHtml = (mod.params || []).map(param => {
       const val = item.state[param.key] != null ? item.state[param.key] : (param.default != null ? param.default : '');
       const id = 'plcfg_' + param.key;
@@ -5557,14 +5837,13 @@ const UI = {
           <input type="range" id="${id}" min="${param.min}" max="${param.max}" step="${param.step}" value="${val}">
         </div>`;
       }
-      // text / url
       return `<div class="pl-config-row">
         <div class="pl-config-label">${esc(param.label)}${param.required ? ' <span style="color:var(--danger)">*</span>' : ''}</div>
         <input type="text" id="${id}" placeholder="${esc(param.placeholder || '')}" value="${esc(val)}">
       </div>`;
     }).join('');
 
-    // 渲染用户上传输入(如果有)
+    // 用户上传
     let userInputHtml = '';
     if (mod.userInput) {
       userInputHtml = this._renderPipelineUserInputRow(idx, mod);
@@ -5572,13 +5851,27 @@ const UI = {
 
     wrap.innerHTML = `
       <div class="pl-config-title">
-        <span class="pl-cfg-icon">${mod.icon}</span>
+        <span class="pl-cfg-icon">${this._plIcon(mod.iconKey)}</span>
         <span>${esc(mod.title)} · 配置</span>
-        <span style="margin-left:auto;font-size:10px;color:var(--text-dim);font-weight:400">输出: ${esc(this._plTypeLabel(mod.provides))}${mod.accepts ? ' · 需要' + esc(this._plTypeLabel(mod.accepts)) : ''}</span>
+        <span style="margin-left:auto;font-size:10px;color:var(--text-dim);font-weight:400">输出: ${esc(this._plTypeLabel(mod.provides))}</span>
       </div>
+      ${routeHtml}
       ${paramsHtml}
       ${userInputHtml}
     `;
+
+    // 绑定路由选择
+    if (mod.inputSlots && mod.inputSlots.length > 1) {
+      wrap.querySelectorAll('[data-route]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (btn.disabled) return;
+          item._routeKey = btn.dataset.route;
+          this._renderPipelineConfig();
+          this._renderPipelineChain();
+          this._renderPipelineOverview();
+        });
+      });
+    }
 
     // 绑定参数事件
     (mod.params || []).forEach(param => {
@@ -5596,7 +5889,6 @@ const UI = {
         el.addEventListener('input', () => {
           item.state[param.key] = el.value;
           this._updatePipelineEstimate();
-          // 实时更新编排链描述
           this._renderPipelineChain();
         });
       } else if (param.type === 'select') {
@@ -5607,7 +5899,7 @@ const UI = {
       }
     });
 
-    // 绑定用户上传按钮
+    // 绑定用户上传
     if (mod.userInput) {
       const uploadBtn = $('#plUserInputUpload');
       const fileInput = $('#plUserInputFile');
@@ -5642,17 +5934,14 @@ const UI = {
     let statusCls = '';
     if (has) {
       const isVideo = /\.(mp4|webm|mov|avi)(\?|$)/i.test(val);
-      if (isVideo) {
-        preview = `<video class="pl-user-input-preview" src="${esc(val)}" muted></video>`;
-      } else {
-        preview = `<img class="pl-user-input-preview" src="${esc(val)}" loading="lazy" referrerpolicy="no-referrer">`;
-      }
+      if (isVideo) preview = `<video class="pl-user-input-preview" src="${esc(val)}" muted></video>`;
+      else preview = `<img class="pl-user-input-preview" src="${esc(val)}" loading="lazy" referrerpolicy="no-referrer">`;
       statusText = '已上传';
       statusCls = 'done';
     } else if (item._uploading) {
       statusText = '上传中...';
       statusCls = 'uploading';
-      preview = `<div class="pl-user-input-preview" style="display:flex;align-items:center;justify-content:center;font-size:18px">⏳</div>`;
+      preview = `<div class="pl-user-input-preview" style="display:flex;align-items:center;justify-content:center"><div style="width:16px;height:16px">${this._plIcon('sparkles')}</div></div>`;
     } else if (item._uploadError) {
       statusText = '失败: ' + item._uploadError;
       statusCls = 'error';
@@ -5662,7 +5951,7 @@ const UI = {
         <div class="pl-config-label">${esc(ui.label)} <span class="pl-cfg-hint">${esc(ui.hint || '')}</span></div>
         <div class="pl-user-input ${has ? 'has-file' : ''}">
           <div class="pl-user-input-row">
-            ${preview || `<div class="pl-user-input-preview" style="display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:18px">+</div>`}
+            ${preview || `<div class="pl-user-input-preview" style="display:flex;align-items:center;justify-content:center;color:var(--text-dim)">${this._plIcon('plus')}</div>`}
             <div class="pl-user-input-info">
               <div class="pl-ui-name">${has ? esc(ui.label + ' · 已就绪') : esc(ui.label)}</div>
               <div class="pl-ui-status ${statusCls}">${esc(statusText)}</div>
@@ -5686,10 +5975,10 @@ const UI = {
       const mod = this._PIPELINE_MODULES.find(m => m.id === item.moduleId);
       return sum + (mod ? (mod.estimateCost(item.state) || 0) : 0);
     }, 0);
-    const validIcon = v.ok ? '✓' : '✗';
+    const validIcon = v.ok ? this._plIcon('check') : this._plIcon('warn');
     const validColor = v.ok ? 'var(--success)' : 'var(--danger)';
     wrap.innerHTML = `
-      <div class="pl-ov-item"><span style="color:${validColor}">${validIcon}</span> <strong>${stepCount}</strong> 步</div>
+      <div class="pl-ov-item" style="color:${validColor}"><span style="width:14px;height:14px;display:inline-flex">${validIcon}</span> <strong>${stepCount}</strong> 步</div>
       <span class="pl-ov-sep">·</span>
       <div class="pl-ov-item">预估 <strong>¥${totalCost.toFixed(4)}</strong></div>
       <span class="pl-ov-sep">·</span>
@@ -5701,42 +5990,45 @@ const UI = {
     const mod = this._PIPELINE_MODULES.find(m => m.id === moduleId);
     if (!mod) return;
     const p = this.state.pipeline;
-    // 初始化模块默认状态
     const state = {};
     (mod.params || []).forEach(param => {
       state[param.key] = param.default != null ? param.default : (param.type === 'range' ? param.min : '');
     });
-    p.chain.push({ moduleId, state, _userInput: {} });
+    // 默认路由: 第一个匹配上步类型的槽位, 或第一个槽位
+    let routeKey = null;
+    if (mod.inputSlots && mod.inputSlots.length) {
+      if (p.chain.length > 0) {
+        const prev = this._PIPELINE_MODULES.find(m => m.id === p.chain[p.chain.length - 1].moduleId);
+        const matchSlot = mod.inputSlots.find(s => s.type === prev.provides);
+        routeKey = (matchSlot || mod.inputSlots[0]).key;
+      } else {
+        routeKey = mod.inputSlots[0].key;
+      }
+    }
+    p.chain.push({ moduleId, state, _userInput: {}, _routeKey: routeKey });
     p.selectedIdx = p.chain.length - 1;
     this._renderPipelineChain();
     this._renderPipelineConfig();
     this._renderPipelineOverview();
     this._updatePipelineEstimate();
+    Toast.success('已添加: ' + mod.title);
   },
 
   _removePipelineModule(idx) {
     const p = this.state.pipeline;
     if (idx < 0 || idx >= p.chain.length) return;
+    const mod = this._PIPELINE_MODULES.find(m => m.id === p.chain[idx].moduleId);
     p.chain.splice(idx, 1);
     if (p.selectedIdx >= p.chain.length) p.selectedIdx = p.chain.length - 1;
     this._renderPipelineChain();
     this._renderPipelineConfig();
     this._renderPipelineOverview();
     this._updatePipelineEstimate();
+    if (mod) Toast.info('已删除: ' + mod.title);
   },
 
   _movePipelineModule(idx, dir) {
-    const p = this.state.pipeline;
-    const newIdx = idx + dir;
-    if (newIdx < 0 || newIdx >= p.chain.length) return;
-    const tmp = p.chain[idx];
-    p.chain[idx] = p.chain[newIdx];
-    p.chain[newIdx] = tmp;
-    if (p.selectedIdx === idx) p.selectedIdx = newIdx;
-    else if (p.selectedIdx === newIdx) p.selectedIdx = idx;
-    this._renderPipelineChain();
-    this._renderPipelineConfig();
-    this._renderPipelineOverview();
+    this._reorderPipelineChain(idx, idx + dir);
   },
 
   _selectPipelineModule(idx) {
@@ -5755,7 +6047,16 @@ const UI = {
       (mod.params || []).forEach(param => {
         state[param.key] = param.default != null ? param.default : (param.type === 'range' ? param.min : '');
       });
-      return { moduleId, state, _userInput: {} };
+      return { moduleId, state, _userInput: {}, _routeKey: null };
+    });
+    // 自动设置路由 (预设中的模块顺序已确定, 逐个匹配)
+    p.chain.forEach((item, i) => {
+      const mod = this._PIPELINE_MODULES.find(m => m.id === item.moduleId);
+      if (mod.inputSlots && mod.inputSlots.length && i > 0) {
+        const prev = this._PIPELINE_MODULES.find(m => m.id === p.chain[i - 1].moduleId);
+        const matchSlot = mod.inputSlots.find(s => s.type === prev.provides);
+        item._routeKey = (matchSlot || mod.inputSlots[0]).key;
+      }
     });
     p.selectedIdx = p.chain.length - 1;
     this._renderPipelineChain();
@@ -5797,7 +6098,7 @@ const UI = {
     this._renderPipelineOverview();
   },
 
-  // 校验单步: 返回 { ok, error }
+  // 校验单步
   _validatePipelineStep(i) {
     const p = this.state.pipeline;
     const item = p.chain[i];
@@ -5811,33 +6112,31 @@ const UI = {
         if (!val || !String(val).trim()) return { ok: false, error: '缺 ' + param.label };
       }
     }
-    // userInput 校验: 若 userInput.key 不在 needs 中(附加输入), 则必须上传
-    // 若 userInput.key 在 needs 中(替代输入), 则可由上步提供或用户上传
+    // userInput 附加输入校验 (key 不在 inputSlots 中 = 必填附加)
     if (mod.userInput) {
-      const isAlternative = mod.needs && mod.needs.includes(mod.userInput.key);
+      const isAlternative = mod.inputSlots && mod.inputSlots.some(s => s.key === mod.userInput.key);
       if (!isAlternative) {
         const has = item._userInput && item._userInput[mod.userInput.key];
         if (!has) return { ok: false, error: '需上传' + mod.userInput.label };
       }
     }
-    // needs 校验: 若有 accepts 类型要求, 上一步 provides 必须匹配, 或者用户手动上传(替代模式)
-    if (mod.needs && mod.needs.length && mod.accepts) {
-      const hasUserInput = mod.userInput && item._userInput && item._userInput[mod.userInput.key];
-      if (hasUserInput) {
-        // 替代模式: 用户已上传, 无需上步
+    // inputSlots 校验: 若有槽位, 必须有上步匹配 或 userInput替代
+    if (mod.inputSlots && mod.inputSlots.length) {
+      const routeKey = item._routeKey || mod.inputSlots[0].key;
+      const slot = mod.inputSlots.find(s => s.key === routeKey) || mod.inputSlots[0];
+      // 检查是否有 userInput 替代该槽位
+      const hasUserAlt = mod.userInput && mod.userInput.key === routeKey && item._userInput && item._userInput[routeKey];
+      if (hasUserAlt) {
+        // 用户上传替代, 无需上步
       } else if (i === 0) {
-        return { ok: false, error: '需上传' + (mod.userInput ? mod.userInput.label : mod.accepts) };
+        return { ok: false, error: '需上传' + slot.label };
       } else {
         const prev = this._PIPELINE_MODULES.find(m => m.id === p.chain[i - 1].moduleId);
         if (!prev) return { ok: false, error: '无上一步' };
-        if (prev.provides !== mod.accepts) return { ok: false, error: '上步需提供' + this._plTypeLabel(mod.accepts) };
+        if (prev.provides !== slot.type) return { ok: false, error: '上步需提供' + this._plTypeLabel(slot.type) };
       }
     }
     return { ok: true };
-  },
-
-  _plTypeLabel(t) {
-    return t === 'audio' ? '音频' : t === 'image' ? '图片' : t === 'video' ? '视频' : t;
   },
 
   _validatePipeline() {
@@ -5871,21 +6170,19 @@ const UI = {
     }
   },
 
-  // 渲染运行中的进度(复用 .pipeline-steps 样式)
+  // 运行中进度渲染
   _renderPipelineSteps() {
     const wrap = $('#plSteps');
     if (!wrap) return;
     const steps = this._pipeline.steps || [];
     if (!steps.length) { wrap.innerHTML = ''; return; }
-    // 用 chain 中的模块标题作为节点名
     const p = this.state.pipeline;
     const chain = (p && p.chain) || [];
     wrap.innerHTML = steps.map((st, i) => {
       const mod = chain[i] ? this._PIPELINE_MODULES.find(m => m.id === chain[i].moduleId) : null;
       const title = mod ? mod.title : ('步骤 ' + (i + 1));
-      const icon = mod ? mod.icon : (i + 1);
       const cls = st.status === 'done' ? 'done' : st.status === 'active' ? 'active' : st.status === 'error' ? 'error' : '';
-      const psIcon = st.status === 'done' ? '✓' : st.status === 'active' ? '…' : st.status === 'error' ? '!' : icon;
+      const psIcon = st.status === 'done' ? '✓' : st.status === 'active' ? '…' : st.status === 'error' ? '!' : (i + 1);
       const meta = st.elapsed ? fmtDur(st.elapsed) : (st.status === 'pending' ? '等待' : st.status === 'active' ? '处理中' : st.status === 'error' ? '失败' : '');
       const rerunBtn = st.status === 'done' ? `<button class="ps-rerun" data-rerun-step="${i}">重跑</button>` : '';
       return `<div class="pipeline-step ${cls}">
@@ -5903,7 +6200,6 @@ const UI = {
   async _submitPipeline() {
     const p = this.state.pipeline;
     if (!p || !p.chain || !p.chain.length) { Toast.warning('请至少添加一个模块'); return; }
-    // 校验
     const v = this._validatePipeline();
     if (!v.ok) { Toast.error(v.error); return; }
     if (!TaskCenter.isAvailable()) {
@@ -5919,7 +6215,8 @@ const UI = {
       // 从模块构建 steps 数组
       const steps = p.chain.map((item, i) => {
         const mod = this._PIPELINE_MODULES.find(m => m.id === item.moduleId);
-        const step = mod.buildStep(item.state, item._userInput || {});
+        const routeKey = item._routeKey || (mod.inputSlots && mod.inputSlots.length ? mod.inputSlots[0].key : null);
+        const step = mod.buildStep(item.state, item._userInput || {}, routeKey);
         step.seq = i + 1;
         return step;
       });
@@ -5927,11 +6224,7 @@ const UI = {
         const s = item.state || {};
         return s.text || s.prompt || '';
       }).filter(Boolean).join(' | ');
-      const payload = {
-        kind: 'pipeline',
-        steps,
-        prompt,
-      };
+      const payload = { kind: 'pipeline', steps, prompt };
       const taskId = genId();
       const url = TaskCenter.workerUrl + '/task?token=' + encodeURIComponent(TaskCenter.token);
       const ctrl = new AbortController();
@@ -5948,26 +6241,17 @@ const UI = {
       if (!res.ok) throw new Error(data.error || data.message || `HTTP ${res.status}`);
       const workerId = data.id || data.taskId || data.task?.id || (data.task && data.task.id);
       if (!workerId) throw new Error('任务中心未返回任务 ID');
-      // 注册到 TaskCenter 以便轮询
       TaskCenter._submitted.set(taskId, { task: { id: taskId }, lastStatus: 'processing', startTime: Date.now(), workerId: String(workerId), isPipeline: true });
-      // 初始化进度UI
       this._pipeline.active = { id: taskId, workerId: String(workerId), startedAt: Date.now() };
       this._pipeline.steps = p.chain.map((_, i) => ({ status: i === 0 ? 'active' : 'pending', startedAt: i === 0 ? Date.now() : null }));
-      // 切换到运行视图
       this._renderPipelineForm();
       this._renderPipelineSteps();
       Toast.success('流水线已提交到任务中心');
-      // 加入历史
       const fakeTask = {
         id: taskId,
         model: { id: 'pipeline', name: '流水线(' + p.chain.length + '步)', type: 'video', price: '组合计费' },
-        body: payload,
-        prompt,
-        status: 'processing',
-        createdAt: Date.now(),
-        apiId: workerId,
-        dispatchedVia: 'taskcenter',
-        isPipeline: true
+        body: payload, prompt, status: 'processing', createdAt: Date.now(),
+        apiId: workerId, dispatchedVia: 'taskcenter', isPipeline: true
       };
       const tasks = Store.getTasks();
       tasks.unshift(fakeTask);
@@ -5982,19 +6266,13 @@ const UI = {
     }
   },
 
-  // 从 worker 进度事件更新流水线步骤UI
   _updatePipelineFromEvent(payload) {
     if (!this._pipeline.active) return;
     const steps = payload.steps || [];
     if (!steps.length) return;
     this._pipeline.steps = steps.map((s, i) => {
       const prev = this._pipeline.steps[i] || {};
-      return {
-        status: s.status || 'pending',
-        startedAt: s.startedAt || prev.startedAt,
-        elapsed: s.elapsed,
-        result: s.result || prev.result
-      };
+      return { status: s.status || 'pending', startedAt: s.startedAt || prev.startedAt, elapsed: s.elapsed, result: s.result || prev.result };
     });
     this._renderPipelineSteps();
   },
@@ -6011,9 +6289,7 @@ const UI = {
           this._pipeline.steps[stepIdx] = { status: 'active', startedAt: Date.now() };
           this._renderPipelineSteps();
         }
-      } else {
-        Toast.error('重跑请求失败');
-      }
+      } else Toast.error('重跑请求失败');
     } catch (e) { Toast.error('重跑失败: ' + e.message); }
   },
 
@@ -6696,7 +6972,7 @@ const UI = {
   _toggleCompare(task) {
     const idx = this.state.compareList.findIndex(t => t.id === task.id);
     if (idx >= 0) this.state.compareList.splice(idx, 1);
-    else { if (this.state.compareList.length >= 3) { Toast.warning('最多对比 3 个'); return; } this.state.compareList.push(task); }
+    else { if (this.state.compareList.length >= 4) { Toast.warning('最多对比 4 个'); return; } this.state.compareList.push(task); }
     this._renderCompareBar();
   },
 
@@ -6712,22 +6988,26 @@ const UI = {
     if (!this.state.compareList.length) return;
     const inner = $('#compareGridInner');
     const list = this.state.compareList;
-    // V27 — 默认并排模式，2 张图时提供 Slider 模式
+    // V29 — 2 张图时提供 Slider 模式; 3-4 张并排; 1 张直接显示
     const hasSliderMode = list.length === 2;
     let modeBar = '';
     if (hasSliderMode) {
       modeBar = `<div class="compare-mode-bar">
         <span class="cm-label">对比模式：</span>
-        <button data-cm-mode="side" class="active">并排</button>
-        <button data-cm-mode="slider">滑块对比</button>
+        <button data-cm-mode="side" class="active">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg>
+          并排
+        </button>
+        <button data-cm-mode="slider">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="3" x2="12" y2="21"/><polyline points="9 7 5 12 9 17"/><polyline points="15 7 19 12 15 17"/></svg>
+          滑块对比
+        </button>
       </div>`;
     }
-    inner.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:12px;width:100%;max-width:1200px">
-      ${modeBar}
-      <div id="compareContent" style="display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap">${this._renderCompareSide(list)}</div>
-    </div>`;
+    inner.innerHTML = `${modeBar}
+      <div id="compareContent" style="width:100%">${this._renderCompareSide(list)}</div>`;
     $('#compareGrid').classList.add('show');
-    // V27 — 绑定模式切换
+    // V29 — 绑定模式切换
     if (hasSliderMode) {
       inner.querySelectorAll('[data-cm-mode]').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -6737,11 +7017,9 @@ const UI = {
           const content = $('#compareContent');
           if (!content) return;
           if (mode === 'slider') {
-            content.style.flexDirection = 'column';
             content.innerHTML = this._renderCompareSlider(list);
             this._bindCompareSlider();
           } else {
-            content.style.flexDirection = 'row';
             content.innerHTML = this._renderCompareSide(list);
           }
         });
@@ -6749,23 +7027,34 @@ const UI = {
     }
   },
 
-  /* V27 — 并排对比渲染 */
+  /* V29 — 并排对比渲染 (响应式 grid, 支持 1-4 张) */
   _renderCompareSide(list) {
-    return list.map((t, i) => `<div class="compare-cell"><span class="compare-label">${esc(t.model?.name || '')} #${i+1}</span><img src="${esc(t.result?.url)}"></div>`).join('');
+    const cells = list.map((t, i) => {
+      const url = t.result?.url || '';
+      const isVideo = /\.(mp4|webm|mov|avi)(\?|$)/i.test(url);
+      const media = isVideo
+        ? `<video src="${esc(url)}" controls muted></video>`
+        : `<img src="${esc(url)}" loading="lazy" referrerpolicy="no-referrer">`;
+      return `<div class="compare-cell">
+        <span class="compare-label">${esc(t.model?.name || '')} #${i+1}</span>
+        ${media}
+      </div>`;
+    }).join('');
+    return `<div class="compare-side-grid" data-count="${list.length}">${cells}</div>`;
   },
 
-  /* V27 — 滑块对比渲染（仅 2 张图） */
+  /* V29 — 滑块对比渲染（仅 2 张图）— 更细的线/白色把手 */
   _renderCompareSlider(list) {
     const a = list[0], b = list[1];
     return `<div class="compare-slider-wrap" id="cmpSliderWrap">
       <span class="compare-label-tag before">${esc(a.model?.name || '前')}</span>
       <span class="compare-label-tag after">${esc(b.model?.name || '后')}</span>
-      <img id="cmpSliderBefore" src="${esc(a.result?.url)}" alt="before">
+      <img id="cmpSliderBefore" src="${esc(a.result?.url)}" alt="before" referrerpolicy="no-referrer">
       <div class="compare-slider-after" id="cmpSliderAfter">
-        <img id="cmpSliderAfterImg" src="${esc(b.result?.url)}" alt="after">
+        <img id="cmpSliderAfterImg" src="${esc(b.result?.url)}" alt="after" referrerpolicy="no-referrer">
       </div>
       <div class="compare-slider-handle" id="cmpSliderHandle">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/><polyline points="9 18 15 12 9 6" transform="translate(6 0)"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="13 17 8 12 13 7"/><polyline points="19 17 14 12 19 7"/></svg>
       </div>
       <input type="range" min="0" max="100" value="50" class="compare-slider-range" id="cmpSliderRange" aria-label="对比滑块">
     </div>`;
