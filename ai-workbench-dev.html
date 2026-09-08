@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#080b14" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
-<title>修的媒体工作台 V30 · 节点图流水线</title>
+<title>修的媒体工作台 V31 · React Flow 节点图</title>
 <style>
 /* ============================================================
    主题变量
@@ -642,366 +642,228 @@ textarea { resize: vertical; min-height: 80px; }
 .pipeline-step .ps-progress-bar { display: none; }
 
 /* ============================================================
-   V30: 节点图流水线 (Node Graph Pipeline) — 参考 CORAL AI
-   自研 SVG 画布 + 语义端口 + 拓扑排序
+   V31: 节点图流水线 (React Flow) — 参考 CORAL AI
+   使用开源 React Flow 库, 主题适配深色/浅色
    ============================================================ */
 
-/* 三栏布局 */
-.pl-graph-layout {
-  display: grid;
-  grid-template-columns: 200px 1fr 280px;
-  gap: 0;
-  flex: 1;
-  min-height: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  background: var(--surface);
-}
-@media (max-width: 1024px) {
-  .pl-graph-layout { grid-template-columns: 160px 1fr 240px; }
-}
-@media (max-width: 768px) {
-  .pl-graph-layout {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr auto;
-    height: auto;
-    min-height: 600px;
-  }
-}
-
-/* 左栏: 节点库 */
-.pl-node-lib {
-  border-right: 1px solid var(--border);
-  background: var(--surface-2);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-.pl-lib-header {
-  padding: 10px 12px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: .04em;
-  border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  background: var(--surface-2);
-  z-index: 1;
-}
-.pl-lib-category {
-  padding: 8px 0 4px;
-}
-.pl-lib-cat-title {
-  padding: 4px 12px;
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text-dim);
-  text-transform: uppercase;
-  letter-spacing: .05em;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.pl-lib-cat-title .pl-cat-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-}
-.pl-lib-cat-title[data-cat="text"] .pl-cat-dot { background: #3b6ef5; }
-.pl-lib-cat-title[data-cat="image"] .pl-cat-dot { background: #10b981; }
-.pl-lib-cat-title[data-cat="video"] .pl-cat-dot { background: #f59e0b; }
-.pl-lib-cat-title[data-cat="audio"] .pl-cat-dot { background: #8b5cf6; }
-.pl-lib-cat-title[data-cat="utility"] .pl-cat-dot { background: #6b7280; }
-
-.pl-lib-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 12px;
-  cursor: grab;
-  font-size: 12px;
-  color: var(--text);
-  transition: all var(--transition);
-  border-left: 2px solid transparent;
-  user-select: none;
-}
-.pl-lib-item:hover {
-  background: var(--brand-soft);
-  color: var(--brand);
-  border-left-color: var(--brand);
-}
-.pl-lib-item:active { cursor: grabbing; }
-.pl-lib-item .pl-lib-icon {
-  width: 22px; height: 22px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 5px;
-  background: var(--surface);
-  color: var(--text-muted);
-  flex-shrink: 0;
-}
-.pl-lib-item:hover .pl-lib-icon { background: var(--brand); color: #fff; }
-.pl-lib-item .pl-lib-icon svg { width: 13px; height: 13px; }
-.pl-lib-item .pl-lib-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-/* 中栏: SVG 画布 */
-.pl-canvas-wrap {
+/* 流水线布局: 单栏(画布占满) + 节点库浮窗 */
+.pl-workspace {
   position: relative;
-  overflow: hidden;
-  background:
-    radial-gradient(circle, var(--border) 1px, transparent 1px);
-  background-size: 20px 20px;
-  background-color: var(--bg);
-}
-.pl-canvas-wrap.pl-dragging { cursor: grabbing; }
-.pl-canvas-svg {
   width: 100%;
   height: 100%;
-  display: block;
-  cursor: grab;
-}
-.pl-canvas-wrap.pl-dragging .pl-canvas-svg { cursor: grabbing; }
-
-/* 画布工具栏 */
-.pl-canvas-toolbar {
-  position: absolute;
-  top: 10px;
-  left: 10px;
   display: flex;
-  gap: 4px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 4px;
-  box-shadow: var(--shadow-sm);
-  z-index: 10;
+  flex-direction: column;
 }
-.pl-canvas-toolbar button {
-  width: 28px; height: 28px;
+
+/* 顶部工具栏 */
+.pl-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  z-index: 5;
+}
+.pl-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+  border-right: 1px solid var(--border-soft);
+}
+.pl-toolbar-group:last-child { border-right: none; }
+.pl-tb-btn {
+  width: 30px; height: 30px;
   display: flex; align-items: center; justify-content: center;
-  border: none;
-  background: transparent;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
   color: var(--text-muted);
+  border-radius: 6px;
   cursor: pointer;
-  border-radius: 5px;
   transition: all var(--transition);
 }
-.pl-canvas-toolbar button:hover { background: var(--surface-2); color: var(--brand); }
-.pl-canvas-toolbar button svg { width: 14px; height: 14px; }
-.pl-canvas-toolbar .pl-zoom-val {
+.pl-tb-btn:hover { background: var(--brand-soft); color: var(--brand); border-color: var(--brand); }
+.pl-tb-btn svg { width: 14px; height: 14px; }
+.pl-tb-btn.danger:hover { background: var(--danger-soft); color: var(--danger); border-color: var(--danger); }
+.pl-tb-btn.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+.pl-tb-label { font-size: 11px; color: var(--text-muted); padding: 0 4px; }
+.pl-tb-spacer { flex: 1; }
+.pl-tb-info {
   font-size: 11px;
   color: var(--text-muted);
-  padding: 0 6px;
   display: flex;
-  align-items: center;
-  font-variant-numeric: tabular-nums;
-  min-width: 42px;
-  justify-content: center;
-}
-
-/* 画布空状态提示 */
-.pl-canvas-hint {
-  position: absolute;
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  color: var(--text-dim);
-  font-size: 13px;
-  pointer-events: none;
-  display: flex;
-  flex-direction: column;
   align-items: center;
   gap: 8px;
+  padding: 4px 10px;
+  background: var(--surface-2);
+  border-radius: 6px;
 }
-.pl-canvas-hint svg { width: 48px; height: 48px; opacity: .3; }
-.pl-canvas-hint .pl-hint-title { font-weight: 600; color: var(--text-muted); }
-.pl-canvas-hint .pl-hint-sub { font-size: 11px; }
+.pl-tb-info .pl-ti-node-count { color: var(--text); font-weight: 600; }
+.pl-tb-info .pl-ti-cost { color: var(--brand); font-weight: 600; }
 
-/* 节点 (SVG 内的 foreignObject) */
-.pl-node-card {
-  width: 180px;
+/* 画布容器 (React Flow) */
+.pl-canvas-container {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+  background: var(--bg);
+}
+.pl-reactflow {
+  width: 100%;
+  height: 100%;
+}
+
+/* 节点库浮窗 (画布上方左侧) */
+.pl-palette {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 220px;
+  max-height: calc(100% - 24px);
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
-  box-shadow: var(--shadow-sm);
-  overflow: visible;
-  font-size: 12px;
-  user-select: none;
-  transition: box-shadow var(--transition), border-color var(--transition);
-}
-.pl-node-card.selected {
-  border-color: var(--brand);
-  box-shadow: 0 0 0 2px var(--brand-soft), var(--shadow-md);
-}
-.pl-node-card.invalid { border-color: var(--danger); }
-.pl-node-card.running { border-color: var(--brand); animation: pl-node-pulse 1.5s ease-in-out infinite; }
-@keyframes pl-node-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 var(--brand-soft), var(--shadow-sm); }
-  50% { box-shadow: 0 0 0 6px transparent, var(--shadow-sm); }
-}
-
-.pl-node-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 10px;
-  border-bottom: 1px solid var(--border-soft);
-  background: var(--surface-2);
-  border-radius: 8px 8px 0 0;
-  cursor: move;
-}
-.pl-node-header .pl-nh-icon {
-  width: 18px; height: 18px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 4px;
-  flex-shrink: 0;
-}
-.pl-node-header .pl-nh-icon svg { width: 12px; height: 12px; }
-.pl-node-card[data-cat="text"] .pl-nh-icon { background: rgba(59,110,245,.12); color: #3b6ef5; }
-.pl-node-card[data-cat="image"] .pl-nh-icon { background: rgba(16,185,129,.12); color: #10b981; }
-.pl-node-card[data-cat="video"] .pl-nh-icon { background: rgba(245,158,11,.12); color: #f59e0b; }
-.pl-node-card[data-cat="audio"] .pl-nh-icon { background: rgba(139,92,246,.12); color: #8b5cf6; }
-.pl-node-card[data-cat="utility"] .pl-nh-icon { background: rgba(107,114,128,.12); color: #6b7280; }
-.pl-node-header .pl-nh-title {
-  flex: 1;
-  font-weight: 600;
-  font-size: 12px;
-  color: var(--text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.pl-node-header .pl-nh-status {
-  font-size: 9px;
-  padding: 1px 5px;
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-.pl-node-header .pl-nh-status.ok { background: rgba(16,185,129,.15); color: #10b981; }
-.pl-node-header .pl-nh-status.err { background: rgba(239,68,68,.15); color: #ef4444; }
-.pl-node-header .pl-nh-status.pending { background: var(--border); color: var(--text-dim); }
-.pl-node-header .pl-nh-status.running { background: rgba(59,110,245,.15); color: var(--brand); }
-
-/* 节点内容 */
-.pl-node-body {
-  padding: 8px 10px;
-  font-size: 11px;
-  color: var(--text-muted);
-  line-height: 1.4;
-}
-.pl-node-body .pl-nb-preview {
-  font-size: 10px;
-  color: var(--text-dim);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin-bottom: 4px;
-}
-.pl-node-body .pl-nb-thumb {
-  width: 100%;
-  height: 60px;
-  border-radius: 4px;
-  object-fit: cover;
-  background: var(--surface-2);
-  margin-top: 4px;
-}
-
-/* 端口 */
-.pl-port-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 3px 0;
-  font-size: 10px;
-  position: relative;
-}
-.pl-port-row.input { justify-content: flex-start; }
-.pl-port-row.output { justify-content: flex-end; }
-.pl-port-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  border: 2px solid var(--surface);
-  cursor: crosshair;
-  flex-shrink: 0;
-  transition: transform var(--transition);
-  position: relative;
-  z-index: 2;
-}
-.pl-port-dot:hover { transform: scale(1.3); }
-.pl-port-dot[data-type="text"] { background: #3b6ef5; }
-.pl-port-dot[data-type="image"] { background: #10b981; }
-.pl-port-dot[data-type="video"] { background: #f59e0b; }
-.pl-port-dot[data-type="audio"] { background: #8b5cf6; }
-.pl-port-dot.connected { box-shadow: 0 0 0 2px rgba(255,255,255,.4); }
-.pl-port-label {
-  font-size: 10px;
-  color: var(--text-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.pl-ports-section {
-  padding: 4px 10px;
-  border-top: 1px solid var(--border-soft);
-}
-.pl-ports-section.empty { display: none; }
-
-/* 连线 */
-.pl-edge {
-  fill: none;
-  stroke-width: 2;
-  cursor: pointer;
-  transition: stroke-width var(--transition);
-}
-.pl-edge:hover { stroke-width: 3; }
-.pl-edge[data-type="text"] { stroke: #3b6ef5; }
-.pl-edge[data-type="image"] { stroke: #10b981; }
-.pl-edge[data-type="video"] { stroke: #f59e0b; }
-.pl-edge[data-type="audio"] { stroke: #8b5cf6; }
-.pl-edge.invalid { stroke: var(--danger); stroke-dasharray: 4 3; }
-.pl-edge-hit {
-  fill: none;
-  stroke: transparent;
-  stroke-width: 14;
-  cursor: pointer;
-}
-.pl-edge-temp {
-  fill: none;
-  stroke: var(--brand);
-  stroke-width: 2;
-  stroke-dasharray: 4 3;
-  pointer-events: none;
-}
-
-/* 右栏: 节点配置 */
-.pl-config-panel {
-  border-left: 1px solid var(--border);
-  background: var(--surface);
-  overflow-y: auto;
+  border-radius: 10px;
+  box-shadow: var(--shadow-md);
+  z-index: 10;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
-.pl-config-header {
+.pl-palette-header {
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  border-bottom: 1px solid var(--border-soft);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+.pl-palette-header svg { width: 14px; height: 14px; transition: transform var(--transition); }
+.pl-palette.collapsed .pl-palette-header svg { transform: rotate(-90deg); }
+.pl-palette.collapsed .pl-palette-body { display: none; }
+.pl-palette-body {
+  overflow-y: auto;
+  padding: 6px;
+  flex: 1;
+}
+.pl-palette-search {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border-soft);
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  z-index: 1;
+}
+.pl-palette-search input {
+  width: 100%;
+  padding: 5px 8px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface-2);
+  color: var(--text);
+}
+.pl-palette-search input:focus { outline: none; border-color: var(--brand); }
+.pl-palette-cat {
+  padding: 4px 0;
+}
+.pl-palette-cat-title {
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.pl-palette-cat-title .pl-pc-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+}
+.pl-palette-cat-title[data-cat="text"] .pl-pc-dot { background: #3b6ef5; }
+.pl-palette-cat-title[data-cat="image"] .pl-pc-dot { background: #10b981; }
+.pl-palette-cat-title[data-cat="video"] .pl-pc-dot { background: #f59e0b; }
+.pl-palette-cat-title[data-cat="audio"] .pl-pc-dot { background: #8b5cf6; }
+.pl-palette-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  cursor: grab;
+  font-size: 12px;
+  color: var(--text);
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition: all var(--transition);
+  user-select: none;
+}
+.pl-palette-item:hover {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+}
+.pl-palette-item:active { cursor: grabbing; }
+.pl-palette-item .pl-pi-icon {
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
+.pl-palette-item .pl-pi-icon svg { width: 14px; height: 14px; }
+.pl-palette-item[data-cat="text"] .pl-pi-icon { background: rgba(59,110,245,.12); color: #3b6ef5; }
+.pl-palette-item[data-cat="image"] .pl-pi-icon { background: rgba(16,185,129,.12); color: #10b981; }
+.pl-palette-item[data-cat="video"] .pl-pi-icon { background: rgba(245,158,11,.12); color: #f59e0b; }
+.pl-palette-item[data-cat="audio"] .pl-pi-icon { background: rgba(139,92,246,.12); color: #8b5cf6; }
+.pl-palette-item .pl-pi-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-palette-item .pl-pi-desc { font-size: 10px; color: var(--text-dim); }
+
+/* 节点配置面板 (画布右侧浮窗) */
+.pl-inspector {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 300px;
+  max-height: calc(100% - 24px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-md);
+  z-index: 10;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+.pl-inspector.show { display: flex; }
+.pl-inspector-header {
   padding: 10px 12px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-soft);
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.pl-config-header .pl-ch-icon {
-  width: 24px; height: 24px;
+.pl-inspector-header .pl-ih-icon {
+  width: 28px; height: 28px;
   border-radius: 6px;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.pl-config-header .pl-ch-icon svg { width: 14px; height: 14px; }
-.pl-config-header .pl-ch-title {
+.pl-inspector-header .pl-ih-icon svg { width: 15px; height: 15px; }
+.pl-inspector-header[data-cat="text"] .pl-ih-icon { background: rgba(59,110,245,.12); color: #3b6ef5; }
+.pl-inspector-header[data-cat="image"] .pl-ih-icon { background: rgba(16,185,129,.12); color: #10b981; }
+.pl-inspector-header[data-cat="video"] .pl-ih-icon { background: rgba(245,158,11,.12); color: #f59e0b; }
+.pl-inspector-header[data-cat="audio"] .pl-ih-icon { background: rgba(139,92,246,.12); color: #8b5cf6; }
+.pl-inspector-header .pl-ih-title {
   flex: 1;
   font-size: 13px;
   font-weight: 600;
   color: var(--text);
 }
-.pl-config-header .pl-ch-del {
+.pl-inspector-header .pl-ih-close {
   width: 24px; height: 24px;
   border: none;
   background: transparent;
@@ -1009,22 +871,23 @@ textarea { resize: vertical; min-height: 80px; }
   cursor: pointer;
   border-radius: 5px;
   display: flex; align-items: center; justify-content: center;
-  transition: all var(--transition);
 }
-.pl-config-header .pl-ch-del:hover { background: var(--danger-soft); color: var(--danger); }
-.pl-config-header .pl-ch-del svg { width: 13px; height: 13px; }
-.pl-config-body {
+.pl-inspector-header .pl-ih-close:hover { background: var(--surface-2); color: var(--text); }
+.pl-inspector-header .pl-ih-close svg { width: 13px; height: 13px; }
+.pl-inspector-body {
   padding: 12px;
-  flex: 1;
   overflow-y: auto;
+  flex: 1;
 }
-.pl-config-empty {
+.pl-inspector-empty {
   text-align: center;
-  padding: 32px 16px;
+  padding: 24px 12px;
   color: var(--text-dim);
   font-size: 12px;
 }
-.pl-config-empty svg { width: 40px; height: 40px; opacity: .3; margin-bottom: 8px; }
+.pl-inspector-empty svg { width: 36px; height: 36px; opacity: .3; margin-bottom: 8px; }
+
+/* 配置行 */
 .pl-cfg-row { margin-bottom: 12px; }
 .pl-cfg-row:last-child { margin-bottom: 0; }
 .pl-cfg-label {
@@ -1042,22 +905,71 @@ textarea { resize: vertical; min-height: 80px; }
 .pl-cfg-row textarea,
 .pl-cfg-row select {
   width: 100%;
-  padding: 6px 8px;
+  padding: 7px 9px;
   font-size: 12px;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: 6px;
   color: var(--text);
   transition: border-color var(--transition);
+  font-family: inherit;
 }
 .pl-cfg-row input:focus,
 .pl-cfg-row textarea:focus,
-.pl-cfg-row select:focus { outline: none; border-color: var(--brand); }
-.pl-cfg-row textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
-.pl-cfg-row input[type="range"] { width: 100%; }
+.pl-cfg-row select:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand-soft); }
+.pl-cfg-row textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+.pl-cfg-row input[type="range"] { width: 100%; accent-color: var(--brand); }
 .pl-cfg-range-val { font-size: 11px; color: var(--brand); font-weight: 600; font-variant-numeric: tabular-nums; }
 
-/* 素材篮配置 */
+/* 用户上传区 */
+.pl-upload-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: var(--surface-2);
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.pl-upload-box:hover { border-color: var(--brand); background: var(--brand-soft); }
+.pl-upload-box.has-file { border-style: solid; border-color: var(--success); }
+.pl-upload-box .pl-ub-preview {
+  width: 44px; height: 44px;
+  border-radius: 5px;
+  object-fit: cover;
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.pl-upload-box .pl-ub-placeholder {
+  width: 44px; height: 44px;
+  border-radius: 5px;
+  background: var(--surface);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-dim);
+  flex-shrink: 0;
+}
+.pl-upload-box .pl-ub-placeholder svg { width: 18px; height: 18px; }
+.pl-upload-box .pl-ub-info { flex: 1; min-width: 0; }
+.pl-upload-box .pl-ub-name { font-size: 12px; color: var(--text); font-weight: 500; }
+.pl-upload-box .pl-ub-status { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+.pl-upload-box .pl-ub-status.done { color: var(--success); }
+.pl-upload-box .pl-ub-status.uploading { color: var(--brand); }
+.pl-upload-box .pl-ub-actions { display: flex; gap: 4px; }
+.pl-upload-box .pl-ub-btn {
+  padding: 4px 8px;
+  font-size: 11px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.pl-upload-box .pl-ub-btn:hover { border-color: var(--brand); color: var(--brand); }
+
+/* 素材篮缩略图网格 */
 .pl-basket-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -1067,7 +979,7 @@ textarea { resize: vertical; min-height: 80px; }
 .pl-basket-item {
   position: relative;
   aspect-ratio: 1;
-  border-radius: 4px;
+  border-radius: 5px;
   overflow: hidden;
   border: 2px solid transparent;
   cursor: pointer;
@@ -1078,45 +990,266 @@ textarea { resize: vertical; min-height: 80px; }
 .pl-basket-item .pl-bi-check {
   position: absolute;
   top: 2px; right: 2px;
-  width: 14px; height: 14px;
+  width: 16px; height: 16px;
   background: var(--brand);
   border-radius: 50%;
   display: none;
   align-items: center;
   justify-content: center;
   color: #fff;
-  font-size: 9px;
 }
 .pl-basket-item.selected .pl-bi-check { display: flex; }
-.pl-basket-empty { font-size: 10px; color: var(--text-dim); padding: 12px; text-align: center; }
+.pl-basket-item .pl-bi-check svg { width: 10px; height: 10px; }
+.pl-basket-empty { font-size: 11px; color: var(--text-dim); padding: 12px; text-align: center; }
 
-/* 运行进度 (顶部条) */
+/* Agent 对话框 */
+.pl-agent-chat {
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 8px;
+  background: var(--surface-2);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.pl-agent-msg {
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  border-radius: 5px;
+  word-break: break-word;
+}
+.pl-agent-msg.user { background: var(--brand-soft); color: var(--brand); }
+.pl-agent-msg.assistant { background: var(--surface); color: var(--text); border: 1px solid var(--border-soft); }
+.pl-agent-msg.system { background: rgba(245,158,11,.1); color: #f59e0b; font-size: 10px; }
+.pl-agent-msg .pl-am-role { font-size: 9px; opacity: .6; margin-bottom: 2px; text-transform: uppercase; }
+
+/* 运行状态条 */
 .pl-run-bar {
   position: absolute;
-  top: 10px;
+  top: 12px;
   left: 50%;
   transform: translateX(-50%);
   background: var(--surface);
   border: 1px solid var(--brand);
   border-radius: 999px;
-  padding: 4px 14px;
-  font-size: 11px;
+  padding: 5px 16px;
+  font-size: 12px;
   color: var(--brand);
   display: none;
   align-items: center;
-  gap: 6px;
-  z-index: 10;
+  gap: 8px;
+  z-index: 20;
   box-shadow: var(--shadow-md);
 }
 .pl-run-bar.show { display: flex; }
 .pl-run-bar .pl-rb-spinner {
-  width: 11px; height: 11px;
+  width: 12px; height: 12px;
   border: 2px solid var(--brand);
   border-top-color: transparent;
   border-radius: 50%;
   animation: pl-spin 0.8s linear infinite;
 }
 @keyframes pl-spin { to { transform: rotate(360deg); } }
+
+/* ===== React Flow 主题适配 ===== */
+.react-flow {
+  background: var(--bg);
+}
+.react-flow__background {
+  background-color: var(--bg);
+}
+.react-flow__attribution { display: none; }
+.react-flow__controls {
+  box-shadow: var(--shadow-md);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.react-flow__controls-button {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--text-muted);
+  fill: var(--text-muted);
+  width: 30px;
+  height: 30px;
+}
+.react-flow__controls-button:hover {
+  background: var(--surface-2);
+  color: var(--brand);
+  fill: var(--brand);
+}
+.react-flow__minimap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-md);
+}
+.react-flow__edge-path {
+  stroke-width: 2;
+}
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: var(--brand);
+  stroke-width: 3;
+}
+.react-flow__handle {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--surface);
+  border-radius: 50%;
+  cursor: crosshair;
+  transition: transform 150ms ease;
+}
+.react-flow__handle:hover { transform: scale(1.3); }
+.react-flow__handle[data-type="text"] { background: #3b6ef5; }
+.react-flow__handle[data-type="image"] { background: #10b981; }
+.react-flow__handle[data-type="video"] { background: #f59e0b; }
+.react-flow__handle[data-type="audio"] { background: #8b5cf6; }
+.react-flow__handle.connectionindicator:hover { transform: scale(1.4); }
+
+/* React Flow 自定义节点样式 */
+.pl-rf-node {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  width: 200px;
+  font-size: 12px;
+  transition: box-shadow var(--transition), border-color var(--transition);
+}
+.pl-rf-node.selected {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px var(--brand-soft), var(--shadow-md);
+}
+.pl-rf-node.invalid { border-color: var(--danger); }
+.pl-rf-node.running { border-color: var(--brand); animation: pl-node-pulse 1.5s ease-in-out infinite; }
+@keyframes pl-node-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--brand-soft); }
+  50% { box-shadow: 0 0 0 6px transparent; }
+}
+.pl-rf-node-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--surface-2);
+  border-radius: 8px 8px 0 0;
+  cursor: grab;
+}
+.pl-rf-node-header:active { cursor: grabbing; }
+.pl-rf-node-header .pl-rfnh-icon {
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.pl-rf-node-header .pl-rfnh-icon svg { width: 13px; height: 13px; }
+.pl-rf-node[data-cat="text"] .pl-rfnh-icon { background: rgba(59,110,245,.12); color: #3b6ef5; }
+.pl-rf-node[data-cat="image"] .pl-rfnh-icon { background: rgba(16,185,129,.12); color: #10b981; }
+.pl-rf-node[data-cat="video"] .pl-rfnh-icon { background: rgba(245,158,11,.12); color: #f59e0b; }
+.pl-rf-node[data-cat="audio"] .pl-rfnh-icon { background: rgba(139,92,246,.12); color: #8b5cf6; }
+.pl-rf-node-header .pl-rfnh-title {
+  flex: 1;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pl-rf-node-header .pl-rfnh-status {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.pl-rf-node-header .pl-rfnh-status.ok { background: rgba(16,185,129,.15); color: #10b981; }
+.pl-rf-node-header .pl-rfnh-status.err { background: rgba(239,68,68,.15); color: #ef4444; }
+.pl-rf-node-header .pl-rfnh-status.pending { background: var(--border); color: var(--text-dim); }
+.pl-rf-node-header .pl-rfnh-status.running { background: rgba(59,110,245,.15); color: var(--brand); }
+.pl-rf-node-header .pl-rfnh-status.done { background: rgba(16,185,129,.15); color: #10b981; }
+.pl-rf-node-body {
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  position: relative;
+}
+.pl-rf-node-body .pl-rfnb-preview {
+  font-size: 10px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 4px;
+}
+.pl-rf-node-body .pl-rfnb-thumb {
+  width: 100%;
+  height: 64px;
+  border-radius: 4px;
+  object-fit: cover;
+  background: var(--surface-2);
+  margin-top: 4px;
+}
+.pl-rf-node-ports {
+  padding: 4px 0;
+}
+.pl-rf-node-ports-section {
+  padding: 4px 10px;
+  border-top: 1px solid var(--border-soft);
+}
+.pl-rf-node-ports-section.empty { display: none; }
+.pl-rf-port-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+  font-size: 10px;
+  position: relative;
+}
+.pl-rf-port-row.input { justify-content: flex-start; }
+.pl-rf-port-row.output { justify-content: flex-end; }
+.pl-rf-port-label {
+  font-size: 10px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 删除按钮 (节点右上角) */
+.pl-rf-node-del {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  border: none;
+  background: var(--danger-soft);
+  color: var(--danger);
+  border-radius: 4px;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+.pl-rf-node:hover .pl-rf-node-del,
+.pl-rf-node.selected .pl-rf-node-del {
+  display: flex;
+  opacity: 1;
+}
+.pl-rf-node-del:hover { background: var(--danger); color: #fff; }
+.pl-rf-node-del svg { width: 11px; height: 11px; }
+
+/* 连线类型颜色 */
+.react-flow__edge[data-type="text"] .react-flow__edge-path { stroke: #3b6ef5; }
+.react-flow__edge[data-type="image"] .react-flow__edge-path { stroke: #10b981; }
+.react-flow__edge[data-type="video"] .react-flow__edge-path { stroke: #f59e0b; }
+.react-flow__edge[data-type="audio"] .react-flow__edge-path { stroke: #8b5cf6; }
 
 /* 拓扑错误提示 */
 .pl-topo-error {
@@ -2146,6 +2279,8 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
 <!-- V27 — 第三方库 CSS (FilePond) -->
 <link href="https://cdn.jsdelivr.net/npm/filepond@4.31.0/dist/filepond.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.min.css" rel="stylesheet">
+<!-- V31: React Flow CSS -->
+<link href="https://cdn.jsdelivr.net/npm/reactflow@11.11.10/dist/style.min.css" rel="stylesheet">
 </head>
 <body>
 
@@ -2383,7 +2518,7 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
     <div class="settings-section">
       <h4>关于</h4>
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V30 · 节点图流水线<br>
+        修的媒体工作台 V31 · React Flow 节点图<br>
         支持图片、视频、音频生成<br>
         API: api.wuyinkeji.com
       </div>
@@ -2649,6 +2784,10 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
 <script src="https://cdn.jsdelivr.net/npm/tippy.js@6.3.7/dist/tippy-bundle.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dexie@4.0.10/dist/dexie.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<!-- V31: React Flow (节点图画布, 参考 CORAL AI) -->
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reactflow@11.11.10/dist/umd/index.min.js"></script>
 
 <script>
 'use strict';
@@ -4473,7 +4612,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V30';
+      document.title = '修的媒体工作台 V31';
     }
   },
 
@@ -5669,36 +5808,20 @@ const UI = {
     } catch { return null; }
   },
 
-  /* ---------- V30: 节点图流水线 (Node Graph Pipeline) ----------
-   * 参考 CORAL AI (hrmix.cn) 设计: 项目 = 图结构 (nodes + edges + viewport)
+  /* ---------- V31: 节点图流水线 (React Flow) ----------
+   * 参考 CORAL AI (hrmix.cn): 使用开源 React Flow 库
    * 核心特性:
-   *   1. 自研 SVG 画布 (pan/zoom, 不依赖 React Flow)
-   *   2. 语义端口 (sourceHandle/targetHandle, 按类型着色)
-   *   3. Agent 节点 (DeepSeek API 对话式拆解需求)
-   *   4. 素材篮节点 (多图筛选/勾选/排序)
-   *   5. 拓扑排序 → Worker 线性 steps 适配
-   *   6. 本地持久化 (localStorage)
-   *
-   * 数据模型:
-   *   state.pipeline = {
-   *     nodes: [{ id, type, position:{x,y}, data, status }],
-   *     edges: [{ id, source, sourceHandle, target, targetHandle }],
-   *     viewport: { x, y, zoom },
-   *     selectedNodeId: null
-   *   }
-   *
-   * 节点契约:
-   *   _PL_NODE_TYPES[type] = {
-   *     label, iconKey, category, color,
-   *     inputs: [{ id, type, label, multiple }],   // 端口定义
-   *     outputs: [{ id, type, label }],
-   *     params: [...],                              // 配置参数
-   *     buildBody(data, resolvedInputs) → body,     // 构建API请求体
-   *     estimateCost(data) → number
-   *   }
+   *   1. React Flow 节点图画布 (pan/zoom/minimap/controls)
+   *   2. 自定义节点组件 (header/body/ports/delete按钮)
+   *   3. 语义端口 (sourceHandle/targetHandle, 按类型着色)
+   *   4. Agent 节点 (DeepSeek API + Skills技能系统)
+   *   5. 素材篮节点 (多图筛选)
+   *   6. 节点删除/全选/复制快捷键
+   *   7. 拓扑排序 → Worker 线性 steps 适配
+   *   8. 本地持久化 (localStorage)
    */
 
-  // SVG 图标库 (复用 V29)
+  // SVG 图标库
   _PL_ICONS: {
     tts: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>',
     image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
@@ -5715,21 +5838,19 @@ const UI = {
     agent: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>',
     basket: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18l-2 13a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L3 7z"/><path d="M3 7l3-4h12l3 4"/><line x1="8" y1="11" x2="8" y2="18"/><line x1="12" y1="11" x2="12" y2="18"/><line x1="16" y1="11" x2="16" y2="18"/></svg>',
     text_input: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>',
-    zoom_in: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>',
-    zoom_out: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>',
-    fit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>',
     trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+    copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+    select_all: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+    chevron_down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>',
+    play: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>',
+    palette: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>',
   },
 
-  // 端口类型颜色
   _PL_PORT_COLORS: {
-    text: '#3b6ef5',
-    image: '#10b981',
-    video: '#f59e0b',
-    audio: '#8b5cf6'
+    text: '#3b6ef5', image: '#10b981', video: '#f59e0b', audio: '#8b5cf6'
   },
 
-  // 节点类型注册表
+  // 节点类型注册表 (完整版, 每个节点支持模型选择)
   _PL_NODE_TYPES: {
     // === 文本类 ===
     'text-input': {
@@ -5751,12 +5872,20 @@ const UI = {
         { key: 'message', label: '描述需求', type: 'textarea', required: true, default: '', placeholder: '描述你想要的创作内容...' },
         { key: 'skill', label: '技能', type: 'select', default: 'none',
           options: [
-            { value: 'none', label: '通用' },
-            { value: 'cc2image', label: '内容视觉化' }
+            { value: 'none', label: '通用创作' },
+            { value: 'cc2image', label: '内容视觉化' },
+            { value: 'copywriting', label: '文案优化' },
+            { value: 'storyboard', label: '分镜脚本' }
+          ]
+        },
+        { key: 'model', label: '模型', type: 'select', default: 'deepseek-chat',
+          options: [
+            { value: 'deepseek-chat', label: 'DeepSeek Chat' },
+            { value: 'deepseek-reasoner', label: 'DeepSeek Reasoner (R1)' }
           ]
         }
       ],
-      buildBody(data) { return { message: data.message || '', skill: data.skill || 'none' }; },
+      buildBody(data) { return { message: data.message || '', skill: data.skill || 'none', model: data.model || 'deepseek-chat' }; },
       estimateCost() { return 0.01; },
       isAgent: true
     },
@@ -5765,7 +5894,7 @@ const UI = {
     'image-input': {
       label: '加载图片', iconKey: 'image', category: 'image',
       inputs: [],
-      outputs: [{ id: 'image', type: 'image', label: '图片' }],
+      outputs: [{ id: 'image', type: 'image', label: '图片', multiple: true }],
       params: [],
       buildBody(data) { return { imageUrl: data._userInput?.imageUrl || '' }; },
       estimateCost() { return 0; },
@@ -5774,29 +5903,53 @@ const UI = {
     },
     'text-to-image': {
       label: '文生图', iconKey: 'image', category: 'image',
-      inputs: [{ id: 'prompt', type: 'text', label: '提示词' }],
+      inputs: [{ id: 'prompt', type: 'text', label: '提示词' }, { id: 'refImages', type: 'image', label: '参考图', multiple: true }],
       outputs: [{ id: 'image', type: 'image', label: '图片', multiple: true }],
       params: [
         { key: 'prompt_override', label: '提示词(可选覆盖)', type: 'textarea', required: false, default: '', placeholder: '留空则使用上步输入' },
+        { key: 'model', label: '模型', type: 'select', default: 'nanoBanana2',
+          options: [
+            { value: 'nanoBanana2', label: 'NanoBanana2 (0.1元/张)' },
+            { value: 'gpt-image-2', label: 'GPT-Image-2 (0.1元/张)' },
+            { value: 'nanoBanana_pro', label: 'NanoBanana Pro (0.3元/张)' },
+            { value: 'nanoBanana2Lite', label: 'NanoBanana-2-Lite (0.08元/张)' }
+          ]
+        },
         { key: 'size', label: '分辨率', type: 'select', default: '1K', options: ['1K','2K','4K'] },
-        { key: 'aspectRatio', label: '比例', type: 'select', default: 'auto', options: ['auto','1:1','16:9','9:16','4:3','3:4'] }
+        { key: 'aspectRatio', label: '比例', type: 'select', default: 'auto', options: ['auto','1:1','16:9','9:16','4:3','3:4','3:2','2:3'] }
       ],
       buildBody(data, inputs) {
         const prompt = data.prompt_override || inputs.prompt || '';
-        return { prompt, size: data.size || '1K', aspectRatio: data.aspectRatio || 'auto' };
+        const refImages = inputs.refImages || (inputs['refImages[]'] || []);
+        const model = data.model || 'nanoBanana2';
+        const body = { prompt, size: data.size || '1K', aspectRatio: data.aspectRatio || 'auto' };
+        if (refImages && (Array.isArray(refImages) ? refImages.length : refImages)) {
+          body.urls = Array.isArray(refImages) ? refImages.join(',') : refImages;
+        }
+        return { body, endpoint: this._getImageEndpoint(model), model, modelType: 'image' };
       },
-      estimateCost() { return 0.1; },
-      endpoint: '/api/async/image_nanoBanana2', model: 'nanoBanana2', modelType: 'image'
+      _getImageEndpoint(model) {
+        const map = {
+          'nanoBanana2': '/api/async/image_nanoBanana2',
+          'gpt-image-2': '/api/async/image_gpt',
+          'nanoBanana_pro': '/api/async/image_nanoBanana_pro',
+          'nanoBanana2Lite': '/api/async/image_nanoBanana2Lite'
+        };
+        return map[model] || map['nanoBanana2'];
+      },
+      estimateCost(data) {
+        const map = { 'nanoBanana2': 0.1, 'gpt-image-2': 0.1, 'nanoBanana_pro': 0.3, 'nanoBanana2Lite': 0.08 };
+        return map[data.model || 'nanoBanana2'] || 0.1;
+      }
     },
     'asset-basket': {
       label: '素材篮', iconKey: 'basket', category: 'image',
       inputs: [{ id: 'images', type: 'image', label: '图片', multiple: true }],
-      outputs: [{ id: 'image', type: 'image', label: '筛选后图片' }],
+      outputs: [{ id: 'image', type: 'image', label: '筛选后图片', multiple: true }],
       params: [],
       buildBody(data, inputs) {
-        // 素材篮: 用户手动勾选的图片
         const selected = data._selected || [];
-        return { imageUrls: selected.length ? selected : (inputs.images || []) };
+        return { imageUrls: selected.length ? selected : (inputs.images ? (Array.isArray(inputs.images) ? inputs.images : [inputs.images]) : []) };
       },
       estimateCost() { return 0; },
       isBasket: true
@@ -5819,36 +5972,70 @@ const UI = {
       outputs: [{ id: 'video', type: 'video', label: '视频' }],
       params: [
         { key: 'prompt_override', label: '提示词(可选覆盖)', type: 'textarea', required: false, default: '' },
-        { key: 'ratio', label: '宽高比', type: 'select', default: '16:9', options: ['16:9','9:16'] },
+        { key: 'model', label: '模型', type: 'select', default: 'wan3',
+          options: [
+            { value: 'wan3', label: 'Wan3.0 (0.3元/秒)' },
+            { value: 'minimax_h3', label: 'MiniMax H3 (0.3元/秒)' },
+            { value: 'google_omni', label: 'Google Omni (0.1元/秒, 固定10秒)' },
+            { value: 'video_vidu', label: 'Vidu Q3 (1.0元/秒)' }
+          ]
+        },
+        { key: 'ratio', label: '宽高比', type: 'select', default: '16:9', options: ['16:9','9:16','1:1','4:3','3:4'] },
         { key: 'duration', label: '时长', type: 'range', default: 5, min: 4, max: 30, step: 1, unit: 's' }
       ],
       buildBody(data, inputs) {
         const prompt = data.prompt_override || inputs.prompt || '';
-        return { prompt, ratio: data.ratio || '16:9', duration: parseInt(data.duration) || 5, generate_audio: 'true' };
+        const model = data.model || 'wan3';
+        const body = { prompt, ratio: data.ratio || '16:9', duration: parseInt(data.duration) || 5, generate_audio: 'true' };
+        return { body, endpoint: this._getVideoEndpoint(model), model, modelType: 'video' };
       },
-      estimateCost(data) { return (parseInt(data.duration) || 5) * 0.3; },
-      endpoint: '/api/async/video_wan_3.0', model: 'wan3', modelType: 'video'
+      _getVideoEndpoint(model) {
+        const map = {
+          'wan3': '/api/async/video_wan_3.0',
+          'minimax_h3': '/api/async/video_minimax_h3',
+          'google_omni': '/api/async/video_google_omni',
+          'video_vidu': '/api/async/video_vidu'
+        };
+        return map[model] || map['wan3'];
+      },
+      estimateCost(data) {
+        const map = { 'wan3': 0.3, 'minimax_h3': 0.3, 'google_omni': 0.1, 'video_vidu': 1.0 };
+        return (parseInt(data.duration) || 5) * (map[data.model || 'wan3'] || 0.3);
+      }
     },
     'image-to-video': {
       label: '图生视频', iconKey: 'i2v', category: 'video',
       inputs: [
         { id: 'firstFrame', type: 'image', label: '首帧' },
+        { id: 'images', type: 'image', label: '参考图', multiple: true },
         { id: 'prompt', type: 'text', label: '提示词' }
       ],
       outputs: [{ id: 'video', type: 'video', label: '视频' }],
       params: [
         { key: 'prompt_override', label: '提示词(可选覆盖)', type: 'textarea', required: false, default: '' },
-        { key: 'size', label: '清晰度', type: 'select', default: '720p', options: ['720p','1080p'] }
+        { key: 'model', label: '模型', type: 'select', default: 'veo3_fast',
+          options: [
+            { value: 'veo3_fast', label: 'Veo3.1 Fast (0.05元/秒)' },
+            { value: 'wan3', label: 'Wan3.0 (0.3元/秒)' },
+            { value: 'minimax_h3', label: 'MiniMax H3 (0.3元/秒)' },
+            { value: 'video_omni', label: '可灵 Omni (1.0元/秒)' }
+          ]
+        },
+        { key: 'size', label: '清晰度', type: 'select', default: '720p', options: ['720p','1080p'] },
+        { key: 'duration', label: '时长', type: 'range', default: 5, min: 4, max: 15, step: 1, unit: 's' }
       ],
       buildBody(data, inputs) {
         const prompt = data.prompt_override || inputs.prompt || '';
-        return {
-          prompt, aspectRatio: '16:9', size: data.size || '720p',
-          firstFrameUrl: inputs.firstFrame || null
-        };
+        const model = data.model || 'veo3_fast';
+        const body = { prompt, size: data.size || '720p', duration: parseInt(data.duration) || 5 };
+        if (inputs.firstFrame) body.firstFrameUrl = inputs.firstFrame;
+        if (inputs.images) body.urls = Array.isArray(inputs.images) ? inputs.images.join(',') : inputs.images;
+        return { body, endpoint: this._getVideoEndpoint(model), model, modelType: 'video' };
       },
-      estimateCost() { return 0.5; },
-      endpoint: '/api/async/video_veo3.1_fast', model: 'veo3_fast', modelType: 'video'
+      estimateCost(data) {
+        const map = { 'veo3_fast': 0.05, 'wan3': 0.3, 'minimax_h3': 0.3, 'video_omni': 1.0 };
+        return (parseInt(data.duration) || 5) * (map[data.model || 'veo3_fast'] || 0.05);
+      }
     },
     'digital-human': {
       label: '数字人', iconKey: 'user', category: 'video',
@@ -5859,13 +6046,15 @@ const UI = {
       ],
       buildBody(data, inputs) {
         return {
-          videoName: data.videoName || ('数字人_' + Date.now()),
-          audioUrl: inputs.audio || null,
-          videoUrl: data._userInput?.videoUrl || ''
+          body: {
+            videoName: data.videoName || ('数字人_' + Date.now()),
+            audioUrl: inputs.audio || null,
+            videoUrl: data._userInput?.videoUrl || ''
+          },
+          endpoint: '/api/async/video_digital_humans', model: 'digital_humans', modelType: 'video'
         };
       },
       estimateCost() { return 0.5; },
-      endpoint: '/api/async/video_digital_humans', model: 'digital_humans', modelType: 'video',
       userInput: { key: 'videoUrl', label: '人物底片视频', type: 'ref-video' }
     },
     'video-upscale': {
@@ -5873,9 +6062,10 @@ const UI = {
       inputs: [{ id: 'video', type: 'video', label: '原视频' }],
       outputs: [{ id: 'video', type: 'video', label: '视频' }],
       params: [],
-      buildBody(data, inputs) { return { video_url: inputs.video || null }; },
-      estimateCost() { return 0.5; },
-      endpoint: '/api/async/video_processing', model: 'video_upscaling', modelType: 'video'
+      buildBody(data, inputs) {
+        return { body: { video_url: inputs.video || null }, endpoint: '/api/async/video_processing', model: 'video_upscaling', modelType: 'video' };
+      },
+      estimateCost() { return 0.5; }
     },
     'video-package': {
       label: '视频包装', iconKey: 'package', category: 'video',
@@ -5885,9 +6075,10 @@ const UI = {
         { key: 'template_id', label: '模板', type: 'select', default: '1',
           options: Array.from({ length: 30 }, (_, i) => ({ value: String(i + 1), label: '模板 ' + (i + 1) })) }
       ],
-      buildBody(data, inputs) { return { video: inputs.video || null, template_id: data.template_id || '1' }; },
-      estimateCost() { return 0.3; },
-      endpoint: '/api/async/video_package', model: 'video_package', modelType: 'video'
+      buildBody(data, inputs) {
+        return { body: { video: inputs.video || null, template_id: data.template_id || '1' }, endpoint: '/api/async/video_package', model: 'video_package', modelType: 'video' };
+      },
+      estimateCost() { return 0.3; }
     },
 
     // === 音频类 ===
@@ -5906,21 +6097,25 @@ const UI = {
             { value: 'presenter_male', label: '主持人男声' }, { value: 'presenter_female', label: '主持人女声' }
           ]
         },
-        { key: 'speed', label: '语速', type: 'range', default: 1, min: 0.5, max: 2, step: 0.1, unit: 'x' }
+        { key: 'speed', label: '语速', type: 'range', default: 1, min: 0.5, max: 2, step: 0.1, unit: 'x' },
+        { key: 'vol', label: '音量', type: 'range', default: 1, min: 0.1, max: 10, step: 0.1, unit: 'x' },
+        { key: 'language_boost', label: '语种', type: 'select', default: 'auto',
+          options: ['auto','Chinese','English','Japanese','Korean','French','German','Spanish'] }
       ],
       buildBody(data, inputs) {
         const text = data.text_override || inputs.text || '';
-        return { text, voice_id: data.voice_id, speed: parseFloat(data.speed) || 1, vol: 1, language_boost: 'auto' };
+        return {
+          body: { text, voice_id: data.voice_id, speed: parseFloat(data.speed) || 1, vol: parseFloat(data.vol) || 1, language_boost: data.language_boost || 'auto' },
+          endpoint: '/api/async/audio_tts', model: 'audio_tts', modelType: 'audio'
+        };
       },
       estimateCost(data) {
         const text = data.text_override || '';
         return text.length * 0.0006;
-      },
-      endpoint: '/api/async/audio_tts', model: 'audio_tts', modelType: 'audio'
+      }
     }
   },
 
-  // 节点库分类 (左栏)
   _PL_LIB_CATEGORIES: [
     { id: 'text', label: '文本', items: ['text-input', 'agent'] },
     { id: 'image', label: '图像', items: ['image-input', 'text-to-image', 'asset-basket'] },
@@ -5930,14 +6125,16 @@ const UI = {
 
   // === 工具方法 ===
   _plIcon(key) { return this._PL_ICONS[key] || this._PL_ICONS.plus; },
-
   _plTypeLabel(t) {
     return t === 'audio' ? '音频' : t === 'image' ? '图片' : t === 'video' ? '视频' : t === 'text' ? '文本' : t;
   },
-
   _plGenId(prefix) {
     return (prefix || 'n') + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   },
+
+  // React Flow 实例引用
+  _plRfInstance: null,
+  _plRfRoot: null,
 
   // === 渲染主面板 ===
   _renderPipelineForm() {
@@ -5945,218 +6142,368 @@ const UI = {
     if (!panel) return;
     // 初始化图结构
     if (!this.state.pipeline || !Array.isArray(this.state.pipeline.nodes)) {
-      // 尝试从本地恢复
       const saved = Store.getPipelineGraph();
       this.state.pipeline = saved || { nodes: [], edges: [], viewport: { x: 0, y: 0, zoom: 1 }, selectedNodeId: null };
     }
     const p = this.state.pipeline;
     panel.innerHTML = `
-      <div class="pl-graph-layout">
-        <div class="pl-node-lib" id="plNodeLib"></div>
-        <div class="pl-canvas-wrap" id="plCanvasWrap">
-          <div class="pl-canvas-toolbar">
-            <button id="plZoomOut" title="缩小">${this._plIcon('zoom_out')}</button>
-            <span class="pl-zoom-val" id="plZoomVal">100%</span>
-            <button id="plZoomIn" title="放大">${this._plIcon('zoom_in')}</button>
-            <button id="plFit" title="重置视口">${this._plIcon('fit')}</button>
-          </div>
+      <div class="pl-workspace" id="plWorkspace">
+        <div class="pl-toolbar" id="plToolbar"></div>
+        <div class="pl-canvas-container" id="plCanvasContainer">
+          <div class="pl-palette" id="plPalette"></div>
+          <div class="pl-inspector" id="plInspector"></div>
           <div class="pl-run-bar" id="plRunBar">
             <div class="pl-rb-spinner"></div>
             <span id="plRunText">运行中...</span>
           </div>
-          <div class="pl-topo-error" id="plTopoError">
-            ${this._plIcon('warn')}
-            <span id="plTopoErrorText"></span>
-          </div>
-          <svg class="pl-canvas-svg" id="plCanvasSvg">
-            <defs>
-              <pattern id="plGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-                <circle cx="1" cy="1" r="1" fill="var(--border)"/>
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#plGrid)"/>
-            <g id="plCanvasContent"></g>
-            <g id="plCanvasOverlay"></g>
-          </svg>
-          <div class="pl-canvas-hint" id="plCanvasHint" ${p.nodes.length ? 'style="display:none"' : ''}>
-            ${this._plIcon('plus')}
-            <div class="pl-hint-title">从左侧拖入节点开始编排</div>
-            <div class="pl-hint-sub">或点击节点库项添加到画布</div>
-          </div>
+          <div class="pl-reactflow" id="plReactFlow"></div>
         </div>
-        <div class="pl-config-panel" id="plConfigPanel"></div>
       </div>
     `;
-    this._renderPipelineLib();
-    this._renderPipelineCanvas();
-    this._renderPipelineConfig();
-    this._bindPipelineCanvasEvents();
+    this._renderPipelineToolbar();
+    this._renderPipelinePalette();
+    this._renderPipelineInspector();
+    this._initReactFlow();
   },
 
-  // === 左栏: 节点库 ===
-  _renderPipelineLib() {
-    const wrap = $('#plNodeLib');
+  // 顶部工具栏
+  _renderPipelineToolbar() {
+    const tb = $('#plToolbar');
+    if (!tb) return;
+    const p = this.state.pipeline;
+    const totalCost = p.nodes.reduce((s, n) => {
+      const def = this._PL_NODE_TYPES[n.type];
+      return s + (def ? (def.estimateCost(n.data) || 0) : 0);
+    }, 0);
+    tb.innerHTML = `
+      <div class="pl-toolbar-group">
+        <button class="pl-tb-btn" id="plTbSelectAll" title="全选 (Ctrl+A)">${this._plIcon('select_all')}</button>
+        <button class="pl-tb-btn" id="plTbCopy" title="复制选中 (Ctrl+D)">${this._plIcon('copy')}</button>
+        <button class="pl-tb-btn danger" id="plTbDelete" title="删除选中 (Delete)">${this._plIcon('trash')}</button>
+      </div>
+      <div class="pl-toolbar-group">
+        <button class="pl-tb-btn" id="plTbClear" title="清空画布">${this._plIcon('x')}</button>
+      </div>
+      <div class="pl-tb-spacer"></div>
+      <div class="pl-tb-info">
+        <span>节点 <span class="pl-ti-node-count">${p.nodes.length}</span></span>
+        <span>·</span>
+        <span>预估 <span class="pl-ti-cost">¥${totalCost.toFixed(4)}</span></span>
+      </div>
+      <div class="pl-toolbar-group">
+        <button class="pl-tb-btn" id="plTbFit" title="适应视图">${this._plIcon('select_all')}</button>
+      </div>
+    `;
+    // 绑定
+    $('#plTbSelectAll')?.addEventListener('click', () => this._selectAllNodes());
+    $('#plTbCopy')?.addEventListener('click', () => this._duplicateSelectedNodes());
+    $('#plTbDelete')?.addEventListener('click', () => this._deleteSelectedNodes());
+    $('#plTbClear')?.addEventListener('click', () => this._clearPipeline());
+    $('#plTbFit')?.addEventListener('click', () => this._plRfInstance?.fitView({ padding: 0.2 }));
+  },
+
+  // 节点库浮窗
+  _renderPipelinePalette() {
+    const pal = $('#plPalette');
+    if (!pal) return;
+    let html = `
+      <div class="pl-palette-header" id="plPaletteHeader">
+        ${this._plIcon('palette')}
+        <span>节点库</span>
+        ${this._plIcon('chevron_down')}
+      </div>
+      <div class="pl-palette-body" id="plPaletteBody">
+        <div class="pl-palette-search">
+          <input type="text" id="plPaletteSearch" placeholder="搜索节点...">
+        </div>
+        <div id="plPaletteList"></div>
+      </div>
+    `;
+    pal.innerHTML = html;
+    this._renderPaletteList('');
+    // 折叠/展开
+    $('#plPaletteHeader')?.addEventListener('click', () => pal.classList.toggle('collapsed'));
+    // 搜索
+    $('#plPaletteSearch')?.addEventListener('input', e => this._renderPaletteList(e.target.value));
+  },
+
+  _renderPaletteList(filter) {
+    const wrap = $('#plPaletteList');
     if (!wrap) return;
-    let html = '<div class="pl-lib-header">节点库</div>';
+    const f = filter.toLowerCase();
+    let html = '';
     this._PL_LIB_CATEGORIES.forEach(cat => {
-      html += `<div class="pl-lib-category">
-        <div class="pl-lib-cat-title" data-cat="${esc(cat.id)}">
-          <span class="pl-cat-dot"></span>${esc(cat.label)}
+      const items = cat.items.map(t => this._PL_NODE_TYPES[t]).filter(def => def && (
+        !f || def.label.toLowerCase().includes(f) || def.category.includes(f)
+      ));
+      if (!items.length) return;
+      html += `<div class="pl-palette-cat">
+        <div class="pl-palette-cat-title" data-cat="${esc(cat.id)}">
+          <span class="pl-pc-dot"></span>${esc(cat.label)}
         </div>`;
-      cat.items.forEach(type => {
-        const def = this._PL_NODE_TYPES[type];
-        if (!def) return;
-        html += `<div class="pl-lib-item" data-type="${esc(type)}" draggable="true" title="${esc(def.label)}">
-          <span class="pl-lib-icon">${this._plIcon(def.iconKey)}</span>
-          <span class="pl-lib-name">${esc(def.label)}</span>
+      items.forEach((def, i) => {
+        const type = cat.items[i];
+        html += `<div class="pl-palette-item" data-type="${esc(type)}" data-cat="${esc(def.category)}" draggable="true" title="${esc(def.label)}">
+          <span class="pl-pi-icon">${this._plIcon(def.iconKey)}</span>
+          <div style="flex:1;min-width:0">
+            <div class="pl-pi-name">${esc(def.label)}</div>
+          </div>
         </div>`;
       });
       html += '</div>';
     });
     wrap.innerHTML = html;
-    // 点击/拖拽添加节点
-    wrap.querySelectorAll('.pl-lib-item').forEach(item => {
+    // 绑定拖拽
+    wrap.querySelectorAll('.pl-palette-item').forEach(item => {
       item.addEventListener('click', () => this._addPipelineNode(item.dataset.type));
       item.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('text/pl-type', item.dataset.type);
+        e.dataTransfer.setData('application/pl-node-type', item.dataset.type);
         e.dataTransfer.effectAllowed = 'copy';
       });
     });
   },
 
-  // === 中栏: SVG 画布渲染 ===
-  _renderPipelineCanvas() {
-    const content = $('#plCanvasContent');
-    if (!content) return;
-    const p = this.state.pipeline;
-    const vp = p.viewport || { x: 0, y: 0, zoom: 1 };
-    content.setAttribute('transform', `translate(${vp.x},${vp.y}) scale(${vp.zoom})`);
-
-    // 渲染连线 (在节点下方)
-    let edgesHtml = '';
-    p.edges.forEach(edge => {
-      const sn = p.nodes.find(n => n.id === edge.source);
-      const tn = p.nodes.find(n => n.id === edge.target);
-      if (!sn || !tn) return;
-      const sp = this._getPortPos(sn, edge.sourceHandle, 'output');
-      const tp = this._getPortPos(tn, edge.targetHandle, 'input');
-      if (!sp || !tp) return;
-      const path = this._bezierPath(sp, tp);
-      const type = this._getEdgeType(edge);
-      edgesHtml += `<path class="pl-edge-hit" d="${path}" data-edge-id="${esc(edge.id)}"/>`;
-      edgesHtml += `<path class="pl-edge" d="${path}" data-type="${esc(type)}" data-edge-id="${esc(edge.id)}"/>`;
-    });
-    // 临时连线 (拖拽中)
-    if (this._plDragEdge) {
-      const de = this._plDragEdge;
-      const path = this._bezierPath(de.from, de.to);
-      edgesHtml += `<path class="pl-edge-temp" d="${path}"/>`;
+  // === React Flow 初始化 ===
+  _initReactFlow() {
+    const container = $('#plReactFlow');
+    if (!container) return;
+    if (!window.React || !window.ReactDOM || !window.ReactFlow) {
+      container.innerHTML = '<div style="padding:20px;color:var(--danger);text-align:center">React Flow 加载失败, 请检查网络</div>';
+      return;
     }
+    const { ReactFlow, Background, Controls, MiniMap, Handle, Position, addEdge, applyNodeChanges, applyEdgeChanges, MarkerType } = window.ReactFlow;
+    const h = React.createElement;
+    const self = this;
 
-    // 渲染节点 (foreignObject)
-    let nodesHtml = '';
-    p.nodes.forEach(node => {
-      const def = this._PL_NODE_TYPES[node.type];
-      if (!def) return;
-      const selected = p.selectedNodeId === node.id;
-      const status = node.status || 'idle';
-      const valid = this._validateNode(node).ok;
-      const cls = (selected ? 'selected ' : '') + (!valid ? 'invalid ' : '') + (status === 'running' ? 'running' : '');
-      const statusBadge = this._nodeStatusBadge(node);
-      const inputsHtml = (def.inputs || []).map(port => {
-        const connected = p.edges.some(e => e.target === node.id && e.targetHandle === port.id);
-        return `<div class="pl-port-row input">
-          <span class="pl-port-dot ${connected ? 'connected' : ''}" data-type="${esc(port.type)}" data-node="${esc(node.id)}" data-port="${esc(port.id)}" data-dir="input"></span>
-          <span class="pl-port-label">${esc(port.label)}${port.multiple ? ' ×' : ''}</span>
-        </div>`;
-      }).join('');
-      const outputsHtml = (def.outputs || []).map(port => {
-        const connected = p.edges.some(e => e.source === node.id && e.sourceHandle === port.id);
-        return `<div class="pl-port-row output">
-          <span class="pl-port-label">${esc(port.label)}${port.multiple ? ' ×' : ''}</span>
-          <span class="pl-port-dot ${connected ? 'connected' : ''}" data-type="${esc(port.type)}" data-node="${esc(node.id)}" data-port="${esc(port.id)}" data-dir="output"></span>
-        </div>`;
-      }).join('');
-      // 节点内容预览
+    // 自定义节点组件
+    const CustomNode = ({ id, data, selected }) => {
+      const def = self._PL_NODE_TYPES[data._type];
+      if (!def) return h('div', null, '未知节点');
+      const status = data._status || 'idle';
+      const valid = self._validateNode({ id, type: data._type, data }).ok;
+      const nodeCls = 'pl-rf-node' + (selected ? ' selected' : '') + (!valid ? ' invalid' : '') + (status === 'running' ? ' running' : '');
+      const statusBadge = self._nodeStatusBadge(data);
+      // 输入端口
+      const inputs = (def.inputs || []).map(port => {
+        const connected = self.state.pipeline.edges.some(e => e.target === id && e.targetHandle === port.id);
+        return h('div', { key: port.id, className: 'pl-rf-port-row input' },
+          h(Handle, {
+            type: 'target', position: Position.Left, id: port.id,
+            'data-type': port.type,
+            style: { background: self._PL_PORT_COLORS[port.type] },
+            isValidConnection: (conn) => self._isValidConnection(conn, port.type)
+          }),
+          h('span', { className: 'pl-rf-port-label' }, port.label + (port.multiple ? ' ×' : ''))
+        );
+      });
+      // 输出端口
+      const outputs = (def.outputs || []).map(port => {
+        return h('div', { key: port.id, className: 'pl-rf-port-row output' },
+          h('span', { className: 'pl-rf-port-label' }, port.label + (port.multiple ? ' ×' : '')),
+          h(Handle, {
+            type: 'source', position: Position.Right, id: port.id,
+            'data-type': port.type,
+            style: { background: self._PL_PORT_COLORS[port.type] }
+          })
+        );
+      });
+      // 预览
       let bodyPreview = '';
-      if (node.data) {
-        const previewText = node.data.text || node.data.message || node.data.prompt_override || node.data.videoName || '';
-        if (previewText) bodyPreview = `<div class="pl-nb-preview">${esc(previewText.slice(0, 40))}</div>`;
-        if (node.data._result) {
-          const url = node.data._result;
-          if (/\.(mp4|webm)(\?|$)/i.test(url)) {
-            bodyPreview += `<video class="pl-nb-thumb" src="${esc(url)}" muted></video>`;
-          } else if (/\.(mp3|wav)(\?|$)/i.test(url)) {
-            bodyPreview += `<div class="pl-nb-thumb" style="display:flex;align-items:center;justify-content:center;color:var(--brand)">${this._plIcon('tts')}</div>`;
-          } else {
-            bodyPreview += `<img class="pl-nb-thumb" src="${esc(url)}" loading="lazy" referrerpolicy="no-referrer">`;
-          }
+      if (data.text) bodyPreview = data.text.slice(0, 40);
+      else if (data.message) bodyPreview = data.message.slice(0, 40);
+      else if (data.prompt_override) bodyPreview = data.prompt_override.slice(0, 40);
+      else if (data.videoName) bodyPreview = data.videoName;
+      let thumbEl = null;
+      if (data._result) {
+        const url = data._result;
+        if (/\.(mp4|webm)(\?|$)/i.test(url)) {
+          thumbEl = h('video', { className: 'pl-rfnb-thumb', src: url, muted: true });
+        } else if (/\.(mp3|wav)(\?|$)/i.test(url)) {
+          thumbEl = h('div', { className: 'pl-rfnb-thumb', style: { display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brand)' } }, self._plIcon('tts'));
+        } else {
+          thumbEl = h('img', { className: 'pl-rfnb-thumb', src: url, loading: 'lazy', referrerPolicy: 'no-referrer' });
         }
       }
-      const x = node.position.x;
-      const y = node.position.y;
-      nodesHtml += `
-        <foreignObject x="${x}" y="${y}" width="180" height="200" style="overflow:visible">
-          <div class="pl-node-card ${cls}" data-cat="${esc(def.category)}" data-node-id="${esc(node.id)}" xmlns="http://www.w3.org/1999/xhtml">
-            <div class="pl-node-header" data-drag-node="${esc(node.id)}">
-              <span class="pl-nh-icon">${this._plIcon(def.iconKey)}</span>
-              <span class="pl-nh-title">${esc(def.label)}</span>
-              ${statusBadge}
-            </div>
-            <div class="pl-node-body">${bodyPreview}</div>
-            <div class="pl-ports-section ${inputsHtml ? '' : 'empty'}">${inputsHtml}</div>
-            <div class="pl-ports-section ${outputsHtml ? '' : 'empty'}">${outputsHtml}</div>
-          </div>
-        </foreignObject>
-      `;
-    });
-    content.innerHTML = edgesHtml + nodesHtml;
+      // 删除按钮
+      const delBtn = h('button', {
+        className: 'pl-rf-node-del',
+        onClick: (e) => { e.stopPropagation(); self._removePipelineNode(id); },
+        title: '删除节点'
+      }, self._plIcon('x'));
 
-    // 更新缩放显示
-    const zoomVal = $('#plZoomVal');
-    if (zoomVal) zoomVal.textContent = Math.round(vp.zoom * 100) + '%';
+      return h('div', { className: nodeCls, 'data-cat': def.category, 'data-node-id': id },
+        delBtn,
+        h('div', { className: 'pl-rf-node-header' },
+          h('span', { className: 'pl-rfnh-icon' }, self._plIcon(def.iconKey)),
+          h('span', { className: 'pl-rfnh-title' }, def.label),
+          h('span', { className: 'pl-rfnh-status ' + statusBadge.cls }, statusBadge.text)
+        ),
+        h('div', { className: 'pl-rf-node-body' },
+          bodyPreview ? h('div', { className: 'pl-rfnb-preview' }, bodyPreview) : null,
+          thumbEl
+        ),
+        h('div', { className: 'pl-rf-node-ports' },
+          inputs.length ? h('div', { className: 'pl-rf-node-ports-section' }, inputs) : null,
+          outputs.length ? h('div', { className: 'pl-rf-node-ports-section' }, outputs) : null
+        )
+      );
+    };
 
-    // 显示/隐藏空状态提示
-    const hint = $('#plCanvasHint');
-    if (hint) hint.style.display = p.nodes.length ? 'none' : '';
+    const nodeTypes = { custom: CustomNode };
 
-    // 绑定节点事件
-    this._bindPipelineNodeEvents();
-  },
+    // 转换数据格式: 内部 → React Flow
+    const rfNodes = p.nodes.map(n => ({
+      id: n.id,
+      type: 'custom',
+      position: n.position,
+      data: { ...n.data, _type: n.type, _status: n.status }
+    }));
+    const rfEdges = p.edges.map(e => ({
+      id: e.id,
+      source: e.source, sourceHandle: e.sourceHandle,
+      target: e.target, targetHandle: e.targetHandle,
+      type: 'smoothstep',
+      animated: false,
+      style: { stroke: self._PL_PORT_COLORS[self._getEdgeType(e)] || '#3b6ef5', strokeWidth: 2 },
+      data: { type: self._getEdgeType(e) }
+    }));
 
-  _nodeStatusBadge(node) {
-    const status = node.status || 'idle';
-    if (status === 'running') return '<span class="pl-nh-status running">运行</span>';
-    if (status === 'done') return '<span class="pl-nh-status ok">完成</span>';
-    if (status === 'error') return '<span class="pl-nh-status err">失败</span>';
-    const v = this._validateNode(node);
-    return v.ok ? '<span class="pl-nh-status ok">就绪</span>' : '<span class="pl-nh-status err">未就绪</span>';
-  },
+    const onNodesChange = (changes) => {
+      p.nodes = applyNodeChanges(changes, p.nodes.map(n => ({
+        id: n.id, type: 'custom', position: n.position,
+        data: { ...n.data, _type: n.type, _status: n.status }
+      }))).map(rfn => ({
+        id: rfn.id, type: rfn.data._type, position: rfn.position,
+        data: { ...rfn.data }, status: rfn.data._status
+      }));
+      self._savePipelineGraph();
+    };
+    const onEdgesChange = (changes) => {
+      p.edges = applyEdgeChanges(changes, rfEdges);
+      self._savePipelineGraph();
+    };
+    const onConnect = (conn) => {
+      // 校验类型
+      const sourceNode = p.nodes.find(n => n.id === conn.source);
+      const targetNode = p.nodes.find(n => n.id === conn.target);
+      if (!sourceNode || !targetNode) return;
+      const sDef = self._PL_NODE_TYPES[sourceNode.type];
+      const tDef = self._PL_NODE_TYPES[targetNode.type];
+      const sPort = (sDef.outputs || []).find(o => o.id === conn.sourceHandle);
+      const tPort = (tDef.inputs || []).find(i => i.id === conn.targetHandle);
+      if (!sPort || !tPort) return;
+      if (sPort.type !== tPort.type) {
+        Toast.error(`类型不匹配: ${self._plTypeLabel(sPort.type)} → ${self._plTypeLabel(tPort.type)}`);
+        return;
+      }
+      // 单输入端口替换
+      if (!tPort.multiple) {
+        p.edges = p.edges.filter(e => !(e.target === conn.target && e.targetHandle === conn.targetHandle));
+      }
+      const edge = {
+        id: self._plGenId('e'),
+        source: conn.source, sourceHandle: conn.sourceHandle,
+        target: conn.target, targetHandle: conn.targetHandle
+      };
+      p.edges.push(edge);
+      self._renderReactFlow();
+      self._savePipelineGraph();
+    };
+    const onNodeClick = (e, node) => {
+      p.selectedNodeId = node.id;
+      self._renderPipelineInspector();
+    };
+    const onPaneClick = () => {
+      p.selectedNodeId = null;
+      self._renderPipelineInspector();
+    };
+    const onInit = (instance) => {
+      self._plRfInstance = instance;
+      setTimeout(() => instance.fitView({ padding: 0.3 }), 100);
+    };
+    const onDrop = (e) => {
+      e.preventDefault();
+      const type = e.dataTransfer.getData('application/pl-node-type');
+      if (!type) return;
+      const bounds = container.getBoundingClientRect();
+      const position = instance.project({ x: e.clientX - bounds.left, y: e.clientY - bounds.top });
+      self._addPipelineNode(type, position.x, position.y);
+    };
+    const onDragOver = (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; };
+    const onNodeDragStop = (e, node) => {
+      const n = p.nodes.find(x => x.id === node.id);
+      if (n) { n.position = node.position; self._savePipelineGraph(); }
+    };
 
-  // 获取端口位置 (相对画布坐标)
-  _getPortPos(node, portId, dir) {
-    const def = this._PL_NODE_TYPES[node.type];
-    if (!def) return null;
-    const ports = dir === 'input' ? (def.inputs || []) : (def.outputs || []);
-    const idx = ports.findIndex(p => p.id === portId);
-    if (idx < 0) return null;
-    // 节点宽度180, header约32, body约40, ports每行约18
-    const x = node.position.x + (dir === 'input' ? 0 : 180);
-    // 计算y: header(32) + body(动态, 用40) + inputs section
-    let y = node.position.y + 32 + 40;
-    if (dir === 'input') {
-      y += idx * 20 + 10;
-    } else {
-      const inputCount = (def.inputs || []).length;
-      y += inputCount * 20 + (inputCount > 0 ? 8 : 0) + idx * 20 + 10;
+    // 渲染 React Flow
+    if (self._plRfRoot) {
+      try { ReactDOM.unmountComponentAtNode(container); } catch {}
     }
-    return { x, y };
+    self._plRfRoot = ReactDOM.createRoot(container);
+    self._plRfRoot.render(
+      h(ReactFlow, {
+        nodes: rfNodes,
+        edges: rfEdges,
+        nodeTypes: nodeTypes,
+        onNodesChange,
+        onEdgesChange,
+        onConnect,
+        onNodeClick,
+        onPaneClick,
+        onInit,
+        onDrop,
+        onDragOver,
+        onNodeDragStop,
+        fitView: true,
+        snapToGrid: true,
+        snapGrid: [16, 16],
+        deleteKeyCode: ['Delete', 'Backspace'],
+        multiSelectionKeyCode: ['Meta', 'Control'],
+        connectionLineType: 'smoothstep'
+      },
+        h(Background, { color: 'var(--border)', gap: 20, size: 1 }),
+        h(Controls, { showInteractive: false }),
+        h(MiniMap, {
+          nodeColor: (n) => {
+            const def = self._PL_NODE_TYPES[n.data._type];
+            const cat = def?.category;
+            return cat === 'text' ? '#3b6ef5' : cat === 'image' ? '#10b981' : cat === 'video' ? '#f59e0b' : '#8b5cf6';
+          },
+          maskColor: 'rgba(0,0,0,0.1)'
+        })
+      )
+    );
   },
 
-  // 贝塞尔路径
-  _bezierPath(a, b) {
-    const dx = Math.abs(b.x - a.x) * 0.5;
-    return `M ${a.x} ${a.y} C ${a.x + dx} ${a.y}, ${b.x - dx} ${b.y}, ${b.x} ${b.y}`;
+  _renderReactFlow() {
+    // 重新渲染 React Flow (节点/边变化时)
+    if (this._plRfInstance) {
+      const p = this.state.pipeline;
+      const rfNodes = p.nodes.map(n => ({
+        id: n.id, type: 'custom', position: n.position,
+        data: { ...n.data, _type: n.type, _status: n.status }
+      }));
+      const rfEdges = p.edges.map(e => ({
+        id: e.id, source: e.source, sourceHandle: e.sourceHandle,
+        target: e.target, targetHandle: e.targetHandle,
+        type: 'smoothstep',
+        style: { stroke: this._PL_PORT_COLORS[this._getEdgeType(e)] || '#3b6ef5', strokeWidth: 2 },
+        data: { type: this._getEdgeType(e) }
+      }));
+      this._plRfInstance.setNodes(rfNodes);
+      this._plRfInstance.setEdges(rfEdges);
+    }
+    this._renderPipelineInspector();
+    this._renderPipelineToolbar();
+  },
+
+  _isValidConnection(conn, targetType) {
+    const p = this.state.pipeline;
+    const sourceNode = p.nodes.find(n => n.id === conn.source);
+    if (!sourceNode) return false;
+    const sDef = this._PL_NODE_TYPES[sourceNode.type];
+    const sPort = (sDef.outputs || []).find(o => o.id === conn.sourceHandle);
+    return sPort && sPort.type === targetType;
   },
 
   _getEdgeType(edge) {
@@ -6167,296 +6514,31 @@ const UI = {
     return port ? port.type : 'text';
   },
 
-  // === 画布交互 (pan/zoom/拖拽节点/连线) ===
-  _bindPipelineCanvasEvents() {
-    const wrap = $('#plCanvasWrap');
-    const svg = $('#plCanvasSvg');
-    if (!wrap || !svg) return;
-    const p = this.state.pipeline;
-
-    // 工具栏
-    $('#plZoomIn')?.addEventListener('click', () => this._zoomPipeline(1.2));
-    $('#plZoomOut')?.addEventListener('click', () => this._zoomPipeline(1 / 1.2));
-    $('#plFit')?.addEventListener('click', () => this._resetPipelineViewport());
-
-    // 滚轮缩放
-    svg.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      const factor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
-      const rect = svg.getBoundingClientRect();
-      this._zoomPipeline(factor, e.clientX - rect.left, e.clientY - rect.top);
-    }, { passive: false });
-
-    // 画布拖拽 (pan)
-    let panning = false;
-    let panStart = null;
-    svg.addEventListener('mousedown', (e) => {
-      // 只在空白区域 pan
-      if (e.target === svg || e.target.tagName === 'rect') {
-        panning = true;
-        panStart = { x: e.clientX, y: e.clientY, vpx: p.viewport.x, vpy: p.viewport.y };
-        wrap.classList.add('pl-dragging');
-      }
-    });
-    document.addEventListener('mousemove', (e) => {
-      if (panning && panStart) {
-        p.viewport.x = panStart.vpx + (e.clientX - panStart.x);
-        p.viewport.y = panStart.vpy + (e.clientY - panStart.y);
-        this._renderPipelineCanvas();
-      }
-      // 拖拽连线
-      if (this._plDragEdge) {
-        const pt = this._clientToCanvas(e.clientX, e.clientY);
-        this._plDragEdge.to = pt;
-        this._renderPipelineCanvas();
-      }
-      // 拖拽节点
-      if (this._plDragNode) {
-        const pt = this._clientToCanvas(e.clientX, e.clientY);
-        const node = p.nodes.find(n => n.id === this._plDragNode.id);
-        if (node) {
-          node.position.x = pt.x - this._plDragNode.offsetX;
-          node.position.y = pt.y - this._plDragNode.offsetY;
-          this._renderPipelineCanvas();
-        }
-      }
-    });
-    document.addEventListener('mouseup', (e) => {
-      if (panning) { panning = false; wrap.classList.remove('pl-dragging'); this._savePipelineGraph(); }
-      if (this._plDragEdge) {
-        // 检查是否落在端口上
-        const target = document.elementFromPoint(e.clientX, e.clientY);
-        if (target && target.classList.contains('pl-port-dot')) {
-          const targetNodeId = target.dataset.node;
-          const targetPort = target.dataset.port;
-          const targetDir = target.dataset.dir;
-          if (targetDir === 'input' && this._plDragEdge.sourceNodeId !== targetNodeId) {
-            this._addPipelineEdge(this._plDragEdge.sourceNodeId, this._plDragEdge.sourcePort, targetNodeId, targetPort);
-          }
-        }
-        this._plDragEdge = null;
-        this._renderPipelineCanvas();
-      }
-      if (this._plDragNode) {
-        this._plDragNode = null;
-        this._savePipelineGraph();
-      }
-    });
-
-    // 拖放节点 (从左栏)
-    wrap.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
-    wrap.addEventListener('drop', (e) => {
-      e.preventDefault();
-      const type = e.dataTransfer.getData('text/pl-type');
-      if (type) {
-        const pt = this._clientToCanvas(e.clientX, e.clientY);
-        this._addPipelineNode(type, pt.x - 90, pt.y - 50);
-      }
-    });
+  _nodeStatusBadge(data) {
+    const status = data._status || 'idle';
+    if (status === 'running') return { cls: 'running', text: '运行' };
+    if (status === 'done') return { cls: 'done', text: '完成' };
+    if (status === 'error') return { cls: 'err', text: '失败' };
+    return { cls: 'pending', text: '就绪' };
   },
 
-  _bindPipelineNodeEvents() {
-    const p = this.state.pipeline;
-    // 节点点击选中 + 拖拽
-    document.querySelectorAll('[data-drag-node]').forEach(header => {
-      const nodeId = header.dataset.dragNode;
-      header.addEventListener('mousedown', (e) => {
-        if (e.target.classList.contains('pl-port-dot')) return; // 端口拖拽优先
-        e.stopPropagation();
-        p.selectedNodeId = nodeId;
-        const node = p.nodes.find(n => n.id === nodeId);
-        if (!node) return;
-        const pt = this._clientToCanvas(e.clientX, e.clientY);
-        this._plDragNode = {
-          id: nodeId,
-          offsetX: pt.x - node.position.x,
-          offsetY: pt.y - node.position.y
-        };
-        this._renderPipelineCanvas();
-        this._renderPipelineConfig();
-      });
-    });
-    // 端口拖拽 (创建连线)
-    document.querySelectorAll('.pl-port-dot[data-dir="output"]').forEach(port => {
-      port.addEventListener('mousedown', (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        const sourceNodeId = port.dataset.node;
-        const sourcePort = port.dataset.port;
-        const pt = this._clientToCanvas(e.clientX, e.clientY);
-        this._plDragEdge = {
-          sourceNodeId, sourcePort,
-          from: this._getPortPos(p.nodes.find(n => n.id === sourceNodeId), sourcePort, 'output'),
-          to: pt
-        };
-      });
-    });
-    // 连线点击删除
-    document.querySelectorAll('.pl-edge-hit').forEach(path => {
-      path.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const edgeId = path.dataset.edgeId;
-        if (confirm('删除这条连线?')) {
-          this._removePipelineEdge(edgeId);
-        }
-      });
-    });
-  },
-
-  _clientToCanvas(clientX, clientY) {
-    const svg = $('#plCanvasSvg');
-    if (!svg) return { x: 0, y: 0 };
-    const rect = svg.getBoundingClientRect();
-    const p = this.state.pipeline;
-    const vp = p.viewport || { x: 0, y: 0, zoom: 1 };
-    return {
-      x: (clientX - rect.left - vp.x) / vp.zoom,
-      y: (clientY - rect.top - vp.y) / vp.zoom
-    };
-  },
-
-  _zoomPipeline(factor, cx, cy) {
-    const p = this.state.pipeline;
-    const vp = p.viewport;
-    const svg = $('#plCanvasSvg');
-    if (!svg) return;
-    const rect = svg.getBoundingClientRect();
-    if (cx == null) cx = rect.width / 2;
-    if (cy == null) cy = rect.height / 2;
-    const newZoom = Math.max(0.3, Math.min(2.5, vp.zoom * factor));
-    // 以鼠标为中心缩放
-    const px = (cx - vp.x) / vp.zoom;
-    const py = (cy - vp.y) / vp.zoom;
-    vp.zoom = newZoom;
-    vp.x = cx - px * newZoom;
-    vp.y = cy - py * newZoom;
-    this._renderPipelineCanvas();
-    this._savePipelineGraph();
-  },
-
-  _resetPipelineViewport() {
-    const p = this.state.pipeline;
-    p.viewport = { x: 0, y: 0, zoom: 1 };
-    this._renderPipelineCanvas();
-    this._savePipelineGraph();
-  },
-
-  // === 节点/连线 CRUD ===
-  _addPipelineNode(type, x, y) {
-    const def = this._PL_NODE_TYPES[type];
-    if (!def) return;
-    const p = this.state.pipeline;
-    // 初始化默认data
-    const data = {};
-    (def.params || []).forEach(param => {
-      data[param.key] = param.default != null ? param.default : (param.type === 'range' ? param.min : '');
-    });
-    const node = {
-      id: this._plGenId(),
-      type,
-      position: { x: x != null ? x : 100 + Math.random() * 200, y: y != null ? y : 100 + Math.random() * 100 },
-      data,
-      status: 'idle'
-    };
-    p.nodes.push(node);
-    p.selectedNodeId = node.id;
-    this._renderPipelineCanvas();
-    this._renderPipelineConfig();
-    this._savePipelineGraph();
-    Toast.success('已添加: ' + def.label);
-  },
-
-  _removePipelineNode(nodeId) {
-    const p = this.state.pipeline;
-    p.nodes = p.nodes.filter(n => n.id !== nodeId);
-    p.edges = p.edges.filter(e => e.source !== nodeId && e.target !== nodeId);
-    if (p.selectedNodeId === nodeId) p.selectedNodeId = null;
-    this._renderPipelineCanvas();
-    this._renderPipelineConfig();
-    this._savePipelineGraph();
-  },
-
-  _addPipelineEdge(sourceId, sourcePort, targetId, targetPort) {
-    const p = this.state.pipeline;
-    // 校验端口类型匹配
-    const sNode = p.nodes.find(n => n.id === sourceId);
-    const tNode = p.nodes.find(n => n.id === targetId);
-    if (!sNode || !tNode) return;
-    const sDef = this._PL_NODE_TYPES[sNode.type];
-    const tDef = this._PL_NODE_TYPES[tNode.type];
-    const sPort = (sDef.outputs || []).find(o => o.id === sourcePort);
-    const tPort = (tDef.inputs || []).find(i => i.id === targetPort);
-    if (!sPort || !tPort) return;
-    if (sPort.type !== tPort.type) {
-      Toast.error(`类型不匹配: ${this._plTypeLabel(sPort.type)} → ${this._plTypeLabel(tPort.type)}`);
-      return;
-    }
-    // 检查目标端口是否已有连线 (非 multiple 时替换)
-    if (!tPort.multiple) {
-      p.edges = p.edges.filter(e => !(e.target === targetId && e.targetHandle === targetPort));
-    }
-    // 防止自环
-    if (sourceId === targetId) {
-      Toast.warning('不能连接到自身');
-      return;
-    }
-    // 防止环 (简单DFS)
-    if (this._wouldCreateCycle(sourceId, targetId)) {
-      Toast.error('不能形成环路');
-      return;
-    }
-    const edge = {
-      id: this._plGenId('e'),
-      source: sourceId, sourceHandle: sourcePort,
-      target: targetId, targetHandle: targetPort
-    };
-    p.edges.push(edge);
-    this._renderPipelineCanvas();
-    this._savePipelineGraph();
-  },
-
-  _wouldCreateCycle(sourceId, targetId) {
-    // 从 target 出发能否到达 source
-    const p = this.state.pipeline;
-    const visited = new Set();
-    const dfs = (nodeId) => {
-      if (nodeId === sourceId) return true;
-      if (visited.has(nodeId)) return false;
-      visited.add(nodeId);
-      for (const e of p.edges) {
-        if (e.source === nodeId && dfs(e.target)) return true;
-      }
-      return false;
-    };
-    return dfs(targetId);
-  },
-
-  _removePipelineEdge(edgeId) {
-    const p = this.state.pipeline;
-    p.edges = p.edges.filter(e => e.id !== edgeId);
-    this._renderPipelineCanvas();
-    this._savePipelineGraph();
-  },
-
-  // === 右栏: 节点配置 ===
-  _renderPipelineConfig() {
-    const wrap = $('#plConfigPanel');
+  // === 节点配置面板 (右侧浮窗) ===
+  _renderPipelineInspector() {
+    const wrap = $('#plInspector');
     if (!wrap) return;
     const p = this.state.pipeline;
     const nodeId = p.selectedNodeId;
     if (!nodeId) {
-      wrap.innerHTML = `<div class="pl-config-empty">
-        ${this._plIcon('plus')}
-        <div>点击画布上的节点以配置参数</div>
-      </div>`;
+      wrap.classList.remove('show');
       return;
     }
     const node = p.nodes.find(n => n.id === nodeId);
-    if (!node) { wrap.innerHTML = ''; return; }
+    if (!node) { wrap.classList.remove('show'); return; }
     const def = this._PL_NODE_TYPES[node.type];
-    if (!def) { wrap.innerHTML = ''; return; }
+    if (!def) { wrap.classList.remove('show'); return; }
+    wrap.classList.add('show');
 
-    // 渲染参数表单
+    // 参数表单
     const paramsHtml = (def.params || []).map(param => {
       const val = node.data[param.key] != null ? node.data[param.key] : (param.default != null ? param.default : '');
       const id = 'plcfg_' + param.key;
@@ -6489,36 +6571,28 @@ const UI = {
       </div>`;
     }).join('');
 
-    // 用户上传输入 (如数字人底片)
+    // 用户上传
     let userInputHtml = '';
-    if (def.userInput) {
-      userInputHtml = this._renderPipelineUserInput(node, def);
-    }
-
-    // 素材篮特殊UI
+    if (def.userInput) userInputHtml = this._renderInspectorUpload(node, def);
+    // 素材篮
     let basketHtml = '';
-    if (def.isBasket) {
-      basketHtml = this._renderPipelineBasket(node);
-    }
-
-    // Agent 对话历史
+    if (def.isBasket) basketHtml = this._renderInspectorBasket(node);
+    // Agent
     let agentHtml = '';
-    if (def.isAgent) {
-      agentHtml = this._renderPipelineAgent(node);
-    }
+    if (def.isAgent) agentHtml = this._renderInspectorAgent(node);
 
-    // 输入/输出端口信息
-    const inputsInfo = (def.inputs || []).map(i => `<div style="font-size:10px;color:var(--text-dim)">← ${esc(i.label)} (${this._plTypeLabel(i.type)})</div>`).join('');
-    const outputsInfo = (def.outputs || []).map(o => `<div style="font-size:10px;color:var(--text-dim)">→ ${esc(o.label)} (${this._plTypeLabel(o.type)})</div>`).join('');
+    // 端口信息
+    const inputsInfo = (def.inputs || []).map(i => `<div style="font-size:10px;color:var(--text-dim)">← ${esc(i.label)} (${this._plTypeLabel(i.type)})${i.multiple ? ' ×' : ''}</div>`).join('');
+    const outputsInfo = (def.outputs || []).map(o => `<div style="font-size:10px;color:var(--text-dim)">→ ${esc(o.label)} (${this._plTypeLabel(o.type)})${o.multiple ? ' ×' : ''}</div>`).join('');
 
     wrap.innerHTML = `
-      <div class="pl-config-header">
-        <span class="pl-ch-icon" style="background:var(--brand-soft);color:var(--brand)">${this._plIcon(def.iconKey)}</span>
-        <span class="pl-ch-title">${esc(def.label)}</span>
-        <button class="pl-ch-del" id="plConfigDel" title="删除节点">${this._plIcon('trash')}</button>
+      <div class="pl-inspector-header" data-cat="${esc(def.category)}">
+        <span class="pl-ih-icon">${this._plIcon(def.iconKey)}</span>
+        <span class="pl-ih-title">${esc(def.label)}</span>
+        <button class="pl-ih-close" id="plInspectorClose">${this._plIcon('x')}</button>
       </div>
-      <div class="pl-config-body">
-        ${inputsInfo || outputsInfo ? `<div class="pl-cfg-row" style="padding:6px 8px;background:var(--surface-2);border-radius:6px">${inputsInfo}${outputsInfo}</div>` : ''}
+      <div class="pl-inspector-body">
+        ${inputsInfo || outputsInfo ? `<div class="pl-cfg-row" style="padding:6px 8px;background:var(--surface-2);border-radius:6px;font-size:10px">${inputsInfo}${outputsInfo}</div>` : ''}
         ${agentHtml}
         ${paramsHtml}
         ${userInputHtml}
@@ -6526,7 +6600,7 @@ const UI = {
       </div>
     `;
 
-    // 绑定参数事件
+    // 绑定参数
     (def.params || []).forEach(param => {
       const id = 'plcfg_' + param.key;
       const el = $('#' + id);
@@ -6536,86 +6610,82 @@ const UI = {
           node.data[param.key] = parseFloat(el.value);
           const valEl = $('#' + id + '_val');
           if (valEl) valEl.textContent = el.value + (param.unit || '');
-          this._renderPipelineCanvas();
+          this._renderReactFlow();
           this._savePipelineGraph();
+          this._renderPipelineToolbar();
         });
       } else if (param.type === 'textarea' || param.type === 'text') {
         el.addEventListener('input', () => {
           node.data[param.key] = el.value;
-          this._renderPipelineCanvas();
+          this._renderReactFlow();
           this._savePipelineGraph();
         });
       } else if (param.type === 'select') {
         el.addEventListener('change', () => {
           node.data[param.key] = el.value;
+          this._renderReactFlow();
           this._savePipelineGraph();
+          this._renderPipelineToolbar();
         });
       }
     });
-
-    // 删除按钮
-    $('#plConfigDel')?.addEventListener('click', () => {
-      if (confirm('删除此节点?')) this._removePipelineNode(nodeId);
+    // 关闭
+    $('#plInspectorClose')?.addEventListener('click', () => {
+      p.selectedNodeId = null;
+      wrap.classList.remove('show');
     });
-
     // 用户上传
     if (def.userInput) {
-      $('#plUserInputUpload')?.addEventListener('click', () => $('#plUserInputFile')?.click());
-      $('#plUserInputFile')?.addEventListener('change', (e) => {
+      $('#plUploadBox')?.addEventListener('click', () => $('#plUploadFile')?.click());
+      $('#plUploadFile')?.addEventListener('change', (e) => {
         const f = e.target.files[0];
         if (f) this._uploadPipelineNodeFile(node, def, f);
         e.target.value = '';
       });
-      $('#plUserInputClear')?.addEventListener('click', () => {
+      $('#plUploadClear')?.addEventListener('click', (e) => {
+        e.stopPropagation();
         delete node.data._userInput;
-        this._renderPipelineConfig();
-        this._renderPipelineCanvas();
+        this._renderPipelineInspector();
+        this._renderReactFlow();
         this._savePipelineGraph();
       });
     }
-
-    // 素材篮交互
-    if (def.isBasket) {
-      this._bindPipelineBasket(node);
-    }
-
-    // Agent 交互
-    if (def.isAgent) {
-      this._bindPipelineAgent(node);
-    }
+    // 素材篮
+    if (def.isBasket) this._bindInspectorBasket(node);
+    // Agent
+    if (def.isAgent) this._bindInspectorAgent(node);
   },
 
-  _renderPipelineUserInput(node, def) {
+  _renderInspectorUpload(node, def) {
     const ui = def.userInput;
     const val = node.data._userInput && node.data._userInput[ui.key];
     const has = !!val;
     const accept = ui.type === 'ref-video' ? 'video/*' : 'image/*';
     let preview = '';
-    let statusText = '未上传';
+    let statusText = '点击上传';
     if (has) {
       const isVideo = /\.(mp4|webm|mov|avi)(\?|$)/i.test(val);
-      if (isVideo) preview = `<video class="pl-user-input-preview" src="${esc(val)}" muted style="width:48px;height:48px;border-radius:6px;object-fit:cover"></video>`;
-      else preview = `<img src="${esc(val)}" loading="lazy" referrerpolicy="no-referrer" style="width:48px;height:48px;border-radius:6px;object-fit:cover">`;
+      if (isVideo) preview = `<video class="pl-ub-preview" src="${esc(val)}" muted></video>`;
+      else preview = `<img class="pl-ub-preview" src="${esc(val)}" loading="lazy" referrerpolicy="no-referrer">`;
       statusText = '已上传';
     }
     return `<div class="pl-cfg-row">
       <div class="pl-cfg-label">${esc(ui.label)}</div>
-      <div style="display:flex;align-items:center;gap:8px;padding:8px;background:var(--surface-2);border-radius:6px">
-        ${preview || `<div style="width:48px;height:48px;border-radius:6px;background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--text-dim)">${this._plIcon('plus')}</div>`}
-        <div style="flex:1;min-width:0">
-          <div style="font-size:12px;color:var(--text)">${esc(ui.label)}</div>
-          <div style="font-size:10px;color:var(--text-dim)">${esc(statusText)}</div>
+      <div class="pl-upload-box ${has ? 'has-file' : ''}" id="plUploadBox">
+        ${preview || `<div class="pl-ub-placeholder">${this._plIcon('plus')}</div>`}
+        <div class="pl-ub-info">
+          <div class="pl-ub-name">${esc(ui.label)}</div>
+          <div class="pl-ub-status ${has ? 'done' : ''}">${esc(statusText)}</div>
         </div>
-        <button class="pl-user-input-btn" id="plUserInputUpload" style="padding:4px 8px;font-size:11px;border:1px solid var(--border);background:var(--surface);border-radius:4px;cursor:pointer">${has ? '更换' : '上传'}</button>
-        ${has ? '<button class="pl-user-input-btn" id="plUserInputClear" style="padding:4px 8px;font-size:11px;border:1px solid var(--border);background:var(--surface);border-radius:4px;cursor:pointer">清除</button>' : ''}
+        <div class="pl-ub-actions">
+          ${has ? '<button class="pl-ub-btn" id="plUploadClear" type="button">清除</button>' : ''}
+        </div>
       </div>
-      <input type="file" id="plUserInputFile" accept="${accept}" style="display:none">
+      <input type="file" id="plUploadFile" accept="${accept}" style="display:none">
     </div>`;
   },
 
-  _renderPipelineBasket(node) {
-    // 收集上游图片
-    const p = this.state.pipeline;
+  _renderInspectorBasket(node) {
     const upstreamImages = this._collectUpstreamImages(node.id);
     node.data._available = upstreamImages;
     if (!node.data._selected) node.data._selected = [];
@@ -6623,10 +6693,10 @@ const UI = {
     if (!upstreamImages.length) {
       return `<div class="pl-cfg-row">
         <div class="pl-cfg-label">素材篮</div>
-        <div class="pl-basket-empty">暂无上游图片输入。请将上游图片节点连到此节点的"图片"端口。</div>
+        <div class="pl-basket-empty">暂无上游图片。请将上游图片节点连到此节点的"图片"端口。</div>
       </div>`;
     }
-    const items = upstreamImages.map((url, i) => {
+    const items = upstreamImages.map((url) => {
       const isSelected = selected.includes(url);
       return `<div class="pl-basket-item ${isSelected ? 'selected' : ''}" data-url="${esc(url)}">
         <img src="${esc(url)}" loading="lazy" referrerpolicy="no-referrer">
@@ -6647,15 +6717,14 @@ const UI = {
     for (const edge of incomingEdges) {
       const sourceNode = p.nodes.find(n => n.id === edge.source);
       if (!sourceNode) continue;
-      // 如果上游是生成节点且有结果, 取结果
       if (sourceNode.data._result) {
-        images.push(sourceNode.data._result);
+        // 如果是单个URL
+        if (typeof sourceNode.data._result === 'string') images.push(sourceNode.data._result);
+        else if (Array.isArray(sourceNode.data._result)) images.push(...sourceNode.data._result);
       }
-      // 如果上游是图片输入节点
       else if (sourceNode.type === 'image-input' && sourceNode.data._userInput?.imageUrl) {
         images.push(sourceNode.data._userInput.imageUrl);
       }
-      // 递归向上
       else {
         const upstream = this._collectUpstreamImages(sourceNode.id);
         images.push(...upstream);
@@ -6664,7 +6733,7 @@ const UI = {
     return images;
   },
 
-  _bindPipelineBasket(node) {
+  _bindInspectorBasket(node) {
     document.querySelectorAll('.pl-basket-item').forEach(item => {
       item.addEventListener('click', () => {
         const url = item.dataset.url;
@@ -6674,28 +6743,29 @@ const UI = {
         if (idx >= 0) selected.splice(idx, 1);
         else selected.push(url);
         node.data._selected = selected;
-        this._renderPipelineConfig();
+        this._renderPipelineInspector();
         this._savePipelineGraph();
       });
     });
   },
 
-  _renderPipelineAgent(node) {
+  _renderInspectorAgent(node) {
     const msgs = node.data._conversation || [];
     const msgsHtml = msgs.map(m => {
       const cls = m.role === 'user' ? 'user' : (m.role === 'assistant' ? 'assistant' : 'system');
-      return `<div class="pl-agent-msg ${cls}">${esc(m.content.slice(0, 200))}</div>`;
+      const roleLabel = m.role === 'user' ? '用户' : (m.role === 'assistant' ? 'AI' : '系统');
+      return `<div class="pl-agent-msg ${cls}"><div class="pl-am-role">${roleLabel}</div>${esc(m.content.slice(0, 500))}</div>`;
     }).join('');
     return `<div class="pl-cfg-row">
       <div class="pl-cfg-label">对话</div>
-      <div class="pl-agent-chat" id="plAgentChat">${msgsHtml || '<div style="color:var(--text-dim);text-align:center;padding:12px">点击下方"运行Agent"开始对话</div>'}</div>
-      <button id="plAgentRun" style="width:100%;padding:6px;font-size:12px;background:var(--brand);color:#fff;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px">
-        ${this._plIcon('agent')} 运行 Agent
+      <div class="pl-agent-chat" id="plAgentChat">${msgsHtml || '<div style="color:var(--text-dim);text-align:center;padding:12px;font-size:11px">点击下方按钮开始对话</div>'}</div>
+      <button id="plAgentRun" style="width:100%;padding:7px;font-size:12px;background:var(--brand);color:#fff;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;font-weight:500">
+        ${this._plIcon('play')} 运行 Agent
       </button>
     </div>`;
   },
 
-  _bindPipelineAgent(node) {
+  _bindInspectorAgent(node) {
     $('#plAgentRun')?.addEventListener('click', () => this._runPipelineAgent(node));
   },
 
@@ -6714,38 +6784,40 @@ const UI = {
     node.data._conversation = node.data._conversation || [];
     node.data._conversation.push({ role: 'user', content: message });
     node.status = 'running';
-    this._renderPipelineConfig();
-    this._renderPipelineCanvas();
+    this._renderPipelineInspector();
+    this._renderReactFlow();
     try {
-      // 构建 system prompt: 让 Agent 拆解需求并生成各下游节点的提示词
-      const sysPrompt = '你是一个创作助手。用户会描述创作需求，你需要理解并输出一段精心优化的创作提示词。只输出提示词本身，不要解释。';
+      // Skills 系统提示词
+      const skillPrompts = {
+        'none': '你是一个创作助手。用户会描述创作需求，你需要理解并输出一段精心优化的创作提示词。只输出提示词本身，不要解释。',
+        'cc2image': '你是一个内容视觉化专家。将文章、知识点等内容转化为匹配的视觉风格与生图提示词。输出格式：主体描述 + 风格 + 构图 + 光影。',
+        'copywriting': '你是一个文案优化专家。优化用户给出的文案，使其更有吸引力和感染力。直接输出优化后的文案。',
+        'storyboard': '你是一个分镜脚本专家。根据用户描述生成分镜脚本，每个分镜包含：镜头描述、画面内容、时长建议。'
+      };
+      const sysPrompt = skillPrompts[node.data.skill || 'none'] || skillPrompts['none'];
       const res = await fetch('https://api.deepseek.com/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
         body: JSON.stringify({
-          model: 'deepseek-chat',
-          messages: [
-            { role: 'system', content: sysPrompt },
-            ...node.data._conversation
-          ],
-          max_tokens: 500,
-          temperature: 0.7
+          model: node.data.model || 'deepseek-chat',
+          messages: [{ role: 'system', content: sysPrompt }, ...node.data._conversation],
+          max_tokens: 800, temperature: 0.7
         })
       });
       if (!res.ok) throw new Error('DeepSeek API HTTP ' + res.status);
       const data = await res.json();
       const reply = data.choices?.[0]?.message?.content || '(空回复)';
       node.data._conversation.push({ role: 'assistant', content: reply });
-      node.data._result = reply; // Agent 的输出是文本
+      node.data._result = reply;
       node.status = 'done';
-      Toast.success('Agent 已生成提示词');
+      Toast.success('Agent 已生成');
     } catch (e) {
       node.data._conversation.push({ role: 'system', content: '调用失败: ' + e.message });
       node.status = 'error';
       Toast.error('Agent 调用失败: ' + e.message);
     }
-    this._renderPipelineConfig();
-    this._renderPipelineCanvas();
+    this._renderPipelineInspector();
+    this._renderReactFlow();
     this._savePipelineGraph();
   },
 
@@ -6763,36 +6835,135 @@ const UI = {
       node.data._userInput = node.data._userInput || {};
       node.data._userInput[ui.key] = r2url;
       Toast.success(ui.label + ' 已上传');
-      this._renderPipelineConfig();
-      this._renderPipelineCanvas();
+      this._renderPipelineInspector();
+      this._renderReactFlow();
       this._savePipelineGraph();
     } catch (err) {
       Toast.error('上传失败: ' + err.message);
     }
   },
 
+  // === 节点/画布操作 ===
+  _addPipelineNode(type, x, y) {
+    const def = this._PL_NODE_TYPES[type];
+    if (!def) return;
+    const p = this.state.pipeline;
+    const data = {};
+    (def.params || []).forEach(param => {
+      data[param.key] = param.default != null ? param.default : (param.type === 'range' ? param.min : '');
+    });
+    const node = {
+      id: this._plGenId(),
+      type,
+      position: { x: x != null ? x : 100 + Math.random() * 300, y: y != null ? y : 100 + Math.random() * 200 },
+      data, status: 'idle'
+    };
+    p.nodes.push(node);
+    p.selectedNodeId = node.id;
+    this._renderReactFlow();
+    this._renderPipelineInspector();
+    this._renderPipelineToolbar();
+    this._savePipelineGraph();
+    Toast.success('已添加: ' + def.label);
+  },
+
+  _removePipelineNode(nodeId) {
+    const p = this.state.pipeline;
+    p.nodes = p.nodes.filter(n => n.id !== nodeId);
+    p.edges = p.edges.filter(e => e.source !== nodeId && e.target !== nodeId);
+    if (p.selectedNodeId === nodeId) p.selectedNodeId = null;
+    this._renderReactFlow();
+    this._renderPipelineInspector();
+    this._renderPipelineToolbar();
+    this._savePipelineGraph();
+  },
+
+  _deleteSelectedNodes() {
+    const p = this.state.pipeline;
+    if (p.selectedNodeId) {
+      this._removePipelineNode(p.selectedNodeId);
+    } else if (this._plRfInstance) {
+      const selected = this._plRfInstance.getSelectedNodes();
+      if (selected.length) {
+        const ids = selected.map(n => n.id);
+        p.nodes = p.nodes.filter(n => !ids.includes(n.id));
+        p.edges = p.edges.filter(e => !ids.includes(e.source) && !ids.includes(e.target));
+        this._renderReactFlow();
+        this._renderPipelineInspector();
+        this._renderPipelineToolbar();
+        this._savePipelineGraph();
+        Toast.info('已删除 ' + ids.length + ' 个节点');
+      } else {
+        Toast.warning('请先选中节点');
+      }
+    }
+  },
+
+  _selectAllNodes() {
+    if (this._plRfInstance) {
+      const nodes = this._plRfInstance.getNodes();
+      this._plRfInstance.setNodes(nodes.map(n => ({ ...n, selected: true })));
+      Toast.info('已全选 ' + nodes.length + ' 个节点');
+    }
+  },
+
+  _duplicateSelectedNodes() {
+    const p = this.state.pipeline;
+    if (!p.selectedNodeId) { Toast.warning('请先选中节点'); return; }
+    const node = p.nodes.find(n => n.id === p.selectedNodeId);
+    if (!node) return;
+    const newNode = {
+      id: this._plGenId(),
+      type: node.type,
+      position: { x: node.position.x + 40, y: node.position.y + 40 },
+      data: JSON.parse(JSON.stringify(node.data)),
+      status: 'idle'
+    };
+    // 清除运行状态
+    delete newNode.data._result;
+    delete newNode.data._conversation;
+    newNode.data._status = 'idle';
+    p.nodes.push(newNode);
+    p.selectedNodeId = newNode.id;
+    this._renderReactFlow();
+    this._renderPipelineInspector();
+    this._renderPipelineToolbar();
+    this._savePipelineGraph();
+    Toast.success('已复制节点');
+  },
+
+  _clearPipeline() {
+    if (!confirm('清空画布? 所有节点和连线将被删除。')) return;
+    const p = this.state.pipeline;
+    p.nodes = [];
+    p.edges = [];
+    p.selectedNodeId = null;
+    this._renderReactFlow();
+    this._renderPipelineInspector();
+    this._renderPipelineToolbar();
+    this._savePipelineGraph();
+    Toast.info('画布已清空');
+  },
+
   // === 校验 ===
   _validateNode(node) {
     const def = this._PL_NODE_TYPES[node.type];
     if (!def) return { ok: false, error: '未知节点类型' };
-    // 必填参数
     for (const param of (def.params || [])) {
       if (param.required) {
         const val = node.data[param.key];
         if (!val || !String(val).trim()) return { ok: false, error: '缺 ' + param.label };
       }
     }
-    // userInput 必填校验
-    if (def.userInput) {
+    if (def.userInput && !def.inputs?.length) {
       const has = node.data._userInput && node.data._userInput[def.userInput.key];
-      if (!has && !def.inputs?.length) return { ok: false, error: '需上传' + def.userInput.label };
+      if (!has) return { ok: false, error: '需上传' + def.userInput.label };
     }
-    // 输入端口连接校验 (非 source 节点)
     if (!def.isSource && def.inputs && def.inputs.length) {
       const p = this.state.pipeline;
       for (const port of def.inputs) {
         const connected = p.edges.some(e => e.target === node.id && e.targetHandle === port.id);
-        if (!connected && !def.userInput) {
+        if (!connected && !def.userInput && !def.isAgent) {
           return { ok: false, error: '需连接 ' + port.label };
         }
       }
@@ -6834,28 +7005,17 @@ const UI = {
         if (inDegree[next] === 0) queue.push(next);
       });
     }
-    if (sorted.length !== p.nodes.length) {
-      return { ok: false, error: '图中存在环路', sorted: [] };
-    }
+    if (sorted.length !== p.nodes.length) return { ok: false, error: '图中存在环路', sorted: [] };
     return { ok: true, sorted };
   },
 
-  // === 提交流水线 ===
+  // === 提交 ===
   async _submitPipeline() {
     const p = this.state.pipeline;
     const v = this._validatePipelineGraph();
-    if (!v.ok) {
-      Toast.error(v.error);
-      this._showPipelineTopoError(v.error);
-      return;
-    }
+    if (!v.ok) { Toast.error(v.error); return; }
     const topo = this._topologicalSort();
-    if (!topo.ok) {
-      Toast.error(topo.error);
-      this._showPipelineTopoError(topo.error);
-      return;
-    }
-    this._hidePipelineTopoError();
+    if (!topo.ok) { Toast.error(topo.error); return; }
     if (!TaskCenter.isAvailable()) {
       Toast.warning('流水线需要任务中心支持，请先在设置中配置任务中心');
       this._openSettings();
@@ -6865,26 +7025,19 @@ const UI = {
     this._generating = true;
     const btn = $('#generateBtn');
     btn.disabled = true; $('#generateBtnText').textContent = '提交中...';
-    // 显示运行条
     const runBar = $('#plRunBar');
     if (runBar) runBar.classList.add('show');
     try {
-      // 按拓扑序构建 steps (线性化: 当前实现只取主链, 分叉/合并后续增强)
       const sortedNodes = topo.sorted.map(id => p.nodes.find(n => n.id === id)).filter(Boolean);
-      // 过滤掉 source 节点 (text-input/image-input/video-input/agent) 和素材篮, 只保留实际调用API的节点
       const apiNodes = sortedNodes.filter(n => {
         const def = this._PL_NODE_TYPES[n.type];
-        return def && def.endpoint && !def.isAgent;
+        return def && (def.endpoint || def.buildBody(n.data, {}).endpoint) && !def.isAgent;
       });
-      if (!apiNodes.length) {
-        throw new Error('无可执行的API节点(请确保至少有一个生成节点)');
-      }
+      if (!apiNodes.length) throw new Error('无可执行的API节点');
       const steps = apiNodes.map((node, i) => {
         const def = this._PL_NODE_TYPES[node.type];
-        // 解析输入端口的上游结果
         const inputs = {};
         (def.inputs || []).forEach(port => {
-          // 找到连入此端口的上游节点结果
           const edge = p.edges.find(e => e.target === node.id && e.targetHandle === port.id);
           if (edge) {
             const sourceNode = p.nodes.find(n => n.id === edge.source);
@@ -6892,17 +7045,17 @@ const UI = {
               if (sourceNode.data._result) inputs[port.id] = sourceNode.data._result;
               else if (sourceNode.data._userInput?.imageUrl) inputs[port.id] = sourceNode.data._userInput.imageUrl;
               else if (sourceNode.data._userInput?.videoUrl) inputs[port.id] = sourceNode.data._userInput.videoUrl;
-              else if (sourceNode.data._selected?.length) inputs[port.id] = sourceNode.data._selected[0];
+              else if (sourceNode.data._selected?.length) inputs[port.id] = port.multiple ? sourceNode.data._selected : sourceNode.data._selected[0];
             }
           }
         });
-        const body = def.buildBody(node.data, inputs);
-        const needs = Object.keys(inputs).filter(k => !body[k]); // 未填的 needs
-        return {
-          seq: i + 1,
-          type: node.type, model: def.model, modelType: def.modelType,
-          endpoint: def.endpoint, body, needs
-        };
+        const built = def.buildBody(node.data, inputs);
+        const body = built.body || built;
+        const endpoint = built.endpoint || def.endpoint;
+        const model = built.model || def.model;
+        const modelType = built.modelType || def.modelType;
+        const needs = Object.keys(inputs).filter(k => !body[k]);
+        return { seq: i + 1, type: node.type, model, modelType, endpoint, body, needs };
       });
       const prompt = apiNodes.map(n => n.data.text || n.data.message || n.data.prompt_override || '').filter(Boolean).join(' | ');
       const payload = { kind: 'pipeline', steps, prompt };
@@ -6923,14 +7076,11 @@ const UI = {
       TaskCenter._submitted.set(taskId, { task: { id: taskId }, lastStatus: 'processing', startTime: Date.now(), workerId: String(workerId), isPipeline: true });
       this._pipeline.active = { id: taskId, workerId: String(workerId), startedAt: Date.now() };
       this._pipeline.steps = apiNodes.map((_, i) => ({ status: i === 0 ? 'active' : 'pending', startedAt: i === 0 ? Date.now() : null }));
-      // 标记第一个节点为运行中
       if (apiNodes[0]) apiNodes[0].status = 'running';
-      this._renderPipelineCanvas();
+      this._renderReactFlow();
       Toast.success('流水线已提交到任务中心');
-      // 加入历史
       const fakeTask = {
-        id: taskId,
-        model: { id: 'pipeline', name: '流水线(' + apiNodes.length + '步)', type: 'video', price: '组合计费' },
+        id: taskId, model: { id: 'pipeline', name: '流水线(' + apiNodes.length + '步)', type: 'video', price: '组合计费' },
         body: payload, prompt, status: 'processing', createdAt: Date.now(),
         apiId: workerId, dispatchedVia: 'taskcenter', isPipeline: true
       };
@@ -6948,17 +7098,6 @@ const UI = {
     }
   },
 
-  _showPipelineTopoError(msg) {
-    const el = $('#plTopoError');
-    const txt = $('#plTopoErrorText');
-    if (el && txt) { txt.textContent = msg; el.classList.add('show'); }
-  },
-
-  _hidePipelineTopoError() {
-    const el = $('#plTopoError');
-    if (el) el.classList.remove('show');
-  },
-
   _updatePipelineFromEvent(payload) {
     if (!this._pipeline.active) return;
     const steps = payload.steps || [];
@@ -6967,7 +7106,6 @@ const UI = {
       const prev = this._pipeline.steps[i] || {};
       return { status: s.status || 'pending', startedAt: s.startedAt || prev.startedAt, elapsed: s.elapsed, result: s.result || prev.result };
     });
-    // 更新节点状态
     const p = this.state.pipeline;
     const topo = this._topologicalSort();
     if (topo.ok) {
@@ -6978,14 +7116,11 @@ const UI = {
           if (st.result) apiNodes[i].data._result = st.result;
         }
       });
-      this._renderPipelineCanvas();
+      this._renderReactFlow();
     }
   },
 
-  _renderPipelineSteps() {
-    // V30: 进度通过节点状态显示, 不再单独渲染步骤条
-    this._renderPipelineCanvas();
-  },
+  _renderPipelineSteps() { this._renderReactFlow(); },
 
   async _rerunPipelineStep(stepIdx) {
     if (!this._pipeline.active) { Toast.warning('当前没有运行的流水线'); return; }
@@ -7008,22 +7143,18 @@ const UI = {
     const el = $('#estimateCost');
     if (el) {
       const v = this._validatePipelineGraph();
-      const label = p.nodes.map(n => this._PL_NODE_TYPES[n.type]?.label || '?').join(' → ');
-      el.innerHTML = `预计 <span class="amount">¥${total.toFixed(4)}</span> · ${p.nodes.length}节点 · ${esc(label)}${v.ok ? '' : ' · <span style="color:var(--danger)">' + esc(v.error) + '</span>'}`;
+      el.innerHTML = `预计 <span class="amount">¥${total.toFixed(4)}</span> · ${p.nodes.length}节点${v.ok ? '' : ' · <span style="color:var(--danger)">' + esc(v.error) + '</span>'}`;
     }
   },
 
-  // === 持久化 ===
   _savePipelineGraph() {
     try {
       const p = this.state.pipeline;
       if (!p || !p.nodes) return;
-      // 只持久化必要字段
       const slim = {
         nodes: p.nodes.map(n => ({ id: n.id, type: n.type, position: n.position, data: n.data, status: n.status })),
         edges: p.edges.map(e => ({ id: e.id, source: e.source, sourceHandle: e.sourceHandle, target: e.target, targetHandle: e.targetHandle })),
-        viewport: p.viewport,
-        selectedNodeId: p.selectedNodeId
+        viewport: p.viewport, selectedNodeId: p.selectedNodeId
       };
       Store.setPipelineGraph(slim);
     } catch (e) { console.warn('save pipeline graph failed', e); }
