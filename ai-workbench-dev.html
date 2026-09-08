@@ -4159,8 +4159,20 @@ const UI = {
         const local = Store.getHistory();
         const merged = this._mergeHistory(local, data.data);
         Store.saveHistory(merged);
+        // V26.9.11: 后台归档未转存的历史记录 (速创URL → R2)
+        this._archivePendingHistory();
       }
     } catch (e) { /* silent */ }
+  },
+  // V26.9.11: 后台批量归档历史中仍为速创URL的结果
+  _archivePendingHistory() {
+    if (!TaskCenter.isAvailable()) return;
+    const hist = Store.getHistory();
+    const pending = hist.filter(h => h.status === 'succeeded' && h.result?.url && !h.result.url.startsWith(TaskCenter.workerUrl) && !h.result.originalUrl);
+    // 限制并发: 最多同时归档 3 个
+    pending.slice(0, 3).forEach(h => {
+      this._archiveResult(h).catch(() => {});
+    });
   },
   _mergeHistory(local, cloud) {
     // union by id, prefer newer completedAt, sort by createdAt desc
@@ -5438,7 +5450,7 @@ const UI = {
   },
 
   /* ---------- TASK RESULTS ---------- */
-  // V35: 预加载结果 blob + 后台转存 R2（速创临时 URL → R2 永久链接）
+  // V35: 预加载结果 blob (用于下载时加速)
   async _preloadResult(task) {
     const url = task.result?.url;
     if (!url || this._preloadCache.has(url)) return;
@@ -5451,14 +5463,16 @@ const UI = {
         const firstKey = this._preloadCache.keys().next().value;
         this._preloadCache.delete(firstKey);
       }
-      // 转存 R2（TaskCenter 可用时）
-      if (typeof TaskCenter !== 'undefined' && TaskCenter.isAvailable()) {
-        this._archiveResult(task).catch(() => {});
-      }
-    } catch (e) { /* silent */ }
+    } catch (e) { /* silent — 预加载失败不影响主流程 */ }
+    // V26.9.11: 转存 R2 独立执行，不依赖 blob 下载成功
+    // Worker 端会自己 fetch 速创 URL 再写入 R2，前端不需要先下载
+    if (typeof TaskCenter !== 'undefined' && TaskCenter.isAvailable()) {
+      this._archiveResult(task).catch(() => {});
+    }
   },
 
-  // V35: 把速创结果 URL 转存到 R2 results/ 目录，主链接替换为 R2 永久链接
+  // V26.9.11: 把速创结果 URL 转存到 R2 results/ 目录，主链接替换为 R2 永久链接
+  // 支持图片/视频/音频，独立于 _preloadResult 执行
   async _archiveResult(task) {
     const url = task.result?.url;
     if (!url) return;
@@ -5466,10 +5480,13 @@ const UI = {
     if (url.startsWith(TaskCenter.workerUrl)) return;
     // 跳过 data:/blob:
     if (/^(data:|blob:)/.test(url)) return;
-    // 提取扩展名
-    const ext = (url.match(/\.(png|jpg|jpeg|webp|mp4|mp3|wav|webm)(\?|$)/i) || [,'png'])[1].toLowerCase();
+    // 提取扩展名 — 支持图片/视频/音频
+    const ext = (url.match(/\.(png|jpg|jpeg|webp|mp4|mp3|wav|webm|mov|avi|m4a|ogg|flac)(\?|$)/i) || [,'png'])[1].toLowerCase();
+    // webm/mov/avi/m4a/ogg/flac 不在 Worker 白名单里，回退到 png(图片)/mp4(视频)/mp3(音频)
+    const extMap = { webm: 'mp4', mov: 'mp4', avi: 'mp4', m4a: 'mp3', ogg: 'mp3', flac: 'mp3' };
+    const finalExt = extMap[ext] || ext;
     try {
-      const res = await fetch(TaskCenter.workerUrl + '/archive?url=' + encodeURIComponent(url) + '&ext=' + ext + '&token=' + encodeURIComponent(TaskCenter.token), { method: 'POST' });
+      const res = await fetch(TaskCenter.workerUrl + '/archive?url=' + encodeURIComponent(url) + '&ext=' + finalExt + '&token=' + encodeURIComponent(TaskCenter.token), { method: 'POST' });
       const data = await res.json();
       if (data.ok && data.url) {
         // 保存原始速创 URL 作为备用
@@ -5490,12 +5507,22 @@ const UI = {
           this._preloadCache.delete(url);
           this._preloadCache.set(data.url, entry);
         }
-        // 刷新 UI 卡片显示新链接
-        this._updateTaskCard(task);
-        this._renderResultStrip();
+        // 更新 DOM 中使用旧 URL 的元素
+        document.querySelectorAll(`[data-lightbox="${url}"]`).forEach(el => { el.dataset.lightbox = data.url; });
+        document.querySelectorAll(`img[src="${url}"]`).forEach(el => { el.src = data.url; });
+        document.querySelectorAll(`video[src="${url}"]`).forEach(el => { el.src = data.url; });
+        // 刷新结果列表和历史侧栏
+        this._renderTaskList();
         if ($('#historySidebar')?.classList.contains('show')) this.renderHistory();
+        // 同步历史到云端
+        this._scheduleHistorySync();
+        console.log('[archive] 转存成功:', url, '→', data.url);
+      } else {
+        console.warn('[archive] 转存失败:', data.error || 'unknown');
       }
-    } catch (e) { /* silent */ }
+    } catch (e) {
+      console.warn('[archive] 转存异常:', e.message);
+    }
   },
 
   onTaskResult(taskId, result) {
