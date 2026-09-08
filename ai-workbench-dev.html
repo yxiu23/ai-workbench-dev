@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#080b14" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
-<title>修的媒体工作台 V33 · 节点图流水线</title>
+<title>修的媒体工作台 V34 · 节点图流水线</title>
 <style>
 /* ============================================================
    主题变量
@@ -852,6 +852,39 @@ textarea { resize: vertical; min-height: 80px; }
 }
 @keyframes pl-spin { to { transform: rotate(360deg); } }
 
+/* 画布空状态提示 */
+.pl-canvas-empty {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.pl-canvas-empty .pl-empty-icon {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 2px dashed var(--border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.pl-canvas-empty .pl-empty-icon svg { width: 24px; height: 24px; }
+.pl-canvas-empty .pl-empty-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.pl-canvas-empty .pl-empty-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
 /* ===== 节点配置面板 (复用 param-group/field-row 样式) ===== */
 .pl-inspector {
   flex: 1;
@@ -1085,16 +1118,19 @@ textarea { resize: vertical; min-height: 80px; }
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 1px 3px rgba(0,0,0,.12), 0 1px 2px rgba(0,0,0,.08);
   width: 200px;
   font-size: 12px;
-  transition: box-shadow var(--transition), border-color var(--transition);
+  transition: box-shadow var(--transition), border-color var(--transition), transform var(--transition);
+}
+.pl-rf-node:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,.15), 0 2px 4px rgba(0,0,0,.1);
 }
 .pl-rf-node.selected {
   border-color: var(--brand);
-  box-shadow: 0 0 0 2px var(--brand-soft), var(--shadow-md);
+  box-shadow: 0 0 0 2px rgba(59,110,245,.15), 0 4px 16px rgba(59,110,245,.2);
 }
-.pl-rf-node.invalid { border-color: var(--danger); }
+.pl-rf-node.invalid { border-color: var(--danger); box-shadow: 0 0 0 2px rgba(239,68,68,.12); }
 .pl-rf-node.running { border-color: var(--brand); animation: pl-node-pulse 1.5s ease-in-out infinite; }
 @keyframes pl-node-pulse {
   0%, 100% { box-shadow: 0 0 0 0 var(--brand-soft); }
@@ -2406,7 +2442,7 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
     <div class="settings-section">
       <h4>关于</h4>
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V33 · 节点图流水线<br>
+        修的媒体工作台 V34 · 节点图流水线<br>
         API: api.wuyinkeji.com
       </div>
       <button class="workflow-btn" id="switchMobileBtn" style="width:100%;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px">
@@ -4499,7 +4535,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V33';
+      document.title = '修的媒体工作台 V34';
     }
   },
 
@@ -6090,6 +6126,11 @@ const UI = {
             <div class="pl-rb-spinner"></div>
             <span id="plRunText">运行中...</span>
           </div>
+          <div class="pl-canvas-empty" id="plCanvasEmpty" ${p.nodes.length ? 'style="display:none"' : ''}>
+            <div class="pl-empty-icon">${this._plIcon('plus')}</div>
+            <div class="pl-empty-title">从右侧节点库拖入或点击添加节点</div>
+            <div class="pl-empty-sub">支持文本/图像/视频/音频生成工作流</div>
+          </div>
           <div class="pl-reactflow" id="plReactFlow"></div>
         </div>
       </div>
@@ -6451,6 +6492,9 @@ const UI = {
     }));
     if (this._plSetRfNodes) this._plSetRfNodes(rfNodes);
     if (this._plSetRfEdges) this._plSetRfEdges(rfEdges);
+    // 切换空状态提示
+    const empty = $('#plCanvasEmpty');
+    if (empty) empty.style.display = p.nodes.length ? 'none' : '';
     this._renderPipelineInspector();
     this._renderPipelineToolbar();
   },
@@ -6490,7 +6534,7 @@ const UI = {
       wrap.classList.add('show');
       wrap.innerHTML = `<div class="pl-inspector-empty">
         ${this._plIcon('plus')}
-        <div>点击画布节点查看参数</div>
+        <div>选中画布节点编辑参数</div>
       </div>`;
       return;
     }
@@ -6499,7 +6543,7 @@ const UI = {
       wrap.classList.add('show');
       wrap.innerHTML = `<div class="pl-inspector-empty">
         ${this._plIcon('plus')}
-        <div>点击画布节点查看参数</div>
+        <div>选中画布节点编辑参数</div>
       </div>`;
       return;
     }
@@ -6556,12 +6600,12 @@ const UI = {
     let agentHtml = '';
     if (def.isAgent) agentHtml = this._renderInspectorAgent(node);
 
-    // 组装: 标题头 + 参数组 + 上传组 + 素材篮 + Agent
+    // 组装: 标题头 + 参数组 + 上传组 + 素材篮 + Agent对话(最后)
     let body = '';
-    if (agentHtml) body += agentHtml;
     if (paramsHtml) body += `<div class="pl-cfg-group">${paramsHtml}</div>`;
     if (uploadHtml) body += uploadHtml;
     if (basketHtml) body += basketHtml;
+    if (agentHtml) body += agentHtml;
 
     wrap.innerHTML = `
       <div class="pl-inspector-header" data-cat="${esc(def.category)}">
@@ -6716,10 +6760,10 @@ const UI = {
       const roleLabel = m.role === 'user' ? '用户' : (m.role === 'assistant' ? 'AI' : '系统');
       return `<div class="pl-agent-msg ${cls}"><div class="pl-am-role">${roleLabel}</div>${esc(m.content.slice(0, 500))}</div>`;
     }).join('');
-    return `<div class="pl-cfg-row">
-      <div class="pl-cfg-label">对话</div>
-      <div class="pl-agent-chat" id="plAgentChat">${msgsHtml || '<div style="color:var(--text-dim);text-align:center;padding:12px;font-size:11px">点击下方按钮开始对话</div>'}</div>
-      <button id="plAgentRun" style="width:100%;padding:7px;font-size:12px;background:var(--brand);color:#fff;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;font-weight:500">
+    return `<div class="pl-upload-section">
+      <div class="pl-upload-label">对话 <span class="pl-ul-hint">运行 Agent 生成提示词</span></div>
+      <div class="pl-agent-chat" id="plAgentChat">${msgsHtml || '<div style="color:var(--text-dim);text-align:center;padding:16px;font-size:11px">输入需求描述后点击运行</div>'}</div>
+      <button id="plAgentRun" style="width:100%;padding:8px;font-size:12px;background:var(--brand);color:#fff;border:none;border-radius:var(--radius-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:4px;font-weight:500;margin-top:8px">
         ${this._plIcon('play')} 运行 Agent
       </button>
     </div>`;
