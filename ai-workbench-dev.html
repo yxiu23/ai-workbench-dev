@@ -6352,6 +6352,7 @@ const UI = {
     const nodeTypes = { custom: CustomNode };
 
     // 转换数据格式: 内部 → React Flow
+    const p = this.state.pipeline;
     const rfNodes = p.nodes.map(n => ({
       id: n.id,
       type: 'custom',
