@@ -793,6 +793,7 @@ textarea { resize: vertical; min-height: 80px; }
 .lightbox {
   position: fixed; inset: 0; z-index: 70; background: rgba(0,0,0,.9); display: none;
   align-items: center; justify-content: center; backdrop-filter: blur(4px);
+  overflow-y: auto; padding: 40px 20px;
 }
 .lightbox.show { display: flex; }
 .lightbox img, .lightbox video { max-width: 92vw; max-height: 92vh; border-radius: var(--radius-md); }
@@ -1492,7 +1493,7 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
 
 /* --- 1c. 衬线品牌字：美术馆配方，标题衬线、正文黑体 --- */
 .brand-mark {
-  display: flex; align-items: baseline; justify-content: space-between;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
   padding: 0 2px 2px; margin-bottom: 2px; user-select: none;
 }
 .brand-mark .brand-name {
@@ -1671,6 +1672,7 @@ body.is-generating .orb-a {
 .lb-stage {
   display: flex; flex-direction: column; align-items: center; gap: 16px;
   max-width: min(92vw, 1200px); animation: fade-in .32s ease;
+  margin: auto; /* V26.9.10: 垂直居中 + 顶部留空 */
 }
 /* 装裱：留白卡纸 + 细框 + 底部投影，像挂在虚拟墙面上 */
 .lb-wall {
@@ -1698,7 +1700,7 @@ body.is-generating .orb-a {
 }
 .lb-wall.audio .lb-frame::before { border-color: rgba(215,222,240,.16); }
 .lightbox .lb-art {
-  max-width: min(90vw, 1200px); max-height: 80vh;
+  max-width: min(86vw, 1100px); max-height: 72vh;
   display: block; border-radius: 2px; background: #0a0d16;
   width: auto; height: auto; object-fit: contain; /* V26.9.9: 竖图限高、长图限宽，按比例缩放 */
 }
@@ -1897,7 +1899,6 @@ body.is-generating .orb-a {
     <!-- V38 品牌字（衬线）— 标题嵌入 api.wuyinkeji.com 链接 -->
     <div class="brand-mark" aria-hidden="true">
       <span class="brand-name"><a href="https://api.wuyinkeji.com" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none">修的媒体工作台</a></span>
-      <span class="brand-version">V26.9.8</span>
     </div>
 
     <!-- Tabs -->
@@ -6207,14 +6208,14 @@ const UI = {
     } else if (isVideo) {
       mediaHtml = `<video class="lb-art" src="${esc(url)}" controls autoplay playsinline></video>`;
     } else {
-      // V38: 模糊缩略图预览 + 加载圈 + 原图就绪刷新
+      // V26.9.10: 原图显示 — 优先用 rec.result.url, onerror 回退 originalUrl
       const thumbUrl = rec?.result?.thumbUrl;
-      // V26.9.9: 传入的 url 可能是 thumbUrl 或归档前的速创旧链接，这里强制用记录里的原图 URL（优先 R2 永久链接）
       const origUrl = rec?.result?.url || url;
+      const fallbackUrl = rec?.result?.originalUrl || '';
       const hasThumb = thumbUrl && thumbUrl !== origUrl;
       mediaHtml = `<div class="lb-img-wrap">
         ${hasThumb ? `<img class="lb-art lb-art-blur" src="${esc(thumbUrl)}" referrerpolicy="no-referrer">` : ''}
-        <img class="lb-art lb-art-main" src="${esc(origUrl)}" referrerpolicy="no-referrer"${hasThumb ? ' style="opacity:0"' : ''}>
+        <img class="lb-art lb-art-main" src="${esc(origUrl)}" referrerpolicy="no-referrer"${hasThumb ? ' style="opacity:0"' : ''}${fallbackUrl && fallbackUrl !== origUrl ? ` data-fallback="${esc(fallbackUrl)}"` : ''}>
         <div class="lb-loading"><span class="task-spinner"></span></div>
       </div>`;
     }
@@ -6224,7 +6225,6 @@ const UI = {
         ${rec.prompt ? `<div class="lb-meta-prompt">${esc(trunc(rec.prompt, 120))}</div>` : ''}
         <div class="lb-meta-row">
           <span>${fmtTime(rec.createdAt)}</span>
-          ${rec.model?.type ? `<span>${typeName(rec.model.type)}</span>` : ''}
           ${rec.body?.aspectRatio || rec.body?.ratio ? `<span>${esc(rec.body?.aspectRatio || rec.body?.ratio)}</span>` : ''}
           ${rec.body?.size || rec.body?.resolution ? `<span>${esc(rec.body?.size || rec.body?.resolution)}</span>` : ''}
         </div>
@@ -6246,8 +6246,21 @@ const UI = {
           const loading = $('#lbContent').querySelector('.lb-loading');
           if (loading) loading.style.display = 'none';
         };
+        // V26.9.10: onerror 回退到 originalUrl (速创原始链接)
+        const onError = () => {
+          const fb = mainImg.dataset.fallback;
+          if (fb && mainImg.src !== fb) {
+            mainImg.src = fb;
+          } else {
+            // 都失败了，显示模糊预览（如果有）
+            mainImg.style.opacity = '0.6';
+            const loading = $('#lbContent').querySelector('.lb-loading');
+            if (loading) loading.innerHTML = '<span style="font-size:12px;color:#999">图片加载失败</span>';
+          }
+        };
         if (mainImg.complete && mainImg.naturalWidth > 0) onLoad();
-        else mainImg.addEventListener('load', onLoad);
+        else if (mainImg.complete && mainImg.naturalWidth === 0) onError();
+        else { mainImg.addEventListener('load', onLoad); mainImg.addEventListener('error', onError); }
       }
     }
     // V37: 滚轮缩放 + 双击重置 + 拖拽平移（仅图片，绑到主图）
