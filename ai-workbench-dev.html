@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#080b14" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
-<title>修的媒体工作台 V68</title>
+<title>修的媒体工作台 V26.9.8</title>
 <!-- V68 衬线品牌字：思源宋体（Noto Serif SC），加载失败回退系统宋体 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -846,7 +846,7 @@ textarea { resize: vertical; min-height: 80px; }
 .settings-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
 .settings-header h3 { font-size: 15px; font-weight: 600; flex: 1; }
 .settings-body { flex: 1; overflow-y: auto; padding: 16px 18px; }
-.settings-section { margin-bottom: 20px; }
+.settings-section { margin-bottom: 24px; }
 .settings-section h4 { font-size: 12px; font-weight: 600; color: var(--text-dim); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .5px; }
 .settings-section .input-group { margin-bottom: 10px; }
 .settings-section .input-group label { font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px; }
@@ -1822,11 +1822,11 @@ body.is-generating .orb-a {
 /* V37: 天气动效 */
 .weather-badge {
   display: inline-flex; align-items: center; gap: 3px;
-  font-size: 13px; margin-right: 8px; vertical-align: middle;
+  font-size: 13px; margin-right: 4px; vertical-align: middle;
   opacity: 0; animation: weather-fade-in 0.6s ease 0.3s forwards;
 }
 @keyframes weather-fade-in { to { opacity: 1; } }
-.weather-icon { font-size: 15px; }
+.weather-icon { font-size: 20px; }
 .weather-temp { font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 .weather-sunny .weather-icon { animation: weather-spin 8s linear infinite; display: inline-block; }
 @keyframes weather-spin { to { transform: rotate(360deg); } }
@@ -1839,6 +1839,28 @@ body.is-generating .orb-a {
 @media (prefers-reduced-motion: reduce) {
   .weather-icon { animation: none !important; }
 }
+
+/* V38: lightbox 原图加载（模糊预览 + 加载圈） */
+.lb-img-wrap { position: relative; line-height: 0; }
+.lb-art-blur { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; filter: blur(4px); transition: opacity .3s; }
+.lb-art-main { position: relative; transition: opacity .3s; }
+.lb-loading {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  display: flex; align-items: center; justify-content: center;
+  pointer-events: none; z-index: 2;
+}
+.lb-loading .task-spinner {
+  width: 32px; height: 32px;
+  border: 3px solid rgba(255,255,255,.2);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: lb-spin 0.8s linear infinite;
+}
+@keyframes lb-spin { to { transform: rotate(360deg); } }
+
+/* V38: 隐藏参数面板侧边滚动条 */
+.param-panel::-webkit-scrollbar { width: 0; height: 0; }
+.param-panel { scrollbar-width: none; -ms-overflow-style: none; }
 
 </style>
 </head>
@@ -1870,10 +1892,10 @@ body.is-generating .orb-a {
 <div class="app-body">
   <!-- 参数面板 -->
   <aside class="param-panel mobile-active" id="paramPanel">
-    <!-- V68 品牌字（衬线） -->
+    <!-- V38 品牌字（衬线）— 标题嵌入 api.wuyinkeji.com 链接 -->
     <div class="brand-mark" aria-hidden="true">
-      <span class="brand-name">修的媒体工作台</span>
-      <span class="brand-version">V68</span>
+      <span class="brand-name"><a href="https://api.wuyinkeji.com" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none">修的媒体工作台</a></span>
+      <span class="brand-version">V26.9.8</span>
     </div>
 
     <!-- Tabs -->
@@ -2000,33 +2022,25 @@ body.is-generating .orb-a {
     <button class="modal-close" id="settingsClose">×</button>
   </div>
   <div class="settings-body">
-    <!-- V37: 偏好开关 -->
+    <!-- V38: 偏好开关（每 ¥10 提醒移除开关，默认开启） -->
     <div class="settings-section">
       <h4>偏好</h4>
       <div class="settings-toggle">
         <div>
           <div class="toggle-label">深色主题</div>
-          <div class="toggle-sub">切换亮色/深色外观</div>
         </div>
         <div class="toggle-switch on" id="themeToggle"></div>
       </div>
       <div class="settings-toggle">
         <div>
           <div class="toggle-label">完成提示音</div>
-          <div class="toggle-sub">任务完成后播放提示音</div>
         </div>
         <div class="toggle-switch on" id="soundToggle"></div>
       </div>
-      <div class="settings-toggle">
-        <div>
-          <div class="toggle-label">每 ¥10 提醒</div>
-          <div class="toggle-sub">今日累计每跨过 ¥10 时提示</div>
-        </div>
-        <div class="toggle-switch" id="spendAlertToggle"></div>
-      </div>
     </div>
-    <!-- V37: API 密钥 (无 h4, placeholder 提示) -->
+    <!-- V38: API 配置 -->
     <div class="settings-section">
+      <h4>API 配置</h4>
       <div class="input-group">
         <div class="input-row">
           <input type="password" id="apiKeyInput" placeholder="速创 API Key (sk-...)" autocomplete="off" spellcheck="false">
@@ -2034,8 +2048,9 @@ body.is-generating .orb-a {
         </div>
       </div>
     </div>
-    <!-- V37: R2 图床 (无 h4, placeholder 提示) -->
+    <!-- V38: R2 图床 -->
     <div class="settings-section">
+      <h4>R2 图床</h4>
       <div class="input-group">
         <div class="input-row">
           <input type="text" id="r2WorkerUrlInput" placeholder="R2 Worker URL" autocomplete="off" autocapitalize="off" spellcheck="false">
@@ -2048,8 +2063,9 @@ body.is-generating .orb-a {
         </div>
       </div>
     </div>
-    <!-- V37: 任务中心 (无 h4, placeholder 提示) -->
+    <!-- V38: 任务中心 -->
     <div class="settings-section">
+      <h4>任务中心</h4>
       <div class="input-group">
         <div class="input-row">
           <input type="text" id="taskCenterUrlInput" placeholder="任务中心 Worker URL" autocomplete="off" autocapitalize="off" spellcheck="false">
@@ -2063,12 +2079,11 @@ body.is-generating .orb-a {
       </div>
       <div id="taskCenterStatus" style="font-size:12px;color:var(--text-muted);padding:4px 0"></div>
     </div>
-    <!-- V37: 关于 (分隔线 + 居中) -->
+    <!-- V38: 关于 (分隔线 + 居中，无 API 行) -->
     <hr style="border:none;border-top:1px solid var(--border);margin:20px 0 16px">
     <div class="settings-section" style="text-align:center">
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V37<br>
-        API: api.wuyinkeji.com
+        修的媒体工作台 V26.9.8
       </div>
     </div>
   </div>
@@ -2865,9 +2880,9 @@ const Store = {
   dismissGuide() { storageSet(CONFIG.STORAGE_KEYS.GUIDE_DISMISSED, '1'); },
   getBudget() { const v = parseFloat(storageGet(CONFIG.STORAGE_KEYS.BUDGET, '0')); return isNaN(v) ? 0 : v; },
   setBudget(v) { storageSet(CONFIG.STORAGE_KEYS.BUDGET, String(v || 0)); },
-  // V37: 每 ¥10 提醒开关
-  getSpendAlert() { return storageGet(CONFIG.STORAGE_KEYS.SPEND_ALERT, '0') === '1'; },
-  setSpendAlert(on) { storageSet(CONFIG.STORAGE_KEYS.SPEND_ALERT, on ? '1' : '0'); },
+  // V38: 每 ¥10 提醒 — 默认开启，UI 开关已移除
+  getSpendAlert() { return true; },
+  setSpendAlert(on) { /* no-op: 默认开启，不再持久化（保留方法以兼容历史调用） */ },
   getTodaySpend() {
     const todayStart = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime();
     return this.getHistory().filter(h => h.status === 'succeeded' && h.createdAt >= todayStart).reduce((s, h) => s + (h.cost || 0), 0);
@@ -4166,7 +4181,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V68';
+      document.title = '修的媒体工作台 V26.9.8';
     }
   },
 
@@ -4233,8 +4248,7 @@ const UI = {
     });
     $('#themeToggle').addEventListener('click', () => this.toggleTheme());
     $('#soundToggle').addEventListener('click', () => this.toggleSound());
-    // V37: 每 ¥10 提醒 toggle
-    $('#spendAlertToggle').addEventListener('click', () => this.toggleSpendAlert());
+    // V38: 每 ¥10 提醒开关已从 UI 移除，默认开启，不再绑定 click
     $('#themeBtn').addEventListener('click', () => this.toggleTheme());
     $('#soundBtn').addEventListener('click', () => this.toggleSound());
 
@@ -6189,7 +6203,15 @@ const UI = {
     } else if (isVideo) {
       mediaHtml = `<video class="lb-art" src="${esc(url)}" controls autoplay playsinline></video>`;
     } else {
-      mediaHtml = `<img class="lb-art" src="${esc(url)}" referrerpolicy="no-referrer">`;
+      // V38: 模糊缩略图预览 + 加载圈 + 原图就绪刷新
+      const thumbUrl = rec?.result?.thumbUrl;
+      const origUrl = url;
+      const hasThumb = thumbUrl && thumbUrl !== origUrl;
+      mediaHtml = `<div class="lb-img-wrap">
+        ${hasThumb ? `<img class="lb-art lb-art-blur" src="${esc(thumbUrl)}" referrerpolicy="no-referrer">` : ''}
+        <img class="lb-art lb-art-main" src="${esc(origUrl)}" referrerpolicy="no-referrer"${hasThumb ? ' style="opacity:0"' : ''}>
+        <div class="lb-loading"><span class="task-spinner"></span></div>
+      </div>`;
     }
     const meta = rec ? `
       <div class="lb-meta">
@@ -6197,9 +6219,9 @@ const UI = {
         ${rec.prompt ? `<div class="lb-meta-prompt">${esc(trunc(rec.prompt, 120))}</div>` : ''}
         <div class="lb-meta-row">
           <span>${fmtTime(rec.createdAt)}</span>
-          ${rec.cost != null ? `<span>¥${rec.cost.toFixed(2)}</span>` : ''}
           ${rec.model?.type ? `<span>${typeName(rec.model.type)}</span>` : ''}
-          ${rec.id ? `<span>No.${esc(rec.id.slice(0, 8))}</span>` : ''}
+          ${rec.body?.aspectRatio || rec.body?.ratio ? `<span>${esc(rec.body?.aspectRatio || rec.body?.ratio)}</span>` : ''}
+          ${rec.body?.size || rec.body?.resolution ? `<span>${esc(rec.body?.size || rec.body?.resolution)}</span>` : ''}
         </div>
       </div>` : '';
     $('#lbContent').innerHTML = `
@@ -6208,8 +6230,23 @@ const UI = {
         ${meta}
         ${n > 1 ? `<div class="lb-count">${pos} / ${n}</div>` : ''}
       </div>`;
-    // V37: 滚轮缩放 + 双击重置 + 拖拽平移（仅图片）
-    const img = !isVideo && !isAudio ? $('#lbContent').querySelector('img.lb-art') : null;
+    // V38: 原图加载完成后显示，移除模糊预览和加载圈
+    if (!isVideo && !isAudio) {
+      const mainImg = $('#lbContent').querySelector('.lb-art-main');
+      if (mainImg) {
+        const onLoad = () => {
+          mainImg.style.opacity = '1';
+          const blur = $('#lbContent').querySelector('.lb-art-blur');
+          if (blur) blur.style.display = 'none';
+          const loading = $('#lbContent').querySelector('.lb-loading');
+          if (loading) loading.style.display = 'none';
+        };
+        if (mainImg.complete && mainImg.naturalWidth > 0) onLoad();
+        else mainImg.addEventListener('load', onLoad);
+      }
+    }
+    // V37: 滚轮缩放 + 双击重置 + 拖拽平移（仅图片，绑到主图）
+    const img = !isVideo && !isAudio ? $('#lbContent').querySelector('img.lb-art-main') : null;
     if (img) {
       let scale = 1, x = 0, y = 0;
       const apply = () => { img.style.transform = `translate(${x}px,${y}px) scale(${scale})`; img.style.transformOrigin = 'center center'; };
@@ -6244,7 +6281,7 @@ const UI = {
     this._renderLightbox();
   },
 
-  _closeLightbox() { $('#lightbox').classList.remove('show'); const c = $('#lbContent'); const img = c && c.querySelector('img.lb-art'); if (img && img._v37Cleanup) { try { img._v37Cleanup(); } catch (e) {} } c.innerHTML = ''; },
+  _closeLightbox() { $('#lightbox').classList.remove('show'); const c = $('#lbContent'); const img = c && c.querySelector('img.lb-art-main'); if (img && img._v37Cleanup) { try { img._v37Cleanup(); } catch (e) {} } c.innerHTML = ''; },
 
   /* ---------- HISTORY ---------- */
   renderHistoryBadge() {
@@ -6642,8 +6679,7 @@ ${items.map(h => {
     $('#taskCenterTokenInput').value = Store.getTaskCenterToken() || '';
     $('#themeToggle').classList.toggle('on', Store.getTheme() === 'dark');
     $('#soundToggle').classList.toggle('on', Store.getSound());
-    // V37: 每 ¥10 提醒开关初始状态
-    $('#spendAlertToggle').classList.toggle('on', Store.getSpendAlert());
+    // V38: 每 ¥10 提醒开关已移除，默认开启，无需同步 UI
     // V56: update Task Center status badge
     const tcStatus = $('#taskCenterStatus');
     if (tcStatus) tcStatus.innerHTML = TaskCenter.isAvailable()
@@ -6683,12 +6719,9 @@ ${items.map(h => {
     return true;
   },
 
-  // V37: 每 ¥10 提醒 toggle 切换
+  // V38: 每 ¥10 提醒 toggle 切换（UI 已移除，保留方法但 no-op）
   toggleSpendAlert() {
-    const on = !Store.getSpendAlert();
-    Store.setSpendAlert(on);
-    $('#spendAlertToggle').classList.toggle('on', on);
-    Toast.info(on ? '已开启每 ¥10 提醒' : '已关闭每 ¥10 提醒');
+    Toast.info('每 ¥10 提醒默认开启');
   },
 
   _closeSettings() { $('#settingsDrawer').classList.remove('show'); $('#settingsOverlay').classList.remove('show'); },
