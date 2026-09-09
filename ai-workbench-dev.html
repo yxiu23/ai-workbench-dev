@@ -1845,8 +1845,8 @@ body.is-generating .orb-a {
 @keyframes weather-fade-in { to { opacity: 1; } }
 .weather-icon { font-size: 40px; } /* V26.9.9: 再放大一倍（20→40） */
 .weather-temp { font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.weather-sunny .weather-icon { animation: weather-spin 8s linear infinite; display: inline-block; }
-@keyframes weather-spin { to { transform: rotate(360deg); } }
+.weather-sunny .weather-icon { animation: weather-sway 3s ease-in-out infinite; display: inline-block; transform-origin: 50% 60%; }
+@keyframes weather-sway { 0%,100% { transform: rotate(-12deg); } 50% { transform: rotate(12deg); } }
 .weather-rain .weather-icon { animation: weather-bounce 1s ease-in-out infinite; display: inline-block; }
 @keyframes weather-bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
 .weather-snow .weather-icon { animation: weather-float 2s ease-in-out infinite; display: inline-block; }
@@ -1882,7 +1882,7 @@ body.is-generating .orb-a {
 /* V26.9.9: 空状态 Lottie 容器 */
 .empty-state { text-align: center; padding: 48px 24px; }
 .empty-anim {
-  width: 120px; height: 120px; margin: 0 auto 20px;
+  width: 240px; height: 240px; margin: 0 auto 20px; max-width: 60vw;
 }
 /* 数据流动效 — 三个圆点波浪起伏 */
 .empty-anim-dots { display: flex; gap: 8px; justify-content: center; align-items: center; height: 100%; }
