@@ -1879,10 +1879,10 @@ body.is-generating .orb-a {
 .param-panel::-webkit-scrollbar { width: 0; height: 0; }
 .param-panel { scrollbar-width: none; -ms-overflow-style: none; }
 
-/* V26.9.9: 空状态动效 */
+/* V26.9.9: 空状态 Lottie 容器 */
 .empty-state { text-align: center; padding: 48px 24px; }
 .empty-anim {
-  width: 80px; height: 80px; margin: 0 auto 20px; position: relative;
+  width: 120px; height: 120px; margin: 0 auto 20px;
 }
 /* 数据流动效 — 三个圆点波浪起伏 */
 .empty-anim-dots { display: flex; gap: 8px; justify-content: center; align-items: center; height: 100%; }
@@ -2059,7 +2059,7 @@ body.is-generating .orb-a {
       <div id="activeTasksPanel" class="active-tasks-panel empty"></div>
       <div class="result-list" id="resultList">
         <div class="empty-state" id="emptyState">
-          <div class="empty-anim"><div class="empty-anim-dots"><span></span><span></span><span></span></div></div>
+          <div class="empty-anim" id="emptyLottie"></div>
           <div class="empty-title">还没有生成结果</div>
           <div class="empty-sub">填写提示词，点击「生成」开始创作 ✨</div>
         </div>
@@ -2385,6 +2385,7 @@ body.is-generating .orb-a {
 
 <!-- V35 taskD: Dexie.js (IndexedDB) — 替代/补充 localStorage 用于历史记录与缩略图缓存 -->
 <script src="https://cdn.jsdelivr.net/npm/dexie@4.0.10/dist/dexie.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lottie-web@5.12.2/build/player/lottie.min.js"></script>
 <!-- V68 taskE: FilePond 上传组件 + 图片预览/类型校验插件 + SortableJS 拖拽排序 -->
 <script src="https://cdn.jsdelivr.net/npm/filepond@4.31.0/dist/filepond.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.min.js"></script>
@@ -5757,8 +5758,10 @@ const UI = {
     if (!filtered.length) {
       // V26.9.9: 区分"没有结果"和"结果被隐藏"两种状态，分别显示不同动效
       list.innerHTML = hidden.size > 0
-        ? `<div class="empty-state"><div class="empty-anim-404"></div><div class="empty-title">所有结果已隐藏</div><div class="empty-sub">点击「还原」恢复显示，或生成新内容</div></div>`
-        : `<div class="empty-state"><div class="empty-anim"><div class="empty-anim-dots"><span></span><span></span><span></span></div></div><div class="empty-title">还没有生成结果</div><div class="empty-sub">填写提示词，点击「生成」开始创作 ✨</div></div>`; // V26.9.9 UX: 空状态动效
+        ? `<div class="empty-state"><div class="empty-anim" id="emptyLottie"></div><div class="empty-title">所有结果已隐藏</div><div class="empty-sub">点击「还原」恢复显示，或生成新内容</div></div>`
+        : `<div class="empty-state"><div class="empty-anim" id="emptyLottie"></div><div class="empty-title">还没有生成结果</div><div class="empty-sub">填写提示词，点击「生成」开始创作 ✨</div></div>`;
+      // V26.9.9: 加载 Lottie 动效
+      this._playEmptyLottie(hidden.size > 0);
       return;
     }
     filtered.slice(0, 100).forEach(t => list.appendChild(this._buildTaskCard(t)));
@@ -5779,6 +5782,22 @@ const UI = {
   },
 
   // V37: 后台预加载缩略图 — 提前把前 10 条带 url 的记录的缩略图读入内存/IDB
+  // V26.9.9: Lottie 空状态动效
+  _emptyLottieInst: null,
+  _playEmptyLottie(isHidden) {
+    if (this._emptyLottieInst) { try { this._emptyLottieInst.destroy(); } catch {} this._emptyLottieInst = null; }
+    const container = $('#emptyLottie');
+    if (!container || typeof lottie === 'undefined') return;
+    const url = isHidden
+      ? 'https://pub-0f64bcd69f464228b22d20964f000919.r2.dev/lottie/1788955743-r2_af1562ee189419c4.json' // 404错误
+      : 'https://pub-0f64bcd69f464228b22d20964f000919.r2.dev/lottie/1788955744-r2_4ee0b506cf24e5ea.json'; // 办公
+    try {
+      this._emptyLottieInst = lottie.loadAnimation({
+        container, renderer: 'svg', loop: true, autoplay: true, path: url
+      });
+    } catch (e) { /* silent */ }
+  },
+
   _preloadThumbs() {
     if (typeof ThumbService === 'undefined') return;
     try {
