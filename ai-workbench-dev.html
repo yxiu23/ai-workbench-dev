@@ -1839,22 +1839,15 @@ body.is-generating .orb-a {
 .weather-badge {
   display: inline-flex; align-items: center; gap: 3px;
   font-size: 13px; margin-right: 4px; vertical-align: middle;
-  line-height: 1; /* V26.9.9: 大图标不撑高行高 */
+  line-height: 1;
   opacity: 0; animation: weather-fade-in 0.6s ease 0.3s forwards;
 }
 @keyframes weather-fade-in { to { opacity: 1; } }
-.weather-icon { font-size: 40px; } /* V26.9.9: 再放大一倍（20→40） */
+.weather-lottie { width: 40px; height: 40px; display: inline-block; }
+.weather-icon { font-size: 40px; }
 .weather-temp { font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
-.weather-sunny .weather-icon { animation: weather-sway 3s ease-in-out infinite; display: inline-block; transform-origin: 50% 60%; }
-@keyframes weather-sway { 0%,100% { transform: rotate(-12deg); } 50% { transform: rotate(12deg); } }
-.weather-rain .weather-icon { animation: weather-bounce 1s ease-in-out infinite; display: inline-block; }
-@keyframes weather-bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
-.weather-snow .weather-icon { animation: weather-float 2s ease-in-out infinite; display: inline-block; }
-@keyframes weather-float { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-3px) rotate(10deg); } }
-.weather-storm .weather-icon { animation: weather-shake 0.5s ease-in-out infinite; display: inline-block; }
-@keyframes weather-shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-1px); } 75% { transform: translateX(1px); } }
 @media (prefers-reduced-motion: reduce) {
-  .weather-icon { animation: none !important; }
+  .weather-lottie, .weather-icon { animation: none !important; }
 }
 
 /* V38: lightbox 原图加载（模糊预览 + 加载圈） */
@@ -4151,39 +4144,56 @@ const UI = {
   _renderWeather(code, temp) {
     const mark = document.querySelector('.brand-mark');
     if (!mark) return;
-    // WMO 天气代码映射: https://open-meteo.com/en/docs
+    // WMO 天气代码 → Lottie JSON 文件映射
+    const LOTTE_BASE = 'https://media.gaze23.work/lottie/';
     const map = {
-      0: { icon: '☀️', anim: 'sunny', text: '晴' },
-      1: { icon: '🌤️', anim: 'sunny', text: '少云' },
-      2: { icon: '⛅', anim: 'cloudy', text: '多云' },
-      3: { icon: '☁️', anim: 'cloudy', text: '阴' },
-      45: { icon: '🌫️', anim: 'fog', text: '雾' },
-      48: { icon: '🌫️', anim: 'fog', text: '雾凇' },
-      51: { icon: '🌦️', anim: 'rain', text: '小雨' },
-      53: { icon: '🌦️', anim: 'rain', text: '中雨' },
-      55: { icon: '🌧️', anim: 'rain', text: '大雨' },
-      61: { icon: '🌧️', anim: 'rain', text: '小雨' },
-      63: { icon: '🌧️', anim: 'rain', text: '中雨' },
-      65: { icon: '🌧️', anim: 'rain', text: '大雨' },
-      71: { icon: '🌨️', anim: 'snow', text: '小雪' },
-      73: { icon: '🌨️', anim: 'snow', text: '中雪' },
-      75: { icon: '❄️', anim: 'snow', text: '大雪' },
-      80: { icon: '🌦️', anim: 'rain', text: '阵雨' },
-      81: { icon: '🌧️', anim: 'rain', text: '阵雨' },
-      82: { icon: '⛈️', anim: 'rain', text: '暴雨' },
-      95: { icon: '⛈️', anim: 'storm', text: '雷暴' },
-      96: { icon: '⛈️', anim: 'storm', text: '雷暴冰雹' },
-      99: { icon: '⛈️', anim: 'storm', text: '雷暴冰雹' }
+      0: { lottie: '1788958353-r2_bf2637c40cea8634.json', text: '晴' },       // sunny-day
+      1: { lottie: '1788958354-r2_d2adc6fb7633da60.json', text: '少云' },     // sunny-hight
+      2: { lottie: '1788958354-r2_3cfe1f7e0fb482c4.json', text: '多云' },     // cloudy
+      3: { lottie: '1788958355-r2_7e1b3ca44e9adb4b.json', text: '阴' },       // cloudy-03
+      45: { lottie: '1788958355-r2_399fc23019ddd9dc.json', text: '雾' },       // fog
+      48: { lottie: '1788958355-r2_399fc23019ddd9dc.json', text: '雾凇' },     // fog
+      51: { lottie: '1788958356-r2_2115c55217427983.json', text: '小雨' },     // cloudy-and-rainny
+      53: { lottie: '1788958356-r2_2115c55217427983.json', text: '中雨' },     // cloudy-and-rainny
+      55: { lottie: '1788958356-r2_611c29e4f83647fc.json', text: '大雨' },     // Rain
+      61: { lottie: '1788958356-r2_2115c55217427983.json', text: '小雨' },     // cloudy-and-rainny
+      63: { lottie: '1788958356-r2_611c29e4f83647fc.json', text: '中雨' },     // Rain
+      65: { lottie: '1788958356-r2_611c29e4f83647fc.json', text: '大雨' },     // Rain
+      71: { lottie: '1788958356-r2_d696815dc000a9ed.json', text: '小雪' },     // light-snow
+      73: { lottie: '1788958356-r2_d696815dc000a9ed.json', text: '中雪' },     // light-snow
+      75: { lottie: '1788958356-r2_d696815dc000a9ed.json', text: '大雪' },     // light-snow
+      80: { lottie: '1788958356-r2_2115c55217427983.json', text: '阵雨' },     // cloudy-and-rainny
+      81: { lottie: '1788958356-r2_611c29e4f83647fc.json', text: '阵雨' },     // Rain
+      82: { lottie: '1788958356-r2_611c29e4f83647fc.json', text: '暴雨' },     // Rain
+      95: { lottie: '1788958357-r2_1bd1393ae028339c.json', text: '雷暴' },     // thunder
+      96: { lottie: '1788958357-r2_1bd1393ae028339c.json', text: '雷暴冰雹' }, // thunder
+      99: { lottie: '1788958357-r2_1bd1393ae028339c.json', text: '雷暴冰雹' }  // thunder
     };
-    const w = map[code] || { icon: '🌡️', anim: '', text: '' };
+    const w = map[code] || { lottie: null, text: '' };
     const old = mark.querySelector('.weather-badge');
     if (old) old.remove();
     const badge = document.createElement('span');
-    badge.className = 'weather-badge weather-' + w.anim;
+    badge.className = 'weather-badge';
     const tempStr = (typeof temp === 'number' && !isNaN(temp)) ? `${Math.round(temp)}°` : '';
-    badge.innerHTML = `<span class="weather-icon">${w.icon}</span><span class="weather-temp">${tempStr}</span>`;
-    badge.title = `镇江京口 · ${w.text}${tempStr ? ' · ' + Math.round(temp) + '°C' : ''}`;
-    mark.insertBefore(badge, mark.firstChild);
+    // V26.9.9: 用 Lottie 动效替代 emoji
+    if (w.lottie && typeof lottie !== 'undefined') {
+      badge.innerHTML = `<span class="weather-lottie" id="weatherLottie"></span><span class="weather-temp">${tempStr}</span>`;
+      badge.title = `镇江京口 · ${w.text}${tempStr ? ' · ' + Math.round(temp) + '°C' : ''}`;
+      mark.insertBefore(badge, mark.firstChild);
+      try {
+        lottie.loadAnimation({
+          container: document.getElementById('weatherLottie'),
+          renderer: 'svg', loop: true, autoplay: true,
+          path: LOTTE_BASE + w.lottie
+        });
+      } catch (e) { /* silent */ }
+    } else {
+      // fallback: emoji
+      const icon = code === 0 ? '☀️' : code === 1 ? '🌤️' : code === 2 ? '⛅' : code === 3 ? '☁️' : code === 45 || code === 48 ? '🌫️' : '🌡️';
+      badge.innerHTML = `<span class="weather-icon">${icon}</span><span class="weather-temp">${tempStr}</span>`;
+      badge.title = `镇江京口 · ${w.text}${tempStr ? ' · ' + Math.round(temp) + '°C' : ''}`;
+      mark.insertBefore(badge, mark.firstChild);
+    }
   },
 
   /* ---------- V35 taskD: 历史记录 R2 同步 ---------- */
