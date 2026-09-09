@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#080b14" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
-<title>修的媒体工作台 V26.9.8</title>
+<title>修的媒体工作台 V26.9.9</title>
 <!-- V68 衬线品牌字：思源宋体（Noto Serif SC），加载失败回退系统宋体 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1334,6 +1334,8 @@ input[type="range"].im-range {
   .ref-grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 6px; }
   /* 批量面板 */
   .batch-panel { padding: 10px; }
+  /* V26.9.9: 手机端隐藏底栏最近项 */
+  .result-strip { display: none !important; }
 }
 
 /* 小手机：进一步压缩 */
@@ -1913,13 +1915,13 @@ body.is-generating .orb-a {
     <!-- Tabs -->
     <div class="tabs" id="tabs">
       <button class="tab active" data-tab="image">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>图片
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>图片生成
       </button>
       <button class="tab" data-tab="video">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>视频
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>视频生成
       </button>
       <button class="tab" data-tab="audio">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1v-7h3v5zM3 19a2 2 0 0 0 2 2h1v-7H3v5z"/></svg>音频
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1v-7h3v5zM3 19a2 2 0 0 0 2 2h1v-7H3v5z"/></svg>音频生成
       </button>
     </div>
 
@@ -2058,6 +2060,7 @@ body.is-generating .orb-a {
           <input type="password" id="apiKeyInput" placeholder="速创 API Key (sk-...)" autocomplete="off" spellcheck="false">
           <button id="testKeyBtn">测试</button>
         </div>
+        <div id="apiKeyStatus" style="font-size:11px;color:var(--text-muted);padding:2px 0"></div>
       </div>
     </div>
     <!-- V38: R2 图床 -->
@@ -2073,6 +2076,7 @@ body.is-generating .orb-a {
           <input type="password" id="r2AuthTokenInput" placeholder="R2 Auth Token" autocomplete="off" spellcheck="false">
           <button id="testR2Btn">测试</button>
         </div>
+        <div id="r2Status" style="font-size:11px;color:var(--text-muted);padding:2px 0"></div>
       </div>
     </div>
     <!-- V38: 任务中心 -->
@@ -2095,7 +2099,7 @@ body.is-generating .orb-a {
     <hr style="border:none;border-top:1px solid var(--border);margin:20px 0 16px">
     <div class="settings-section" style="text-align:center">
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V26.9.8
+        修的媒体工作台 V26.9.9
       </div>
     </div>
   </div>
@@ -4159,6 +4163,19 @@ const UI = {
       });
     } catch (e) { /* silent */ }
   },
+  // V26.9.9: 删除操作后立即同步到云端（不走防抖）
+  async _syncHistoryToCloudNow() {
+    if (!TaskCenter.isAvailable()) return;
+    try {
+      const hist = Store.getHistory();
+      const top = hist.slice(0, 500);
+      await fetch(TaskCenter.workerUrl + '/userdata?key=history&token=' + encodeURIComponent(TaskCenter.token), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(top)
+      });
+    } catch (e) { /* silent */ }
+  },
   async _syncHistoryFromCloud() {
     if (!TaskCenter.isAvailable()) return;
     try {
@@ -4168,6 +4185,8 @@ const UI = {
         const local = Store.getHistory();
         const merged = this._mergeHistory(local, data.data);
         Store.saveHistory(merged);
+        // V26.9.9: 同步后立即刷新底栏最近项
+        this._renderResultStrip();
         // V26.9.11: 后台归档未转存的历史记录 (速创URL → R2)
         this._archivePendingHistory();
       }
@@ -4205,7 +4224,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V26.9.8';
+      document.title = '修的媒体工作台 V26.9.9';
     }
   },
 
@@ -5482,6 +5501,7 @@ const UI = {
 
   // V26.9.11: 把速创结果 URL 转存到 R2 results/ 目录，主链接替换为 R2 永久链接
   // 支持图片/视频/音频，独立于 _preloadResult 执行
+  // V26.9.9: 前端构建文件名（模型名_时间_比例_分辨率.ext）+ 前端下载上传，CORS 失败回退 Worker /archive
   async _archiveResult(task) {
     const url = task.result?.url;
     if (!url) return;
@@ -5489,49 +5509,80 @@ const UI = {
     if (url.startsWith(TaskCenter.workerUrl)) return;
     // 跳过 data:/blob:
     if (/^(data:|blob:)/.test(url)) return;
-    // 提取扩展名 — 支持图片/视频/音频
-    const ext = (url.match(/\.(png|jpg|jpeg|webp|mp4|mp3|wav|webm|mov|avi|m4a|ogg|flac)(\?|$)/i) || [,'png'])[1].toLowerCase();
-    // webm/mov/avi/m4a/ogg/flac 不在 Worker 白名单里，回退到 png(图片)/mp4(视频)/mp3(音频)
+
+    // 构建文件名: 模型名_时间_比例_分辨率.ext
+    const modelName = (task.model?.name || 'unknown').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const time = new Date(task.completedAt || task.createdAt || Date.now()).toISOString().slice(0, 19).replace(/[:T]/g, '-');
+    const ratio = task.body?.aspectRatio || task.body?.ratio || 'auto';
+    const resolution = task.body?.size || task.body?.resolution || '';
+    const ext = (url.match(/\.(png|jpg|jpeg|webp|mp4|mp3|wav|webm)(\?|$)/i) || [,'png'])[1].toLowerCase();
     const extMap = { webm: 'mp4', mov: 'mp4', avi: 'mp4', m4a: 'mp3', ogg: 'mp3', flac: 'mp3' };
     const finalExt = extMap[ext] || ext;
+    const fileName = `${modelName}_${time}_${ratio}${resolution ? '_' + resolution : ''}.${finalExt}`;
+
+    // 成功后统一的副作用更新（更新 Store / 历史 / preloadCache / DOM）
+    const applyArchived = (newUrl) => {
+      // 保存原始速创 URL 作为备用
+      task.result.originalUrl = url;
+      // 替换主链接为 R2 永久链接
+      task.result.url = newUrl;
+      // 同步更新 Store 中的活动任务记录
+      const tasks = Store.getTasks();
+      const t = tasks.find(x => x.id === task.id);
+      if (t) { t.result = task.result; Store.saveTasks(tasks); }
+      // 同步更新历史记录
+      const hist = Store.getHistory();
+      const h = hist.find(x => x.id === task.id);
+      if (h) { h.result = task.result; Store.saveHistory(hist); }
+      // 重新映射 preloadCache 的 key（原 URL → R2 URL）
+      if (this._preloadCache && this._preloadCache.has(url)) {
+        const entry = this._preloadCache.get(url);
+        this._preloadCache.delete(url);
+        this._preloadCache.set(newUrl, entry);
+      }
+      // 更新 DOM 中使用旧 URL 的元素
+      document.querySelectorAll(`[data-lightbox="${url}"]`).forEach(el => { el.dataset.lightbox = newUrl; });
+      document.querySelectorAll(`img[src="${url}"]`).forEach(el => { el.src = newUrl; });
+      document.querySelectorAll(`video[src="${url}"]`).forEach(el => { el.src = newUrl; });
+      // 刷新结果列表和历史侧栏
+      this._renderTaskList();
+      if ($('#historySidebar')?.classList.contains('show')) this.renderHistory();
+      // 同步历史到云端
+      this._scheduleHistorySync();
+    };
+
+    try {
+      // 优先：前端下载 + 上传到 R2 results/ 目录（自带文件名）
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const formData = new FormData();
+      formData.append('file', blob, fileName);
+      const uploadUrl = TaskCenter.workerUrl + '/upload?token=' + encodeURIComponent(TaskCenter.token) + '&dir=results';
+      const uploadRes = await fetch(uploadUrl, { method: 'POST', body: formData });
+      const data = await uploadRes.json();
+      if (data.url) {
+        applyArchived(data.url);
+        console.log('[archive] 前端转存成功:', url, '→', data.url, '(', fileName, ')');
+        return;
+      } else {
+        console.warn('[archive] 前端上传返回无 url:', data.error || 'unknown');
+      }
+    } catch (e) {
+      // CORS 或网络失败，回退到 Worker /archive
+      console.warn('[archive] 前端转存失败，回退 Worker /archive:', e.message);
+    }
+
+    // 回退：Worker /archive 接口（Worker 端 fetch 速创 URL 再写入 R2）
     try {
       const res = await fetch(TaskCenter.workerUrl + '/archive?url=' + encodeURIComponent(url) + '&ext=' + finalExt + '&token=' + encodeURIComponent(TaskCenter.token), { method: 'POST' });
       const data = await res.json();
       if (data.ok && data.url) {
-        // 保存原始速创 URL 作为备用
-        task.result.originalUrl = url;
-        // 替换主链接为 R2 永久链接
-        task.result.url = data.url;
-        // 同步更新 Store 中的活动任务记录
-        const tasks = Store.getTasks();
-        const t = tasks.find(x => x.id === task.id);
-        if (t) { t.result = task.result; Store.saveTasks(tasks); }
-        // 同步更新历史记录
-        const hist = Store.getHistory();
-        const h = hist.find(x => x.id === task.id);
-        if (h) { h.result = task.result; Store.saveHistory(hist); }
-        // 重新映射 preloadCache 的 key（原 URL → R2 URL）
-        if (this._preloadCache.has(url)) {
-          const entry = this._preloadCache.get(url);
-          this._preloadCache.delete(url);
-          this._preloadCache.set(data.url, entry);
-        }
-        // 更新 DOM 中使用旧 URL 的元素
-        document.querySelectorAll(`[data-lightbox="${url}"]`).forEach(el => { el.dataset.lightbox = data.url; });
-        document.querySelectorAll(`img[src="${url}"]`).forEach(el => { el.src = data.url; });
-        document.querySelectorAll(`video[src="${url}"]`).forEach(el => { el.src = data.url; });
-        // 刷新结果列表和历史侧栏
-        this._renderTaskList();
-        if ($('#historySidebar')?.classList.contains('show')) this.renderHistory();
-        // 同步历史到云端
-        this._scheduleHistorySync();
-        console.log('[archive] 转存成功:', url, '→', data.url);
+        applyArchived(data.url);
+        console.log('[archive] Worker 转存成功:', url, '→', data.url);
       } else {
-        console.warn('[archive] 转存失败:', data.error || 'unknown');
+        console.warn('[archive] Worker 转存失败:', data.error || 'unknown');
       }
-    } catch (e) {
-      console.warn('[archive] 转存异常:', e.message);
-    }
+    } catch (e2) { /* silent */ }
   },
 
   onTaskResult(taskId, result) {
@@ -5724,6 +5775,8 @@ const UI = {
     // Remove from history
     let history = Store.getHistory().filter(h => !ids.has(h.id));
     storageSet(CONFIG.STORAGE_KEYS.HISTORY, JSON.stringify(history));
+    // V26.9.9: 删除后立即同步到云端
+    this._syncHistoryToCloudNow();
     this._closeModal();
     this._renderTaskList();
     this._renderActiveTasks();
@@ -5996,6 +6049,8 @@ const UI = {
     // Also remove from history
     let history = Store.getHistory().filter(h => h.id !== taskId);
     storageSet(CONFIG.STORAGE_KEYS.HISTORY, JSON.stringify(history));
+    // V26.9.9: 删除后立即同步到云端
+    this._syncHistoryToCloudNow();
     // Remove all DOM cards with this ID (both list and gallery)
     $$(`[data-tid="${taskId}"]`).forEach(el => el.remove());
     this._renderActiveTasks();
@@ -6467,6 +6522,8 @@ const UI = {
     $$('#modalBody [data-clear]').forEach(btn => btn.addEventListener('click', () => {
       const type = btn.dataset.clear;
       Store.clearHistory({ [type]: true });
+      // V26.9.9: 删除后立即同步到云端
+      this._syncHistoryToCloudNow();
       this.renderHistory();
       this.renderHistoryBadge();
       this._closeModal();
@@ -6734,6 +6791,19 @@ ${items.map(h => {
     $('#themeToggle').classList.toggle('on', Store.getTheme() === 'dark');
     $('#soundToggle').classList.toggle('on', Store.getSound());
     // V38: 每 ¥10 提醒开关已移除，默认开启，无需同步 UI
+    // V26.9.9: API Key 状态指示器
+    const apiKey = Store.getApiKey();
+    const apiKeyStatus = $('#apiKeyStatus');
+    if (apiKeyStatus) {
+      apiKeyStatus.innerHTML = apiKey ? '<span style="color:var(--success)">● 已连接</span>' : '<span style="color:var(--text-dim)">● 未配置</span>';
+    }
+    // V26.9.9: R2 图床状态指示器
+    const r2Url = Store.getR2WorkerUrl();
+    const r2Token = Store.getR2AuthToken();
+    const r2Status = $('#r2Status');
+    if (r2Status) {
+      r2Status.innerHTML = (r2Url && r2Token) ? '<span style="color:var(--success)">● 已连接</span>' : '<span style="color:var(--text-dim)">● 未配置</span>';
+    }
     // V56: update Task Center status badge
     const tcStatus = $('#taskCenterStatus');
     if (tcStatus) tcStatus.innerHTML = TaskCenter.isAvailable()
