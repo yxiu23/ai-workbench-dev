@@ -5429,13 +5429,15 @@ const UI = {
 
   /* ---------- ESTIMATE ---------- */
   _updateEstimate() {
-    if (!this.state.model) { $('#estimateCost').textContent = '预计 —'; return; }
+    const el = $('#estimateCost');
+    if (!el) return; // V26.9.9: 元素已删除，静默返回
+    if (!this.state.model) { el.textContent = '预计 —'; return; }
     let body;
-    try { body = this._collectParamsSync(); } catch { $('#estimateCost').textContent = '预计 —'; return; }
+    try { body = this._collectParamsSync(); } catch { el.textContent = '预计 —'; return; }
     const est = calcEstimate(this.state.model, body);
-    if (!est) { $('#estimateCost').textContent = '预计 —'; return; }
-    if (est.amount != null) $('#estimateCost').innerHTML = `预计 <span class="amount">¥${est.amount.toFixed(2)}</span> · ${esc(est.label)}`;
-    else $('#estimateCost').innerHTML = `预计 <span class="amount">—</span> · ${esc(est.label)}`;
+    if (!est) { el.textContent = '预计 —'; return; }
+    if (est.amount != null) el.innerHTML = `预计 <span class="amount">¥${est.amount.toFixed(2)}</span> · ${esc(est.label)}`;
+    else el.innerHTML = `预计 <span class="amount">—</span> · ${esc(est.label)}`;
   },
 
   /* ---------- GENERATE ---------- */
