@@ -1843,7 +1843,11 @@ body.is-generating .orb-a {
   opacity: 0; animation: weather-fade-in 0.6s ease 0.3s forwards;
 }
 @keyframes weather-fade-in { to { opacity: 1; } }
-.weather-lottie { width: 56px; height: 56px; display: inline-block; background: transparent !important; } .weather-lottie svg { background: transparent !important; }
+/* V26.9.9: 天气 Lottie — 84px + 透明背景(覆盖Lottie内置黑底) */
+.weather-lottie { width: 84px; height: 84px; display: inline-block; background: transparent !important; margin: -8px -4px; }
+.weather-lottie svg { background: transparent !important; }
+.weather-lottie svg > g:first-child > g:first-child > path,
+.weather-lottie svg > g:first-child > g:first-child > rect { display: none !important; }
 .weather-icon { font-size: 40px; }
 .weather-temp { font-size: 11px; color: var(--text-muted); font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) {
@@ -4185,7 +4189,26 @@ const UI = {
           renderer: 'svg', loop: true, autoplay: true,
           path: LOTTE_BASE + w.lottie
         });
-        anim.addEventListener('data_ready', () => console.log('[weather] Lottie loaded OK'));
+        anim.addEventListener('data_ready', () => {
+          console.log('[weather] Lottie loaded OK');
+          // V26.9.9: 隐藏Lottie内置的黑色背景矩形
+          const svg = document.getElementById('weatherLottie')?.querySelector('svg');
+          if (svg) {
+            // 隐藏最大的矩形(背景)
+            svg.querySelectorAll('rect').forEach(r => {
+              const w = parseFloat(r.getAttribute('width') || 0);
+              const h = parseFloat(r.getAttribute('height') || 0);
+              if (w > 200 && h > 200) { r.style.display = 'none'; }
+            });
+            // 隐藏填充色为深色的path
+            svg.querySelectorAll('path').forEach(p => {
+              const fill = p.getAttribute('fill') || '';
+              if (fill.includes('11') || fill.includes('1a') || fill.includes('0d')) {
+                if (!p.getAttribute('d') || p.getAttribute('d').length < 10) p.style.display = 'none';
+              }
+            });
+          }
+        });
         anim.addEventListener('data_failed', (err) => console.warn('[weather] Lottie failed:', err));
       } catch (e) { console.warn('[weather] Lottie error:', e.message); }
     } else {
