@@ -1507,6 +1507,21 @@ async function fetch(request, env, ctx) {
     });
   }
 
+  // V26.9.9: Public Lottie JSON proxy (CORS-enabled, no auth)
+  if (url.pathname.startsWith('/lottie/')) {
+    const key = url.pathname.slice(1); // remove leading /
+    if (!env.AI_BUCKET) return jsonResponse(500, { error: 'AI_BUCKET not bound' });
+    const obj = await env.AI_BUCKET.get(key);
+    if (!obj) return jsonResponse(404, { error: 'Not found' });
+    return new Response(obj.body, {
+      headers: {
+        'content-type': 'application/json',
+        'access-control-allow-origin': '*',
+        'cache-control': 'public, max-age=86400',
+      },
+    });
+  }
+
   // All other endpoints require ?token= matching AUTH_TOKEN.
   const auth = requireAuth(url, env);
   if (!auth.ok) return auth.response;
