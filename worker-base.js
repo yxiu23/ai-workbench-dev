@@ -1422,6 +1422,10 @@ async function handleArchive(request, env, srcUrl, ext) {
   if (!isUrl(srcUrl)) {
     return jsonResponse(400, { error: 'Invalid url parameter' });
   }
+  // V26.9.12: normalize URL to avoid "Invalid URL string" in Workers fetch
+  try { srcUrl = new URL(srcUrl).href; } catch (e) {
+    return jsonResponse(400, { ok: false, error: 'Invalid url parameter' });
+  }
   const normExt = (ext || '').toLowerCase();
   if (!ARCHIVE_EXT_CT[normExt]) {
     return jsonResponse(400, {
@@ -1433,7 +1437,7 @@ async function handleArchive(request, env, srcUrl, ext) {
   const timeoutId = setTimeout(() => controller.abort(), ARCHIVE_TIMEOUT_MS);
   let upstream;
   try {
-    upstream = await fetch(srcUrl, { signal: controller.signal });
+    upstream = await globalThis.fetch(srcUrl, { signal: controller.signal });
   } catch (e) {
     return jsonResponse(502, {
       ok: false,
