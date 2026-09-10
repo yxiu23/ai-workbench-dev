@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#080b14" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
-<title>修的媒体工作台 V26.9.25</title>
+<title>修的媒体工作台 V26.9.27</title>
 <!-- V68 衬线品牌字：思源宋体（Noto Serif SC），加载失败回退系统宋体 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -78,6 +78,8 @@
   --surface-glass: rgba(15,20,38,.30);
   --surface-glass-2: rgba(19,25,45,.42);
   --surface-glass-card: rgba(15,20,38,.24);
+  /* V26.9.26: 浮层弹卡专用（天气弹卡等小面积阅读型浮层）——比面板更实一档，防背景透出看不清 */
+  --surface-glass-pop: rgba(15,20,38,.50);
   --lg-gloss: linear-gradient(135deg, rgba(255,255,255,.11), rgba(255,255,255,.03) 36%, rgba(255,255,255,.015) 62%, rgba(255,255,255,.06));
   --lg-edge: rgba(255,255,255,.14);
   --lg-hi: rgba(255,255,255,.30);
@@ -106,6 +108,8 @@
   --surface-glass: rgba(255,255,255,.40);
   --surface-glass-2: rgba(255,255,255,.54);
   --surface-glass-card: rgba(255,255,255,.36);
+  /* V26.9.26: 浅色浮层弹卡同步更实一档 */
+  --surface-glass-pop: rgba(255,255,255,.68);
   --lg-gloss: linear-gradient(135deg, rgba(255,255,255,.80), rgba(255,255,255,.30) 36%, rgba(255,255,255,.16) 62%, rgba(255,255,255,.45));
   --lg-edge: rgba(255,255,255,.92);
   --lg-hi: rgba(255,255,255,1);
@@ -424,20 +428,42 @@ textarea { resize: vertical; min-height: 80px; }
 .ref-item .ref-badge.uploading { background: var(--warning); }
 .ref-item .ref-badge.local { background: var(--text-dim); }
 .ref-item .ref-badge.uploaded { background: var(--success); } /* V36 UX: 上传完成瞬间绿色提示 */
-.ref-item .ref-del {
-  position: absolute; top: 2px; right: 2px; width: 18px; height: 18px; border-radius: 4px;
-  background: rgba(0,0,0,.6); color: #fff; display: flex; align-items: center; justify-content: center;
-  font-size: 12px; opacity: 0; transition: opacity var(--transition);
+/* V26.9.26 参考图悬浮操作钮重做：毛玻璃圆钮 + 弹出式 spring 入场
+   —— 删除钮自上方弹出 / 编辑钮自左侧弹出 / 复制钮自右侧弹出（各从所在边缘「弹出来」）；
+      触屏 (hover:none) 常显（否则移动端永远点不到删除）；reduced-motion 退化为纯淡入 */
+.ref-item .ref-del, .ref-item .ref-edit, .ref-item .ref-copy {
+  position: absolute; width: 21px; height: 21px; border-radius: 999px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,0) 55%), rgba(12,16,30,.46);
+  -webkit-backdrop-filter: blur(7px) saturate(150%); backdrop-filter: blur(7px) saturate(150%);
+  border: 1px solid rgba(255,255,255,.20);
+  box-shadow: 0 3px 9px rgba(2,4,12,.34), inset 0 1px 0 rgba(255,255,255,.16);
+  color: #fff; cursor: pointer; opacity: 0; pointer-events: none;
+  transition: opacity .18s ease, transform .34s var(--spring), background .18s ease, border-color .18s ease;
 }
-.ref-item:hover .ref-del { opacity: 1; }
-.ref-item .ref-del:hover { background: var(--danger); }
-.ref-item .ref-copy {
-  position: absolute; bottom: 2px; right: 2px; width: 18px; height: 18px; border-radius: 4px;
-  background: rgba(0,0,0,.6); color: #fff; display: flex; align-items: center; justify-content: center;
-  opacity: 0; transition: opacity var(--transition);
+.ref-item .ref-del { top: 3px; right: 3px; transform: translateY(-7px) scale(.55); font-size: 13px; line-height: 1; font-weight: 600; }
+.ref-item .ref-edit { bottom: 3px; left: 3px; transform: translateX(-7px) scale(.55); }
+.ref-item .ref-copy { bottom: 3px; right: 3px; transform: translateX(7px) scale(.55); }
+.ref-item:hover .ref-del, .ref-item:hover .ref-edit, .ref-item:hover .ref-copy,
+.ref-item:focus-within .ref-del, .ref-item:focus-within .ref-edit, .ref-item:focus-within .ref-copy {
+  opacity: 1; pointer-events: auto; transform: translate(0, 0) scale(1);
 }
-.ref-item:hover .ref-copy { opacity: 1; }
-.ref-item .ref-copy svg { width: 12px; height: 12px; }
+.ref-item .ref-del:hover {
+  background: linear-gradient(160deg, rgba(255,130,130,.30), rgba(255,255,255,0) 60%), color-mix(in srgb, var(--danger) 62%, transparent);
+  border-color: rgba(255,150,150,.36);
+}
+.ref-item .ref-edit:hover {
+  background: linear-gradient(160deg, rgba(255,255,255,.20), rgba(255,255,255,0) 60%), color-mix(in srgb, var(--brand) 55%, transparent);
+  border-color: color-mix(in srgb, var(--brand) 45%, rgba(255,255,255,.2));
+}
+.ref-item .ref-copy:hover { background: linear-gradient(160deg, rgba(255,255,255,.20), rgba(255,255,255,0) 60%), rgba(15,20,38,.62); border-color: rgba(160,190,255,.35); }
+.ref-item .ref-copy svg, .ref-item .ref-edit svg { width: 11px; height: 11px; }
+@media (hover: none) {
+  .ref-item .ref-del, .ref-item .ref-edit, .ref-item .ref-copy { opacity: 1; pointer-events: auto; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ref-item .ref-del, .ref-item .ref-edit, .ref-item .ref-copy { transition: opacity var(--transition); transform: none; }
+}
 .ref-add {
   aspect-ratio: 1; border: 2px dashed var(--border); border-radius: var(--radius-sm);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
@@ -513,7 +539,18 @@ textarea { resize: vertical; min-height: 80px; }
 .generate-btn:hover:not(:disabled) { background: linear-gradient(180deg, rgba(255,255,255,.20), rgba(255,255,255,0) 46%, rgba(9,14,30,.10)), var(--brand-hover); box-shadow: 0 8px 22px rgba(88,104,236,.46), inset 0 1px 0 rgba(255,255,255,.20); transform: translateY(-1px); }
 .generate-btn:active:not(:disabled) { transform: translateY(0); box-shadow: 0 2px 8px rgba(88,104,236,.30), inset 0 2px 4px rgba(9,14,30,.18); }
 .generate-btn:disabled { opacity: .5; cursor: not-allowed; }
-.generate-btn svg { width: 18px; height: 18px; }
+.generate-btn svg { width: 19px; height: 19px; transform-origin: center; }
+/* V26.9.26: 四芒魔星三态动效 —— idle 主星呼吸+四点星光交替闪烁；hover 过冲弹旋；生成中匀速自旋（reduced-motion 全停） */
+.generate-btn svg .gen-star { transform-origin: 12px 12px; animation: genStarBreath 3.4s ease-in-out infinite; }
+.generate-btn svg .gen-spark-a, .generate-btn svg .gen-spark-a2 { animation: genSparkTwinkle 3.4s ease-in-out infinite; }
+.generate-btn svg .gen-spark-b, .generate-btn svg .gen-spark-b2 { animation: genSparkTwinkle 3.4s ease-in-out 1.1s infinite; }
+@keyframes genStarBreath { 0%, 100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.1) rotate(6deg); } }
+@keyframes genSparkTwinkle { 0%, 100% { opacity: .4; } 50% { opacity: 1; } }
+.generate-btn:hover:not(:disabled) svg { animation: genIconPop .72s var(--spring); }
+@keyframes genIconPop { 0% { transform: rotate(0deg) scale(1); } 52% { transform: rotate(16deg) scale(1.24); } 100% { transform: rotate(0deg) scale(1.07); } }
+.generate-btn:disabled svg { animation: genIconSpin 1.5s linear infinite; }
+@keyframes genIconSpin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .generate-btn svg, .generate-btn svg .gen-star, .generate-btn svg .gen-spark { animation: none !important; } }
 
 /* ============================================================
    结果面板
@@ -634,6 +671,7 @@ textarea { resize: vertical; min-height: 80px; }
 .atp-card {
   padding: 8px 10px; border-radius: var(--radius-sm); background: var(--lg-gloss), var(--surface-glass-card); /* V26.9.24: 玻璃化 */
   border: 1px solid var(--border-soft);
+  -webkit-backdrop-filter: blur(10px) saturate(140%); backdrop-filter: blur(10px) saturate(140%); /* V26.9.27: 基础兜底（23a 折射仅 Chromium 138+） */
   display: flex; align-items: center; gap: 8px; font-size: 12px;
 }
 .atp-card .atp-model { font-weight: 500; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1407,7 +1445,7 @@ input[type="range"].im-range {
 }
 /* V26.9.25 预设重组：4 浅色（晨曦/翡翠/樱雪/云青）+ 4 深色（极光/暮紫/熔金/深海）
    每个预设最后一层是全覆盖基底渐变（消除光斑间隙的黑底——移动端「上下发黑」根因），
-   同步用 body[data-bgpreset] 底色兑底（回弹/过滚动区域也不再露黑） */
+   同步用 body[data-bgpreset] 底色兜底（回弹/过滚动区域也不再露黑） */
 body[data-bgpreset="aurora"] .theme-bg-grad {
   opacity: 1;
   background:
@@ -1484,7 +1522,7 @@ body[data-bgpreset="cloud"] .theme-bg-grad {
     radial-gradient(40% 36% at 64% 12%, rgba(255,255,255,.50), transparent 60%),
     linear-gradient(160deg, #dfe9f2 0%, #e6e9f6 48%, #d9e8e6 100%);
 }
-/* 基底兑底：渐变幕动画在任意相位、页面回弹/过滚动时都不会露出原始黑/白底 */
+/* 基底兜底：渐变幕动画在任意相位、页面回弹/过滚动时都不会露出原始黑/白底 */
 body[data-bgpreset="aurora"] { background-color: #061224; }
 body[data-bgpreset="dusk"] { background-color: #140a28; }
 body[data-bgpreset="ember"] { background-color: #200d0e; }
@@ -1509,7 +1547,7 @@ body[data-bgpreset="cloud"] .theme-bg-grad { opacity: 1; }
 body[data-bgmedia] .theme-bg-grad { opacity: 0 !important; }
 
 /* --- 22d. 设置面板·背景主题 UI --- */
-.bg-type-row { display: flex; gap: 3px; padding: 3px; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border-soft); }
+.bg-type-row { display: flex; gap: 3px; padding: 3px; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border-soft); -webkit-backdrop-filter: blur(8px) saturate(140%); backdrop-filter: blur(8px) saturate(140%); } /* V26.9.27: 兜底 blur（折射不可用时仍有磨砂） */
 .bg-type-btn { flex: 1; padding: 6px 0; border-radius: calc(var(--radius-sm) - 3px); font-size: 12px; color: var(--text-muted); text-align: center; transition: all var(--transition-fast); }
 .bg-type-btn:hover { color: var(--text); background: var(--surface-3); }
 .bg-type-btn.active { background: var(--brand); color: #fff; font-weight: 500; }
@@ -2335,7 +2373,7 @@ body.is-generating .orb-a {
 @keyframes wpHl { 0%, 55% { background: var(--surface-2); box-shadow: 0 0 0 1px var(--brand) inset; } 100% { background: transparent; box-shadow: 0 0 0 1px transparent inset; } }
 @media (prefers-reduced-motion: reduce) { .wp-days.wp-hl { animation: none; } }
 /* V26.9.19: 曲线热点自定义 tooltip（替代原生 title） */
-.weather-pop .wp-tip { position: absolute; z-index: 6; pointer-events: none; padding: 5px 9px; border-radius: 8px; background-color: var(--bg); background-image: linear-gradient(var(--surface), var(--surface)); border: 1px solid var(--border); box-shadow: var(--shadow-md); font-size: 11px; color: var(--text-muted); white-space: nowrap; opacity: 0; translate: -50% 2px; transition: opacity .16s ease, translate .16s ease; }
+.weather-pop .wp-tip { position: absolute; z-index: 6; pointer-events: none; padding: 5px 9px; border-radius: 8px; background-color: var(--bg); background-image: linear-gradient(var(--surface), var(--surface)); border: 1px solid var(--border); box-shadow: var(--shadow-md); font-size: 11px; color: var(--text-muted); white-space: nowrap; opacity: 0; translate: -50% 2px; transition: opacity .16s ease, translate .16s ease; -webkit-backdrop-filter: blur(7px) saturate(150%); backdrop-filter: blur(7px) saturate(150%); } /* V26.9.27: 兜底 blur */
 .weather-pop .wp-tip.show { opacity: 1; translate: -50% -6px; }
 .weather-pop .wp-tip .wp-tip-t { font-family: var(--font-mono); color: var(--text); }
 .weather-pop .wp-tip b { color: var(--text); font-weight: 700; }
@@ -2592,9 +2630,15 @@ body.is-generating .orb-a {
    移动端与非 Retina 屏（1dppx）直接回落纯 blur（低分屏栅格化位移后锯齿更明显且费电） --- */
 @supports (backdrop-filter: url(#lgRefract) blur(1px)) {
   .param-panel, .result-panel, .result-header, .result-strip,
-  .settings-drawer, .history-sidebar, .modal-content, .compare-bar, .weather-pop, .lb-meta {
+  .settings-drawer, .history-sidebar, .modal-content, .compare-bar, .lb-meta {
     -webkit-backdrop-filter: url(#lgRefract) blur(18px) saturate(150%) brightness(1.05);
     backdrop-filter: url(#lgRefract) blur(18px) saturate(150%) brightness(1.05);
+  }
+  /* V26.9.26: 天气弹卡单列 —— 磨砂更粗（blur 18→26 + saturate 提升），配合更实的底色令牌防「太透看不清」
+     V26.9.27: 加 !important —— 23d 段补了基础 blur 兜底且位置在后，不加则折射增强会被覆盖 */
+  .weather-pop {
+    -webkit-backdrop-filter: url(#lgRefract) blur(26px) saturate(172%) brightness(1.06) !important;
+    backdrop-filter: url(#lgRefract) blur(26px) saturate(172%) brightness(1.06) !important;
   }
   .tc-quick, .atp-card, .bg-type-row, .wp-tip {
     -webkit-backdrop-filter: url(#lgRefractSoft) blur(14px) saturate(160%) brightness(1.04);
@@ -2602,9 +2646,13 @@ body.is-generating .orb-a {
   }
   @media (max-width: 768px), (resolution: 1dppx) {
     .param-panel, .result-panel, .result-header, .result-strip,
-    .settings-drawer, .history-sidebar, .modal-content, .compare-bar, .weather-pop, .lb-meta {
+    .settings-drawer, .history-sidebar, .modal-content, .compare-bar, .lb-meta {
       -webkit-backdrop-filter: blur(18px) saturate(150%) brightness(1.05);
       backdrop-filter: blur(18px) saturate(150%) brightness(1.05);
+    }
+    .weather-pop {
+      -webkit-backdrop-filter: blur(26px) saturate(172%) brightness(1.06) !important;
+      backdrop-filter: blur(26px) saturate(172%) brightness(1.06) !important;
     }
     .tc-quick, .atp-card, .bg-type-row, .wp-tip {
       -webkit-backdrop-filter: blur(14px) saturate(160%) brightness(1.04);
@@ -2653,13 +2701,22 @@ body.is-generating .orb-a {
   background-size: 160px 160px;
 }
 
-/* --- 23d. 全局玻璃铺开：天气弹卡 / 模态窗 / 对比栏 升级为统一液态玻璃（历史/设置/灯箱 V26.9.22 已做） --- */
+/* --- 23d. 全局玻璃铺开：天气弹卡 / 模态窗 / 对比栏 升级为统一液态玻璃（历史/设置/灯箱 V26.9.22 已做）
+   V26.9.26: 天气弹卡换用 --surface-glass-pop（dark .50 / light .68）——底色更实一档，
+   用户反馈「太透看不清」；噪点磨砂单独加密（::after 粒径 160→112px）强化「粗糙玻璃」手感
+   V26.9.27: 天气弹卡补基础 backdrop-filter 兜底——此前 blur 只写在 23a 的
+   @supports(backdrop-filter:url()) 内，Safari/Firefox/旧 Chromium 不支持折射滤镜时
+   弹卡完全没有模糊（其他弹窗均有 --glass-blur 兜底，材质不一致）。
+   兜底 blur(24px) saturate(158%) 比标准 --glass-blur 略强一档，延续「弹卡更实更糙」定位；
+   支持折射的浏览器仍由 23a（!important）提供 url(#lgRefract) blur(26) 液态增强 --- */
 .weather-pop {
-  background: var(--lg-gloss), var(--surface-glass) !important;
+  background: var(--lg-gloss), var(--surface-glass-pop) !important;
   border: 1px solid var(--lg-edge);
   box-shadow: var(--lg-slab);
   overflow: hidden;
+  -webkit-backdrop-filter: blur(24px) saturate(158%); backdrop-filter: blur(24px) saturate(158%);
 }
+.weather-pop::after { background-size: 112px 112px; }
 .modal-content {
   position: relative;
   background: var(--lg-gloss), var(--surface-glass-2);
@@ -2708,6 +2765,47 @@ body.is-generating .orb-a {
   .task-card, .tc-quick, .tc-quick button, .icon-btn, .filter-tab, .bg-type-btn, .qs-chip, .fav-chip, .preset-recent-chip { transition: none; }
   .task-card:hover, .task-card:active, .icon-btn:active { transform: none; }
 }
+
+/* ============================================================
+   25. V26.9.26 玻璃下拉：原生 <select> 弹出列表的液态玻璃替换层
+   —— 鼠标/触摸弹出走自定义玻璃浮层（统一全局材质）；
+      键盘（Tab+Enter/方向键）仍触发原生下拉，可访问性零回归
+   ============================================================ */
+.glass-select-pop {
+  position: fixed; z-index: 96; min-width: 148px; max-height: 264px; overflow-y: auto;
+  padding: 5px; border-radius: 14px;
+  background: var(--lg-gloss), var(--surface-glass-2);
+  border: 1px solid var(--lg-edge);
+  box-shadow: var(--lg-slab);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  transform-origin: top center;
+  animation: gselIn .22s var(--spring);
+}
+.glass-select-pop.up { transform-origin: bottom center; animation-name: gselInUp; }
+.glass-select-pop::before {
+  content: ''; position: absolute; top: 0; left: 9%; right: 9%; height: 1px; pointer-events: none; border-radius: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.48) 42%, transparent);
+}
+[data-theme="light"] .glass-select-pop::before { background: linear-gradient(90deg, transparent, rgba(255,255,255,1) 42%, transparent); }
+@keyframes gselIn { from { opacity: 0; transform: translateY(-6px) scale(.94); } }
+@keyframes gselInUp { from { opacity: 0; transform: translateY(6px) scale(.94); } }
+.gsp-item {
+  display: flex; align-items: center; gap: 7px; padding: 7px 10px; border-radius: 9px;
+  font-size: 12.5px; color: var(--text); cursor: pointer; user-select: none;
+  transition: background .13s ease, transform .16s var(--spring);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.gsp-item:hover, .gsp-item.hl { background: var(--surface-2); }
+.gsp-item:active { transform: scale(.97); }
+.gsp-item.sel {
+  color: var(--brand); font-weight: 600;
+  background: color-mix(in srgb, var(--brand) 11%, transparent);
+}
+.gsp-item.disabled { opacity: .38; pointer-events: none; }
+.gsp-item .gsp-check { margin-left: auto; width: 13px; height: 13px; flex-shrink: 0; opacity: 0; }
+.gsp-item.sel .gsp-check { opacity: 1; }
+.gsp-empty { padding: 12px 10px; font-size: 12px; color: var(--text-dim); text-align: center; }
+@media (prefers-reduced-motion: reduce) { .glass-select-pop { animation: none; } .gsp-item { transition: none; } }
 
 </style>
 </head>
@@ -2812,7 +2910,8 @@ body.is-generating .orb-a {
       </div>
       <div class="generate-row">
         <button class="generate-btn" id="generateBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8l-6.2 4.5 2.4-7.4L2 9.4h7.6z"/></svg>
+          <!-- V26.9.26: 四芒魔星图标 —— 主星淡填充+四点星光，idle 呼吸闪烁 / hover 弹旋 / 生成中自旋 -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="gen-star" d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" fill="currentColor" fill-opacity=".18"/><path class="gen-spark gen-spark-a" d="M5 3v4"/><path class="gen-spark gen-spark-a2" d="M3 5h4"/><path class="gen-spark gen-spark-b" d="M19 17v4"/><path class="gen-spark gen-spark-b2" d="M17 19h4"/></svg>
           <span id="generateBtnText">生成</span>
         </button>
       </div>
@@ -3025,7 +3124,7 @@ body.is-generating .orb-a {
     <hr style="border:none;border-top:1px solid var(--border);margin:20px 0 16px">
     <div class="settings-section" style="text-align:center">
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V26.9.25
+        修的媒体工作台 V26.9.27
       </div>
     </div>
   </div>
@@ -5154,6 +5253,7 @@ const UI = {
     this.applyTheme();
     this._initThemeBg(); // V26.9.22: 背景主题（动态渐变/图片/视频）
     this._initLiquidGlass(); // V26.9.24: specular 已下线，保留空壳兼容调用
+    this._initGlassSelects(); // V26.9.26: 原生 select 弹层 → 液态玻璃浮层（键盘原生路径保留）
     this.bindEvents();
     this.switchTab('image');
     this._renderResultStrip();
@@ -6080,7 +6180,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V26.9.25';
+      document.title = '修的媒体工作台 V26.9.27';
     }
   },
 
@@ -6289,6 +6389,82 @@ const UI = {
   /* V26.9.24: specular 跟随光标光晕已按用户反馈移除（「不要鼠标箭头带光晕」）；
      方法保留为空壳以兼容 init() 调用点，磨砂噪点层仍在 CSS ::after 中 */
   _initLiquidGlass() { /* V26.9.24: 已清空 —— specular 光晕整体下线 */ },
+
+  /* ---------- V26.9.26 玻璃下拉：原生 select 弹出列表 → 液态玻璃浮层 ----------
+     策略：pointerdown capture 拦截 + preventDefault 阻止原生弹层，改为浮层展示 options；
+     键盘（focus 后 Enter/Space/方向键）不经过 pointer 事件 → 原生下拉照常，可访问性零回归；
+     覆盖范围：全部 <select>（模型/排序/城市/参数表单/datalist/工作流模态，含动态重建） */
+  _initGlassSelects() {
+    if (this._gselBound) return; this._gselBound = true;
+    const closePop = () => { document.querySelectorAll('.glass-select-pop').forEach(p => p.remove()); };
+    const hasPop = () => !!document.querySelector('.glass-select-pop');
+
+    const buildPop = sel => {
+      closePop();
+      const r = sel.getBoundingClientRect();
+      if (!r.width && !r.height) return; // 隐藏中的 select 不弹
+      const el = document.createElement('div');
+      el.className = 'glass-select-pop';
+      el._src = sel;
+      el.setAttribute('role', 'listbox');
+      const items = [...sel.options].map((o, i) => {
+        const isSel = i === sel.selectedIndex;
+        return `<div class="gsp-item${isSel ? ' sel' : ''}${o.disabled ? ' disabled' : ''}" data-i="${i}" role="option" aria-selected="${isSel}">${esc(o.textContent || o.value)}<svg class="gsp-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>`;
+      }).join('');
+      el.innerHTML = items || '<div class="gsp-empty">暂无选项</div>';
+      const vw = window.innerWidth, vh = window.innerHeight;
+      const w = Math.max(Math.ceil(r.width), 148);
+      const maxH = 264;
+      const below = vh - r.bottom;
+      const up = below < Math.min(maxH + 18, 190) && r.top > below;
+      if (up) el.classList.add('up');
+      el.style.minWidth = w + 'px';
+      el.style.left = Math.max(8, Math.min(Math.round(r.left), vw - w - 8)) + 'px';
+      document.body.appendChild(el);
+      if (el.scrollHeight > maxH) el.style.height = maxH + 'px';
+      const ph = Math.min(el.scrollHeight + 10, maxH);
+      el.style.top = up ? Math.max(8, Math.round(r.top - ph - 6)) + 'px' : Math.min(vh - 8, Math.round(r.bottom + 6)) + 'px';
+      const selItem = el.querySelector('.gsp-item.sel');
+      if (selItem) selItem.scrollIntoView({ block: 'nearest' });
+      el.addEventListener('click', e => {
+        const item = e.target.closest('.gsp-item');
+        if (!item || item.classList.contains('disabled')) return;
+        const i = +item.dataset.i;
+        if (i !== sel.selectedIndex) {
+          sel.selectedIndex = i;
+          sel.dispatchEvent(new Event('change', { bubbles: true })); // 复用既有 change 链路（表单缓存/回显/模型切换）
+        }
+        closePop();
+      });
+      return el;
+    };
+
+    // pointerdown capture：命中 select → 玻璃浮层；命中浮层外 → 关闭
+    document.addEventListener('pointerdown', e => {
+      const sel = e.target.closest('select');
+      const pop = document.querySelector('.glass-select-pop');
+      if (sel && !sel.disabled && !sel.multiple && sel.options.length > 0) {
+        e.preventDefault(); // 阻止原生下拉（Chromium/Firefox/桌面 Safari 均有效）
+        if (pop && pop._src === sel) { closePop(); return; } // 再点同一 select = 关闭
+        buildPop(sel);
+      } else if (pop && !e.target.closest('.glass-select-pop')) {
+        closePop();
+      }
+    }, true);
+
+    // iOS 兜底：select 触摸抬指若被 OS 接管会弹原生面板 —— 弹层开着时拦掉
+    document.addEventListener('touchend', e => {
+      if (e.target.closest && e.target.closest('select') && hasPop()) e.preventDefault();
+    }, { passive: false });
+
+    // 滚动/缩放/Esc 关闭（capture 捕获容器内滚动；弹层自身滚动除外）
+    window.addEventListener('scroll', e => {
+      if (e.target && e.target.closest && e.target.closest('.glass-select-pop')) return;
+      closePop();
+    }, true);
+    window.addEventListener('resize', closePop);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && hasPop()) closePop(); });
+  },
 
   /* ---------- V26.9.25: IndexedDB 本地背景媒体缓存（本地图片/视频刷新后自动恢复） ---------- */
   _idbOpen() {
@@ -6705,7 +6881,7 @@ const UI = {
       refSection.appendChild(fileInput);
       const refGrid = refSection.querySelector('.ref-grid');
       refGrid.addEventListener('click', e => {
-        if (e.target.closest('.ref-del') || e.target.closest('.ref-copy') || e.target.closest('.ref-item')) return;
+        if (e.target.closest('.ref-del') || e.target.closest('.ref-copy') || e.target.closest('.ref-edit') || e.target.closest('.ref-item')) return;
         this.state.activeRefKey = key;
         // V68 taskE: 优先使用 FilePond 弹窗，加载失败/不可用时 fallback 到原生 fileInput
         const acceptType = param.type === 'ref-video' ? 'video/*' : param.type === 'ref-audio' ? 'audio/*' : 'image/*';
@@ -7013,7 +7189,7 @@ const UI = {
     wrap.appendChild(fileInput);
     const grid = wrap.querySelector('.ref-grid');
     grid.addEventListener('click', e => {
-      if (e.target.closest('.ref-del') || e.target.closest('.ref-copy') || e.target.closest('.ref-item')) return;
+      if (e.target.closest('.ref-del') || e.target.closest('.ref-copy') || e.target.closest('.ref-edit') || e.target.closest('.ref-item')) return;
       this.state.activeRefKey = p.key;
       // V68 taskE: 优先使用 FilePond 弹窗，加载失败/不可用时 fallback 到原生 fileInput
       const acceptType = p.type === 'ref-video' ? 'video/*' : p.type === 'ref-audio' ? 'audio/*' : 'image/*';
@@ -7519,7 +7695,9 @@ const UI = {
       if (isVideo) media = `<video src="${esc(r.src)}" muted></video>`;
       else if (isAudio) media = `<div class="ref-audio-thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span class="ref-audio-name">${esc(trunc(r.name, 12))}</span></div>`;
       else media = `<img src="${esc(r.src)}" loading="lazy" referrerpolicy="no-referrer">`;
-      return `<div class="ref-item ${isVideo ? 'ref-item-video' : ''} ${isAudio ? 'ref-item-audio' : ''}" data-rid="${esc(r.id)}">${media}${localBadge}${progressHtml}<button class="ref-del" data-del="${esc(r.id)}">×</button><button class="ref-copy" data-copy-url="${esc(r.id)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>`;
+      /* V26.9.26: 图片且已上传（remote）才给编辑钮 —— 编辑器经 weserv 代理拉图，本地 blob 拉不到 */
+      const editBtn = (!isVideo && !isAudio && r.remote) ? `<button class="ref-edit" data-edit="${esc(r.id)}" title="编辑此图" aria-label="编辑此图"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>` : '';
+      return `<div class="ref-item ${isVideo ? 'ref-item-video' : ''} ${isAudio ? 'ref-item-audio' : ''}" data-rid="${esc(r.id)}">${media}${localBadge}${progressHtml}<button class="ref-del" data-del="${esc(r.id)}" aria-label="删除参考图">×</button>${editBtn}<button class="ref-copy" data-copy-url="${esc(r.id)}" aria-label="复制图片URL"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>`;
     }).join('');
     if (refs.length < max) {
       html += `<div class="ref-add ${isVideo ? 'ref-add-video' : ''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加</div>`;
@@ -7527,6 +7705,8 @@ const UI = {
     grid.innerHTML = html;
     grid.querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); this._removeRef(key, btn.dataset.del); }));
     grid.querySelectorAll('[data-copy-url]').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); const r = refs.find(x => x.id === btn.dataset.copyUrl); if (r && r.remote) { copy(r.remote).then(ok => ok ? Toast.success('URL 已复制') : Toast.error('复制失败')); } }));
+    // V26.9.26: 编辑钮 → 打开标注编辑器（与结果卡「编辑」同一链路 _openEditor）
+    grid.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); const r = refs.find(x => x.id === btn.dataset.edit); if (r && r.remote) this._openEditor(r.remote); }));
     grid.querySelectorAll('.ref-item').forEach(el => el.addEventListener('click', e => { e.stopPropagation(); const r = refs.find(x => x.id === el.dataset.rid); if (r && r.remote) { if (r.kind.includes('video')) this._openLightbox([r.remote], 0, true); else if (!r.kind.includes('audio')) this._openLightbox([r.remote], 0, false); } }));
     this._updateEstimate();
     // V68 taskE: SortableJS 拖拽排序（仅在 2+ 个 ref-item 时启用）
