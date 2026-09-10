@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#080b14" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
-<title>修的媒体工作台 V26.9.24</title>
+<title>修的媒体工作台 V26.9.25</title>
 <!-- V68 衬线品牌字：思源宋体（Noto Serif SC），加载失败回退系统宋体 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1405,74 +1405,104 @@ input[type="range"].im-range {
   from { filter: blur(46px) saturate(1.18) hue-rotate(-14deg); }
   to   { filter: blur(46px) saturate(1.30) hue-rotate(46deg); }
 }
+/* V26.9.25 预设重组：4 浅色（晨曦/翡翠/樱雪/云青）+ 4 深色（极光/暮紫/熔金/深海）
+   每个预设最后一层是全覆盖基底渐变（消除光斑间隙的黑底——移动端「上下发黑」根因），
+   同步用 body[data-bgpreset] 底色兑底（回弹/过滚动区域也不再露黑） */
 body[data-bgpreset="aurora"] .theme-bg-grad {
   opacity: 1;
   background:
-    radial-gradient(52% 46% at 24% 22%, rgba(45,212,191,.42), transparent 62%),
-    radial-gradient(48% 42% at 78% 12%, rgba(99,102,241,.38), transparent 60%),
-    radial-gradient(46% 44% at 62% 78%, rgba(16,185,129,.30), transparent 62%),
-    radial-gradient(40% 38% at 14% 82%, rgba(56,130,246,.30), transparent 60%);
+    radial-gradient(52% 46% at 24% 22%, rgba(45,212,191,.44), transparent 62%),
+    radial-gradient(48% 42% at 78% 12%, rgba(99,102,241,.40), transparent 60%),
+    radial-gradient(46% 44% at 62% 78%, rgba(16,185,129,.32), transparent 62%),
+    radial-gradient(40% 38% at 14% 82%, rgba(56,130,246,.32), transparent 60%),
+    linear-gradient(168deg, #06231e 0%, #0a1030 46%, #071a26 78%, #04101c 100%);
 }
 body[data-bgpreset="dusk"] .theme-bg-grad {
-  opacity: 1;
+  opacity: 1; animation-duration: 20s, 36s; animation-delay: -5s, -9s;
   background:
-    radial-gradient(52% 46% at 26% 18%, rgba(236,72,153,.46), transparent 62%),
-    radial-gradient(50% 44% at 80% 20%, rgba(139,92,246,.42), transparent 60%),
-    radial-gradient(48% 42% at 58% 82%, rgba(88,60,220,.34), transparent 62%),
-    radial-gradient(38% 36% at 12% 78%, rgba(56,130,246,.30), transparent 58%);
+    radial-gradient(52% 46% at 26% 18%, rgba(236,72,153,.48), transparent 62%),
+    radial-gradient(50% 44% at 80% 20%, rgba(139,92,246,.44), transparent 60%),
+    radial-gradient(48% 42% at 58% 82%, rgba(88,60,220,.36), transparent 62%),
+    radial-gradient(38% 36% at 12% 78%, rgba(56,130,246,.32), transparent 58%),
+    linear-gradient(164deg, #26091f 0%, #180a33 50%, #0c0a2c 100%);
 }
-body[data-bgpreset="obsidian"] .theme-bg-grad {
-  opacity: 1;
-  background:
-    radial-gradient(54% 48% at 30% 16%, rgba(148,163,184,.34), transparent 62%),
-    radial-gradient(48% 44% at 82% 74%, rgba(71,85,105,.40), transparent 60%),
-    radial-gradient(44% 40% at 16% 80%, rgba(30,41,59,.46), transparent 64%);
-}
-body[data-bgpreset="dawn"] .theme-bg-grad {
-  opacity: 1;
-  background:
-    radial-gradient(52% 46% at 26% 20%, rgba(251,146,60,.46), transparent 62%),
-    radial-gradient(48% 42% at 80% 16%, rgba(244,114,182,.40), transparent 60%),
-    radial-gradient(46% 42% at 60% 80%, rgba(250,204,21,.28), transparent 62%),
-    radial-gradient(38% 36% at 12% 78%, rgba(248,113,113,.28), transparent 58%);
-}
-/* V26.9.24 新增四预设：mesh 渐变 + conic 流动层，颜色更高级（熔金/翡冷翠/玫瑰暮霭/深海） */
 body[data-bgpreset="ember"] .theme-bg-grad {
   opacity: 1; animation-duration: 15s, 26s; animation-delay: -4s, -8s;
   background:
-    conic-gradient(from 210deg at 68% 34%, rgba(255,94,58,.20), transparent 30%, rgba(255,175,64,.16) 62%, transparent 86%),
-    radial-gradient(54% 46% at 24% 24%, rgba(255,122,40,.48), transparent 62%),
-    radial-gradient(48% 44% at 82% 18%, rgba(255,84,90,.38), transparent 60%),
-    radial-gradient(46% 42% at 62% 82%, rgba(184,54,54,.34), transparent 62%),
-    radial-gradient(40% 36% at 10% 80%, rgba(255,196,90,.30), transparent 58%);
-}
-body[data-bgpreset="jade"] .theme-bg-grad {
-  opacity: 1; animation-duration: 21s, 38s; animation-delay: -9s, -15s;
-  background:
-    conic-gradient(from 120deg at 30% 68%, rgba(16,185,129,.18), transparent 34%, rgba(45,212,191,.14) 60%, transparent 84%),
-    radial-gradient(52% 46% at 76% 22%, rgba(52,211,153,.42), transparent 62%),
-    radial-gradient(48% 44% at 20% 30%, rgba(20,184,166,.40), transparent 60%),
-    radial-gradient(46% 42% at 66% 80%, rgba(6,148,112,.34), transparent 62%),
-    radial-gradient(38% 34% at 88% 76%, rgba(163,230,53,.22), transparent 58%);
-}
-body[data-bgpreset="rose"] .theme-bg-grad {
-  opacity: 1; animation-duration: 19s, 34s; animation-delay: -6s, -11s;
-  background:
-    conic-gradient(from 300deg at 74% 66%, rgba(244,114,182,.18), transparent 32%, rgba(192,132,252,.15) 64%, transparent 86%),
-    radial-gradient(52% 46% at 28% 22%, rgba(251,113,183,.46), transparent 62%),
-    radial-gradient(50% 44% at 82% 28%, rgba(216,120,255,.36), transparent 60%),
-    radial-gradient(46% 42% at 56% 84%, rgba(190,24,93,.32), transparent 62%),
-    radial-gradient(38% 34% at 10% 76%, rgba(255,164,164,.28), transparent 58%);
+    conic-gradient(from 210deg at 68% 34%, rgba(255,94,58,.22), transparent 30%, rgba(255,175,64,.18) 62%, transparent 86%),
+    radial-gradient(54% 46% at 24% 24%, rgba(255,122,40,.50), transparent 62%),
+    radial-gradient(48% 44% at 82% 18%, rgba(255,84,90,.40), transparent 60%),
+    radial-gradient(46% 42% at 62% 82%, rgba(184,54,54,.36), transparent 62%),
+    radial-gradient(40% 36% at 10% 80%, rgba(255,196,90,.32), transparent 58%),
+    linear-gradient(162deg, #2a1206 0%, #330d1a 55%, #1a0a12 100%);
 }
 body[data-bgpreset="abyss"] .theme-bg-grad {
   opacity: 1; animation-duration: 24s, 42s; animation-delay: -12s, -20s;
   background:
-    conic-gradient(from 30deg at 56% 40%, rgba(34,211,238,.14), transparent 34%, rgba(59,130,246,.13) 60%, transparent 86%),
-    radial-gradient(54% 48% at 26% 18%, rgba(14,165,233,.42), transparent 62%),
-    radial-gradient(48% 44% at 84% 30%, rgba(37,99,235,.36), transparent 60%),
-    radial-gradient(46% 42% at 64% 84%, rgba(8,145,178,.34), transparent 62%),
-    radial-gradient(40% 36% at 12% 78%, rgba(94,234,212,.20), transparent 58%);
+    conic-gradient(from 30deg at 56% 40%, rgba(34,211,238,.16), transparent 34%, rgba(59,130,246,.15) 60%, transparent 86%),
+    radial-gradient(54% 48% at 26% 18%, rgba(14,165,233,.44), transparent 62%),
+    radial-gradient(48% 44% at 84% 30%, rgba(37,99,235,.38), transparent 60%),
+    radial-gradient(46% 42% at 64% 84%, rgba(8,145,178,.36), transparent 62%),
+    radial-gradient(40% 36% at 12% 78%, rgba(94,234,212,.22), transparent 58%),
+    linear-gradient(166deg, #05202f 0%, #0a1240 55%, #041022 100%);
 }
+body[data-bgpreset="dawn"] .theme-bg-grad {
+  opacity: 1; animation-duration: 22s, 38s; animation-delay: -3s, -7s;
+  background:
+    radial-gradient(52% 46% at 26% 20%, rgba(251,146,60,.42), transparent 62%),
+    radial-gradient(48% 42% at 80% 16%, rgba(244,114,182,.38), transparent 60%),
+    radial-gradient(46% 42% at 60% 80%, rgba(250,204,21,.34), transparent 62%),
+    radial-gradient(38% 36% at 12% 78%, rgba(248,113,113,.30), transparent 58%),
+    linear-gradient(160deg, #ffe3c9 0%, #ffd9e6 44%, #fff0bf 100%);
+}
+body[data-bgpreset="jade"] .theme-bg-grad {
+  opacity: 1; animation-duration: 21s, 38s; animation-delay: -9s, -15s;
+  background:
+    conic-gradient(from 120deg at 30% 68%, rgba(16,185,129,.20), transparent 34%, rgba(45,212,191,.16) 60%, transparent 84%),
+    radial-gradient(52% 46% at 76% 22%, rgba(52,211,153,.44), transparent 62%),
+    radial-gradient(48% 44% at 20% 30%, rgba(20,184,166,.42), transparent 60%),
+    radial-gradient(46% 42% at 66% 80%, rgba(6,148,112,.34), transparent 62%),
+    radial-gradient(38% 34% at 88% 76%, rgba(163,230,53,.26), transparent 58%),
+    linear-gradient(158deg, #d5f6e4 0%, #c6f1dc 46%, #edf8c4 100%);
+}
+body[data-bgpreset="sakura"] .theme-bg-grad {
+  opacity: 1; animation-duration: 19s, 34s; animation-delay: -6s, -11s;
+  background:
+    conic-gradient(from 300deg at 74% 66%, rgba(244,114,182,.20), transparent 32%, rgba(192,132,252,.16) 64%, transparent 86%),
+    radial-gradient(52% 46% at 28% 22%, rgba(251,113,183,.44), transparent 62%),
+    radial-gradient(50% 44% at 82% 28%, rgba(216,120,255,.36), transparent 60%),
+    radial-gradient(46% 42% at 56% 84%, rgba(190,24,93,.28), transparent 62%),
+    radial-gradient(38% 34% at 10% 76%, rgba(255,164,196,.34), transparent 58%),
+    linear-gradient(156deg, #ffe0ec 0%, #f2dff9 48%, #ffeadf 100%);
+}
+body[data-bgpreset="cloud"] .theme-bg-grad {
+  opacity: 1; animation-duration: 26s, 44s; animation-delay: -14s, -22s;
+  background:
+    radial-gradient(54% 48% at 30% 18%, rgba(148,180,214,.40), transparent 62%),
+    radial-gradient(48% 44% at 82% 72%, rgba(120,190,196,.38), transparent 60%),
+    radial-gradient(44% 40% at 16% 80%, rgba(196,170,220,.34), transparent 64%),
+    radial-gradient(40% 36% at 64% 12%, rgba(255,255,255,.50), transparent 60%),
+    linear-gradient(160deg, #dfe9f2 0%, #e6e9f6 48%, #d9e8e6 100%);
+}
+/* 基底兑底：渐变幕动画在任意相位、页面回弹/过滚动时都不会露出原始黑/白底 */
+body[data-bgpreset="aurora"] { background-color: #061224; }
+body[data-bgpreset="dusk"] { background-color: #140a28; }
+body[data-bgpreset="ember"] { background-color: #200d0e; }
+body[data-bgpreset="abyss"] { background-color: #051527; }
+body[data-bgpreset="dawn"] { background-color: #f2d9bd; }
+body[data-bgpreset="jade"] { background-color: #cfeedd; }
+body[data-bgpreset="sakura"] { background-color: #f3dce7; }
+body[data-bgpreset="cloud"] { background-color: #dfe4ee; }
+/* 浅色预设补偿：暗色主题下浅色幕布更亮，面板玻璃加深一档防「亮底浅字」读不清 */
+[data-theme="dark"] body[data-bgpreset="dawn"], [data-theme="dark"] body[data-bgpreset="jade"],
+[data-theme="dark"] body[data-bgpreset="sakura"], [data-theme="dark"] body[data-bgpreset="cloud"] {
+  --surface-glass: rgba(15,20,38,.52);
+  --surface-glass-2: rgba(19,25,45,.64);
+  --surface-glass-card: rgba(15,20,38,.42);
+}
+/* V26.9.25 新浅色预设（樱雪/云青）+ 熔金保留；曜石/玫瑰暮霭退役 */
+body[data-bgpreset="sakura"] .theme-bg-grad,
+body[data-bgpreset="cloud"] .theme-bg-grad { opacity: 1; }
 [data-theme="light"] body[data-bgpreset] .theme-bg-grad { filter: blur(46px) saturate(1.12); opacity: .62; }
 @media (prefers-reduced-motion: reduce) { .theme-bg-grad { animation: none; } }
 /* 媒体背景（图片/视频）模式下隐藏渐变幕 */
@@ -1483,18 +1513,20 @@ body[data-bgmedia] .theme-bg-grad { opacity: 0 !important; }
 .bg-type-btn { flex: 1; padding: 6px 0; border-radius: calc(var(--radius-sm) - 3px); font-size: 12px; color: var(--text-muted); text-align: center; transition: all var(--transition-fast); }
 .bg-type-btn:hover { color: var(--text); background: var(--surface-3); }
 .bg-type-btn.active { background: var(--brand); color: #fff; font-weight: 500; }
-.bg-presets { display: flex; align-items: center; gap: 8px; padding: 2px 0; }
-.bg-swatch { width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; position: relative; transition: transform var(--transition-fast), border-color var(--transition-fast); }
-.bg-swatch:hover { transform: scale(1.12); }
-.bg-swatch.active { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
-.bg-swatch[data-swatch="aurora"] { background: linear-gradient(135deg, #5868ec, #a78bfa 55%, #2cbd85); }
+.bg-presets { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; row-gap: 8px; padding: 2px 0; }
+.bgp-group-label { flex-basis: 100%; font-size: 10px; letter-spacing: .14em; color: var(--text-dim); user-select: none; padding-left: 1px; } /* V26.9.25: 独占一行（浅色/深色两行分组，窄抽屉不乱 wrap） */
+/* V26.9.25: 色板升级玻璃弹珠质感（内高光+内收光+投影），28px 更易点按，视觉无锯齿 */
+.bg-swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--lg-edge); cursor: pointer; position: relative; transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast); box-shadow: inset 0 1px 1px rgba(255,255,255,.30), inset 0 -1px 2px rgba(3,6,16,.22), 0 2px 6px -2px rgba(3,6,16,.55); }
+.bg-swatch:hover { transform: scale(1.14); }
+.bg-swatch:active { transform: scale(.94); }
+.bg-swatch.active { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft), inset 0 1px 1px rgba(255,255,255,.30); }
+.bg-swatch[data-swatch="dawn"] { background: linear-gradient(135deg, #fbbf6e, #f472b6 55%, #fbe28a); }
+.bg-swatch[data-swatch="jade"] { background: linear-gradient(135deg, #6ee7b7, #2dd4bf 55%, #c8f06e); }
+.bg-swatch[data-swatch="sakura"] { background: linear-gradient(135deg, #fda4d4, #e0b3ff 55%, #ffd6cf); }
+.bg-swatch[data-swatch="cloud"] { background: linear-gradient(135deg, #c7d7e8, #a8d8dc 55%, #e3d9ef); }
+.bg-swatch[data-swatch="aurora"] { background: linear-gradient(135deg, #2dd4bf, #6366f1 55%, #10b981); }
 .bg-swatch[data-swatch="dusk"] { background: linear-gradient(135deg, #ec4899, #8b5cf6 55%, #3882f6); }
-.bg-swatch[data-swatch="obsidian"] { background: linear-gradient(135deg, #94a3b8, #475569 60%, #1e293b); }
-.bg-swatch[data-swatch="dawn"] { background: linear-gradient(135deg, #fb923c, #f472b6 55%, #facc15); }
-/* V26.9.24 新预设色板 */
 .bg-swatch[data-swatch="ember"] { background: linear-gradient(135deg, #ff7a28, #ff545a 55%, #ffc45a); }
-.bg-swatch[data-swatch="jade"] { background: linear-gradient(135deg, #34d399, #14b8a6 55%, #a3e635); }
-.bg-swatch[data-swatch="rose"] { background: linear-gradient(135deg, #fb71b7, #d878ff 55%, #be1860); }
 .bg-swatch[data-swatch="abyss"] { background: linear-gradient(135deg, #0ea5e9, #2563eb 55%, #5eead4); }
 .bg-swatch-label { font-size: 11px; color: var(--text-dim); margin-left: auto; }
 .bg-dim-row { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text-muted); }
@@ -1575,31 +1607,52 @@ body[data-bgmedia] .theme-bg-grad { opacity: 0 !important; }
   }
   .result-panel.mobile-active { display: flex; }
   .result-body { padding: 12px; }
-  /* 移动端视图切换栏 — flex子元素，不遮挡内容 */
+  /* V26.9.25 移动端视图切换 — 液态玻璃胶囊（全局材质统一：gloss+玻璃令牌+slab 阴影+顶部内高光） */
   .mobile-view-switch {
     display: flex !important;
     flex-shrink: 0;
-    background: var(--bg-elev);
-    border-bottom: 1px solid var(--border);
-    padding: 0 max(12px, var(--safe-left));
+    align-self: center;
+    gap: 4px;
+    margin: 10px 0 0;
+    padding: 4px;
+    border-radius: 999px;
+    background: var(--lg-gloss), var(--surface-glass-2);
+    border: 1px solid var(--lg-edge);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    box-shadow: var(--lg-slab);
+    position: relative;
     z-index: 15;
   }
   .mobile-view-switch button {
     flex: 1;
-    padding: 8px 0;
+    min-width: 96px;
+    padding: 7px 20px;
     border: none;
+    border-radius: 999px;
     background: none;
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text-muted);
     cursor: pointer;
-    border-bottom: 2px solid transparent;
     transition: all var(--transition-fast);
   }
+  .mobile-view-switch button:active { transform: scale(.92); } /* V26.9.24 spring 按压手感延续 */
   .mobile-view-switch button.active {
     color: var(--brand);
-    border-bottom-color: var(--brand);
+    background: var(--brand-soft);
+    box-shadow: inset 0 1px 0 var(--lg-hi), 0 2px 8px -2px color-mix(in srgb, var(--brand) 35%, transparent);
   }
+  /* V26.9.25 移动端去外围大框：全出血玻璃，背景动态渐变直达边缘（不再有四角黑框） */
+  .app-body { padding: 0; gap: 0; }
+  .param-panel, .result-panel {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    box-shadow: none;
+  }
+  .param-panel { padding-top: 2px; }
   /* Header紧凑 */
   .brand-name { font-size: 13px; }
   .header-btn, .icon-btn {
@@ -1726,8 +1779,7 @@ body[data-bgmedia] .theme-bg-grad { opacity: 0 !important; }
 
 /* 小手机：进一步压缩 */
 @media (max-width: 380px) {
-  /* V26.9.11: 小屏不再隐藏品牌名，改为缩小字号（三级类选择器压过 @media 1024 内的同级规则） */
-  .param-panel .brand-mark .brand-name { font-size: 12px; letter-spacing: .06em; }
+  /* V26.9.25: 品牌字已移除，原小屏字号降级规则一并清退 */
   .filter-tab { padding: 3px 6px; font-size: 11px; }
   .result-search-wrap { min-width: 60px; }
 }
@@ -1889,20 +1941,13 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
   box-shadow: 3px 5px 14px rgba(2,4,12,.35), inset 1px 1px 0 0 var(--hl-inset), inset -1px -1px 0 0 var(--sh-inset);
 }
 
-/* --- 1c. 衬线品牌字：美术馆配方，标题衬线、正文黑体 --- */
+/* --- 1c. 衬线品牌字：美术馆配方，标题衬线、正文黑体 ---
+   V26.9.25: 品牌字已从页面移除（仅留居中天气图标），保留 .brand-mark 容器作天气定位锚点 */
 .brand-mark {
   display: flex; align-items: center; justify-content: center; gap: 4px;
-  /* V26.9.21: 右侧补偿 padding——左侧 Lottie+温度视觉重量大，纯几何居中偏右，左移后视觉居中 */
-  padding: 0 14px 2px 2px; margin-bottom: 2px; user-select: none;
+  /* V26.9.25: 品牌字移除后天气图标独占一行，纯几何居中（不再需要右侧光学补偿） */
+  padding: 0 0 2px; margin-bottom: 2px; user-select: none;
   position: relative; /* V26.9.11: 预报弹卡定位锚点 */
-}
-.brand-mark .brand-name {
-  font-family: var(--font-serif); font-weight: 600; font-size: 15px;
-  letter-spacing: .16em; color: var(--text); opacity: .92;
-}
-.brand-mark .brand-version {
-  font-family: var(--font-mono); font-size: 10px; letter-spacing: .1em;
-  color: var(--text-dim); opacity: .8;
 }
 .empty-state .empty-title { font-family: var(--font-serif); letter-spacing: .06em; }
 
@@ -2140,7 +2185,6 @@ body.is-generating .orb-a {
 
 /* 移动端适配：展厅元素收拢 */
 @media (max-width: 1024px) {
-  .brand-mark .brand-name { font-size: 13px; letter-spacing: .1em; }
   .param-panel { padding-top: 14px; }
   .lightbox .lb-art { max-width: 88vw; max-height: 65vh; }
   .lb-meta { min-width: 78vw; padding: 10px 14px 9px; }
@@ -2542,7 +2586,10 @@ body.is-generating .orb-a {
    ③ 磨砂噪点颗粒 ④ specular 高光跟随光标 ⑤ 天气弹卡/设置/历史/模态/对比栏玻璃统一
    ============================================================ */
 
-/* --- 23a. 折射：Chromium 支持 url() 滤镜时，玻璃面背后内容产生液态扭曲（面板级 22px / 小件 14px） --- */
+/* --- 23a. 折射：Chromium 支持 url() 滤镜时，玻璃面背后内容产生液态扭曲
+   V26.9.25 去锯齿：feTurbulence numOctaves 2→1（只剩低频波动，无高频颗粒），
+   预模糊 2.6→5 / 幅度 22→10（面板）与 14→6（小件）——保留「液」感、消除图标/文字透过后发毛的锯齿感；
+   移动端与非 Retina 屏（1dppx）直接回落纯 blur（低分屏栅格化位移后锯齿更明显且费电） --- */
 @supports (backdrop-filter: url(#lgRefract) blur(1px)) {
   .param-panel, .result-panel, .result-header, .result-strip,
   .settings-drawer, .history-sidebar, .modal-content, .compare-bar, .weather-pop, .lb-meta {
@@ -2552,6 +2599,17 @@ body.is-generating .orb-a {
   .tc-quick, .atp-card, .bg-type-row, .wp-tip {
     -webkit-backdrop-filter: url(#lgRefractSoft) blur(14px) saturate(160%) brightness(1.04);
     backdrop-filter: url(#lgRefractSoft) blur(14px) saturate(160%) brightness(1.04);
+  }
+  @media (max-width: 768px), (resolution: 1dppx) {
+    .param-panel, .result-panel, .result-header, .result-strip,
+    .settings-drawer, .history-sidebar, .modal-content, .compare-bar, .weather-pop, .lb-meta {
+      -webkit-backdrop-filter: blur(18px) saturate(150%) brightness(1.05);
+      backdrop-filter: blur(18px) saturate(150%) brightness(1.05);
+    }
+    .tc-quick, .atp-card, .bg-type-row, .wp-tip {
+      -webkit-backdrop-filter: blur(14px) saturate(160%) brightness(1.04);
+      backdrop-filter: blur(14px) saturate(160%) brightness(1.04);
+    }
   }
 }
 
@@ -2656,19 +2714,19 @@ body.is-generating .orb-a {
 <body>
 
 <!-- V26.9.23 Apple Liquid Glass：SVG 折射滤镜（feTurbulence→feDisplacementMap）
-     背后内容透过玻璃产生轻微液态扭曲（scale 22 微幅，配合 blur 柔化不晕）
+     背后内容透过玻璃产生轻微液态扭曲（V26.9.25: 低频单倍频程 noise + scale 10/6 微幅，配合 blur 柔化无锯齿）
      Chromium 138+ 支持 backdrop-filter:url()；Safari/Firefox 经 @supports 自动降级纯 blur -->
 <svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;pointer-events:none">
   <defs>
     <filter id="lgRefract" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
-      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.017" numOctaves="2" seed="11" result="n"/>
-      <feGaussianBlur in="n" stdDeviation="2.6" result="nb"/>
-      <feDisplacementMap in="SourceGraphic" in2="nb" scale="22" xChannelSelector="R" yChannelSelector="G"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.005 0.008" numOctaves="1" seed="11" result="n"/>
+      <feGaussianBlur in="n" stdDeviation="5" result="nb"/>
+      <feDisplacementMap in="SourceGraphic" in2="nb" scale="10" xChannelSelector="R" yChannelSelector="G"/>
     </filter>
     <filter id="lgRefractSoft" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
-      <feTurbulence type="fractalNoise" baseFrequency="0.014 0.02" numOctaves="2" seed="7" result="n"/>
-      <feGaussianBlur in="n" stdDeviation="2" result="nb"/>
-      <feDisplacementMap in="SourceGraphic" in2="nb" scale="14" xChannelSelector="R" yChannelSelector="G"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.007 0.01" numOctaves="1" seed="7" result="n"/>
+      <feGaussianBlur in="n" stdDeviation="4" result="nb"/>
+      <feDisplacementMap in="SourceGraphic" in2="nb" scale="6" xChannelSelector="R" yChannelSelector="G"/>
     </filter>
   </defs>
 </svg>
@@ -2708,10 +2766,8 @@ body.is-generating .orb-a {
 <div class="app-body">
   <!-- 参数面板 -->
   <aside class="param-panel mobile-active" id="paramPanel">
-    <!-- V38 品牌字（衬线）— 标题嵌入 api.wuyinkeji.com 链接 -->
-    <div class="brand-mark">
-      <span class="brand-name"><a href="https://api.wuyinkeji.com" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none">修的媒体工作台</a></span>
-    </div>
+    <!-- V26.9.25 品牌字已移除（用户要求），仅保留居中天气图标（.brand-mark 保留为天气徽章/预报弹卡定位锚点） -->
+    <div class="brand-mark"></div>
 
     <!-- Tabs -->
     <div class="tabs" id="tabs">
@@ -2925,15 +2981,17 @@ body.is-generating .orb-a {
         <button type="button" class="bg-type-btn" data-bgtype="image">图片</button>
         <button type="button" class="bg-type-btn" data-bgtype="video">视频</button>
       </div>
-      <div class="bg-presets" id="bgPresets" aria-label="渐变预设">
-        <button type="button" class="bg-swatch active" data-swatch="aurora" title="极光（默认）" aria-label="极光预设"></button>
-        <button type="button" class="bg-swatch" data-swatch="dusk" title="暮紫" aria-label="暮紫预设"></button>
-        <button type="button" class="bg-swatch" data-swatch="obsidian" title="曜石" aria-label="曜石预设"></button>
-        <button type="button" class="bg-swatch" data-swatch="dawn" title="晨曦" aria-label="晨曦预设"></button>
-        <button type="button" class="bg-swatch" data-swatch="ember" title="熔金" aria-label="熔金预设"></button>
-        <button type="button" class="bg-swatch" data-swatch="jade" title="翡冷翠" aria-label="翡冷翠预设"></button>
-        <button type="button" class="bg-swatch" data-swatch="rose" title="玫瑰暮霭" aria-label="玫瑰暮霭预设"></button>
-        <button type="button" class="bg-swatch" data-swatch="abyss" title="深海" aria-label="深海预设"></button>
+      <div class="bg-presets" id="bgPresets" aria-label="渐变预设（4 浅色 + 4 深色）">
+        <span class="bgp-group-label">浅色</span>
+        <button type="button" class="bg-swatch" data-swatch="dawn" title="晨曦（浅）" aria-label="晨曦预设（浅色）"></button>
+        <button type="button" class="bg-swatch" data-swatch="jade" title="翡翠（浅）" aria-label="翡翠预设（浅色）"></button>
+        <button type="button" class="bg-swatch" data-swatch="sakura" title="樱雪（浅）" aria-label="樱雪预设（浅色）"></button>
+        <button type="button" class="bg-swatch" data-swatch="cloud" title="云青（浅）" aria-label="云青预设（浅色）"></button>
+        <span class="bgp-group-label">深色</span>
+        <button type="button" class="bg-swatch active" data-swatch="aurora" title="极光（深 · 默认）" aria-label="极光预设（深色，默认）"></button>
+        <button type="button" class="bg-swatch" data-swatch="dusk" title="暮紫（深）" aria-label="暮紫预设（深色）"></button>
+        <button type="button" class="bg-swatch" data-swatch="ember" title="熔金（深）" aria-label="熔金预设（深色）"></button>
+        <button type="button" class="bg-swatch" data-swatch="abyss" title="深海（深）" aria-label="深海预设（深色）"></button>
         <span class="bg-swatch-label" id="bgPresetLabel">极光</span>
       </div>
       <div class="input-group" id="bgImageRow" style="display:none">
@@ -2947,7 +3005,7 @@ body.is-generating .orb-a {
           <input type="text" id="bgVideoUrl" placeholder="视频 URL（mp4/webm，静音循环播放）" autocomplete="off" spellcheck="false" aria-label="背景视频 URL">
           <button type="button" id="bgVideoFileBtn">本地</button>
         </div>
-        <div style="font-size:10.5px;color:var(--text-dim);padding:2px 0">本地视频仅本次会话生效（浏览器安全限制，刷新后需重选）</div>
+        <div style="font-size:10.5px;color:var(--text-dim);padding:2px 0">V26.9.25：本地图片/视频会自动缓存到浏览器（IndexedDB），刷新后自动恢复；填 URL 同样永久记忆，重装浏览器/清缓存后需重选</div>
       </div>
       <div class="bg-dim-row" style="margin-top:8px">
         <label for="bgDimRange">背景压暗</label>
@@ -2967,7 +3025,7 @@ body.is-generating .orb-a {
     <hr style="border:none;border-top:1px solid var(--border);margin:20px 0 16px">
     <div class="settings-section" style="text-align:center">
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V26.9.24
+        修的媒体工作台 V26.9.25
       </div>
     </div>
   </div>
@@ -5417,16 +5475,14 @@ const UI = {
       99: { lottie: '1788958357-r2_1bd1393ae028339c.json', text: '雷暴冰雹' }  // thunder
     };
     const w = map[code] || { lottie: null, text: '' };
-    // V26.9.23: 夜间晴/少云 → 月亮图标（图床无夜间 Lottie，走 emoji 路径 🌙）
-    // 其余天气（雨雪云雾雷）Lottie 昼夜观感差异小，继续用 Lottie + title 标注「（夜）」
-    const nightClear = !isDay && (code === 0 || code === 1);
+    // V26.9.25: 应用户要求还原「最初的动图」——昼夜一律走 Lottie（图床无夜间版时夜间沿用白天动图），不再切 emoji 🌙
     const old = mark.querySelector('.weather-badge');
     if (old) old.remove();
     const badge = document.createElement('span');
     badge.className = 'weather-badge' + (!isDay ? ' is-night' : ''); // V26.9.23: is-night 仅保留 title（夜）语义，无视觉滤镜
     const tempStr = (typeof temp === 'number' && !isNaN(temp)) ? `${Math.round(temp)}°` : '';
-    // V26.9.10: fetch → 清洗背景层 → animationData 加载（根治内置黑底）; V26.9.23: 夜间晴改月亮 emoji
-    if (w.lottie && typeof lottie !== 'undefined' && !nightClear) {
+    // V26.9.10: fetch → 清洗背景层 → animationData 加载（根治内置黑底）; V26.9.25: 夜间还原 Lottie 动图
+    if (w.lottie && typeof lottie !== 'undefined') {
       badge.innerHTML = `<span class="weather-lottie" id="weatherLottie" aria-hidden="true"></span><span class="weather-temp">${tempStr}</span>`;
       badge.title = `${this._getCity().name} · ${w.text}${!isDay ? '（夜）' : ''}${tempStr ? ' · ' + Math.round(temp) + '°C' : ''}`;
       mark.insertBefore(badge, mark.firstChild);
@@ -6024,7 +6080,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V26.9.24';
+      document.title = '修的媒体工作台 V26.9.25';
     }
   },
 
@@ -6234,6 +6290,43 @@ const UI = {
      方法保留为空壳以兼容 init() 调用点，磨砂噪点层仍在 CSS ::after 中 */
   _initLiquidGlass() { /* V26.9.24: 已清空 —— specular 光晕整体下线 */ },
 
+  /* ---------- V26.9.25: IndexedDB 本地背景媒体缓存（本地图片/视频刷新后自动恢复） ---------- */
+  _idbOpen() {
+    return new Promise((resolve, reject) => {
+      if (!('indexedDB' in window)) { reject(new Error('no idb')); return; }
+      let req;
+      try { req = indexedDB.open('xiu-workbench-bg', 1); } catch (e) { reject(e); return; }
+      req.onupgradeneeded = () => { try { req.result.createObjectStore('media'); } catch {} };
+      req.onblocked = () => reject(new Error('idb blocked'));
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error || new Error('idb open failed'));
+    });
+  },
+  _idbSet(key, val) {
+    return this._idbOpen().then(db => new Promise((resolve, reject) => {
+      const tx = db.transaction('media', 'readwrite');
+      tx.objectStore('media').put(val, key);
+      tx.oncomplete = () => { try { db.close(); } catch {} resolve(); };
+      tx.onerror = () => { try { db.close(); } catch {} reject(tx.error || new Error('idb put failed')); };
+    }));
+  },
+  _idbGet(key) {
+    return this._idbOpen().then(db => new Promise((resolve, reject) => {
+      const rq = db.transaction('media', 'readonly').objectStore('media').get(key);
+      rq.onsuccess = () => { try { db.close(); } catch {} resolve(rq.result || null); };
+      rq.onerror = () => { try { db.close(); } catch {} reject(rq.error || new Error('idb get failed')); };
+    }));
+  },
+  _idbDel(key) {
+    return this._idbOpen().then(db => new Promise(resolve => {
+      try {
+        const tx = db.transaction('media', 'readwrite');
+        tx.objectStore('media').delete(key);
+        tx.oncomplete = () => { try { db.close(); } catch {} resolve(); };
+        tx.onerror = () => { try { db.close(); } catch {} resolve(); };
+      } catch { try { db.close(); } catch {} resolve(); }
+    })).catch(() => {});
+  },
   _initThemeBg() {
     this._applyThemeBg();
     const row = $('#bgTypeRow');
@@ -6260,37 +6353,34 @@ const UI = {
       save(cfg);
     });
     // URL 输入（change = 失焦/回车提交）
-    $('#bgImageUrl').addEventListener('change', () => { const cfg = Store.getBgCfg(); cfg.mode = 'image'; cfg.url = $('#bgImageUrl').value.trim(); this._bgMemUrl = ''; save(cfg); });
-    $('#bgVideoUrl').addEventListener('change', () => { const cfg = Store.getBgCfg(); cfg.mode = 'video'; cfg.url = $('#bgVideoUrl').value.trim(); this._bgMemUrl = ''; try { sessionStorage.removeItem(this._bgVideoSessionKey); } catch {} save(cfg); });
-    // 本地文件
+    $('#bgImageUrl').addEventListener('change', () => { const cfg = Store.getBgCfg(); cfg.mode = 'image'; cfg.url = $('#bgImageUrl').value.trim(); cfg.local = ''; this._bgMemUrl = ''; save(cfg); });
+    $('#bgVideoUrl').addEventListener('change', () => { const cfg = Store.getBgCfg(); cfg.mode = 'video'; cfg.url = $('#bgVideoUrl').value.trim(); cfg.local = ''; this._bgMemUrl = ''; try { sessionStorage.removeItem(this._bgVideoSessionKey); } catch {} save(cfg); });
+    // 本地文件（V26.9.25: IndexedDB 持久化——本地图片/视频缓存进浏览器，刷新后自动恢复；过大或失败退回会话级）
     $('#bgImageFileBtn').addEventListener('click', () => $('#bgImageFile').click());
     $('#bgVideoFileBtn').addEventListener('click', () => $('#bgVideoFile').click());
-    $('#bgImageFile').addEventListener('change', e => {
-      const f = e.target.files && e.target.files[0];
-      if (!f) return;
-      const fr = new FileReader();
-      fr.onload = () => {
-        const cfg = Store.getBgCfg();
-        cfg.mode = 'image'; cfg.url = fr.result; this._bgMemUrl = '';
-        try { localStorage.setItem(CONFIG.STORAGE_KEYS.BG_CFG, JSON.stringify(cfg)); this._setBgStatus('已应用本地图片'); }
-        catch { this._bgMemUrl = fr.result; this._setBgStatus('图片过大，仅本次会话生效（建议改用 URL）'); }
-        this._applyThemeBg();
-      };
-      fr.readAsDataURL(f);
-      e.target.value = '';
-    });
-    $('#bgVideoFile').addEventListener('change', e => {
-      const f = e.target.files && e.target.files[0];
-      if (!f) return;
-      const objUrl = URL.createObjectURL(f);
-      this._bgMemUrl = objUrl;
-      try { sessionStorage.setItem(this._bgVideoSessionKey, objUrl); } catch {}
+    const applyLocalMedia = (file, kind) => {
+      if (!file) return;
+      const tooBig = file.size > 150 * 1024 * 1024; // >150MB 不入缓存（配额友好），仅本次会话
       const cfg = Store.getBgCfg();
-      cfg.mode = 'video'; cfg.url = ''; // object URL 不持久化，仅会话内
-      save(cfg);
-      this._setBgStatus('已应用本地视频（刷新后需重选）');
-      e.target.value = '';
-    });
+      cfg.mode = kind; cfg.url = '';
+      if (this._bgMemUrl) { try { URL.revokeObjectURL(this._bgMemUrl); } catch {} }
+      this._bgMemUrl = URL.createObjectURL(file); // 图片/视频统一走 objectURL（立即可预览，无需等 IDB 回读）
+      const done = msg => { save(cfg); this._setBgStatus(msg); };
+      if (!tooBig) {
+        this._idbSet('bg-media', file).then(() => {
+          cfg.local = kind;
+          done(kind === 'video' ? '已应用本地视频（已缓存，刷新后自动恢复）' : '已应用本地图片（已缓存，刷新后自动恢复）');
+        }).catch(() => {
+          cfg.local = '';
+          done('浏览器缓存不可用，本地文件仅本次会话生效（建议改用 URL）');
+        });
+      } else {
+        cfg.local = '';
+        done('文件过大（>150MB）未入缓存，仅本次会话生效');
+      }
+    };
+    $('#bgImageFile').addEventListener('change', e => { applyLocalMedia(e.target.files && e.target.files[0], 'image'); e.target.value = ''; });
+    $('#bgVideoFile').addEventListener('change', e => { applyLocalMedia(e.target.files && e.target.files[0], 'video'); e.target.value = ''; });
     // 压暗/模糊（input 实时预览）
     $('#bgDimRange').addEventListener('input', () => { const v = +$('#bgDimRange').value; $('#bgDimVal').textContent = v + '%'; const cfg = Store.getBgCfg(); cfg.dim = v; this._applyDim(cfg); Store.setBgCfg(cfg); });
     $('#bgBlurRange').addEventListener('input', () => { const v = +$('#bgBlurRange').value; $('#bgBlurVal').textContent = v + 'px'; const cfg = Store.getBgCfg(); cfg.blur = v; this._applyDim(cfg); Store.setBgCfg(cfg); });
@@ -6319,14 +6409,38 @@ const UI = {
   },
   _applyThemeBg() {
     const cfg = Store.getBgCfg();
+    /* V26.9.25: 预设重组（4 浅 4 深）——旧 obsidian/rose 迁移到 abyss/sakura，未知值回落默认极光 */
+    const BG_PRESETS = ['dawn', 'jade', 'sakura', 'cloud', 'aurora', 'dusk', 'ember', 'abyss'];
+    if (!BG_PRESETS.includes(cfg.preset)) {
+      cfg.preset = cfg.preset === 'obsidian' ? 'abyss' : cfg.preset === 'rose' ? 'sakura' : 'aurora';
+      Store.setBgCfg(cfg);
+    }
     const img = $('#themeBgImg'), video = $('#themeBgVideo'), layer = $('#themeBgLayer');
     if (!layer) return;
     // 渐变预设（V26.9.23: .theme-bg-grad 动画幕接管视觉；媒体模式下 data-bgmedia 隐藏渐变幕）
-    document.body.dataset.bgpreset = cfg.mode === 'gradient' ? (cfg.preset || 'aurora') : 'aurora';
+    document.body.dataset.bgpreset = cfg.mode === 'gradient' ? cfg.preset : 'aurora';
     if (cfg.mode === 'gradient') delete document.body.dataset.bgmedia; else document.body.dataset.bgmedia = '1';
     let memUrl = this._bgMemUrl || '';
     if (!memUrl && cfg.mode === 'video') { try { memUrl = sessionStorage.getItem(this._bgVideoSessionKey) || ''; } catch {} }
     const src = cfg.url || memUrl;
+    /* V26.9.25: 本地媒体恢复——刷新后 cfg.local 标记存在但无对象 URL 时，从 IndexedDB 异步取回（图片/视频通用） */
+    if (!src && cfg.local && cfg.mode === cfg.local && !this._bgIdbLoading) {
+      this._bgIdbLoading = true;
+      this._idbGet('bg-media').then(blob => {
+        this._bgIdbLoading = false; this._bgIdbRetry = 0;
+        const cur = Store.getBgCfg();
+        if (blob && cur.local && cur.mode === cur.local && (!cur.url)) {
+          if (this._bgMemUrl) { try { URL.revokeObjectURL(this._bgMemUrl); } catch {} }
+          this._bgMemUrl = URL.createObjectURL(blob);
+          this._applyThemeBg();
+        }
+      }).catch(() => {
+        /* V26.9.25: 瞬时失败（连接释放/被阻塞）自动重试最多 2 次，间隔 1s */
+        this._bgIdbLoading = false;
+        this._bgIdbRetry = (this._bgIdbRetry || 0) + 1;
+        if (this._bgIdbRetry <= 2) setTimeout(() => { if (Store.getBgCfg().local) this._applyThemeBg(); }, 1000);
+      });
+    }
     const showImg = cfg.mode === 'image' && src;
     const showVideo = cfg.mode === 'video' && src;
     if (showImg) {
@@ -6348,8 +6462,8 @@ const UI = {
     if (typeRow) {
       typeRow.querySelectorAll('.bg-type-btn').forEach(b => b.classList.toggle('active', b.dataset.bgtype === cfg.mode));
       document.querySelectorAll('#bgPresets .bg-swatch').forEach(s => s.classList.toggle('active', cfg.mode === 'gradient' && s.dataset.swatch === (cfg.preset || 'aurora')));
-      const presetNames = { aurora: '极光', dusk: '暮紫', obsidian: '曜石', dawn: '晨曦', ember: '熔金', jade: '翡冷翠', rose: '玫瑰暮霭', abyss: '深海' };
-      const pl = $('#bgPresetLabel'); if (pl) pl.textContent = presetNames[cfg.preset || 'aurora'] || '极光';
+      const presetNames = { dawn: '晨曦', jade: '翡翠', sakura: '樱雪', cloud: '云青', aurora: '极光', dusk: '暮紫', ember: '熔金', abyss: '深海' };
+      const pl = $('#bgPresetLabel'); if (pl) pl.textContent = presetNames[cfg.preset] || '极光';
       $('#bgImageRow').style.display = cfg.mode === 'image' ? '' : 'none';
       $('#bgVideoRow').style.display = cfg.mode === 'video' ? '' : 'none';
       if (cfg.mode === 'image') $('#bgImageUrl').value = cfg.url || '';
@@ -9241,8 +9355,57 @@ const UI = {
 
   _openEnergyPayment() {
     if (/MicroMessenger/i.test(navigator.userAgent)) { window.location.href = CONFIG.WECHAT_PAY_URI; return; }
-    const html = `<div style="text-align:center;padding:20px"><div style="font-size:14px;font-weight:600;margin-bottom:12px">微信扫码支付</div><div class="energy-qr" style="display:flex;justify-content:center"><img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(CONFIG.WECHAT_PAY_URI)}" style="width:200px;height:200px;border-radius:8px"></div><div style="font-size:12px;color:var(--text-dim);margin-top:12px">微信扫一扫 · 支持开发者</div></div>`;
+    /* V26.9.25: 二维码去白底 —— canvas 逐像素重映射（白底→透明、码点→主题对比色），与玻璃模态融为一体；
+       暗色主题下码点为近白（微信支持反色码识别），浅色主题为近黑；CORS 失败回退白底图保证可扫 */
+    const html = `<div style="text-align:center;padding:20px"><div style="font-size:14px;font-weight:600;margin-bottom:12px">微信扫码支付</div><div class="energy-qr" style="display:flex;justify-content:center"><canvas id="payQrCanvas" width="400" height="400" style="width:200px;height:200px;border-radius:12px" aria-label="微信支付二维码" role="img"></canvas></div><div style="font-size:12px;color:var(--text-dim);margin-top:12px">微信扫一扫 · 支持开发者</div></div>`;
     this._showModal('微信支付', html);
+    this._renderPayQr();
+  },
+
+  /* V26.9.25: 支付二维码主题化渲染（无白底：白→透明，码点→主题对比色） */
+  _renderPayQr() {
+    const canvas = $('#payQrCanvas');
+    if (!canvas) return;
+    /* 主题切换时若二维码弹窗仍开着，自动重渲染（防白码贴白底不可见） */
+    if (!this._payQrThemeWatch) {
+      this._payQrThemeWatch = true;
+      try {
+        new MutationObserver(() => { if ($('#payQrCanvas')) this._renderPayQr(); })
+          .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+      } catch {}
+    }
+    const ctx = canvas.getContext('2d');
+    if (!ctx) { this._payQrFallback(); return; }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    const dark = document.documentElement.dataset.theme !== 'light';
+    img.onload = () => {
+      try {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const data = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const d = data.data;
+        const [r2, g2, b2] = dark ? [245, 248, 255] : [24, 28, 40];
+        for (let i = 0; i < d.length; i += 4) {
+          const lum = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+          if (lum > 148) d[i + 3] = 0;                                  // 白底/静区 → 全透明
+          else { d[i] = r2; d[i + 1] = g2; d[i + 2] = b2; d[i + 3] = 255; } // 码点 → 主题对比色
+        }
+        ctx.putImageData(data, 0, 0);
+      } catch (e) { this._payQrFallback(); } // 画布被污染（无 CORS 头）→ 回退白底
+    };
+    img.onerror = () => this._payQrFallback();
+    img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&qzone=2&data=' + encodeURIComponent(CONFIG.WECHAT_PAY_URI);
+  },
+
+  _payQrFallback() {
+    const canvas = $('#payQrCanvas');
+    if (!canvas) return;
+    const img = document.createElement('img');
+    img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&qzone=2&data=' + encodeURIComponent(CONFIG.WECHAT_PAY_URI);
+    img.alt = '微信支付二维码';
+    img.style.cssText = 'width:200px;height:200px;border-radius:12px;background:#fff';
+    canvas.replaceWith(img);
   },
 
   /* ---------- BATCH EXPORT ---------- */
@@ -10378,4 +10541,4 @@ document.addEventListener('DOMContentLoaded', () => UI.init());
 </script>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
