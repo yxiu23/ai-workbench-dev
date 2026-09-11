@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#080b14" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
-<title>修的媒体工作台 V26.9.27</title>
+<title>修的媒体工作台 V26.9.29</title>
 <!-- V68 衬线品牌字：思源宋体（Noto Serif SC），加载失败回退系统宋体 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,13 +23,12 @@
 :root {
   color-scheme: light dark;
   --safe-top: env(safe-area-inset-top, 0px);
-  --safe-top-fallback: 0px;
+  /* V26.9.29: --safe-top-fallback 死代码清退（定义后全站零消费） */
 }
 /* PWA standalone模式：env(safe-area-inset-top)可能返回0，用固定值兜底 */
 @media all and (display-mode: standalone) {
   :root {
     --safe-top: 59px; /* 灵动岛机型安全区高度 */
-    --safe-top-fallback: 59px;
   }
 }
 :root {
@@ -1612,12 +1611,7 @@ body[data-bgmedia] .theme-bg-grad { opacity: 0 !important; }
     --radius-md: 13px;
     --radius-lg: 18px;
   }
-  /* 安全区适配 */
-  .app-header {
-    padding-top: var(--safe-top);
-    height: calc(48px + var(--safe-top));
-    flex-shrink: 0;
-  }
+  /* V26.9.29: .app-header 死规则清退（该元素 V26.9.25 已从 DOM 移除，安全区改由 .app-body padding 承担） */
   /* 布局：上下堆叠 + 视图切换；V26.9.22: 玻璃板留白与安全区适配 */
   .app-body {
     display: flex;
@@ -1645,27 +1639,33 @@ body[data-bgmedia] .theme-bg-grad { opacity: 0 !important; }
   }
   .result-panel.mobile-active { display: flex; }
   .result-body { padding: 12px; }
-  /* V26.9.25 移动端视图切换 — 液态玻璃胶囊（全局材质统一：gloss+玻璃令牌+slab 阴影+顶部内高光） */
+  /* V26.9.29 编辑/结果切换移至底部：液态玻璃 dock + 底部安全区（拇指热区，遗留需求落地；
+     z-index 40 层级表：低于天气弹卡 80/抽屉 72/toast 90，im-overlay 99999 全屏自然覆盖） */
   .mobile-view-switch {
     display: flex !important;
-    flex-shrink: 0;
-    align-self: center;
+    position: fixed;
+    left: 50%;
+    bottom: calc(10px + var(--safe-bottom));
+    transform: translateX(-50%);
     gap: 4px;
-    margin: 10px 0 0;
-    padding: 4px;
+    margin: 0;
+    padding: 5px 6px;
     border-radius: 999px;
     background: var(--lg-gloss), var(--surface-glass-2);
     border: 1px solid var(--lg-edge);
     -webkit-backdrop-filter: var(--glass-blur);
     backdrop-filter: var(--glass-blur);
-    box-shadow: var(--lg-slab);
-    position: relative;
-    z-index: 15;
+    box-shadow: var(--lg-slab), 0 14px 34px -12px rgba(0, 0, 0, .5);
+    z-index: 40;
   }
   .mobile-view-switch button {
-    flex: 1;
-    min-width: 96px;
-    padding: 7px 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 108px;
+    min-height: 44px; /* V26.9.29: 触控标准 */
+    padding: 8px 18px;
     border: none;
     border-radius: 999px;
     background: none;
@@ -1675,14 +1675,17 @@ body[data-bgmedia] .theme-bg-grad { opacity: 0 !important; }
     cursor: pointer;
     transition: all var(--transition-fast);
   }
+  .mobile-view-switch button svg { width: 15px; height: 15px; flex-shrink: 0; }
   .mobile-view-switch button:active { transform: scale(.92); } /* V26.9.24 spring 按压手感延续 */
   .mobile-view-switch button.active {
     color: var(--brand);
     background: var(--brand-soft);
     box-shadow: inset 0 1px 0 var(--lg-hi), 0 2px 8px -2px color-mix(in srgb, var(--brand) 35%, transparent);
   }
-  /* V26.9.25 移动端去外围大框：全出血玻璃，背景动态渐变直达边缘（不再有四角黑框） */
-  .app-body { padding: 0; gap: 0; }
+  /* V26.9.25 移动端去外围大框：全出血玻璃，背景动态渐变直达边缘（不再有四角黑框）
+     V26.9.29: 安全区改由 app-body 承担——顶部避开刘海/灵动岛（原补偿写在已删除的 .app-header 死规则里），
+     底部为玻璃 dock 预留 66px，sticky 生成条/滚动内容均不被 dock 遮挡 */
+  .app-body { padding: var(--safe-top) 0 calc(66px + var(--safe-bottom)); gap: 0; }
   .param-panel, .result-panel {
     border-radius: 0;
     border-left: none;
@@ -1716,23 +1719,30 @@ body[data-bgmedia] .theme-bg-grad { opacity: 0 !important; }
   .result-search-wrap { min-width: 80px; flex: 1; }
   .result-search-input { font-size: 11px; padding: 4px 6px 4px 24px; }
   .sort-select { font-size: 11px; min-width: 90px; }
-  /* 表单元素触控优化 */
+  /* 表单元素触控优化；V26.9.29: 字号 15→16px，<16px 会触发 iOS Safari 聚焦自动放大且不回弹 */
   .param-panel input[type="text"],
   .param-panel input[type="number"],
   .param-panel select,
   .param-panel textarea {
     min-height: 40px;
-    font-size: 15px;
+    font-size: 16px;
   }
   .param-panel textarea { min-height: 60px; }
-  /* V26.9.12: 移动端生成按钮贴底悬浮 */
+  /* V26.9.12: 移动端生成按钮贴底悬浮
+     V26.9.29: 渐变底(transparent→--bg-elev)在全出血动态背景上有色带断层 → 改液态玻璃条
+     （gloss+pop 磨砂+玻璃 blur+上缘 hairline+上投阴影），与全站弹卡材质统一；
+     safe-bottom 已由 app-body padding 承担，此处不再叠加避免双倍 */
   .generate-section {
     position: sticky;
     bottom: 0;
     left: 0;
     right: 0;
-    background: linear-gradient(180deg, transparent 0%, var(--bg-elev) 30%);
-    padding: 12px max(12px, var(--safe-left)) calc(8px + var(--safe-bottom));
+    background: var(--lg-gloss), var(--surface-glass-pop);
+    border-top: 1px solid var(--lg-edge);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+    box-shadow: 0 -14px 30px -18px rgba(0, 0, 0, .55);
+    padding: 10px max(12px, var(--safe-left));
     margin-top: auto;
     z-index: 10;
   }
@@ -1813,6 +1823,31 @@ body[data-bgmedia] .theme-bg-grad { opacity: 0 !important; }
   .batch-panel { padding: 10px; }
   /* V26.9.9: 手机端隐藏底栏最近项 */
   .result-strip { display: none !important; }
+  /* ===== V26.9.29 移动端布局优化批 ===== */
+  /* iOS 防聚焦自动放大：全站其余触屏输入面统一 ≥16px（param-panel 主规则已改，此处兜底低频输入区） */
+  .result-search-input, .settings-body input[type="text"], .settings-body input[type="password"],
+  .modal-overlay input[type="text"], .modal-overlay input[type="password"], .modal-overlay input[type="number"],
+  .history-sidebar input[type="text"], .city-search input {
+    font-size: 16px !important;
+  }
+  /* 触控热区扩展：视觉不变，伪元素参与命中测试 → 命中区扩至 ≥39px（44px 标准的务实近似） */
+  .prompt-actions .tool-btn, .set-nav-chip, .preset-trigger, .prompt-save-btn, .modal-close { position: relative; }
+  .prompt-actions .tool-btn::after, .set-nav-chip::after, .preset-trigger::after,
+  .prompt-save-btn::after, .modal-close::after {
+    content: ''; position: absolute; inset: -7px; border-radius: inherit;
+  }
+  /* 底部抽屉 grabber 把手（全局隐藏规则在 768 块外桌面区，此处仅移动端展开；DOM 由 JS 注入） */
+  .settings-drawer .drawer-grabber, .history-sidebar .drawer-grabber {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 22px; flex-shrink: 0; cursor: grab; touch-action: none;
+    margin-top: 2px;
+  }
+  .drawer-grabber::after {
+    content: ''; width: 40px; height: 4px; border-radius: 999px;
+    background: color-mix(in srgb, var(--text-dim) 60%, transparent);
+    transition: background var(--transition);
+  }
+  .drawer-grabber:active::after { background: var(--text-muted); }
 }
 
 /* 小手机：进一步压缩 */
@@ -1822,8 +1857,9 @@ body[data-bgmedia] .theme-bg-grad { opacity: 0 !important; }
   .result-search-wrap { min-width: 60px; }
 }
 
-/* 移动端视图切换栏（桌面隐藏） */
+/* 移动端专属组件：桌面隐藏（V26.9.29: 新增抽屉 grabber 同列） */
 .mobile-view-switch { display: none; }
+.drawer-grabber { display: none; }
 
 /* iOS26 液态玻璃：支持backdrop-filter的元素增强 */
 @supports (backdrop-filter: blur(20px)) or (-webkit-backdrop-filter: blur(20px)) {
@@ -2327,17 +2363,26 @@ body.is-generating .orb-a {
 
 .weather-icon { font-size: 52px; }
 .weather-temp { font-size: 13px; color: var(--text-muted); font-variant-numeric: tabular-nums; font-weight: 500; }
+/* V26.9.29: 天气徽章移动端压缩 100→64px——原独占行高约 72px，压缩后释放约 30px 首屏给表单；
+   弹卡定位锚点为 badge 实时 rect，尺寸变化自动适应 */
 @media (max-width: 768px) {
-  .weather-lottie { width: 100px; height: 100px; margin: -16px -6px -16px -4px; }
-  .weather-icon { font-size: 44px; }
+  .weather-lottie { width: 64px; height: 64px; margin: -12px -4px -12px -2px; }
+  .weather-icon { font-size: 34px; }
+  .weather-temp { font-size: 12px; }
+  .brand-mark { margin-bottom: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
   .weather-lottie, .weather-icon { animation: none !important; }
 }
 
-/* V26.9.11: 天气预报弹卡（点击徽章展开未来4天） */
+/* V26.9.11: 天气预报弹卡（点击徽章展开未来4天）
+   V26.9.28: absolute→fixed + 挂载点移至 body —— 根因：弹卡原为 .param-panel（玻璃）的 DOM 后代，
+   参数面板自身的 backdrop-filter 会成为后代的 Backdrop Root 边界，弹卡的模糊只能采样
+   「面板已绘制结果」（半透明底色+已被面板模糊过一次的背景），再 blur 视觉无感（A/B 实验证实：
+   blur26 开/关截图像素级无差异）。挂到 body 后与 modal/设置抽屉同级，直接采样页面锐利内容，
+   模糊立现；left/top 由 JS 依徽章位置计算（_positionWeatherPop），translate:-50% 保留水平居中锚定 */
 .weather-pop {
-  position: absolute; top: calc(100% + 8px); left: 50%; translate: -50% 0;
+  position: fixed; left: 50%; top: 0; translate: -50% 0;
   z-index: 80; min-width: 288px; padding: 12px 14px 14px;
   /* 暗色主题 --surface 为 60% 透明玻璃色，浮层需实底：--bg 打底 + surface 色叠加 */
   background-color: var(--bg);
@@ -2634,12 +2679,9 @@ body.is-generating .orb-a {
     -webkit-backdrop-filter: url(#lgRefract) blur(18px) saturate(150%) brightness(1.05);
     backdrop-filter: url(#lgRefract) blur(18px) saturate(150%) brightness(1.05);
   }
-  /* V26.9.26: 天气弹卡单列 —— 磨砂更粗（blur 18→26 + saturate 提升），配合更实的底色令牌防「太透看不清」
-     V26.9.27: 加 !important —— 23d 段补了基础 blur 兜底且位置在后，不加则折射增强会被覆盖 */
-  .weather-pop {
-    -webkit-backdrop-filter: url(#lgRefract) blur(26px) saturate(172%) brightness(1.06) !important;
-    backdrop-filter: url(#lgRefract) blur(26px) saturate(172%) brightness(1.06) !important;
-  }
+  /* V26.9.26: 天气弹卡单列磨砂更粗；V26.9.28: 弹卡退出折射组 ——
+     ①阅读型浮层重磨砂比折射更合适 ②规避 backdrop-filter:url() 在部分 Chromium 的渲染变量
+     ③挂 body 后采样锐利页面内容，纯 blur(26px) 已足够「液态」；参数并入 23d 基础规则 */
   .tc-quick, .atp-card, .bg-type-row, .wp-tip {
     -webkit-backdrop-filter: url(#lgRefractSoft) blur(14px) saturate(160%) brightness(1.04);
     backdrop-filter: url(#lgRefractSoft) blur(14px) saturate(160%) brightness(1.04);
@@ -2649,10 +2691,6 @@ body.is-generating .orb-a {
     .settings-drawer, .history-sidebar, .modal-content, .compare-bar, .lb-meta {
       -webkit-backdrop-filter: blur(18px) saturate(150%) brightness(1.05);
       backdrop-filter: blur(18px) saturate(150%) brightness(1.05);
-    }
-    .weather-pop {
-      -webkit-backdrop-filter: blur(26px) saturate(172%) brightness(1.06) !important;
-      backdrop-filter: blur(26px) saturate(172%) brightness(1.06) !important;
     }
     .tc-quick, .atp-card, .bg-type-row, .wp-tip {
       -webkit-backdrop-filter: blur(14px) saturate(160%) brightness(1.04);
@@ -2704,17 +2742,16 @@ body.is-generating .orb-a {
 /* --- 23d. 全局玻璃铺开：天气弹卡 / 模态窗 / 对比栏 升级为统一液态玻璃（历史/设置/灯箱 V26.9.22 已做）
    V26.9.26: 天气弹卡换用 --surface-glass-pop（dark .50 / light .68）——底色更实一档，
    用户反馈「太透看不清」；噪点磨砂单独加密（::after 粒径 160→112px）强化「粗糙玻璃」手感
-   V26.9.27: 天气弹卡补基础 backdrop-filter 兜底——此前 blur 只写在 23a 的
-   @supports(backdrop-filter:url()) 内，Safari/Firefox/旧 Chromium 不支持折射滤镜时
-   弹卡完全没有模糊（其他弹窗均有 --glass-blur 兜底，材质不一致）。
-   兜底 blur(24px) saturate(158%) 比标准 --glass-blur 略强一档，延续「弹卡更实更糙」定位；
-   支持折射的浏览器仍由 23a（!important）提供 url(#lgRefract) blur(26) 液态增强 --- */
+   V26.9.27: 补基础兜底（当时误判根因为「缺兜底」，实际根因是 Backdrop Root 边界——
+   弹卡嵌在玻璃面板内采样不到锐利内容）
+   V26.9.28: 弹卡挂 body + 退出折射组后，此处成为唯一 blur 来源，参数吸收原折射段
+   blur(26px) saturate(172%) brightness(1.06)——纯 blur、全浏览器同一条已验证路径 --- */
 .weather-pop {
   background: var(--lg-gloss), var(--surface-glass-pop) !important;
   border: 1px solid var(--lg-edge);
   box-shadow: var(--lg-slab);
   overflow: hidden;
-  -webkit-backdrop-filter: blur(24px) saturate(158%); backdrop-filter: blur(24px) saturate(158%);
+  -webkit-backdrop-filter: blur(26px) saturate(172%) brightness(1.06); backdrop-filter: blur(26px) saturate(172%) brightness(1.06);
 }
 .weather-pop::after { background-size: 112px 112px; }
 .modal-content {
@@ -2854,10 +2891,10 @@ body.is-generating .orb-a {
   <button class="guide-close" id="guideClose">×</button>
 </div>
 
-<!-- 移动端视图切换栏 -->
+<!-- 移动端视图切换栏（V26.9.29: 移至底部玻璃 dock，带图标） -->
 <div class="mobile-view-switch" id="mobileViewSwitch">
-  <button class="active" data-mview="param">编辑</button>
-  <button data-mview="result">结果</button>
+  <button class="active" data-mview="param"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/></svg>编辑</button>
+  <button data-mview="result"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>结果</button>
 </div>
 
 <!-- 主体 -->
@@ -3124,7 +3161,7 @@ body.is-generating .orb-a {
     <hr style="border:none;border-top:1px solid var(--border);margin:20px 0 16px">
     <div class="settings-section" style="text-align:center">
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V26.9.27
+        修的媒体工作台 V26.9.29
       </div>
     </div>
   </div>
@@ -5265,6 +5302,7 @@ const UI = {
     this._startTaskCardTicker();
     this.renderHistoryBadge();
     this._bindMobileViewSwitch();
+    this._bindDrawerSwipe();
     AmbientFX.setGenerating(Store.getTasks().some(t => t.status === 'processing'));
     // V56: init TaskCenter (async, non-blocking; falls back to local polling)
     if (typeof TaskCenter !== 'undefined') {
@@ -5651,7 +5689,8 @@ const UI = {
       pop.id = 'weatherPop';
       pop.className = 'weather-pop';
       pop.setAttribute('role', 'dialog');
-      mark.appendChild(pop);
+      // V26.9.28: 挂 body（脱离 param-panel 玻璃的 Backdrop Root，模糊采样页面锐利内容才可见）
+      document.body.appendChild(pop);
     }
     // V26.9.13: aria-label 跟随当前城市（原为硬编码镇江）
     pop.setAttribute('aria-label', `${this._getCity().name} · 未来几天天气预报`);
@@ -5675,6 +5714,7 @@ const UI = {
       this._wpAtForecast = false;
       pop.innerHTML = this._buildForecastHTML(); this._animateCounters(pop); // V26.9.16: 数字滚动
       pop.classList.add('show');
+      this._positionWeatherPop(); // V26.9.28: fixed 定位（内容变化后宽度才准确，二次校准防视口溢出）
       const b = mark.querySelector('.weather-badge');
       if (b) b.setAttribute('aria-expanded', 'true');
     }
@@ -5699,7 +5739,31 @@ const UI = {
           }
         }
       });
+      // V26.9.28: fixed 弹卡不随文档滚动 —— 捕获阶段监听任意滚动容器，滚动即关闭（弹卡内部滚动除外）
+      document.addEventListener('scroll', (e) => {
+        const p = document.getElementById('weatherPop');
+        if (!p || !p.classList.contains('show')) return;
+        const tg = e.target;
+        if (tg && tg.nodeType === 1 && p.contains(tg)) return; // 弹卡自身内容滚动不关闭
+        p.classList.remove('show');
+        const bd = document.querySelector('.weather-badge');
+        if (bd) bd.setAttribute('aria-expanded', 'false');
+      }, true);
+      window.addEventListener('resize', () => this._positionWeatherPop());
     }
+  },
+
+  /* V26.9.28: fixed 弹卡定位 —— 以天气徽章为锚（水平中心对齐、下方 8px），并 clamp 防视口溢出 */
+  _positionWeatherPop() {
+    const pop = document.getElementById('weatherPop');
+    const badge = document.querySelector('.weather-badge');
+    if (!pop || !badge || !pop.classList.contains('show')) return;
+    const r = badge.getBoundingClientRect();
+    const vw = document.documentElement.clientWidth;
+    const half = pop.offsetWidth / 2 || 144; // 显示后 offsetWidth 才准确；translate:-50% 不影响该值
+    const cx = Math.max(half + 8, Math.min(r.left + r.width / 2, vw - half - 8));
+    pop.style.left = Math.round(cx) + 'px';
+    pop.style.top = Math.round(r.bottom + 8) + 'px';
   },
 
   /* V26.9.16: 弹卡数字滚动微动效（头部温度/三联条/AQI）—— reduced-motion 或已动画过的元素跳过 */
@@ -6180,7 +6244,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V26.9.27';
+      document.title = '修的媒体工作台 V26.9.29';
     }
   },
 
@@ -10287,6 +10351,45 @@ ${items.map(h => {
           sw.querySelector('[data-mview="result"]')?.click();
         }
       }, 500);
+    });
+  },
+
+  /* V26.9.29: 移动端底部抽屉 grabber 把手 + 下滑关闭手势
+     —— 手势只绑在 grabber 上（不干扰抽屉内容滚动），下滑 >90px 关闭；
+        inline transform 临时覆盖 class 动画，结束即清空恢复 class 控制 */
+  _bindDrawerSwipe() {
+    const drawers = [
+      { el: $('#settingsDrawer'), close: () => this._closeSettings() },
+      { el: $('#historySidebar'), close: () => this._closeHistory() },
+    ];
+    drawers.forEach(({ el, close }) => {
+      if (!el || el.dataset.grabBound) return;
+      el.dataset.grabBound = '1';
+      const grab = document.createElement('div');
+      grab.className = 'drawer-grabber';
+      grab.setAttribute('aria-hidden', 'true');
+      el.insertBefore(grab, el.firstChild);
+      let sy = 0, dy = 0, tracking = false;
+      grab.addEventListener('touchstart', (e) => {
+        if (window.innerWidth > 768) return;
+        sy = e.touches[0].clientY; dy = 0; tracking = true;
+        el.style.transition = 'none';
+      }, { passive: true });
+      grab.addEventListener('touchmove', (e) => {
+        if (!tracking) return;
+        dy = Math.max(0, e.touches[0].clientY - sy);
+        el.style.transform = 'translateY(' + dy + 'px)';
+        if (dy > 8 && e.cancelable) e.preventDefault();
+      }, { passive: false });
+      const end = () => {
+        if (!tracking) return;
+        tracking = false;
+        el.style.transition = '';
+        el.style.transform = '';
+        if (dy > 90) close();
+      };
+      grab.addEventListener('touchend', end);
+      grab.addEventListener('touchcancel', end);
     });
   },
 
