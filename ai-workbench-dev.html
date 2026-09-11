@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#080b14" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
-<title>修的媒体工作台 V26.9.35</title>
+<title>修的媒体工作台 V26.9.11</title>
 <!-- V68 衬线品牌字：思源宋体（Noto Serif SC），加载失败回退系统宋体 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1337,22 +1337,39 @@ textarea { resize: vertical; min-height: 80px; }
 .settings-drawer.show { transform: translateX(0); }
 .settings-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
 .settings-header h3 { font-size: 15px; font-weight: 600; flex: 1; }
-.settings-body { flex: 1; overflow-y: auto; padding: 0 18px 16px; }
-.settings-section { margin-bottom: 24px; }
-.settings-section h4 { font-size: 12px; font-weight: 600; color: var(--text-dim); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .5px; }
-.settings-section .input-group { margin-bottom: 10px; }
+.settings-body { flex: 1; overflow-y: auto; padding: 12px 18px 16px; } /* V26.9.11: 导航退役后由 body 自身提供顶部间距 */
+/* V26.9.38 设置布局重建：分区玻璃卡（L2 家族：玻璃上再叠磨砂）+ 分区头（图标+标题）+ 设置行化（label+控件+分隔线） */
+.settings-section {
+  margin-bottom: 14px;
+  padding: 12px 14px 4px;
+  border-radius: 16px;
+  background: var(--lg-gloss), var(--surface-glass-2);
+  border: 1px solid var(--lg-edge);
+  box-shadow: inset 0 1px 0 var(--lg-hi);
+  -webkit-backdrop-filter: blur(12px) saturate(1.5);
+  backdrop-filter: blur(12px) saturate(1.5);
+}
+.settings-section h4 {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12.5px; font-weight: 600; color: var(--text);
+  margin: 0; padding: 0 2px 9px;
+  border-bottom: 1px solid var(--border-soft);
+  letter-spacing: .3px;
+}
+.set-sec-icon { font-size: 13px; line-height: 1; }
+.set-status { font-size: 11px; color: var(--text-muted); padding: 6px 0 2px; line-height: 1.5; }
+.settings-section .input-group { margin-bottom: 0; }
 .settings-section .input-group label { font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px; }
 .settings-section .input-row { display: flex; gap: 6px; }
 .settings-section .input-row input { flex: 1; font-family: var(--font-mono); font-size: 12px; }
 .settings-section .input-row button { padding: 0 12px; border-radius: var(--radius-sm); background: var(--surface-2); color: var(--text-muted); font-size: 12px; white-space: nowrap; }
 .settings-section .input-row button:hover { color: var(--brand); }
-/* V26.9.18: 设置面板分组导航（吸顶 chips + 滚动同步高亮）—— body 顶部内边距移至导航自身 margin，保证 sticky 可贴住滚动口顶部 */
-.settings-nav { position: sticky; top: 0; z-index: 3; display: flex; gap: 6px; overflow-x: auto; margin: 10px -6px 12px; padding: 6px; background: var(--bg-elev); scrollbar-width: none; border-bottom: 1px solid var(--border-soft); }
-.settings-nav::-webkit-scrollbar { display: none; }
-.set-nav-chip { flex-shrink: 0; padding: 4px 11px; border-radius: 999px; font-size: 11px; color: var(--text-dim); background: var(--surface-2); border: 1px solid transparent; cursor: pointer; transition: color .15s ease, background .15s ease, border-color .15s ease; }
-.set-nav-chip:hover { color: var(--text); }
-.set-nav-chip.active { color: var(--brand); background: var(--surface-3); border-color: var(--brand); font-weight: 600; }
-.settings-toggle { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-soft); }
+/* V26.9.11 需求①：吸顶导航 chips 整条退役（settings-nav/set-nav-chip 系全部清除），分区玻璃卡图标头承担视觉导航 */
+/* 设置行：统一的 label+控件行（行间分隔线，末行去线） */
+.settings-toggle { display: flex; align-items: center; justify-content: space-between; padding: 11px 2px; border-bottom: 1px solid var(--border-soft); }
+.settings-toggle:last-child { border-bottom: none; padding-bottom: 8px; }
+.settings-section .input-group { padding: 10px 2px; border-bottom: 1px solid var(--border-soft); }
+.settings-section .input-group:last-of-type { border-bottom: none; padding-bottom: 8px; }
 .settings-toggle .toggle-label { font-size: 13px; }
 .settings-toggle .toggle-sub { font-size: 11px; color: var(--text-dim); }
 .toggle-switch { width: 40px; height: 22px; border-radius: 11px; background: var(--surface-2); position: relative; cursor: pointer; transition: background var(--transition), box-shadow var(--transition); box-shadow: inset 0 1px 2px rgba(9,14,30,.10); }
@@ -1807,16 +1824,20 @@ body[data-bgpreset="sakura"] .theme-bg-grad,
 body[data-bgpreset="cloud"] .theme-bg-grad { opacity: 1; }
 [data-theme="light"] body[data-bgpreset] .theme-bg-grad { filter: blur(46px) saturate(1.12); opacity: .62; }
 @media (prefers-reduced-motion: reduce) { .theme-bg-grad { animation: none; } }
+/* 关于区（V26.9.38 徽章化） */
+.settings-about { text-align: center; padding: 16px 14px 14px; }
+.about-app { font-size: 12.5px; font-weight: 600; color: var(--text); letter-spacing: .5px; }
+.about-ver { display: inline-block; margin-top: 7px; padding: 2px 10px; border-radius: 999px; background: var(--brand-soft); color: var(--brand); font-size: 10.5px; font-weight: 600; letter-spacing: .5px; }
 /* 媒体背景（图片/视频）模式下隐藏渐变幕 */
 body[data-bgmedia] .theme-bg-grad { opacity: 0 !important; }
 
 /* --- 22d. 设置面板·背景主题 UI --- */
-.bg-type-row { display: flex; gap: 3px; padding: 3px; background: var(--surface-2); border-radius: var(--radius-sm); border: 1px solid var(--border-soft); -webkit-backdrop-filter: blur(8px) saturate(140%); backdrop-filter: blur(8px) saturate(140%); } /* V26.9.27: 兜底 blur（折射不可用时仍有磨砂） */
-.bg-type-btn { flex: 1; padding: 6px 0; border-radius: calc(var(--radius-sm) - 3px); font-size: 12px; color: var(--text-muted); text-align: center; transition: all var(--transition-fast); }
+.bg-type-row { display: flex; gap: 3px; padding: 3px; background: var(--surface-2); border-radius: 999px; border: 1px solid var(--border-soft); -webkit-backdrop-filter: blur(8px) saturate(140%); backdrop-filter: blur(8px) saturate(140%); } /* V26.9.27: 兜底 blur；V26.9.38: 药丸化统一全站分段语言 */
+.bg-type-btn { flex: 1; padding: 6px 0; border-radius: 999px; font-size: 12px; color: var(--text-muted); text-align: center; transition: all var(--transition-fast); }
 .bg-type-btn:hover { color: var(--text); background: var(--surface-3); }
 .bg-type-btn.active { background: var(--brand); color: #fff; font-weight: 500; }
 .bg-presets { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; row-gap: 8px; padding: 2px 0; }
-.bgp-group-label { flex-basis: 100%; font-size: 10px; letter-spacing: .14em; color: var(--text-dim); user-select: none; padding-left: 1px; } /* V26.9.25: 独占一行（浅色/深色两行分组，窄抽屉不乱 wrap） */
+/* V26.9.11 需求③：浅色/深色分组标签退役，8 色板一行平铺（375px+ 单行，320px 自然换行） */
 /* V26.9.25: 色板升级玻璃弹珠质感（内高光+内收光+投影），28px 更易点按，视觉无锯齿 */
 .bg-swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--lg-edge); cursor: pointer; position: relative; transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast); box-shadow: inset 0 1px 1px rgba(255,255,255,.30), inset 0 -1px 2px rgba(3,6,16,.22), 0 2px 6px -2px rgba(3,6,16,.55); }
 .bg-swatch:hover { transform: scale(1.14); }
@@ -1831,7 +1852,8 @@ body[data-bgmedia] .theme-bg-grad { opacity: 0 !important; }
 .bg-swatch[data-swatch="ember"] { background: linear-gradient(135deg, #ff7a28, #ff545a 55%, #ffc45a); }
 .bg-swatch[data-swatch="abyss"] { background: linear-gradient(135deg, #0ea5e9, #2563eb 55%, #5eead4); }
 .bg-swatch-label { font-size: 11px; color: var(--text-dim); margin-left: auto; }
-.bg-dim-row { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text-muted); }
+.bg-dim-row { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text-muted); padding: 10px 2px; border-bottom: 1px solid var(--border-soft); }
+.bg-dim-row:last-of-type { border-bottom: none; padding-bottom: 8px; }
 .bg-dim-row label { flex-shrink: 0; min-width: 58px; }
 .bg-dim-row input[type="range"] { flex: 1; padding: 0; height: 4px; min-height: 4px; -webkit-appearance: none; appearance: none; background: var(--surface-3); border: none; border-radius: 999px; box-shadow: none; cursor: pointer; }
 .bg-dim-row input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--brand); border: 2px solid #fff; box-shadow: 0 1px 4px rgba(2,4,12,.35); cursor: pointer; }
@@ -1923,7 +1945,7 @@ body[data-bgmedia] .theme-bg-grad { opacity: 0 !important; }
     box-shadow: var(--lg-slab);
     z-index: 40;
   }
-  body[data-mview="result"] .mobile-view-switch { display: flex; }
+  body[data-mview="result"] .mobile-view-switch:not(.is-right) { display: flex; } /* V26.9.36 需求⑧：:not(.is-right) —— 结果胶囊仅在编辑视图显示，结果视图只留左上角「编辑」 */
   /* 结果视图：顶部工具行避让左上角返回胶囊 */
   body[data-mview="result"] .result-header { padding-top: 46px; }
   .mobile-view-switch button {
@@ -1950,6 +1972,10 @@ body[data-bgmedia] .theme-bg-grad { opacity: 0 !important; }
     background: var(--brand-soft);
     box-shadow: inset 0 1px 0 var(--lg-hi), 0 2px 8px -2px color-mix(in srgb, var(--brand) 35%, transparent);
   }
+  /* V26.9.36 需求⑧：编辑视图右上角悬浮「结果」胶囊 —— 与左上角「编辑」返回胶囊镜像对称；
+     fixed 悬浮不占布局流（零布局影响），仅 param 编辑视图显示 */
+  .mobile-view-switch.is-right { left: auto; right: max(10px, var(--safe-right)); }
+  body[data-mview="param"] .mobile-view-switch.is-right { display: flex; }
   /* V26.9.25 移动端去外围大框：全出血玻璃，背景动态渐变直达边缘（不再有四角黑框）
      V26.9.29: 安全区改由 app-body 承担——顶部避开刘海/灵动岛（原补偿写在已删除的 .app-header 死规则里），
      底部为玻璃 dock 预留 66px，sticky 生成条/滚动内容均不被 dock 遮挡 */
@@ -2110,8 +2136,8 @@ body[data-bgmedia] .theme-bg-grad { opacity: 0 !important; }
     font-size: 16px !important;
   }
   /* 触控热区扩展：视觉不变，伪元素参与命中测试 → 命中区扩至 ≥39px（44px 标准的务实近似） */
-  .prompt-actions .tool-btn, .set-nav-chip, .preset-trigger, .prompt-save-btn, .modal-close { position: relative; }
-  .prompt-actions .tool-btn::after, .set-nav-chip::after, .preset-trigger::after,
+  .prompt-actions .tool-btn, .preset-trigger, .prompt-save-btn, .modal-close { position: relative; }
+  .prompt-actions .tool-btn::after, .preset-trigger::after,
   .prompt-save-btn::after, .modal-close::after {
     content: ''; position: absolute; inset: -7px; border-radius: inherit;
   }
@@ -2714,6 +2740,28 @@ body.is-generating .orb-a {
 .weather-pop.show { opacity: 1; transform: none; pointer-events: auto; }
 .wp-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 10px; margin-bottom: 8px; border-bottom: 1px solid var(--border-soft); }
 .wp-city { font-size: 12px; color: var(--text-dim); letter-spacing: .04em; }
+/* V26.9.36 需求③：设置页天气城市区移除 → 城市切换入口移入预报弹卡头部（胶囊可点开内嵌城市面板） */
+.wp-city-btn {
+  display: inline-flex; align-items: center; gap: 3px; padding: 3px 8px 3px 8px; border-radius: 999px;
+  font-size: 12px; letter-spacing: .04em; color: var(--text-muted);
+  background: var(--surface-2); border: 1px solid var(--border-soft); cursor: pointer;
+  transition: color .15s ease, border-color .15s ease, background .15s ease;
+}
+.wp-city-btn:hover, .wp-city-btn:focus-visible { color: var(--text); border-color: var(--brand); outline: none; }
+.wp-city-btn .wp-city-caret { width: 11px; height: 11px; flex-shrink: 0; transition: transform .18s ease; }
+.wp-city-btn[aria-expanded="true"] .wp-city-caret { transform: rotate(180deg); }
+.wp-citypanel { margin: 8px 0 2px; padding: 9px; border-radius: var(--radius-md); background: var(--surface-2); }
+.wp-citypanel[hidden] { display: none; }
+.wpc-favs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 7px; }
+.wpc-favs:empty { display: none; margin-bottom: 0; }
+.wpc-search input {
+  width: 100%; padding: 7px 10px; font-size: 12px; color: var(--text);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.wpc-search input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+.wpc-tip { margin-top: 6px; font-size: 10px; color: var(--text-dim); letter-spacing: .02em; }
+.weather-pop .city-results { max-height: 150px; }
 .wp-now { font-family: var(--font-serif); font-size: 20px; font-weight: 600; color: var(--text); line-height: 1; }
 .wp-now small { font-family: inherit; font-size: 12px; font-weight: 400; color: var(--text-muted); margin-left: 6px; letter-spacing: .02em; }
 /* V26.9.16: 弹卡数字滚动微动效（等宽数字防抖动） */
@@ -3216,6 +3264,13 @@ body.is-generating .orb-a {
   </button>
 </div>
 
+<!-- V26.9.36 需求⑧：编辑视图右上角悬浮「结果」胶囊（与左上角「编辑」镜像对称；fixed 不占布局流，仅 param 视图显示） -->
+<div class="mobile-view-switch is-right" id="mobileResultSwitch">
+  <button data-mview="result" aria-label="查看结果">
+    结果<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><polyline points="12 5 19 12 12 19"/></svg>
+  </button>
+</div>
+
 <!-- 工作流按钮停靠区（V26.9.35 需求②：复制/粘贴工作流移入提示词面板头部，与预设并列 —— 同预设钮样式的纯图标小钮；DOM 由 JS 搬进 prompt-actions，appendChild 移动保留事件绑定） -->
 <div id="wfPark" style="display:none">
   <button class="workflow-btn" id="copyWorkflowBtn" title="复制工作流" aria-label="复制工作流">
@@ -3383,10 +3438,10 @@ body.is-generating .orb-a {
     <button class="modal-close" id="settingsClose">×</button>
   </div>
   <div class="settings-body">
-    <div class="settings-nav" id="settingsNav" role="group" aria-label="设置分组快捷导航"></div>
+    <!-- V26.9.11 需求①：上方快捷导航按钮整条退役（分区玻璃卡图标头已承担视觉导航） -->
     <!-- V38: 偏好开关（每 ¥10 提醒移除开关，默认开启） -->
     <div class="settings-section" id="setSecPref">
-      <h4>偏好</h4>
+      <h4><span class="set-sec-icon">🎯</span>偏好</h4>
       <div class="settings-toggle theme-toggle-row">
         <div>
           <div class="toggle-label">深色主题</div>
@@ -3402,79 +3457,61 @@ body.is-generating .orb-a {
     </div>
     <!-- V38: API 配置 -->
     <div class="settings-section" id="setSecApi">
-      <h4>API 配置</h4>
+      <h4><span class="set-sec-icon">🔑</span>API 配置</h4>
       <div class="input-group">
         <div class="input-row">
-          <input type="password" id="apiKeyInput" placeholder="内置默认已生效 · 填入新 Key 将覆盖" autocomplete="off" spellcheck="false">
+          <input type="password" id="apiKeyInput" placeholder="API Key" autocomplete="off" spellcheck="false" aria-label="API Key">
           <button id="testKeyBtn">测试</button>
         </div>
-        <div id="apiKeyStatus" style="font-size:11px;color:var(--text-muted);padding:2px 0"></div>
+        <div id="apiKeyStatus" class="set-status"></div>
       </div>
     </div>
     <!-- V38: R2 图床 -->
     <div class="settings-section" id="setSecR2">
-      <h4>R2 图床</h4>
+      <h4><span class="set-sec-icon">🖼️</span>R2 图床</h4>
       <div class="input-group">
         <div class="input-row">
-          <input type="text" id="r2WorkerUrlInput" placeholder="内置默认已生效 · 填入新 Worker URL 覆盖" autocomplete="off" autocapitalize="off" spellcheck="false">
+          <input type="text" id="r2WorkerUrlInput" placeholder="Worker URL" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="R2 图床 Worker URL">
         </div>
       </div>
       <div class="input-group">
         <div class="input-row">
-          <input type="password" id="r2AuthTokenInput" placeholder="内置默认已生效 · 填入新 Token 覆盖" autocomplete="off" spellcheck="false">
+          <input type="password" id="r2AuthTokenInput" placeholder="Auth Token" autocomplete="off" spellcheck="false" aria-label="R2 图床 Auth Token">
           <button id="testR2Btn">测试</button>
         </div>
-        <div id="r2Status" style="font-size:11px;color:var(--text-muted);padding:2px 0"></div>
+        <div id="r2Status" class="set-status"></div>
       </div>
     </div>
     <!-- V38: 任务中心 -->
     <div class="settings-section" id="setSecTask">
-      <h4>任务中心</h4>
+      <h4><span class="set-sec-icon">📋</span>任务中心</h4>
       <div class="input-group">
         <div class="input-row">
-          <input type="text" id="taskCenterUrlInput" placeholder="任务中心 Worker URL" autocomplete="off" autocapitalize="off" spellcheck="false">
+          <input type="text" id="taskCenterUrlInput" placeholder="Worker URL" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="任务中心 Worker URL">
         </div>
       </div>
       <div class="input-group">
         <div class="input-row">
-          <input type="password" id="taskCenterTokenInput" placeholder="任务中心 Token" autocomplete="off" spellcheck="false">
+          <input type="password" id="taskCenterTokenInput" placeholder="Token" autocomplete="off" spellcheck="false" aria-label="任务中心 Token">
           <button id="testTaskCenterBtn">测试</button>
         </div>
+        <div id="taskCenterStatus" class="set-status"></div>
       </div>
-      <div id="taskCenterStatus" style="font-size:12px;color:var(--text-muted);padding:4px 0"></div>
     </div>
-    <!-- V26.9.12: 天气城市切换 · V26.9.13 自定义城市搜索 · V26.9.14 收藏夹+搜索历史 -->
-    <div class="settings-section" id="setSecWeather">
-      <h4>天气城市</h4>
-      <div class="input-group">
-        <div class="input-row">
-          <select id="weatherCitySelect" class="city-select" aria-label="选择天气城市"></select>
-        </div>
-      </div>
-      <div id="weatherFavChips" class="fav-chips" aria-label="常用城市收藏"></div>
-      <div class="input-group" style="margin-top:8px">
-        <div class="input-row">
-          <input type="text" id="weatherCitySearch" placeholder="搜索任意城市（如：西安、东京）" autocomplete="off" aria-label="搜索城市">
-        </div>
-        <div id="weatherCityResults" class="city-results" role="listbox" aria-label="城市搜索结果"></div>
-      </div>
-      <div id="weatherCityStatus" style="font-size:11px;color:var(--text-muted);padding:2px 0">当前：镇江</div>
-    </div>
+    <!-- V26.9.36 需求③：天气城市区已从设置移除 —— 默认 IP 自动定位，手动切换入口在预报弹卡头部城市胶囊 -->
     <!-- V26.9.22: 背景主题（液态玻璃需要背后有画面：动态渐变/图片/视频） -->
     <div class="settings-section" id="setSecThemeBg">
-      <h4>背景主题</h4>
+      <h4><span class="set-sec-icon">🎨</span>背景主题</h4>
       <div class="bg-type-row" role="group" aria-label="背景类型" id="bgTypeRow">
         <button type="button" class="bg-type-btn active" data-bgtype="gradient">动态渐变</button>
         <button type="button" class="bg-type-btn" data-bgtype="image">图片</button>
         <button type="button" class="bg-type-btn" data-bgtype="video">视频</button>
       </div>
       <div class="bg-presets" id="bgPresets" aria-label="渐变预设（4 浅色 + 4 深色）">
-        <span class="bgp-group-label">浅色</span>
         <button type="button" class="bg-swatch" data-swatch="dawn" title="晨曦（浅）" aria-label="晨曦预设（浅色）"></button>
         <button type="button" class="bg-swatch" data-swatch="jade" title="翡翠（浅）" aria-label="翡翠预设（浅色）"></button>
         <button type="button" class="bg-swatch" data-swatch="sakura" title="樱雪（浅）" aria-label="樱雪预设（浅色）"></button>
         <button type="button" class="bg-swatch" data-swatch="cloud" title="云青（浅）" aria-label="云青预设（浅色）"></button>
-        <span class="bgp-group-label">深色</span>
         <button type="button" class="bg-swatch active" data-swatch="aurora" title="极光（深 · 默认）" aria-label="极光预设（深色，默认）"></button>
         <button type="button" class="bg-swatch" data-swatch="dusk" title="暮紫（深）" aria-label="暮紫预设（深色）"></button>
         <button type="button" class="bg-swatch" data-swatch="ember" title="熔金（深）" aria-label="熔金预设（深色）"></button>
@@ -3489,10 +3526,9 @@ body.is-generating .orb-a {
       </div>
       <div class="input-group" id="bgVideoRow" style="display:none">
         <div class="input-row">
-          <input type="text" id="bgVideoUrl" placeholder="视频 URL（mp4/webm，静音循环播放）" autocomplete="off" spellcheck="false" aria-label="背景视频 URL">
+          <input type="text" id="bgVideoUrl" placeholder="" autocomplete="off" spellcheck="false" aria-label="背景视频 URL">
           <button type="button" id="bgVideoFileBtn">本地</button>
         </div>
-        <div style="font-size:10.5px;color:var(--text-dim);padding:2px 0">V26.9.25：本地图片/视频会自动缓存到浏览器（IndexedDB），刷新后自动恢复；填 URL 同样永久记忆，重装浏览器/清缓存后需重选</div>
       </div>
       <div class="bg-dim-row" style="margin-top:8px">
         <label for="bgDimRange">背景压暗</label>
@@ -3504,16 +3540,14 @@ body.is-generating .orb-a {
         <input type="range" id="bgBlurRange" min="0" max="24" step="2" value="0" aria-label="背景模糊像素">
         <span class="bg-dim-val" id="bgBlurVal">0px</span>
       </div>
-      <div id="bgStatus" style="font-size:11px;color:var(--text-muted);padding:2px 0"></div>
+      <div id="bgStatus" class="set-status"></div>
     </div>
     <input type="file" id="bgImageFile" accept="image/*" style="display:none" aria-hidden="true">
     <input type="file" id="bgVideoFile" accept="video/*" style="display:none" aria-hidden="true">
-    <!-- V38: 关于 (分隔线 + 居中，无 API 行) -->
-    <hr style="border:none;border-top:1px solid var(--border);margin:20px 0 16px">
-    <div class="settings-section" style="text-align:center">
-      <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V26.9.35
-      </div>
+    <!-- V38: 关于（V26.9.38 徽章化：应用名+版本 pill） -->
+    <div class="settings-section settings-about">
+      <div class="about-app">修的媒体工作台</div>
+      <span class="about-ver">V26.9.11</span>
     </div>
   </div>
 </aside>
@@ -5681,11 +5715,13 @@ const UI = {
     this._initCitySelect();
     this._initFavChips();
     this._initCitySearch();
-    this._initSettingsNav(); // V26.9.18: 设置面板分组导航
     this._bindWpTip(); // V26.9.19: 曲线热点自定义 tooltip
     this._initHistoryThumbLoader(); // V26.9.19: 历史缩略图骨架
     this._initMasonry(); // V26.9.21: 瀑布流量高监听（媒体加载/窗口变化）
     this._loadWeather();
+    this._maybeAutoDetectCity(); // V26.9.36 需求③：未手动选过城市时按 IP 自动定位（异步，完成后重载天气）
+    this._bindSystemTheme(); // V26.9.36 需求⑦：系统深浅色变化实时跟随（未手动态下）
+    this._bindPromptGrowOnResize(); // V26.9.36 需求⑥：视口变化重算提示词框高度
   },
 
   /* ---------- V37: 天气动效 · V26.9.13 城市搜索 + AQI + 逐小时现象 ---------- */
@@ -5710,6 +5746,74 @@ const UI = {
       if (c) return c;
     }
     return this._CITIES.find(c => c.id === id) || this._CITIES[0];
+  },
+
+  /* ---------- V26.9.36 需求③：天气城市 IP 自动定位 ----------
+     设置页城市区已移除，默认无需手动设置：首次进入按 IP 定位就近城市
+     （仅当用户从未手动选过城市时生效，尊重手动选择）；定位结果缓存 7 天。
+     手动切换入口在预报弹卡头部城市胶囊（_bindWeatherPopExtras） */
+  async _detectCityByIP() {
+    // ⓪ 缓存命中（7 天 TTL）直接返回
+    try {
+      const raw = localStorage.getItem('wb-weather-ip-city');
+      if (raw) {
+        const c = JSON.parse(raw);
+        if (c && c.name && typeof c.lat === 'number' && typeof c.lon === 'number' && (Date.now() - (c.t || 0)) < 7 * 24 * 3600 * 1000) return c;
+      }
+    } catch (e) { /* 缓存不可用则直连 */ }
+    // ① IP → 经纬度（ipapi.co 优先，ipwho.is 兑底；各自 5s 超时）
+    let geo = null;
+    const apis = [
+      { url: 'https://ipapi.co/json/', pick: d => (d && d.city && typeof d.latitude === 'number' && typeof d.longitude === 'number') ? { name: d.city, lat: d.latitude, lon: d.longitude } : null },
+      { url: 'https://ipwho.is/', pick: d => (d && d.success !== false && d.city && typeof d.latitude === 'number' && typeof d.longitude === 'number') ? { name: d.city, lat: d.latitude, lon: d.longitude } : null }
+    ];
+    for (const api of apis) {
+      if (geo) break;
+      try {
+        const ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+        if (ctl) setTimeout(() => { try { ctl.abort(); } catch (e) { /* 忽略 */ } }, 5000);
+        const res = await fetch(api.url, { signal: ctl && ctl.signal });
+        if (!res.ok) continue;
+        geo = api.pick(await res.json());
+      } catch (e) { /* 试下一个源 */ }
+    }
+    if (!geo) return null;
+    // ② 经纬度 → 中文名（BigDataCloud 免费客户端逆向地理编码；失败沿用 IP 返回名）
+    let name = geo.name || '';
+    try {
+      const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${geo.lat}&longitude=${geo.lon}&localityLanguage=zh`);
+      if (res.ok) {
+        const d = await res.json();
+        name = d.city || d.locality || d.principalSubdivision || name;
+      }
+    } catch (e) { /* 沿用 IP 名 */ }
+    if (!name) name = '当前位置';
+    // ③ 命中预设（就近 0.6°≈60km 或同名）→ 用预设中文名；否则写入自定义城市
+    const preset = this._CITIES.find(x => Math.abs(x.lat - geo.lat) < 0.6 && Math.abs(x.lon - geo.lon) < 0.6)
+      || this._CITIES.find(x => x.name === name);
+    const city = preset ? { id: preset.id, name: preset.name, lat: preset.lat, lon: preset.lon } : { id: 'custom', name, lat: geo.lat, lon: geo.lon };
+    try { localStorage.setItem('wb-weather-ip-city', JSON.stringify(Object.assign({}, city, { t: Date.now() }))); } catch (e) { /* 跳过 */ }
+    return city;
+  },
+
+  /* 仅当用户从未手动选择城市时自动定位；定位完成清预报缓存后重载 */
+  async _maybeAutoDetectCity() {
+    let chosen = null;
+    try { chosen = localStorage.getItem('wb-weather-city'); } catch (e) { return; }
+    if (chosen) return;
+    const city = await this._detectCityByIP();
+    if (!city) return;
+    try {
+      if (city.id === 'custom') {
+        localStorage.setItem('wb-weather-city-custom', JSON.stringify(city));
+        localStorage.setItem('wb-weather-city', 'custom');
+      } else {
+        localStorage.setItem('wb-weather-city', city.id);
+      }
+      localStorage.removeItem('wb-weather-fc-v1');
+      localStorage.removeItem('wb-weather-aqi-v1');
+    } catch (e) { return; }
+    this._loadWeather();
   },
   // V26.9.13: 读取自定义城市（无效时返回 null 回退默认）
   _getCustomCity() {
@@ -5904,6 +6008,9 @@ const UI = {
       this._weatherNowTime = data.current_weather?.time || null;
       this._weatherNow = { temp: (typeof temp === 'number' && !isNaN(temp)) ? Math.round(temp) : null, text: this._wmoIcon(code)[1] };
       this._renderWeather(code, temp, this._weatherIsDay);
+      /* V26.9.36 需求③：预报弹卡开着时热更新主数据（城市/温度/4 天预报；原仅 AQI 热更新） */
+      const wpOpen = document.getElementById('weatherPop');
+      if (wpOpen && wpOpen.classList.contains('show')) { wpOpen.innerHTML = this._buildForecastHTML(); this._animateCounters(wpOpen); this._positionWeatherPop(); }
       // V26.9.13: 空气质量异步加载（失败不拖垮主天气；弹卡开着时热更新）
       this._fetchAir(city).then(aqi => {
         this._weatherAQI = aqi;
@@ -6072,6 +6179,7 @@ const UI = {
     } else {
       this._wpAtForecast = false;
       pop.innerHTML = this._buildForecastHTML(); this._animateCounters(pop); // V26.9.16: 数字滚动
+      this._bindWeatherPopExtras(); // V26.9.36 需求③：内嵌城市面板事件委托（绑定一次，innerHTML 重建不丢）
       pop.classList.add('show');
       this._positionWeatherPop(); // V26.9.28: fixed 定位（内容变化后宽度才准确，二次校准防视口溢出）
       const b = mark.querySelector('.weather-badge');
@@ -6176,7 +6284,8 @@ const UI = {
     const hi = Math.max(...rows.map(r => r.max));
     const span = Math.max(1, hi - lo);
     const now = this._weatherNow || {};
-    const head = `<div class="wp-head"><span class="wp-city">📍 ${this._getCity().name}</span><span class="wp-now">${now.temp != null ? `<span class="wp-cnt" data-cnt="${now.temp}">${now.temp}</span>°` : ''}<small>${now.text || ''}</small></span></div>`;
+    /* V26.9.36 需求③：城市名 → 可点胶囊（开/收内嵌城市面板：收藏 chips + 搜索） */
+    const head = `<div class="wp-head"><button type="button" class="wp-city-btn" data-citybtn aria-haspopup="true" aria-expanded="false" title="点击切换城市"><span aria-hidden="true">📍</span> ${esc(this._getCity().name)}<svg class="wp-city-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg></button><span class="wp-now">${now.temp != null ? `<span class="wp-cnt" data-cnt="${now.temp}">${now.temp}</span>°` : ''}<small>${now.text || ''}</small></span></div>`;
     const body = rows.map(r => `
       <div class="wp-day">
         <span class="wp-name">${r.name}</span>
@@ -6185,7 +6294,159 @@ const UI = {
         <div class="wp-range" aria-hidden="true"><i style="left:${(((r.min - lo) / span) * 100).toFixed(1)}%;width:${(((r.max - r.min) / span) * 100).toFixed(1)}%"></i></div>
         <span class="wp-temps"><span>${r.min}°</span> <b>${r.max}°</b></span>
       </div>`).join('');
-    return head + this._buildNowStripHTML() + this._buildSparklineSVG() + this._buildSunArcHTML() + this._buildAirHTML() + `<div class="wp-days" role="group" aria-label="未来 4 天预报">${body}</div>`;
+    return head + this._buildCityPanelHTML() + this._buildNowStripHTML() + this._buildSparklineSVG() + this._buildSunArcHTML() + this._buildAirHTML() + `<div class="wp-days" role="group" aria-label="未来 4 天预报">${body}</div>`;
+  },
+
+  /* V26.9.36 需求③：预报弹卡内嵌城市面板（收藏 chips + 城市搜索 + 最近搜索），默认收起 */
+  _buildCityPanelHTML() {
+    return `<div class="wp-citypanel" data-citypanel hidden>` +
+      `<div class="wpc-favs">${this._popupFavsHTML()}</div>` +
+      `<div class="wpc-search"><input type="text" class="wp-citysearch" placeholder="搜索任意城市（如：西安、东京）" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="搜索城市"></div>` +
+      `<div class="city-results wp-cityresults" role="listbox" aria-label="城市搜索结果"></div>` +
+      `<div class="wpc-tip">📍 未定位到理想城市？直接搜索城市名即可切换</div>` +
+      `</div>`;
+  },
+  _popupFavsHTML() {
+    const cur = this._normCity(this._getCity());
+    return this._getFavs().map((c, i) => {
+      const on = this._sameCity(cur, c);
+      return `<span class="fav-chip${on ? ' active' : ''}" role="button" tabindex="0" aria-pressed="${on}" data-i="${i}" title="${c.name}${on ? ' · 当前城市' : ' · 点击切换'}，× 移除">⭐ ${esc(c.name)}<i class="fc-x" role="button" aria-label="移除收藏 ${c.name}" tabindex="0">×</i></span>`;
+    }).join('');
+  },
+  _popupRecentHTML() {
+    const rec = this._getRecent();
+    if (!rec.length) return '';
+    // 与设置页搜索版一致：recent 模式统一为 geocoding 形状供 choose 使用
+    this._lastSearchResults = rec.map(c => ({ name: c.name, latitude: c.lat, longitude: c.lon }));
+    return `<div class="cr-cap"><span>🕘 最近搜索</span><button class="cr-clear" type="button" aria-label="清空搜索历史">清空</button></div>` +
+      rec.map((c, i) => `<div class="city-result" role="option" tabindex="0" data-i="${i}"><span class="cr-main"><span class="cr-name">🕘 ${esc(c.name)}</span></span></div>`).join('');
+  },
+
+  /* V26.9.36 需求③：弹卡内城市面板交互（pop 元素常驻、事件委托 —— innerHTML 重建不丢绑定） */
+  _bindWeatherPopExtras() {
+    const pop = document.getElementById('weatherPop');
+    if (!pop || pop.dataset.cityBound) return;
+    pop.dataset.cityBound = '1';
+    const panelOf = () => pop.querySelector('[data-citypanel]');
+    const refreshFavs = () => {
+      const box = pop.querySelector('.wpc-favs');
+      if (box) box.innerHTML = this._popupFavsHTML();
+    };
+    const doSearch = async (q, box) => {
+      try {
+        const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=8&language=zh&format=json`);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const list = data.results || [];
+        this._lastSearchResults = list;
+        box.innerHTML = list.length ? list.map((r, i) => {
+          const meta = [r.admin1, r.country].filter(Boolean).join(' · ');
+          const fav = this._isFav(r);
+          return `<div class="city-result" role="option" tabindex="0" data-i="${i}"><span class="cr-main"><span class="cr-name">📍 ${esc(r.name)}</span>${meta ? `<span class="cr-meta">${meta}</span>` : ''}</span><span class="cr-star${fav ? ' on' : ''}" role="button" tabindex="0" aria-label="${fav ? '取消收藏' : '收藏'} ${esc(r.name)}" title="收藏常用城市">${fav ? '★' : '☆'}</span></div>`;
+        }).join('') : '<div class="city-empty">未找到匹配城市</div>';
+      } catch (e) {
+        box.innerHTML = '<div class="city-empty">搜索失败，请稍后再试</div>';
+      }
+    };
+    pop.addEventListener('click', (e) => {
+      if (e.target.closest('[data-citybtn]')) { this._togglePopupCityPanel(); return; }
+      const panel = panelOf();
+      if (!panel || panel.hidden) return;
+      const clear = e.target.closest('.cr-clear');
+      if (clear) {
+        try { localStorage.removeItem('wb-weather-recent'); } catch (err) { /* 忽略 */ }
+        const box = pop.querySelector('.wp-cityresults');
+        if (box) box.innerHTML = '';
+        return;
+      }
+      const star = e.target.closest('.cr-star');
+      if (star) {
+        const item = star.closest('.city-result');
+        const r = (this._lastSearchResults || [])[parseInt(item && item.dataset.i, 10)];
+        if (r) {
+          this._toggleFav(r);
+          refreshFavs();
+          doSearchInline();
+        }
+        return;
+      }
+      const x = e.target.closest('.fc-x');
+      if (x) {
+        const chip = x.closest('.fav-chip');
+        const i = parseInt(chip && chip.dataset.i, 10);
+        const favs = this._getFavs();
+        if (chip && favs[i]) { favs.splice(i, 1); this._setFavs(favs); refreshFavs(); }
+        return;
+      }
+      const chip = e.target.closest('.fav-chip');
+      if (chip) {
+        const i = parseInt(chip.dataset.i, 10);
+        const favs = this._getFavs();
+        if (favs[i]) this._switchCity(favs[i]);
+        return;
+      }
+      const item = e.target.closest('.city-result');
+      if (item) {
+        const r = (this._lastSearchResults || [])[parseInt(item.dataset.i, 10)];
+        if (r) { this._pushRecent(r); this._switchCity(r); }
+      }
+    });
+    /* ★ 内联刷新当前结果列表的收藏星（搜索结果/最近搜索两态通用） */
+    const doSearchInline = () => {
+      const box = pop.querySelector('.wp-cityresults');
+      if (!box) return;
+      const list = this._lastSearchResults || [];
+      box.innerHTML = list.length ? list.map((r, i) => {
+        const meta = [r.admin1, r.country].filter(Boolean).join(' · ');
+        const fav = this._isFav(r);
+        return `<div class="city-result" role="option" tabindex="0" data-i="${i}"><span class="cr-main"><span class="cr-name">📍 ${esc(r.name)}</span>${meta ? `<span class="cr-meta">${meta}</span>` : ''}</span><span class="cr-star${fav ? ' on' : ''}" role="button" tabindex="0" title="收藏常用城市">${fav ? '★' : '☆'}</span></div>`;
+      }).join('') : '';
+      if (!list.length) box.innerHTML = this._popupRecentHTML();
+    };
+    pop.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const t = e.target;
+      if (!t.classList) return;
+      if (t.classList.contains('fav-chip') || t.classList.contains('city-result') || t.classList.contains('fc-x') || t.classList.contains('cr-star') || t.closest('[data-citybtn]')) {
+        e.preventDefault();
+        t.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      }
+    });
+    pop.addEventListener('input', (e) => {
+      const inp = e.target.closest('.wp-citysearch');
+      if (!inp) return;
+      clearTimeout(this._wpSearchTimer);
+      const q = inp.value.trim();
+      const box = pop.querySelector('.wp-cityresults');
+      if (!box) return;
+      if (!q) { box.innerHTML = this._popupRecentHTML(); return; }
+      this._wpSearchTimer = setTimeout(() => doSearch(q, box), 380);
+    });
+    pop.addEventListener('focusin', (e) => {
+      const inp = e.target.closest('.wp-citysearch');
+      if (!inp || inp.value.trim()) return;
+      const box = pop.querySelector('.wp-cityresults');
+      if (box) box.innerHTML = this._popupRecentHTML();
+    });
+  },
+
+  _togglePopupCityPanel() {
+    const pop = document.getElementById('weatherPop');
+    if (!pop) return;
+    const panel = pop.querySelector('[data-citypanel]');
+    if (!panel) return;
+    panel.hidden = !panel.hidden;
+    const btn = pop.querySelector('[data-citybtn]');
+    if (btn) btn.setAttribute('aria-expanded', panel.hidden ? 'false' : 'true');
+    if (!panel.hidden) {
+      const favsBox = panel.querySelector('.wpc-favs');
+      if (favsBox) favsBox.innerHTML = this._popupFavsHTML();
+      const box = panel.querySelector('.wp-cityresults');
+      if (box) box.innerHTML = this._popupRecentHTML();
+      const inp = panel.querySelector('.wp-citysearch');
+      if (inp) setTimeout(() => { try { inp.focus({ preventScroll: true }); } catch (e) { inp.focus(); } }, 60);
+    }
+    this._positionWeatherPop(); /* 面板展开/收起后弹卡高度变化，重新校准位置 */
   },
 
   /* V26.9.13: 空气质量区块（US AQI 分级色 + 比例条 + PM2.5/PM10），无数据时返回空 */
@@ -6345,6 +6606,13 @@ const UI = {
     } catch (e) { /* 忽略 */ }
     this._buildCityOptions();
     this._renderFavChips();
+    /* V26.9.36 需求③：预报弹卡开着时立即重建内容（新城市名+收起的城市面板；后续 _loadWeather 回来再热更新数据） */
+    const wpPop = document.getElementById('weatherPop');
+    if (wpPop && wpPop.classList.contains('show')) {
+      wpPop.innerHTML = this._buildForecastHTML();
+      this._animateCounters(wpPop);
+      this._positionWeatherPop();
+    }
     this._loadWeather();
   },
   _renderFavChips() {
@@ -6655,7 +6923,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V26.9.35';
+      document.title = '修的媒体工作台 V26.9.11';
     }
   },
 
@@ -6845,11 +7113,20 @@ const UI = {
   },
 
   /* ---------- THEME/SOUND ---------- */
+  /* V26.9.36 需求⑦：手机端兼容系统明暗主题 —— 从未手动选择过主题（无存储）时，
+     手机（≤768px）跟随 prefers-color-scheme；桌面端无存储仍默认白色（延续 V26.9.31 需求③）。
+     手动切换过（toggleTheme 写入存储）则一律以存储为准，双向可用 */
+  _effectiveTheme() {
+    let saved = null;
+    try { saved = localStorage.getItem(CONFIG.STORAGE_KEYS.THEME); } catch (e) { /* 存储不可用 */ }
+    if (saved === 'dark' || saved === 'light') return saved;
+    try {
+      if (window.innerWidth <= 768 && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+    } catch (e) { /* 匹配失败保持 light */ }
+    return 'light';
+  },
   applyTheme() {
-    /* V26.9.31 需求③：默认白色 —— 撤销 V26.9.30 需求⑪的「手机跟随系统」
-      （用户系统深色时打开文件是深色，违背「默认就是白色」）；
-      一律读存储（默认 light），手动切换双向可用 */
-    const theme = Store.getTheme() === 'dark' ? 'dark' : 'light';
+    const theme = this._effectiveTheme();
     document.documentElement.setAttribute('data-theme', theme);
     const isDark = theme === 'dark';
     $('#themeToggle').classList.toggle('on', isDark);
@@ -6857,7 +7134,24 @@ const UI = {
       ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
       : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
   },
-  toggleTheme() { const t = Store.getTheme() === 'dark' ? 'light' : 'dark'; Store.setTheme(t); this.applyTheme(); },
+  /* V26.9.36 需求⑦：从「当前生效主题」取反（系统跟随态下可见反差正确），写入存储后进入手动态 */
+  toggleTheme() { const t = this._effectiveTheme() === 'dark' ? 'light' : 'dark'; Store.setTheme(t); this.applyTheme(); },
+
+  /* V26.9.36 需求⑦：系统深浅色变化时（未手动选择过主题）实时跟随 */
+  _bindSystemTheme() {
+    if (this._sysThemeBound || !window.matchMedia) return;
+    try {
+      const mq = window.matchMedia('(prefers-color-scheme: dark)');
+      const handler = () => {
+        let saved = null;
+        try { saved = localStorage.getItem(CONFIG.STORAGE_KEYS.THEME); } catch (e) { /* 忽略 */ }
+        if (saved !== 'dark' && saved !== 'light') this.applyTheme();
+      };
+      if (mq.addEventListener) mq.addEventListener('change', handler);
+      else if (mq.addListener) mq.addListener(handler);
+      this._sysThemeBound = true;
+    } catch (e) { /* 忽略 */ }
+  },
 
   /* V26.9.30 需求⑥：最近栏纯缩略图——滚轮纵向增量转横向滚动 */
   _bindStripWheel() {
@@ -7295,10 +7589,21 @@ const UI = {
     this._onPromptInput(ta);
   },
 
-  /* V26.9.31 需求③：提示词智能拉高 —— 全端启用（参数收纳后两端都有富余空间），42vh 封顶 */
+  /* V26.9.31 需求③：提示词智能拉高 —— 全端启用（参数收纳后两端都有富余空间）
+     V26.9.36 需求⑥：跟随能力放宽 —— 42vh 封顶提升至 62vh，长提示词更高地随内容展开
+     （仍保留封顶：超长文本时内部滚动，避免参数区被无限推远） */
   _autoGrowPrompt(ta) {
     ta.style.height = 'auto';
-    ta.style.height = Math.min(ta.scrollHeight, Math.round(window.innerHeight * 0.42)) + 'px';
+    ta.style.height = Math.min(ta.scrollHeight, Math.round(window.innerHeight * 0.62)) + 'px';
+  },
+
+  /* V26.9.36 需求⑥：视口变化时重算提示词框高度（旋转屏/分屏/软键盘收起后仍贴合内容） */
+  _bindPromptGrowOnResize() {
+    if (this._promptGrowBound) return; this._promptGrowBound = true;
+    window.addEventListener('resize', () => {
+      const ta = document.querySelector('#paramForm textarea[data-key]');
+      if (ta) this._autoGrowPrompt(ta);
+    }, { passive: true });
   },
 
   /* ---------- V26.9.22 背景主题（动态渐变/图片/视频）---------- */
@@ -7696,6 +8001,10 @@ const UI = {
         complexParams.push({ type: 'field', param: p });
       }
     }
+    /* V26.9.36 需求①：遮罩图卡片固定排在参考图下方 —— mask 稳定排序到尾部（其余保持定义顺序，
+       Array.prototype.sort 现代引擎稳定，非 mask 项互不换位） */
+    complexParams.sort((a, b) =>
+      ((a.type === 'ref' && a.param.key === 'mask') ? 1 : 0) - ((b.type === 'ref' && b.param.key === 'mask') ? 1 : 0));
     // V26.9.33 需求③：张数退役出参数面板 → 生成钮左侧「张数胶囊」+ 隐藏值源 select（不渲染成组，
     // __count 不入 API body；_getBatchCount/_saveFormToCache/_restoreFormFromCache 按 data-key 全兼容）
     const cntDef = (this.state.formCache[this.state.modelKey] || {})['__count']
@@ -10838,47 +11147,6 @@ ${items.map(h => {
   },
 
   /* ---------- SETTINGS ---------- */
-  /* V26.9.18: 设置面板分组导航（吸顶 chips + 点击平滑滚动 + 滚动同步高亮） */
-  _initSettingsNav() {
-    const nav = document.getElementById('settingsNav');
-    if (!nav || nav.dataset.navBound) return;
-    nav.dataset.navBound = '1';
-    const secs = [
-      ['setSecPref', '🎯 偏好'],
-      ['setSecApi', '🔑 API'],
-      ['setSecR2', '🖼️ 图床'],
-      ['setSecTask', '📋 任务'],
-      ['setSecWeather', '🌤️ 天气'],
-      ['setSecThemeBg', '🎨 背景']
-    ].filter(([id]) => document.getElementById(id));
-    if (!secs.length) return;
-    nav.innerHTML = secs.map(([id, label]) => `<button type="button" class="set-nav-chip" data-setnav="${id}" aria-label="跳转到${label.replace(/^\S+\s/, '')}设置">${label}</button>`).join('');
-    const body = nav.closest('.settings-body');
-    if (!body) return;
-    const chips = Array.from(nav.querySelectorAll('.set-nav-chip'));
-    // V26.9.18: rect 基准计算（offsetTop 受 sticky 干扰不可靠）
-    const navH = () => { const h = nav.getBoundingClientRect().height; return h > 0 ? h : 46; };
-    nav.addEventListener('click', e => {
-      const chip = e.target.closest('[data-setnav]');
-      if (!chip) return;
-      const sec = document.getElementById(chip.dataset.setnav);
-      if (!sec) return;
-      const top = sec.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop - navH() - 6;
-      try { body.scrollTo({ top: Math.max(0, top), behavior: 'smooth' }); } catch (err) { body.scrollTop = Math.max(0, top); }
-      chips.forEach(c => c.classList.toggle('active', c === chip));
-    });
-    // 滚动同步高亮（rAF 节流，探测线 = 吸顶导航下缘 +12px；滚到底时末节强制激活——短内容面板末节可能永远够不到探测线）
-    let ticking = false;
-    const sync = () => {
-      ticking = false;
-      let cur = secs[0][0];
-      const probe = body.getBoundingClientRect().top + navH() + 12;
-      secs.forEach(([id]) => { const el = document.getElementById(id); if (el && el.getBoundingClientRect().top <= probe) cur = id; });
-      if (body.scrollTop + body.clientHeight >= body.scrollHeight - 2) cur = secs[secs.length - 1][0];
-      chips.forEach(c => c.classList.toggle('active', c.dataset.setnav === cur));
-    };
-    body.addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(() => { ticking = false; sync(); }); } }, { passive: true });
-  },
 
   _openSettings() {
     // V26.9.20: 打开设置时自动关闭历史侧栏（两者同层互开时设置会被遮挡）
@@ -10889,7 +11157,7 @@ ${items.map(h => {
     $('#r2AuthTokenInput').value = Store.hasCustomR2() ? (storageGet(CONFIG.STORAGE_KEYS.R2_AUTH_TOKEN) || '') : '';
     $('#taskCenterUrlInput').value = Store.getTaskCenterUrl() || '';
     $('#taskCenterTokenInput').value = Store.getTaskCenterToken() || '';
-    $('#themeToggle').classList.toggle('on', Store.getTheme() === 'dark');
+    $('#themeToggle').classList.toggle('on', document.documentElement.getAttribute('data-theme') === 'dark'); /* V26.9.36 需求⑦：跟随实际生效主题（系统跟随态下开关同步） */
     $('#soundToggle').classList.toggle('on', Store.getSound());
     // V38: 每 ¥10 提醒开关已移除，默认开启，无需同步 UI
     // V26.9.9: API Key 状态指示器（V26.9.24: 区分内置默认/已自定义）
@@ -11301,8 +11569,13 @@ ${items.map(h => {
   /* ---------- MOBILE VIEW SWITCH ---------- */
   _bindMobileViewSwitch() {
     const sw = $('#mobileViewSwitch');
-    if (!sw) return;
-    sw.querySelectorAll('button').forEach(btn => {
+    if (sw) {
+      sw.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', () => this._switchMobileView(btn.dataset.mview));
+      });
+    }
+    /* V26.9.36 需求⑧：右上角「结果」胶囊（与左上角「编辑」对称） */
+    $('#mobileResultSwitch')?.querySelectorAll('button').forEach(btn => {
       btn.addEventListener('click', () => this._switchMobileView(btn.dataset.mview));
     });
     // V26.9.30 需求⑨：生成后自动切结果视图（左上角浮现返回胶囊，点回编辑）
@@ -11316,9 +11589,11 @@ ${items.map(h => {
   },
 
   /* V26.9.30 需求⑨：单一视图切换源 —— body[data-mview] 驱动返回胶囊显隐；
-     编辑视图无胶囊（全屏创作），结果视图左上角返回胶囊 */
+     编辑视图无胶囊（全屏创作），结果视图左上角返回胶囊；
+     V26.9.36 需求⑧：编辑视图右上角新增「结果」胶囊（对称镜像，fixed 不占布局流） */
   _switchMobileView(view) {
     $('#mobileViewSwitch')?.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.mview === view));
+    $('#mobileResultSwitch')?.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.mview === view));
     $('#paramPanel')?.classList.toggle('mobile-active', view === 'param');
     $('#resultPanel')?.classList.toggle('mobile-active', view === 'result');
     document.body.dataset.mview = view;
@@ -11794,4 +12069,4 @@ document.addEventListener('DOMContentLoaded', () => UI.init());
 </script>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
