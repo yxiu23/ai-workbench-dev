@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#080b14" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
-<title>修的媒体工作台 V26.9.32</title>
+<title>修的媒体工作台 V26.9.35</title>
 <!-- V68 衬线品牌字：思源宋体（Noto Serif SC），加载失败回退系统宋体 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -88,7 +88,10 @@
   --lg-gloss: linear-gradient(135deg, rgba(255,255,255,.11), rgba(255,255,255,.03) 36%, rgba(255,255,255,.015) 62%, rgba(255,255,255,.06));
   --lg-edge: rgba(255,255,255,.14);
   --lg-hi: rgba(255,255,255,.30);
-  --lg-slab: inset 0 1px 0 rgba(255,255,255,.30), inset 1px 0 0 rgba(255,255,255,.07), inset 0 -1px 0 rgba(3,6,16,.28), 0 1px 1px rgba(3,6,16,.24), 0 12px 28px -12px rgba(3,6,16,.42), 0 32px 72px -28px rgba(3,6,16,.62);
+  /* V26.9.33 需求⑤：厚玻璃边 —— 外环并入 --lg-slab 后，全站所有液态玻璃面板自动获得
+     「border 1px + 外环 1px = 视觉 2px 厚边」，环色取玻璃截面微光，营造有厚度的玻璃观感 */
+  --lg-rim: rgba(255,255,255,.085);
+  --lg-slab: 0 0 0 1px var(--lg-rim), inset 0 1px 0 rgba(255,255,255,.30), inset 1px 0 0 rgba(255,255,255,.07), inset 0 -1px 0 rgba(3,6,16,.28), 0 1px 1px rgba(3,6,16,.24), 0 12px 28px -12px rgba(3,6,16,.42), 0 32px 72px -28px rgba(3,6,16,.62);
   --bg-grad: radial-gradient(1100px 720px at 82% -12%, rgba(88,104,236,.06), transparent 56%), radial-gradient(820px 520px at -8% 30%, rgba(167,139,250,.028), transparent 55%), radial-gradient(760px 460px at 55% 115%, rgba(44,189,133,.022), transparent 55%);
 }
 [data-theme="light"] {
@@ -123,7 +126,9 @@
   --lg-gloss: linear-gradient(135deg, rgba(255,255,255,.58), rgba(255,255,255,.22) 36%, rgba(255,255,255,.12) 62%, rgba(255,255,255,.32));
   --lg-edge: rgba(255,255,255,.92);
   --lg-hi: rgba(255,255,255,1);
-  --lg-slab: inset 0 1px 0 rgba(255,255,255,.95), inset 1px 0 0 rgba(255,255,255,.60), inset 0 -1px 0 rgba(23,32,64,.05), 0 1px 2px rgba(23,32,64,.05), 0 12px 26px -12px rgba(23,32,64,.14), 0 30px 64px -28px rgba(23,32,64,.22);
+  /* V26.9.33 需求⑤：浅色厚玻璃边 —— 暗色截面环（白琉璃边缘的厚度阴影面） */
+  --lg-rim: rgba(23,32,64,.09);
+  --lg-slab: 0 0 0 1px var(--lg-rim), inset 0 1px 0 rgba(255,255,255,.95), inset 1px 0 0 rgba(255,255,255,.60), inset 0 -1px 0 rgba(23,32,64,.05), 0 1px 2px rgba(23,32,64,.05), 0 12px 26px -12px rgba(23,32,64,.14), 0 30px 64px -28px rgba(23,32,64,.22);
   --bg-grad: radial-gradient(1100px 720px at 82% -12%, rgba(88,104,236,.04), transparent 56%), radial-gradient(820px 520px at -8% 30%, rgba(167,139,250,.024), transparent 55%), radial-gradient(760px 460px at 55% 115%, rgba(44,189,133,.018), transparent 55%);
 }
 
@@ -228,7 +233,7 @@ textarea { resize: vertical; min-height: 80px; }
 .tabs {
   display: flex; gap: 3px; padding: 3px; background: var(--surface-2);
   border-radius: 999px; border: 1px solid var(--border-soft); /* V26.9.32 需求⑤：三模式按钮大圆角化（药丸分段） */
-  box-shadow: inset 0 1px 2px rgba(9,14,30,.06);
+  box-shadow: inset 0 1px 2px rgba(9,14,30,.06), 0 0 0 1px var(--lg-rim); /* V26.9.33 需求⑤：厚玻璃边 */
 }
 .tab {
   flex: 1; padding: 8px 12px; border-radius: 999px; font-size: 13px; font-weight: 500; /* V26.9.32 需求⑤：药丸圆角 */
@@ -297,6 +302,18 @@ textarea { resize: vertical; min-height: 80px; }
   background: var(--surface-2); color: var(--text-muted); font-size: 16px; transition: all var(--transition);
 }
 .prompt-save-btn:hover { background: var(--brand-soft); color: var(--brand); }
+/* V26.9.35 需求②：工作流按钮 —— 提示词面板头部与预设并列的纯图标小钮
+   （与预设/保存钮同族：surface-2 底 + border，28×28 方形；hover 品牌色反馈；
+     flex:0 0 auto 压制基础样式的 flex:1 拉伸，否则会被 flex 容器拉宽） */
+.prompt-actions .workflow-btn {
+  flex: 0 0 auto; width: 28px; height: 28px; padding: 0; border-radius: var(--radius-sm);
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted);
+  transition: all var(--transition);
+}
+.prompt-actions .workflow-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+.prompt-actions .workflow-btn:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-soft); }
+.prompt-actions .workflow-btn:active { transform: scale(.96); }
 .prompt-module textarea {
   min-height: 100px; font-size: 13px; line-height: 1.6; border-radius: var(--radius-sm);
 }
@@ -382,38 +399,63 @@ textarea { resize: vertical; min-height: 80px; }
 
 /* ============================================================
    参考素材系统
+   V26.9.34 视频模式参考素材扁平化重构：
+   唯一玻璃卡（ref-mode-section）＝ 一段头（图标+标题+hint 左 / 模式药丸右）
+   ＋ 轻内容（去卡化 ref-section / ref-field）—— 消灭「卡中卡中卡」三层嵌套
    ============================================================ */
 .ref-mode-section {
-  background: var(--surface-nested); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px;
+  background: var(--surface-nested); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 13px;
 }
 .ref-mode-header {
-  display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-bottom: 12px;
 }
-.ref-mode-title { font-size: 12px; font-weight: 600; color: var(--text-muted); }
-.ref-mode-hint { font-size: 10px; color: var(--text-dim); }
+.ref-mode-head-l { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.ref-mode-title {
+  font-size: 12px; font-weight: 600; color: var(--text-muted);
+  display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;
+}
+.ref-mode-title svg { width: 13px; height: 13px; color: var(--brand); flex-shrink: 0; align-self: center; }
+/* V26.9.35 需求①：「只能选择一种」类 hint 退役（模式药丸互斥交互已自明） */
+/* 模式选择 = 分段药丸（与 tabs 设计语言统一，大圆角，无逐钮描边碎块感） */
 .ref-mode-row {
-  display: grid; gap: 4px; margin-bottom: 10px;
+  display: grid; gap: 2px; margin-left: auto;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 999px; padding: 3px;
 }
 .ref-mode-btn {
-  padding: 7px 6px; border: 1px solid var(--border); border-radius: var(--radius-sm);
-  background: var(--surface-2); color: var(--text-muted); font-size: 11px; font-weight: 500;
+  padding: 5px 12px; min-height: 28px; border: none; border-radius: 999px;
+  background: transparent; color: var(--text-muted); font-size: 11px; font-weight: 500;
   transition: all var(--transition); text-align: center; letter-spacing: .02em;
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px; white-space: nowrap;
 }
-.ref-mode-btn:hover { border-color: var(--brand); color: var(--brand); }
+.ref-mode-btn:hover { color: var(--brand); }
 .ref-mode-btn:active { transform: scale(.97); }
-.ref-mode-btn.active { border-color: var(--brand); background: var(--brand-soft); color: var(--brand); font-weight: 600; }
+.ref-mode-btn.active {
+  background: var(--brand-soft); color: var(--brand); font-weight: 600;
+  box-shadow: inset 0 1px 0 var(--hl-inset), 0 1px 3px rgba(2,4,12,.12);
+}
+/* 药丸素材角标：该模式已添加的素材数（0 时隐藏）——不切换也能看到素材状态 */
+.ref-mode-badge {
+  min-width: 14px; height: 14px; padding: 0 4px; border-radius: 999px;
+  background: var(--brand); color: #fff; font-size: 9px; font-weight: 700; line-height: 14px;
+  display: none; flex-shrink: 0;
+}
+.ref-mode-badge.on { display: inline-block; }
 .ref-mode-panel { display: none; }
 .ref-mode-panel.active { display: block; }
-.ref-mode-panel[data-ref-panel="frame"] .ref-section,
-.ref-mode-panel[data-ref-panel="frames"] .ref-section { display: inline-block; width: calc(50% - 4px); vertical-align: top; margin-right: 4px; }
-.ref-mode-panel[data-ref-panel="frame"] .ref-section:nth-child(even),
-.ref-mode-panel[data-ref-panel="frames"] .ref-section:nth-child(even) { margin-right: 0; }
+/* 多参数模式（首/尾帧等）：panel 内 section 自动两列（数据驱动，不再写死 mode value） */
+.ref-mode-panel.ref-panel-cols.active { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; align-items: start; }
 .ref-section {
   background: var(--surface-nested); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px;
 }
 .ref-label {
   font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 10px;
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between; gap: 5px;
+}
+.ref-label > svg { width: 12px; height: 12px; color: var(--text-dim); flex-shrink: 0; }
+/* 手机端：标题行与药丸分行（药丸全宽更易点） */
+@media (max-width: 480px) {
+  .ref-mode-header { flex-direction: column; align-items: stretch; }
+  .ref-mode-row { margin-left: 0; width: 100%; }
 }
 .ref-hint { font-size: 10px; color: var(--text-dim); font-weight: 400; }
 .ref-grid {
@@ -476,13 +518,23 @@ textarea { resize: vertical; min-height: 80px; }
   .ref-item .ref-del, .ref-item .ref-edit, .ref-item .ref-copy { transition: opacity var(--transition); transform: none; }
 }
 .ref-add {
-  aspect-ratio: 1; border: 2px dashed var(--border); border-radius: var(--radius-sm);
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  aspect-ratio: 1; border: 1.5px dashed var(--border); border-radius: var(--radius-sm);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
   color: var(--text-dim); cursor: pointer; transition: all var(--transition); font-size: 11px;
+  background: transparent;
 }
 .ref-add:hover { border-color: var(--brand); color: var(--brand); background: var(--brand-soft); transform: scale(1.02); }
 .ref-add svg { width: 20px; height: 20px; }
 .ref-add-video { aspect-ratio: 1; }
+/* V26.9.35 需求③⑥：镂空添加框 —— 中央大加号 + 名称在加号下方，
+   无「点击添加」/格式提示/「最多 N 张」文字（达上限时添加块自然消失 + Toast 反馈） */
+.ref-add-name { font-size: 11px; color: var(--text-dim); line-height: 1; letter-spacing: .02em; }
+.ref-add:hover .ref-add-name { color: var(--brand); }
+/* V26.9.34 空态大上传热区：无素材时占满整行（≥76px 高，触控友好） */
+.ref-grid.is-empty { grid-template-columns: 1fr; }
+.ref-grid.is-empty .ref-add { aspect-ratio: auto; height: 76px; border-radius: var(--radius-md); gap: 5px; }
+.ref-grid.is-empty .ref-add svg { width: 24px; height: 24px; }
+/* 空态时 label 行隐藏（名称已在框内）——渲染层 _renderRefGrid 控制 display */
 .ref-empty {
   text-align: center; padding: 16px 8px; color: var(--text-dim); font-size: 12px;
 }
@@ -564,15 +616,16 @@ textarea { resize: vertical; min-height: 80px; }
 @media (prefers-reduced-motion: reduce) { .generate-btn svg, .generate-btn svg .gen-star, .generate-btn svg .gen-spark { animation: none !important; } }
 
 /* ============================================================
-   V26.9.31 需求①②③：三按钮并列行 + 全端参数弹出面板 + 图标化参数控件
+   V26.9.35 需求④：按钮行 = 比例 | 参数 | 张数 三钮并列（张数从生成钮旁并入行尾）
    ============================================================ */
 .form-actions-row {
-  display: grid; grid-template-columns: 1.45fr 1fr 1fr; gap: 6px;
+  /* 行移入生成区（钉在生成钮正上方，sticky 一体）；空组按钮隐藏后自然重排 */
+  display: flex; gap: 6px;
 }
-.form-actions-row .wf-actions { display: contents; }
 .param-quick-btn {
+  flex: 1.08 1 0; min-width: 0;
   display: flex; align-items: center; justify-content: center; gap: 5px;
-  min-width: 0; height: 40px; padding: 0 10px;
+  height: 40px; padding: 0 10px;
   border-radius: 12px; border: 1px solid var(--lg-edge); cursor: pointer;
   background: var(--lg-gloss), var(--surface-glass-2);
   -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
@@ -580,6 +633,7 @@ textarea { resize: vertical; min-height: 80px; }
   color: var(--text-muted); font-size: 12.5px; font-weight: 500;
   transition: all var(--transition-fast);
 }
+.param-quick-btn[aria-expanded="true"] { color: var(--brand); border-color: var(--brand); background: var(--lg-gloss), var(--brand-soft); }
 .param-quick-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
 .param-quick-btn:active { transform: scale(.97); }
 .param-quick-btn .pq-label { flex-shrink: 0; }
@@ -587,22 +641,51 @@ textarea { resize: vertical; min-height: 80px; }
   min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   color: var(--text); font-weight: 600; letter-spacing: .02em; font-size: 11.5px;
 }
-/* 工作流按钮在并列行中的形态：与参数钮同高玻璃药丸 */
-.form-actions-row .workflow-btn {
-  min-width: 0; height: 40px; padding: 0 6px; border-radius: 12px;
-  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+/* V26.9.33 需求①②：参数钮摘要窄屏隐藏 */
+@media (max-width: 420px) {
+  .param-quick-btn .pq-summary { display: none; }
+}
+
+/* ============================================================
+   V26.9.35 需求④：张数钮 —— 从生成钮旁胶囊改为按钮行同形态（同高同玻璃药丸）
+   ============================================================ */
+.count-chip {
+  flex: 0.74 1 0; min-width: 0; height: 40px; padding: 0 8px;
+  border-radius: 12px; border: 1px solid var(--lg-edge); cursor: pointer;
   background: var(--lg-gloss), var(--surface-glass-2);
   -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
   box-shadow: var(--lg-slab);
-  border: 1px solid var(--lg-edge); color: var(--text-muted); font-size: 12px; font-weight: 500;
-  transition: all var(--transition-fast);
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  color: var(--text-muted); font-size: 13.5px; font-weight: 700; font-family: var(--font-mono);
+  transition: all var(--transition-fast); letter-spacing: .02em;
 }
-.form-actions-row .workflow-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
-.form-actions-row .workflow-btn:active { transform: scale(.97); }
-.form-actions-row .workflow-btn:hover { color: var(--brand); border-color: var(--brand); background: var(--brand-soft); }
-@media (max-width: 420px) {
-  .form-actions-row .workflow-btn .wb-txt { font-size: 11px; }
+.count-chip svg { width: 15px; height: 15px; flex-shrink: 0; }
+.count-chip:active { transform: scale(.97); }
+.count-chip[aria-expanded="true"] { color: var(--brand); border-color: var(--brand); }
+.count-pop {
+  position: fixed; z-index: 66; display: none; padding: 6px; gap: 4px;
+  border-radius: 14px; border: 1px solid var(--lg-edge);
+  background: var(--lg-gloss), var(--surface-glass-pop);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: var(--lg-slab), 0 18px 44px -18px rgba(9,14,30,.38);
+  transform: translateY(8px) scale(.97); opacity: 0; transform-origin: 50% 100%;
+  transition: transform 220ms cubic-bezier(.32,1.08,.44,1), opacity 180ms ease;
 }
+.count-pop.displayed { display: flex; }
+.count-pop.show { transform: none; opacity: 1; }
+.count-pop:not(.show) { pointer-events: none; }
+.count-pop .cp-opt {
+  min-width: 52px; height: 44px; padding: 0 12px; border-radius: 10px; cursor: pointer;
+  border: 1px solid transparent; background: transparent; color: var(--text-muted);
+  font-size: 14px; font-weight: 700; font-family: var(--font-mono);
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  transition: all var(--transition-fast); letter-spacing: .02em;
+}
+.count-pop .cp-opt small { font-size: 10px; font-weight: 500; font-family: var(--font-base, inherit); color: var(--text-dim); letter-spacing: 0; }
+.count-pop .cp-opt:hover { background: var(--surface-3); color: var(--text); }
+.count-pop .cp-opt.active { background: var(--brand); color: #fff; box-shadow: 0 2px 8px rgba(88,104,236,.35); }
+.count-pop .cp-opt.active small { color: rgba(255,255,255,.78); }
+@media (prefers-reduced-motion: reduce) { .count-pop { transition: none; } }
 /* 弹出面板：V26.9.32 需求②——锚定悬浮于生成按钮上方（手机/桌面同一体系，JS _positionQuickPanel 定位：
    left/width 对齐按钮内容区，bottom=按钮顶+8px，maxHeight 顶到安全区下沿）；
    需求①——全屏遮罩退役（遮罩 z64 曾盖住参数钮，面板开着时点参数钮=点遮罩，即「弹不出来」体感），改点外关闭 */
@@ -620,6 +703,14 @@ textarea { resize: vertical; min-height: 80px; }
 }
 .param-quick-panel.displayed { display: block; }
 .param-quick-panel.show { transform: none; opacity: 1; }
+/* V26.9.33 需求②：参数按钮拆分 —— 双模式组共存一个面板（DOM 常驻防 $ 全局查询丢失），按 data-mode 显隐
+   （data-mode 设在 #paramQuickBody 上 —— 面板本身已有 display/transform 动画态，避免属性选择器与动画态耦合） */
+.param-quick-panel #paramQuickBody[data-mode="ratio"] .pq-grp-other,
+.param-quick-panel #paramQuickBody[data-mode="other"] .pq-grp-ratio { display: none; }
+/* V26.9.33 需求④：面板内选项间距 —— 组间容器 gap（根因：组从 paramForm 搬来后失去原容器 gap 挤在一起）
+   + 组内呼吸感 + 头部/网格间距同步放大 */
+.param-quick-panel #paramQuickBody { display: flex; flex-direction: column; gap: 12px; }
+.param-quick-panel .pq-head { margin-bottom: 14px; }
 /* V26.9.32 需求①收尾补丁：未 show 态（关闭中 280ms 动画窗）pointer-events 放行——
    面板 opacity:0 但仍参与命中测试，真机连点参数钮会被幽灵面板吞掉（弹不出来体感之一），透明即不可点 */
 .param-quick-panel:not(.show) { pointer-events: none; }
@@ -640,8 +731,8 @@ textarea { resize: vertical; min-height: 80px; }
 }
 .pq-head .pq-close svg { width: 13px; height: 13px; }
 .pq-head .pq-close:hover { color: var(--danger); border-color: var(--danger); background: var(--danger-soft); }
-/* 面板内参数组：全宽 + 图标行 + 值右对齐 */
-.param-quick-panel .param-group { padding: 12px 12px 13px; }
+/* 面板内参数组：全宽 + 图标行 + 值右对齐；V26.9.33 需求④：组内 padding 增大不拥挤 */
+.param-quick-panel .param-group { padding: 13px 14px 14px; }
 .param-quick-panel .field-label { gap: 8px; justify-content: flex-start; }
 .param-quick-panel .field-label .field-val { margin-left: auto; }
 .pq-ico {
@@ -654,7 +745,7 @@ textarea { resize: vertical; min-height: 80px; }
 .pq-hidden-select { position: absolute; width: 0 !important; height: 0 !important; opacity: 0; pointer-events: none; padding: 0; border: 0; }
 /* 比例形状网格（参考用户截图：每个比例一个真实比例的圆角矩形框） */
 .ratio-grid {
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; margin-top: 9px;
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 11px;
 }
 .ratio-cell {
   display: flex; flex-direction: column; align-items: center; gap: 5px;
@@ -676,7 +767,7 @@ textarea { resize: vertical; min-height: 80px; }
 .ratio-cell.active .ratio-name { font-weight: 700; }
 /* 分段控件（分辨率/张数等短选项，参考截图「1K|2K|4K」胶囊段） */
 .pq-seg {
-  display: grid; gap: 4px; margin-top: 9px; padding: 3px;
+  display: grid; gap: 4px; margin-top: 11px; padding: 3px;
   border-radius: 11px; background: var(--surface-2); border: 1px solid var(--border-soft);
 }
 .pq-seg-btn {
@@ -2118,13 +2209,13 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
 [data-theme="dark"] .param-group,
 [data-theme="dark"] .ref-section,
 [data-theme="dark"] .model-select-wrap,
-[data-theme="dark"] .ref-mode-section { box-shadow: var(--lift-card); } /* V26.9.32 需求③：令牌化三层微抬升（旧单层阴影退役） */
+[data-theme="dark"] .ref-mode-section { box-shadow: 0 0 0 1px var(--lg-rim), var(--lift-card); } /* V26.9.33 需求⑤：卡片同步厚玻璃边 */
 /* 浅色主题：卡片玻璃叠玻璃微抬升 */
 [data-theme="light"] .prompt-module,
 [data-theme="light"] .param-group,
 [data-theme="light"] .ref-section,
 [data-theme="light"] .model-select-wrap,
-[data-theme="light"] .ref-mode-section { box-shadow: var(--lift-card); } /* V26.9.32 需求③：同步令牌 */
+[data-theme="light"] .ref-mode-section { box-shadow: 0 0 0 1px var(--lg-rim), var(--lift-card); } /* V26.9.33 需求⑤：同步令牌 */
 /* 模型下拉箭头随主题适配 */
 [data-theme="dark"] .model-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23a8b2ce' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); }
 [data-theme="light"] .model-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23707aa0' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); }
@@ -2176,6 +2267,32 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
   backdrop-filter: blur(12px) saturate(1.5);
   box-shadow: var(--lift-card);
 }
+/* --- 1a-1. V26.9.34 视频模式参考素材扁平化：去卡化覆盖层
+   ref-mode-section 内的 ref-section / ref-field 不再是「卡中卡」——
+   玻璃卡只保留最外层一层，内容区平铺（label+网格/输入行直接贴在卡面上）。
+   本规则必须位于上方渐变描边玻璃 / 主题厚边（[data-theme] …）规则之后（后源压制）。
+   图片模式的 ref-section（不在 ref-mode-section 内）不受影响，仍保留卡片形态。 --- */
+.ref-mode-section .ref-section,
+.ref-mode-section .ref-field {
+  background: none; border: none; border-radius: 0; padding: 0;
+  box-shadow: none;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+.ref-mode-section .ref-section + .ref-section,
+.ref-mode-section .ref-section + .ref-field,
+.ref-mode-section .ref-field + .ref-section { margin-top: 12px; }
+.ref-mode-panel.ref-panel-cols .ref-section + .ref-section { margin-top: 0; } /* 两列模式下间距交给 grid gap */
+.ref-mode-section .ref-label { margin-bottom: 8px; }
+.ref-mode-section .ref-label > svg { color: var(--text-dim); }
+/* ref-field：refGroups 内 text/url 参数的轻量输入行（替代旧 param-group 卡中卡） */
+.ref-field { display: flex; flex-direction: column; gap: 6px; }
+.ref-field-label {
+  font-size: 12px; font-weight: 600; color: var(--text-muted);
+  display: flex; align-items: center; gap: 5px;
+}
+.ref-field-label > svg { width: 12px; height: 12px; color: var(--text-dim); flex-shrink: 0; }
+.ref-field-hint { font-size: 10px; color: var(--text-dim); font-weight: 400; margin-left: auto; }
+.ref-field input { width: 100%; }
 /* --- 1a-2. V26.9.32 需求③：第三级「控件层」内凹质感 —— 输入框/分段钮/比例格叠在卡片玻璃上轻微下沉；
    :where() 零特异性，不与 ：focus/:active 的 ring 阴影竞争（同特异性源顺序覆盖防线） --- */
 :where(.param-panel) :where(input[type="text"], input[type="number"], input[type="url"], select, textarea),
@@ -3099,13 +3216,13 @@ body.is-generating .orb-a {
   </button>
 </div>
 
-<!-- 工作流按钮停靠区（V26.9.31 需求②：按钮 DOM 由 JS 搬进三按钮并列行 wfActionsSlot，appendChild 移动保留事件绑定；导入工作流按用户口径改名「粘贴工作流」） -->
+<!-- 工作流按钮停靠区（V26.9.35 需求②：复制/粘贴工作流移入提示词面板头部，与预设并列 —— 同预设钮样式的纯图标小钮；DOM 由 JS 搬进 prompt-actions，appendChild 移动保留事件绑定） -->
 <div id="wfPark" style="display:none">
-  <button class="workflow-btn" id="copyWorkflowBtn" title="复制工作流">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span class="wb-txt">复制工作流</span>
+  <button class="workflow-btn" id="copyWorkflowBtn" title="复制工作流" aria-label="复制工作流">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
   </button>
-  <button class="workflow-btn" id="importWorkflowBtn" title="粘贴工作流">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span class="wb-txt">粘贴工作流</span>
+  <button class="workflow-btn" id="importWorkflowBtn" title="粘贴工作流" aria-label="粘贴工作流">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
   </button>
 </div>
 
@@ -3136,21 +3253,28 @@ body.is-generating .orb-a {
       <div class="model-desc" id="modelDesc"></div>
     </div>
 
-    <!-- V26.9.31 需求①②：参数/复制工作流/粘贴工作流三按钮并列（全端统一，参数弹出面板也全端化） -->
-    <div class="form-actions-row" id="formActionsRow">
-      <button type="button" class="param-quick-btn" id="paramQuickBtn" aria-expanded="false" aria-controls="paramQuickPanel">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/></svg>
-        <span class="pq-label">参数</span>
-        <span class="pq-summary" id="paramQuickSummary"></span>
-      </button>
-      <span class="wf-actions" id="wfActionsSlot"></span>
-    </div>
-
     <!-- 参数表单容器 (由 JS 动态渲染) -->
     <div id="paramForm" style="display:flex !important;flex-direction:column;gap:14px;"></div>
 
-    <!-- 生成操作区（V26.9.31：参数钮已上移至三按钮并列行，此处仅余估算+生成钮；批量按钮已删） -->
+    <!-- 生成操作区（V26.9.35 需求④：张数钮并入按钮行与比例/参数并列 —— 比例|参数|张数 三钮同排；
+         工作流按钮已移入提示词面板 → 行内不再有 wfActionsSlot） -->
     <div class="generate-section">
+      <div class="form-actions-row" id="formActionsRow">
+        <button type="button" class="param-quick-btn" id="paramQuickBtnRatio" data-pq-mode="ratio" aria-expanded="false" aria-controls="paramQuickPanel" aria-label="比例与分辨率参数">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M7 6v12M17 6v12" opacity=".45"/></svg>
+          <span class="pq-label">比例</span>
+          <span class="pq-summary" id="pqSummaryRatio"></span>
+        </button>
+        <button type="button" class="param-quick-btn" id="paramQuickBtnOther" data-pq-mode="other" aria-expanded="false" aria-controls="paramQuickPanel" aria-label="其他生成参数">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 8h10M18 8h2M4 16h4M12 16h8M14 5.5v5M8 13.5v5"/></svg>
+          <span class="pq-label">参数</span>
+          <span class="pq-summary" id="pqSummaryOther"></span>
+        </button>
+        <button type="button" class="count-chip" id="countChipBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="countPop" aria-label="生成张数">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8.5" y="8.5" width="12" height="12" rx="2.5"/><path d="M4 15.5V6a2 2 0 0 1 2-2h9.5"/></svg>
+          <span id="countChipVal">×1</span>
+        </button>
+      </div>
       <div class="generate-row">
         <button class="generate-btn" id="generateBtn">
           <!-- V26.9.26: 四芒魔星图标 —— 主星淡填充+四点星光，idle 呼吸闪烁 / hover 弹旋 / 生成中自旋 -->
@@ -3161,7 +3285,8 @@ body.is-generating .orb-a {
     </div>
   </aside>
 
-  <!-- 参数快启面板（V26.9.32 需求①②：遮罩退役，改锚定生成按钮上方的悬浮玻璃卡，点外/Esc/关闭钮/点生成 四路收起） -->
+  <!-- 参数快启面板（V26.9.33 需求②：双模式一个面板，组 DOM 常驻按 data-mode 显隐（防全局查询丢失），
+       锚定四按钮行上方悬浮玻璃卡，点外/Esc/关闭钮/点生成 四路收起） -->
   <div class="param-quick-panel" id="paramQuickPanel" role="dialog" aria-label="生成参数">
     <div class="pq-head">
       <span class="pq-title">生成参数</span>
@@ -3171,6 +3296,14 @@ body.is-generating .orb-a {
       </button>
     </div>
     <div id="paramQuickBody"></div>
+  </div>
+
+  <!-- 张数浮层（V26.9.35 需求④：张数钮随行移至参数钮右侧，浮层锚定逻辑不变仍挂 body） -->
+  <div class="count-pop" id="countPop" role="menu" aria-label="生成张数">
+    <button type="button" class="cp-opt" data-v="1" role="menuitemradio" aria-label="1 张">×1</button>
+    <button type="button" class="cp-opt" data-v="2" role="menuitemradio" aria-label="2 张">×2</button>
+    <button type="button" class="cp-opt" data-v="3" role="menuitemradio" aria-label="3 张">×3</button>
+    <button type="button" class="cp-opt" data-v="4" role="menuitemradio" aria-label="4 张">×4</button>
   </div>
 
   <!-- 结果面板 -->
@@ -3379,7 +3512,7 @@ body.is-generating .orb-a {
     <hr style="border:none;border-top:1px solid var(--border);margin:20px 0 16px">
     <div class="settings-section" style="text-align:center">
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V26.9.32
+        修的媒体工作台 V26.9.35
       </div>
     </div>
   </div>
@@ -6522,7 +6655,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V26.9.32';
+      document.title = '修的媒体工作台 V26.9.35';
     }
   },
 
@@ -6738,16 +6871,18 @@ const UI = {
     }, { passive: false });
   },
 
-  /* ===== V26.9.31 需求①③：参数收纳全端统一 =====
+  /* ===== V26.9.31 需求①③：参数收纳全端统一 → V26.9.33 需求②：参数按钮拆分 =====
      渲染后把参数行（select/range/datalist 两列行 + text/url 类单行）搬进弹出面板，
      仅 提示词 / 参考图(ref-*)/遮罩(refGroups) 留主表单；手机与桌面同一行为（用户：电脑端也做收纳）。
-     搬迁后逐组注入图标，并把 比例/尺寸 select 替换为「比例形状网格」、短选项 select 替换为分段控件 */
+     V26.9.33：搬入组按「比例·分辨率 / 其他参数」分类打标（.pq-grp-ratio / .pq-grp-other），
+     两组 DOM 常驻面板（防 $ 全局查询丢失回归），面板按 data-mode 显隐；
+     张数(__count) 已退役为生成区隐藏值源（V26.9.33 需求③），不会出现在此处 */
   _mountQuickParams() {
     const body = $('#paramQuickBody');
     if (!body) return;
     const container = $('#paramForm');
     if (!container) return;
-    body.innerHTML = ''; /* 幂等：重渲染后旧行不残留 */
+    body.innerHTML = '';
     const moved = [];
     const emptyRows = [];
     [...container.children].forEach(el => {
@@ -6764,7 +6899,26 @@ const UI = {
       /* ref-section / ref-mode-section / prompt-module 不在此列 → 自然留主表单 */
     });
     emptyRows.forEach(r => r.remove());
-    moved.forEach(g => body.appendChild(g));
+    /* V26.9.33 需求②：分类打标 —— 比例/尺寸/分辨率/画质类 → ratio 组，其余 → other 组。
+       注意词边界：\bratio\b 防止 duration（du-ratio-n）误入比例组 */
+    const isRatioGrp = g => {
+      const k = g.querySelector('[data-key]')?.dataset.key || '';
+      const l = (g.querySelector('.field-label')?.childNodes[0]?.textContent || '').trim();
+      return /\b(aspectratio|aspect_ratio|ratio|resolution|quality|size|width|height)\b|比例|尺寸|分辨率|清晰度|画质|宽高/i.test(`${k} ${l}`);
+    };
+    moved.forEach(g => {
+      g.classList.add(isRatioGrp(g) ? 'pq-grp-ratio' : 'pq-grp-other');
+      body.appendChild(g);
+    });
+    this._pqGroups = {
+      ratio: [...body.querySelectorAll('.pq-grp-ratio')],
+      other: [...body.querySelectorAll('.pq-grp-other')]
+    };
+    this._pqMode = null;
+    /* 需求②「不足两个的就一个按钮」：空组按钮隐藏（flex 行自然重排） */
+    const btnR = $('#paramQuickBtnRatio'), btnO = $('#paramQuickBtnOther');
+    if (btnR) btnR.style.display = this._pqGroups.ratio.length ? '' : 'none';
+    if (btnO) btnO.style.display = this._pqGroups.other.length ? '' : 'none';
     this._enhanceQuickParams(body);
     const modelEl = $('#paramQuickModel');
     if (modelEl) modelEl.textContent = this.state.model?.name || '';
@@ -6872,17 +7026,32 @@ const UI = {
     $('#paramQuickBody')?.querySelectorAll('select[data-key]').forEach(s => { if (s.dataset.pqReplaced) this._syncPqControl(s); });
   },
   _updateQuickSummary() {
-    const el = $('#paramQuickSummary');
-    const body = $('#paramQuickBody');
-    if (!el || !body) return;
-    const vals = [...body.querySelectorAll('select')].slice(0, 3).map(s => s.value).filter(Boolean);
-    el.textContent = vals.join(' · ');
+    /* V26.9.33 需求②：双摘要 —— 比例钮/参数钮各自展示本组前两个值（桌面显示，手机隐藏）；
+       对象型选项（如音色）显示中文 label 而非英文值（对齐 V26.9.24 field-val 回显逻辑） */
+    const sums = this._pqGroups || { ratio: [], other: [] };
+    const labelOf = (p, v) => {
+      if (p && Array.isArray(p.options) && p.options.length && typeof p.options[0] === 'object') {
+        const hit = p.options.find(o => String(o.value) === String(v));
+        if (hit) return hit.label;
+      }
+      /* V26.9.35 需求⑤：字符串枚举摘要汉化（与下拉/回显同表） */
+      return this._enumLabel(p?.key, v);
+    };
+    const pick = groups => groups.flatMap(g => {
+      const sel = g.querySelector('select[data-key]');
+      if (!sel) return [];
+      const p = (this.state.model?.params || []).find(pp => pp.key === sel.dataset.key);
+      return [labelOf(p, sel.value)];
+    }).filter(Boolean).slice(0, 2).join(' · ');
+    const rEl = $('#pqSummaryRatio'), oEl = $('#pqSummaryOther');
+    if (rEl) rEl.textContent = pick(sums.ratio);
+    if (oEl) oEl.textContent = pick(sums.other);
   },
-  /* V26.9.32 需求②：锚定定位 —— 面板底边贴生成按钮顶 +8px，水平对齐按钮内容区（桌面即参数列内容区），
-     maxHeight 顶到安全区下沿；手机/桌面同一体系（「面板永远悬在生成钮上方」语义，滚/旋/缩跟隨） */
+  /* V26.9.32 需求②：锚定定位 → V26.9.33 需求①：锚点改「四按钮行」（面板悬在按钮行上方，不遮任何按钮），
+     水平对齐行内容区，maxHeight 顶到安全区下沿；手机/桌面同一体系（滚/旋/缩跟隨） */
   _positionQuickPanel() {
     const panel = $('#paramQuickPanel');
-    const anchor = $('.generate-section');
+    const anchor = $('#formActionsRow') || $('.generate-section');
     if (!panel || !anchor) return;
     const gen = anchor.getBoundingClientRect();
     const cs = getComputedStyle(anchor);
@@ -6893,16 +7062,24 @@ const UI = {
     const safeTop = parseFloat(getComputedStyle($('.app-body') || document.body).paddingTop) || 0;
     panel.style.maxHeight = Math.max(220, Math.round(gen.top - safeTop - 14)) + 'px';
   },
-  _openQuickPanel() {
+  _openQuickPanel(mode) {
     const panel = $('#paramQuickPanel');
     if (!panel) return;
     const body = $('#paramQuickBody');
     if (body && !body.children.length) this._mountQuickParams(); /* 需求①兜底：渲染链路异常致空面板时自救 */
+    /* V26.9.33 需求②：设定模式（标题/显隐/按钮态），组 DOM 常驻 → 切模式零搬移零查询丢失 */
+    this._pqMode = mode === 'ratio' ? 'ratio' : 'other';
+    if (body) body.dataset.mode = this._pqMode;
+    const title = panel.querySelector('.pq-title');
+    if (title) title.textContent = this._pqMode === 'ratio' ? '比例 · 分辨率' : '其他参数';
+    $('#paramQuickBtnRatio')?.setAttribute('aria-expanded', String(this._pqMode === 'ratio'));
+    $('#paramQuickBtnOther')?.setAttribute('aria-expanded', String(this._pqMode === 'other'));
+    this._closeCountPop(); /* 双浮层互斥 */
     clearTimeout(this._pqCloseT);
-    /* 需求②前置：锚点（生成钮）滚进参数列视野——桌面列可滚时按钮可能被推到视口外。
+    /* 需求②前置：锚点（按钮行）滚进参数列视野——桌面列可滚时按钮可能被推到视口外。
        手动瞬时 scrollTop（scrollIntoView 的 nearest 在 sticky/嵌套滚动下有测量时序坑），
-       ±2px 阈值守卫：手机 sticky 钉住态 g.bottom==a.bottom，天然零滚动不跳动 */
-    const anchor = $('.generate-section');
+       ±2px 阈值守卫：手机 sticky 钉住态天然零滚动不跳动 */
+    const anchor = $('#formActionsRow') || $('.generate-section');
     const aside = anchor?.closest('.param-panel');
     if (aside) {
       const g0 = anchor.getBoundingClientRect(), a0 = aside.getBoundingClientRect();
@@ -6910,11 +7087,11 @@ const UI = {
       else if (g0.top < a0.top - 2) aside.scrollTop -= a0.top - g0.top + 12;
     }
     panel.classList.add('displayed'); /* 先解除 display:none */
-    this._positionQuickPanel();       /* 需求②：锚定生成按钮上方（内容注入后定位才准确） */
+    this._positionQuickPanel();       /* 需求②：锚定按钮行上方（内容注入后定位才准确） */
     void panel.offsetWidth;           /* reflow：让 transform 过渡真实生效（display 不参与 transition） */
     panel.classList.add('show');
+    this._syncAllPqControls();        /* 模式显隐后激活态保险刷新（缓存回填路径已覆盖，此处兑底） */
     requestAnimationFrame(() => this._positionQuickPanel()); /* 次帧复测：滚动/布局残余自愈 */
-    $('#paramQuickBtn')?.setAttribute('aria-expanded', 'true');
   },
   _closeQuickPanel() {
     const panel = $('#paramQuickPanel');
@@ -6922,30 +7099,60 @@ const UI = {
     panel.classList.remove('show'); /* 先播收起动画（transform+opacity），过渡完再摘 displayed */
     clearTimeout(this._pqCloseT);
     this._pqCloseT = setTimeout(() => panel.classList.remove('displayed'), 280);
-    $('#paramQuickBtn')?.setAttribute('aria-expanded', 'false');
+    $('#paramQuickBtnRatio')?.setAttribute('aria-expanded', 'false');
+    $('#paramQuickBtnOther')?.setAttribute('aria-expanded', 'false');
   },
   /* V26.9.32 需求①：绑定重写 —— document 级事件委托（监听丢失/重复绑定免疫，真机点击失败兜底）
-     + 全屏遮罩退役改点外关闭；生成钮保持可见可点，点生成=收面板+生成一气呵成（需求②的交互闭环） */
+     + 全屏遮罩退役改点外关闭；生成钮保持可见可点，点生成=收面板+生成一气呵成（需求②的交互闭环）
+     V26.9.33 需求②：双参数钮委托（同钮 toggle、异钮热切换保持面板开）；需求③：张数浮层绑定 */
   _bindQuickParams() {
     document.addEventListener('click', e => {
-      if (e.target.closest?.('#paramQuickBtn')) {
-        $('#paramQuickPanel')?.classList.contains('show') ? this._closeQuickPanel() : this._openQuickPanel();
+      const ratioHit = e.target.closest?.('#paramQuickBtnRatio');
+      const otherHit = e.target.closest?.('#paramQuickBtnOther');
+      if (ratioHit || otherHit) {
+        const mode = ratioHit ? 'ratio' : 'other';
+        const panel = $('#paramQuickPanel');
+        if (panel?.classList.contains('show')) {
+          if (this._pqMode === mode) this._closeQuickPanel(); /* 同钮 toggle */
+          else this._openQuickPanel(mode); /* 异钮热切换：面板保持开，内容换组重定位 */
+        } else this._openQuickPanel(mode);
         return;
       }
+      /* 张数浮层外点关闭（点 chip/浮层内不关，各自有 toggle/选值逻辑） */
+      if (!e.target.closest?.('#countChipBtn') && !e.target.closest?.('#countPop')) this._closeCountPop();
       const panel = $('#paramQuickPanel');
       if (panel?.classList.contains('show')
           && !e.target.closest?.('#paramQuickPanel')
           && !e.target.closest?.('.generate-section')) this._closeQuickPanel();
     });
     $('#paramQuickClose')?.addEventListener('click', () => this._closeQuickPanel());
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') this._closeQuickPanel(); });
-    $('#generateBtn')?.addEventListener('click', () => this._closeQuickPanel());
-    window.addEventListener('resize', () => { if ($('#paramQuickPanel')?.classList.contains('show')) this._positionQuickPanel(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { this._closeQuickPanel(); this._closeCountPop(); } });
+    $('#generateBtn')?.addEventListener('click', () => { this._closeQuickPanel(); this._closeCountPop(); });
+    window.addEventListener('resize', () => {
+      if ($('#paramQuickPanel')?.classList.contains('show')) this._positionQuickPanel();
+      if ($('#countPop')?.classList.contains('show')) this._positionCountPop();
+    });
+    /* V26.9.33 需求③：张数胶囊 + 浮层（选值派发 change → _onFieldChange 全链路同步估算/chip/缓存） */
+    $('#countChipBtn')?.addEventListener('click', () => this._toggleCountPop());
+    $('#countPop')?.addEventListener('click', e => {
+      const opt = e.target.closest?.('.cp-opt');
+      if (!opt) return;
+      const sel = document.querySelector('[data-key="__count"]');
+      if (sel) { sel.value = opt.dataset.v; sel.dispatchEvent(new Event('change', { bubbles: true })); }
+      this._closeCountPop();
+    });
     let pqTick = false; /* rAF 节流的滚动跟随（桌面参数列可滚动，按钮动面板跟着动；手机 sticky 按钮本身不动） */
     document.addEventListener('scroll', () => {
-      if (!$('#paramQuickPanel')?.classList.contains('show') || pqTick) return;
+      if (pqTick) return;
+      const pqOpen = $('#paramQuickPanel')?.classList.contains('show');
+      const cpOpen = $('#countPop')?.classList.contains('show');
+      if (!pqOpen && !cpOpen) return;
       pqTick = true;
-      requestAnimationFrame(() => { pqTick = false; this._positionQuickPanel(); });
+      requestAnimationFrame(() => {
+        pqTick = false;
+        if (pqOpen) this._positionQuickPanel();
+        if (cpOpen) this._positionCountPop();
+      });
     }, true);
     /* 面板内隐藏 select 被外部回填时（缓存恢复/撤销），change 冒泡到此 → 刷新激活态与摘要 */
     $('#paramQuickBody')?.addEventListener('change', () => {
@@ -6953,9 +7160,56 @@ const UI = {
     });
   },
 
-  /* V26.9.31 需求②：工作流按钮搬进「参数|复制|粘贴」三按钮并列行（appendChild 移节点，事件绑定保留） */
-  _mountWorkflowBtns() {
-    const slot = document.getElementById('wfActionsSlot');
+  /* ===== V26.9.33 需求③：张数浮层（挂 body 锚张数胶囊上方；与参数面板互斥） ===== */
+  _toggleCountPop() {
+    const pop = $('#countPop');
+    if (!pop) return;
+    if (pop.classList.contains('show')) { this._closeCountPop(); return; }
+    this._closeQuickPanel(); /* 双浮层互斥：开张数关参数面板 */
+    pop.classList.add('displayed');
+    this._renderCountPopActive();
+    this._positionCountPop();
+    void pop.offsetWidth;
+    pop.classList.add('show');
+    $('#countChipBtn')?.setAttribute('aria-expanded', 'true');
+    requestAnimationFrame(() => this._positionCountPop());
+  },
+  _closeCountPop() {
+    const pop = $('#countPop');
+    if (!pop || !pop.classList.contains('show')) return;
+    pop.classList.remove('show');
+    clearTimeout(this._cpCloseT);
+    this._cpCloseT = setTimeout(() => pop.classList.remove('displayed'), 240);
+    $('#countChipBtn')?.setAttribute('aria-expanded', 'false');
+  },
+  _positionCountPop() {
+    const pop = $('#countPop'), chip = $('#countChipBtn');
+    if (!pop || !chip) return;
+    const r = chip.getBoundingClientRect();
+    const pw = pop.offsetWidth || 240;
+    let left = Math.round(r.left + r.width / 2 - pw / 2);
+    left = Math.max(8, Math.min(left, window.innerWidth - pw - 8));
+    pop.style.left = left + 'px';
+    pop.style.bottom = Math.round(window.innerHeight - r.top + 8) + 'px';
+  },
+  _renderCountPopActive() {
+    const cur = String(this._getBatchCount());
+    $('#countPop')?.querySelectorAll('.cp-opt').forEach(b => {
+      const on = b.dataset.v === cur;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', String(on));
+    });
+  },
+  /* V26.9.33 需求③：张数胶囊文案同步（__count 全部变更路径统一经 _onFieldChange → 此处） */
+  _syncCountChip() {
+    const el = $('#countChipVal');
+    if (el) el.textContent = '×' + this._getBatchCount();
+  },
+
+  /* V26.9.35 需求②：工作流按钮搬进提示词面板头部与预设并列（移节点保绑定，二次渲染幂等）；
+     scope 参数：prompt-module 动态构建后 wrap 未入 DOM，全局 getElementById 查不到 slot —— 用 wrap 内查询 */
+  _mountWorkflowBtns(scope) {
+    const slot = scope?.querySelector ? scope.querySelector('#wfActionsSlot') : document.getElementById('wfActionsSlot');
     if (!slot) return;
     ['copyWorkflowBtn', 'importWorkflowBtn'].forEach(id => {
       const btn = document.getElementById(id);
@@ -7400,12 +7654,23 @@ const UI = {
   },
 
   /* ---------- FORM RENDERING ---------- */
+  /* V26.9.35 需求②：工作流按钮现已住在动态 prompt-module 内 —— 渲染前必须归还 wfPark，
+     否则 container.innerHTML='' 会随旧面板一起销毁按钮节点（一次性事件绑定随之永久丢失） */
+  _parkWorkflowBtns() {
+    const park = document.getElementById('wfPark');
+    if (!park) return;
+    ['copyWorkflowBtn', 'importWorkflowBtn'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn && btn.parentElement !== park) park.appendChild(btn);
+    });
+  },
   renderParamForm(modelId) {
     const model = MODELS[this.state.tab].find(m => m.id === modelId) || this.state.model;
     this.state.model = model;
     this.state.modelKey = `${this.state.tab}/${model.id}`;
     this._updateModelBar();
     const container = $('#paramForm');
+    this._parkWorkflowBtns(); /* 归还后再清空，按钮节点永不被销毁 */
     container.innerHTML = '';
     const hasPrompt = model.params.find(p => p.type === 'textarea');
 
@@ -7431,8 +7696,16 @@ const UI = {
         complexParams.push({ type: 'field', param: p });
       }
     }
-    // V26.9.23: 张数伪参数（与分辨率/比例并列的一个「张数」选项；__count 不入 API body）
-    simpleParams.push({ type: 'select', key: '__count', label: '张数', options: ['1', '2', '3', '4'], default: '1', hint: '同提示词连发' });
+    // V26.9.33 需求③：张数退役出参数面板 → 生成钮左侧「张数胶囊」+ 隐藏值源 select（不渲染成组，
+    // __count 不入 API body；_getBatchCount/_saveFormToCache/_restoreFormFromCache 按 data-key 全兼容）
+    const cntDef = (this.state.formCache[this.state.modelKey] || {})['__count']
+      ?? (this.state.formCache[this.state.tab + '_pool'] || {})['__count'] ?? '1';
+    const cntHolder = document.createElement('div');
+    cntHolder.style.cssText = 'display:none';
+    cntHolder.innerHTML = `<select data-key="__count" aria-label="生成张数">${['1', '2', '3', '4'].map(o => `<option value="${o}" ${String(o) === String(cntDef) ? 'selected' : ''}>${o}</option>`).join('')}</select>`;
+    container.appendChild(cntHolder);
+    const cntSel = cntHolder.querySelector('select');
+    cntSel.addEventListener('change', () => this._onFieldChange('__count', cntSel));
 
     // Render simple params in pairs (2-column grid)
     for (let i = 0; i < simpleParams.length; i += 2) {
@@ -7473,6 +7746,17 @@ const UI = {
     this._mountQuickParams();
   },
 
+  /* V26.9.34 参考素材扁平化：类型线性图标（label 精致化，ref-section/ref-field/title 共用） */
+  _REF_ICONS: {
+    group: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M17.5 14v7M14 17.5h7"/></svg>',
+    'ref-image': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>',
+    'ref-video': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2.5"/></svg>',
+    'ref-audio': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
+    text: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg>',
+    url: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>'
+  },
+
+  /* V26.9.35 需求①：「只能选择一种」类 hint 退役（模式药丸互斥交互已自明） */
   _buildRefModeSection(model) {
     const wrap = document.createElement('div');
     wrap.className = 'ref-mode-section';
@@ -7483,29 +7767,29 @@ const UI = {
     if (!this.state.refMode[modelKey]) this.state.refMode[modelKey] = rg.modes[0].value;
 
     const cols = rg.modes.length <= 4 ? `repeat(${rg.modes.length}, 1fr)` : 'repeat(4, 1fr)';
-    let html = `<div class="ref-mode-header"><span class="ref-mode-title">${esc(rg.title)}</span><span class="ref-mode-hint">${esc(rg.hint)}</span></div>`;
+    /* V26.9.34 扁平化：一段头（图标+标题+hint 左 / 模式药丸右，窄屏自动换行） */
+    let html = `<div class="ref-mode-header"><div class="ref-mode-head-l"><span class="ref-mode-title">${this._REF_ICONS.group}<span>${esc(rg.title)}</span></span></div>`;
     html += `<div class="ref-mode-row" style="grid-template-columns:${cols}">`;
-    html += rg.modes.map(m => `<button class="ref-mode-btn ${m.value === this.state.refMode[modelKey] ? 'active' : ''}" data-ref-mode="${esc(m.value)}">${esc(m.label)}</button>`).join('');
-    html += `</div>`;
-    // Panels
+    html += rg.modes.map(m => `<button class="ref-mode-btn ${m.value === this.state.refMode[modelKey] ? 'active' : ''}" data-ref-mode="${esc(m.value)}">${esc(m.label)}<span class="ref-mode-badge" data-ref-badge="${esc(m.value)}"></span></button>`).join('');
+    html += `</div></div>`;
+    // Panels（panel 容器本身无任何视觉样式 → 选中模式的内容直接平铺在玻璃卡上，消灭卡中卡）
     html += `<div class="ref-mode-panels">`;
     rg.modes.forEach(m => {
-      html += `<div class="ref-mode-panel ${m.value === this.state.refMode[modelKey] ? 'active' : ''}" data-ref-panel="${esc(m.value)}">`;
+      /* V26.9.34：多参数模式（首/尾帧等）panel 自动两列 —— 数据驱动，不再写死 mode value */
+      const multiCls = m.params.length > 1 ? ' ref-panel-cols' : '';
+      html += `<div class="ref-mode-panel ${m.value === this.state.refMode[modelKey] ? 'active' : ''}${multiCls}" data-ref-panel="${esc(m.value)}">`;
       m.params.forEach(key => {
         const p = model.params.find(pp => pp.key === key);
         if (!p) return;
         if (p.type === 'ref-image' || p.type === 'ref-video' || p.type === 'ref-audio') {
           const gridClass = p.type === 'ref-video' ? 'ref-grid-video' : p.type === 'ref-audio' ? 'ref-grid-audio' : '';
           const warnMsg = p.type === 'ref-video' ? '本地视频需上传至 R2 后才能用于生成' : p.type === 'ref-audio' ? '本地音频需上传至 R2 后才能用于生成' : '';
-          html += `<div class="ref-section" data-ref-key="${esc(p.key)}" style="margin-bottom:6px;padding:8px"><div class="ref-label">${esc(p.label)}${p.hint ? `<span class="ref-hint">${esc(p.hint)}</span>` : ''}</div><div class="ref-grid ${gridClass}" data-ref-grid="${esc(p.key)}"></div>${warnMsg ? `<div class="ref-video-warn" data-ref-warn="${esc(p.key)}">${warnMsg}</div>` : ''}</div>`;
+          html += `<div class="ref-section" data-ref-key="${esc(p.key)}"><div class="ref-label">${this._REF_ICONS[p.type] || ''}<span>${esc(p.label)}</span>${this._refHint(p.hint) ? `<span class="ref-hint">${esc(this._refHint(p.hint))}</span>` : ''}</div><div class="ref-grid ${gridClass}" data-ref-grid="${esc(p.key)}"></div>${warnMsg ? `<div class="ref-video-warn" data-ref-warn="${esc(p.key)}">${warnMsg}</div>` : ''}</div>`;
         } else {
-          // text/url field
+          // V26.9.34: text/url → 轻量 ref-field 输入行（替代旧 param-group 卡中卡中卡）
           const defVal = this.state.formCache[modelKey]?.[key] ?? p.default ?? '';
-          if (p.type === 'url') {
-            html += `<div class="param-group" style="margin-bottom:6px;padding:8px;background:var(--surface-2);border-radius:var(--radius-sm)"><div class="field-label">${esc(p.label)}</div><div class="url-input-row"><input type="text" data-key="${esc(p.key)}" value="${esc(defVal)}" placeholder="${esc(p.placeholder || 'https://...')}"></div></div>`;
-          } else {
-            html += `<div class="param-group" style="margin-bottom:6px;padding:8px;background:var(--surface-2);border-radius:var(--radius-sm)"><div class="field-label">${esc(p.label)}</div><input type="text" data-key="${esc(p.key)}" value="${esc(defVal)}" placeholder="${esc(p.placeholder || '')}"></div>`;
-          }
+          const ico = this._REF_ICONS[p.type === 'url' ? 'url' : 'text'] || '';
+          html += `<div class="ref-field"><div class="ref-field-label">${ico}<span>${esc(p.label)}</span>${this._refHint(p.hint) ? `<span class="ref-field-hint">${esc(this._refHint(p.hint))}</span>` : ''}</div><input type="text" data-key="${esc(p.key)}" value="${esc(defVal)}" placeholder="${esc(p.placeholder || (p.type === 'url' ? 'https://...' : ''))}"></div>`;
         }
       });
       if (m.params.length === 0) html += `<div class="ref-empty" style="text-align:center;padding:12px;color:var(--text-dim);font-size:12px">无参考素材，仅使用提示词生成</div>`;
@@ -7574,7 +7858,25 @@ const UI = {
       el.addEventListener('change', () => this._onFieldChange(el.dataset.key, el));
     });
 
+    /* V26.9.34：药丸角标首渲染（缓存恢复的素材也要显示） */
+    setTimeout(() => this._syncRefModeBadges(), 0);
+
     return wrap;
+  },
+
+  /* V26.9.34 参考素材扁平化：模式药丸素材角标 —— 每个模式已添加的素材数，
+     挂在药丸上让用户不切换模式也能看到素材状态；_renderRefGrid 每次渲染后调用 */
+  _syncRefModeBadges() {
+    const model = this.state.model;
+    if (!model?.refGroups) return;
+    const mk = this.state.modelKey;
+    model.refGroups.modes.forEach(m => {
+      const badge = $(`.ref-mode-btn[data-ref-mode="${m.value}"] .ref-mode-badge`);
+      if (!badge) return;
+      const n = m.params.reduce((s, k) => s + (this.state.refState[mk]?.[k]?.length || 0), 0);
+      badge.textContent = n > 99 ? '99+' : (n > 0 ? String(n) : '');
+      badge.classList.toggle('on', n > 0);
+    });
   },
 
   _buildPromptModule(model) {
@@ -7588,6 +7890,8 @@ const UI = {
       <div class="prompt-head">
         <span class="prompt-title">提示词</span>
         <div class="prompt-actions">
+          <!-- V26.9.35 需求②：复制/粘贴工作流移至此处与预设并列（纯图标小钮，DOM 由 _mountWorkflowBtns 搬入） -->
+          <span id="wfActionsSlot" style="display:contents"></span>
           <button class="preset-trigger" id="presetTrigger">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
             <span>预设</span>
@@ -7840,7 +8144,7 @@ const UI = {
     const gridClass = p.type === 'ref-video' ? 'ref-grid-video' : p.type === 'ref-audio' ? 'ref-grid-audio' : '';
     const warnMsg = p.type === 'ref-video' ? '本地视频需上传至 R2 后才能用于生成' : p.type === 'ref-audio' ? '本地音频需上传至 R2 后才能用于生成' : '';
     wrap.innerHTML = `
-      <div class="ref-label">${esc(p.label)}${p.hint ? `<span class="ref-hint">${esc(p.hint)}</span>` : ''}</div>
+      <div class="ref-label">${this._REF_ICONS[p.type] || ''}<span>${esc(p.label)}</span>${this._refHint(p.hint) ? `<span class="ref-hint">${esc(this._refHint(p.hint))}</span>` : ''}</div>
       <div class="ref-grid ${gridClass}" data-ref-grid="${esc(p.key)}"></div>
       ${warnMsg ? '<div class="ref-video-warn" data-ref-warn="' + esc(p.key) + '">' + warnMsg + '</div>' : ''}
     `;
@@ -7889,7 +8193,8 @@ const UI = {
     const defVal = this.state.formCache[this.state.modelKey]?.[p.key] ?? p.default ?? '';
     let inner = `<div class="field-row"><div class="field-label">${esc(p.label)}${p.hint ? `<span class="field-hint">${esc(p.hint)}</span>` : ''}<span class="field-val" data-val="${esc(p.key)}"></span></div>`;
     if (p.type === 'select') {
-      inner += `<select data-key="${esc(p.key)}">${p.options.map(o => `<option value="${esc(o)}" ${o === defVal ? 'selected' : ''}>${esc(o)}</option>`).join('')}</select>`;
+      /* V26.9.35 需求⑤：选项显示汉化（枚举值查表），value 原样不变 */
+      inner += `<select data-key="${esc(p.key)}">${p.options.map(o => `<option value="${esc(o)}" ${o === defVal ? 'selected' : ''}>${esc(this._enumLabel(p.key, o))}</option>`).join('')}</select>`;
     } else if (p.type === 'range') {
       inner += `<div class="range-row"><input type="range" data-key="${esc(p.key)}" min="${p.min}" max="${p.max}" step="${p.step}" value="${defVal}"></div>`;
     } else if (p.type === 'number') {
@@ -7917,7 +8222,9 @@ const UI = {
   },
 
   _onFieldChange(key, el) {
-    const valEl = $(`[data-val="${key}"]`);
+    /* V26.9.35 顺手修复：构建时组未入 DOM，全局 $ 查不到 valEl → 初始回显为空；
+       优先从元素所在 param-group 内找（wrap 内查询入 DOM 前也命中），全局查询兜底 */
+    const valEl = (el?.closest?.('.param-group')?.querySelector(`[data-val="${key}"]`)) || $(`[data-val="${key}"]`);
     if (valEl && el) {
       if (el.type === 'range') { valEl.textContent = el.value; }
       else {
@@ -7927,10 +8234,15 @@ const UI = {
         if (p && Array.isArray(p.options) && p.options.length && typeof p.options[0] === 'object') {
           const hit = p.options.find(o => String(o.value) === String(el.value));
           if (hit) txt = hit.label;
+        } else if (el.tagName === 'SELECT') {
+          /* V26.9.35 需求⑤：字符串枚举回显汉化（与下拉/摘要同表） */
+          txt = this._enumLabel(key, el.value);
         }
         valEl.textContent = txt;
       }
     }
+    /* V26.9.33 需求③：张数变更（浮层选值/缓存恢复/撤销）同步生成区胶囊文案 */
+    if (key === '__count') this._syncCountChip();
     /* V26.9.31: select 值变化（含工作流恢复等程序化赋值）同步比例网格/分段控件激活态 */
     if (el && el.tagName === 'SELECT') this._syncPqControl(el);
     this._updateEstimate();
@@ -8346,6 +8658,38 @@ const UI = {
     return true;
   },
 
+  /* V26.9.35 需求⑥：「最多 N 张/个」类静态提示退役 —— 空间留给内容，达上限的反馈交给「添加块消失 + Toast」；
+     功能性 hint（需搭配首帧/有视频时声音需关/必填/至少 10 秒）保留 */
+  _refHint(hint) {
+    if (!hint) return '';
+    return /最多/.test(hint) ? '' : hint;
+  },
+
+  /* V26.9.35 需求⑤：枚举值显示汉化 —— 数据流零侵入（value 原样提交，仅在显示层查表） */
+  _ENUM_ZH: {
+    auto: '自动', adaptive: '自适应', transparent: '透明',
+    low: '低', medium: '中', high: '高', xhigh: '超清', max: '最高',
+    true: '开启', false: '关闭', on: '开启', off: '关闭'
+  },
+  _ENUM_ZH_KEY: {
+    generate_audio: { true: '生成', false: '关闭' },
+    watermark: { 1: '显示', 0: '不显示' },
+    language_boost: {
+      auto: '自动检测', 'Chinese': '中文', 'Chinese,Yue': '中文（粤语）', 'English': '英语',
+      'Arabic': '阿拉伯语', 'Russian': '俄语', 'Spanish': '西班牙语', 'French': '法语',
+      'Portuguese': '葡萄牙语', 'German': '德语', 'Turkish': '土耳其语', 'Dutch': '荷兰语',
+      'Ukrainian': '乌克兰语', 'Vietnamese': '越南语', 'Indonesian': '印尼语',
+      'Japanese': '日语', 'Italian': '意大利语', 'Korean': '韩语'
+    }
+  },
+  _enumLabel(key, v) {
+    const s = String(v ?? '');
+    const byKey = this._ENUM_ZH_KEY?.[key];
+    if (byKey && byKey[s] != null) return byKey[s];
+    if (this._ENUM_ZH[s] != null) return this._ENUM_ZH[s];
+    return v;
+  },
+
   _renderRefGrid(key) {
     const grid = $(`[data-ref-grid="${key}"]`);
     if (!grid) return;
@@ -8373,8 +8717,17 @@ const UI = {
       const editBtn = (!isVideo && !isAudio && r.remote) ? `<button class="ref-edit" data-edit="${esc(r.id)}" title="编辑此图" aria-label="编辑此图"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>` : '';
       return `<div class="ref-item ${isVideo ? 'ref-item-video' : ''} ${isAudio ? 'ref-item-audio' : ''}" data-rid="${esc(r.id)}">${media}${localBadge}${progressHtml}<button class="ref-del" data-del="${esc(r.id)}" aria-label="删除参考图">×</button>${editBtn}<button class="ref-copy" data-copy-url="${esc(r.id)}" aria-label="复制图片URL"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>`;
     }).join('');
-    if (refs.length < max) {
-      html += `<div class="ref-add ${isVideo ? 'ref-add-video' : ''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>添加</div>`;
+    /* V26.9.34 空态大上传热区：无素材时占满整行；V26.9.35 需求③⑥：
+       镂空添加框 = 中央大加号 + 名称（param.label）在加号下方，「点击添加」/格式提示/「最多 N 张」文字全退役 */
+    const isEmpty = refs.length === 0;
+    if (grid.classList) grid.classList.toggle('is-empty', isEmpty);
+    /* V26.9.35 需求⑥：空态时 label 行隐藏（名称已在添加框内），有素材后恢复上下文标识 */
+    const labelEl = grid.parentElement?.querySelector('.ref-label');
+    if (labelEl) labelEl.style.display = isEmpty ? 'none' : '';
+    if (isEmpty && refs.length < max) {
+      html += `<div class="ref-add ${isVideo ? 'ref-add-video' : ''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span class="ref-add-name">${esc(param?.label || '添加')}</span></div>`;
+    } else if (refs.length < max) {
+      html += `<div class="ref-add ${isVideo ? 'ref-add-video' : ''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>`;
     }
     grid.innerHTML = html;
     grid.querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', e => { e.stopPropagation(); this._removeRef(key, btn.dataset.del); }));
@@ -8406,6 +8759,8 @@ const UI = {
         });
       } catch (e) { console.warn('[Sortable] init failed', e); }
     }
+    /* V26.9.34：模式药丸角标同步（内部自查 refGroups，图片/音频模式零开销） */
+    this._syncRefModeBadges();
   },
 
   _updateRefVideoWarn(key) {
