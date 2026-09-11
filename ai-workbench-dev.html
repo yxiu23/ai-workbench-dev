@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="dark">
+<html lang="zh-CN" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0">
@@ -8,7 +8,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#080b14" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#f7f8fc" media="(prefers-color-scheme: light)">
-<title>修的媒体工作台 V26.9.29</title>
+<title>修的媒体工作台 V26.9.32</title>
 <!-- V68 衬线品牌字：思源宋体（Noto Serif SC），加载失败回退系统宋体 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -72,13 +72,19 @@
   --shadow-lg: 0 2px 8px rgba(2,4,12,.22), 0 20px 52px rgba(2,4,12,.30);
   --glass-blur: blur(18px) saturate(132%);
   /* V26.9.22 Liquid Glass: 统一光源=左上（135° 高光/右下收光），玻璃板透出动态背景
-     V26.9.24: 顶层玻璃透明度再调大（.34→.30 / .48→.42）—— 玻璃层叠多了会泛白，越上层越透；
-     新增 --surface-glass-card 专供「面板之上的卡片/胶囊」第二层玻璃用（更透，防叠白） */
-  --surface-glass: rgba(15,20,38,.30);
-  --surface-glass-2: rgba(19,25,45,.42);
-  --surface-glass-card: rgba(15,20,38,.24);
-  /* V26.9.26: 浮层弹卡专用（天气弹卡等小面积阅读型浮层）——比面板更实一档，防背景透出看不清 */
-  --surface-glass-pop: rgba(15,20,38,.50);
+     V26.9.30: 全站透明度再提一档（iOS 液态玻璃风格：更透更轻），模糊度 --glass-blur 不变；
+     三级令牌梯度收窄（面板/浮层差距缩小，观感统一） */
+  --surface-glass: rgba(15,20,38,.20);
+  --surface-glass-2: rgba(19,25,45,.28);
+  --surface-glass-card: rgba(15,20,38,.16);
+  /* V26.9.26: 浮层弹卡专用（天气弹卡等小面积阅读型浮层）——比面板略实一档，防背景透出看不清 */
+  --surface-glass-pop: rgba(15,20,38,.34);
+  /* V26.9.31 需求④：面板内嵌层（提示词/参考图/模型卡/参数组）专用 ——
+     原 --surface 纯白/深实底改为半透明玻璃，主面板→内嵌卡片的双层玻璃层级感更透（iOS 风） */
+  --surface-nested: rgba(28,34,58,.34);
+  /* V26.9.32 需求③：玻璃叠玻璃三级层叠 —— L2 卡片微抬升投影 / L3 控件内凹（叠在卡片玻璃上的下沉感） */
+  --lift-card: inset 0 1px 0 rgba(255,255,255,.06), 0 2px 10px -4px rgba(0,0,0,.45), 0 1px 2px rgba(0,0,0,.28);
+  --lift-ctrl: inset 0 1px 2px rgba(0,0,0,.20), 0 1px 0 rgba(255,255,255,.045);
   --lg-gloss: linear-gradient(135deg, rgba(255,255,255,.11), rgba(255,255,255,.03) 36%, rgba(255,255,255,.015) 62%, rgba(255,255,255,.06));
   --lg-edge: rgba(255,255,255,.14);
   --lg-hi: rgba(255,255,255,.30);
@@ -103,13 +109,18 @@
   --shadow-md: 0 1px 3px rgba(23,32,64,.04), 0 10px 26px rgba(23,32,64,.06);
   --shadow-lg: 0 2px 8px rgba(23,32,64,.05), 0 20px 48px rgba(23,32,64,.11);
   --glass-blur: blur(14px) saturate(128%);
-  /* V26.9.22 Liquid Glass: 浅色白琉璃 — 高光更亮、边缘更实、阴影更柔（V26.9.24 同步降透明度防叠白） */
-  --surface-glass: rgba(255,255,255,.40);
-  --surface-glass-2: rgba(255,255,255,.54);
-  --surface-glass-card: rgba(255,255,255,.36);
-  /* V26.9.26: 浅色浮层弹卡同步更实一档 */
-  --surface-glass-pop: rgba(255,255,255,.68);
-  --lg-gloss: linear-gradient(135deg, rgba(255,255,255,.80), rgba(255,255,255,.30) 36%, rgba(255,255,255,.16) 62%, rgba(255,255,255,.45));
+  /* V26.9.22 Liquid Glass: 浅色白琉璃 — 高光更亮、边缘更实、阴影更柔；V26.9.30 同步提透明（iOS 风格） */
+  --surface-glass: rgba(255,255,255,.26);
+  --surface-glass-2: rgba(255,255,255,.36);
+  --surface-glass-card: rgba(255,255,255,.24);
+  /* V26.9.26: 浅色浮层弹卡同步提透明 */
+  --surface-glass-pop: rgba(255,255,255,.46);
+  /* V26.9.31 需求④：浅色内嵌层 —— 原 #ffffff 实白改半透，透出主面板玻璃底 */
+  --surface-nested: rgba(255,255,255,.46);
+  /* V26.9.32 需求③：浅色层叠令牌 —— 白琉璃卡片亮缘 + 柔影微抬升；控件内凹更轻 */
+  --lift-card: inset 0 1px 0 rgba(255,255,255,.55), 0 2px 10px -4px rgba(38,52,94,.13), 0 1px 2px rgba(38,52,94,.05);
+  --lift-ctrl: inset 0 1px 2px rgba(38,52,94,.055), 0 1px 0 rgba(255,255,255,.65);
+  --lg-gloss: linear-gradient(135deg, rgba(255,255,255,.58), rgba(255,255,255,.22) 36%, rgba(255,255,255,.12) 62%, rgba(255,255,255,.32));
   --lg-edge: rgba(255,255,255,.92);
   --lg-hi: rgba(255,255,255,1);
   --lg-slab: inset 0 1px 0 rgba(255,255,255,.95), inset 1px 0 0 rgba(255,255,255,.60), inset 0 -1px 0 rgba(23,32,64,.05), 0 1px 2px rgba(23,32,64,.05), 0 12px 26px -12px rgba(23,32,64,.14), 0 30px 64px -28px rgba(23,32,64,.22);
@@ -157,7 +168,7 @@ button { cursor: pointer; border: none; background: none; }
 input, textarea, select {
   background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
   padding: 8px 10px; outline: none; width: 100%; transition: border-color var(--transition), box-shadow var(--transition), background var(--transition);
-  box-shadow: inset 0 1px 2px rgba(9,14,30,.035);
+  box-shadow: var(--lift-ctrl); /* V26.9.32 需求③：控件内凹质感令牌化（全站输入面统一，:focus ring 同特异性更后源自然胜出） */
 }
 input:hover, textarea:hover, select:hover { border-color: color-mix(in srgb, var(--text-dim) 32%, var(--border)); }
 input:focus, textarea:focus, select:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft), inset 0 1px 2px rgba(9,14,30,.03); background-color: var(--bg-elev); }
@@ -216,11 +227,11 @@ textarea { resize: vertical; min-height: 80px; }
    ============================================================ */
 .tabs {
   display: flex; gap: 3px; padding: 3px; background: var(--surface-2);
-  border-radius: var(--radius-md); border: 1px solid var(--border-soft);
+  border-radius: 999px; border: 1px solid var(--border-soft); /* V26.9.32 需求⑤：三模式按钮大圆角化（药丸分段） */
   box-shadow: inset 0 1px 2px rgba(9,14,30,.06);
 }
 .tab {
-  flex: 1; padding: 8px 12px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500;
+  flex: 1; padding: 8px 12px; border-radius: 999px; font-size: 13px; font-weight: 500; /* V26.9.32 需求⑤：药丸圆角 */
   color: var(--text-muted); text-align: center; transition: all var(--transition); position: relative; overflow: hidden;
   letter-spacing: .02em;
 }
@@ -238,7 +249,7 @@ textarea { resize: vertical; min-height: 80px; }
    模型选择
    ============================================================ */
 .model-select-wrap {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px;
+  background: var(--surface-nested); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px;
 }
 .model-select {
   width: 100%; padding: 8px 32px 8px 10px; font-size: 14px; font-weight: 600; color: var(--text);
@@ -259,7 +270,8 @@ textarea { resize: vertical; min-height: 80px; }
    提示词模块 (统一)
    ============================================================ */
 .prompt-module {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md);
+  /* V26.9.31 需求④：var(--surface) → 半透明 --surface-nested（提示词/参考图层级面板提透明） */
+  background: var(--surface-nested); border: 1px solid var(--border); border-radius: var(--radius-md);
   padding: 14px; display: flex; flex-direction: column; gap: 10px;
 }
 .prompt-head {
@@ -372,7 +384,7 @@ textarea { resize: vertical; min-height: 80px; }
    参考素材系统
    ============================================================ */
 .ref-mode-section {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px;
+  background: var(--surface-nested); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px;
 }
 .ref-mode-header {
   display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
@@ -397,7 +409,7 @@ textarea { resize: vertical; min-height: 80px; }
 .ref-mode-panel[data-ref-panel="frame"] .ref-section:nth-child(even),
 .ref-mode-panel[data-ref-panel="frames"] .ref-section:nth-child(even) { margin-right: 0; }
 .ref-section {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px;
+  background: var(--surface-nested); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px;
 }
 .ref-label {
   font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 10px;
@@ -488,7 +500,7 @@ textarea { resize: vertical; min-height: 80px; }
    参数控件
    ============================================================ */
 .param-group {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px;
+  background: var(--surface-nested); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px;
 }
 .param-group .group-label {
   font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 10px;
@@ -550,6 +562,167 @@ textarea { resize: vertical; min-height: 80px; }
 .generate-btn:disabled svg { animation: genIconSpin 1.5s linear infinite; }
 @keyframes genIconSpin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .generate-btn svg, .generate-btn svg .gen-star, .generate-btn svg .gen-spark { animation: none !important; } }
+
+/* ============================================================
+   V26.9.31 需求①②③：三按钮并列行 + 全端参数弹出面板 + 图标化参数控件
+   ============================================================ */
+.form-actions-row {
+  display: grid; grid-template-columns: 1.45fr 1fr 1fr; gap: 6px;
+}
+.form-actions-row .wf-actions { display: contents; }
+.param-quick-btn {
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  min-width: 0; height: 40px; padding: 0 10px;
+  border-radius: 12px; border: 1px solid var(--lg-edge); cursor: pointer;
+  background: var(--lg-gloss), var(--surface-glass-2);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: var(--lg-slab);
+  color: var(--text-muted); font-size: 12.5px; font-weight: 500;
+  transition: all var(--transition-fast);
+}
+.param-quick-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+.param-quick-btn:active { transform: scale(.97); }
+.param-quick-btn .pq-label { flex-shrink: 0; }
+.param-quick-btn .pq-summary {
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--text); font-weight: 600; letter-spacing: .02em; font-size: 11.5px;
+}
+/* 工作流按钮在并列行中的形态：与参数钮同高玻璃药丸 */
+.form-actions-row .workflow-btn {
+  min-width: 0; height: 40px; padding: 0 6px; border-radius: 12px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  background: var(--lg-gloss), var(--surface-glass-2);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: var(--lg-slab);
+  border: 1px solid var(--lg-edge); color: var(--text-muted); font-size: 12px; font-weight: 500;
+  transition: all var(--transition-fast);
+}
+.form-actions-row .workflow-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+.form-actions-row .workflow-btn:active { transform: scale(.97); }
+.form-actions-row .workflow-btn:hover { color: var(--brand); border-color: var(--brand); background: var(--brand-soft); }
+@media (max-width: 420px) {
+  .form-actions-row .workflow-btn .wb-txt { font-size: 11px; }
+}
+/* 弹出面板：V26.9.32 需求②——锚定悬浮于生成按钮上方（手机/桌面同一体系，JS _positionQuickPanel 定位：
+   left/width 对齐按钮内容区，bottom=按钮顶+8px，maxHeight 顶到安全区下沿）；
+   需求①——全屏遮罩退役（遮罩 z64 曾盖住参数钮，面板开着时点参数钮=点遮罩，即「弹不出来」体感），改点外关闭 */
+.param-quick-panel {
+  display: none; position: fixed; z-index: 65;
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: 14px 16px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--lg-gloss), var(--surface-glass-pop);
+  border: 1px solid var(--lg-edge);
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+  box-shadow: var(--lg-slab), 0 18px 44px -18px rgba(9,14,30,.38);
+  transform: translateY(12px) scale(.985); opacity: 0; transform-origin: 50% 100%;
+  transition: transform 260ms cubic-bezier(.32,1.08,.44,1), opacity 200ms ease;
+}
+.param-quick-panel.displayed { display: block; }
+.param-quick-panel.show { transform: none; opacity: 1; }
+/* V26.9.32 需求①收尾补丁：未 show 态（关闭中 280ms 动画窗）pointer-events 放行——
+   面板 opacity:0 但仍参与命中测试，真机连点参数钮会被幽灵面板吞掉（弹不出来体感之一），透明即不可点 */
+.param-quick-panel:not(.show) { pointer-events: none; }
+/* 面板头：标题 + 模型名 + 关闭钮 */
+.pq-head {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+}
+.pq-head .pq-title { font-size: 13px; font-weight: 700; color: var(--text); letter-spacing: .04em; }
+.pq-head .pq-model {
+  font-size: 11px; color: var(--text-dim); min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;
+}
+.pq-head .pq-close {
+  width: 28px; height: 28px; border-radius: 9px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--surface-2); border: 1px solid var(--border-soft); color: var(--text-muted);
+  transition: all var(--transition-fast); cursor: pointer;
+}
+.pq-head .pq-close svg { width: 13px; height: 13px; }
+.pq-head .pq-close:hover { color: var(--danger); border-color: var(--danger); background: var(--danger-soft); }
+/* 面板内参数组：全宽 + 图标行 + 值右对齐 */
+.param-quick-panel .param-group { padding: 12px 12px 13px; }
+.param-quick-panel .field-label { gap: 8px; justify-content: flex-start; }
+.param-quick-panel .field-label .field-val { margin-left: auto; }
+.pq-ico {
+  width: 24px; height: 24px; border-radius: 8px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--brand-soft); color: var(--brand);
+}
+.pq-ico svg { width: 14px; height: 14px; }
+/* 隐藏的原生 select（值源保留，0×0 使玻璃下拉 rect 探测直接跳过） */
+.pq-hidden-select { position: absolute; width: 0 !important; height: 0 !important; opacity: 0; pointer-events: none; padding: 0; border: 0; }
+/* 比例形状网格（参考用户截图：每个比例一个真实比例的圆角矩形框） */
+.ratio-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; margin-top: 9px;
+}
+.ratio-cell {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 9px 2px 7px; border-radius: 12px; cursor: pointer;
+  border: 1px solid var(--border-soft); background: var(--surface-2); color: var(--text-muted);
+  transition: all var(--transition-fast);
+}
+.ratio-cell:hover { border-color: var(--brand); color: var(--brand); }
+.ratio-cell.active { border-color: var(--brand); background: var(--brand-soft); color: var(--brand); box-shadow: 0 0 0 1px var(--brand) inset; }
+.ratio-box {
+  height: 24px; display: inline-flex; align-items: center; justify-content: center; color: inherit;
+}
+.ratio-box i {
+  display: block; border: 1.5px solid currentColor; border-radius: 4px; opacity: .9;
+  max-width: 30px; max-height: 22px;
+}
+.ratio-box.auto svg { width: 18px; height: 18px; }
+.ratio-name { font-size: 10.5px; font-weight: 600; font-family: var(--font-mono); letter-spacing: .01em; }
+.ratio-cell.active .ratio-name { font-weight: 700; }
+/* 分段控件（分辨率/张数等短选项，参考截图「1K|2K|4K」胶囊段） */
+.pq-seg {
+  display: grid; gap: 4px; margin-top: 9px; padding: 3px;
+  border-radius: 11px; background: var(--surface-2); border: 1px solid var(--border-soft);
+}
+.pq-seg-btn {
+  padding: 8px 4px; border-radius: 8px; cursor: pointer; text-align: center;
+  font-size: 12px; font-weight: 600; color: var(--text-muted); font-family: var(--font-mono);
+  transition: all var(--transition-fast); letter-spacing: .02em;
+}
+.pq-seg-btn:hover { color: var(--text); background: var(--surface-3); }
+.pq-seg-btn.active { background: var(--brand); color: #fff; box-shadow: 0 2px 8px rgba(88,104,236,.35); }
+/* @ 引用弹层（图1/图2/历史提示词） */
+/* V26.9.32 需求④：@ 字符换链式链接图标（svg 由 .prompt-tools .tool-btn svg 统一 14px） */
+.at-ref-btn { font-weight: 600; }
+.at-ref-btn svg { width: 15px; height: 15px; }
+.cite-pop {
+  position: fixed; z-index: 70; min-width: 208px; padding: 6px;
+  background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg); display: none;
+  animation: citePopIn .18s cubic-bezier(.2,.9,.35,1.15);
+}
+.cite-pop.measuring { animation: none; }
+.cite-pop.show { display: block; }
+@keyframes citePopIn { from { opacity: 0; transform: translateY(5px) scale(.97); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .cite-pop { animation: none; } }
+.cite-item {
+  display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 10px;
+  cursor: pointer; transition: background var(--transition-fast);
+}
+.cite-item:hover { background: var(--brand-soft); }
+.cite-ico {
+  position: relative; width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--brand-soft); color: var(--brand);
+}
+.cite-ico svg { width: 16px; height: 16px; }
+.cite-ico i {
+  position: absolute; right: -4px; top: -4px; width: 14px; height: 14px; border-radius: 50%;
+  background: var(--brand); color: #fff; font-size: 9px; font-weight: 700; font-style: normal;
+  display: flex; align-items: center; justify-content: center; font-family: var(--font-mono);
+}
+.cite-ico.hist { background: var(--warning-soft); color: var(--warning); }
+.cite-txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.cite-txt b { font-size: 12.5px; color: var(--text); font-weight: 600; }
+.cite-txt small { font-size: 10.5px; color: var(--text-dim); }
+.cite-divider { height: 1px; background: var(--border-soft); margin: 4px 8px; }
+/* 提示词加高（参数收纳腾出的空间给提示词框） */
+.prompt-module textarea { min-height: 170px; }
 
 /* ============================================================
    结果面板
@@ -843,8 +1016,9 @@ textarea { resize: vertical; min-height: 80px; }
   scrollbar-width: thin;
 }
 .result-strip.empty { display: none; }
-.result-strip::-webkit-scrollbar { height: 6px; }
-.result-strip::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+/* V26.9.30 需求⑥：纯缩略图横滚——隐藏滚动条，滚轮驱动（JS） */
+.result-strip { scrollbar-width: none; scroll-behavior: smooth; }
+.result-strip::-webkit-scrollbar { display: none; }
 .result-strip .strip-thumb {
   width: 88px; height: 88px; border-radius: 8px; overflow: hidden;
   flex-shrink: 0; cursor: pointer; border: 2px solid transparent;
@@ -1639,39 +1813,42 @@ body[data-bgmedia] .theme-bg-grad { opacity: 0 !important; }
   }
   .result-panel.mobile-active { display: flex; }
   .result-body { padding: 12px; }
-  /* V26.9.29 编辑/结果切换移至底部：液态玻璃 dock + 底部安全区（拇指热区，遗留需求落地；
-     z-index 40 层级表：低于天气弹卡 80/抽屉 72/toast 90，im-overlay 99999 全屏自然覆盖） */
+  /* V26.9.30 需求⑨：底部胶囊删除 → 左上角悬浮返回胶囊（仅结果视图显示；
+     z-index 40 层级表不变：低于天气弹卡 80/抽屉 72/toast 90） */
   .mobile-view-switch {
-    display: flex !important;
+    display: none;
     position: fixed;
-    left: 50%;
-    bottom: calc(10px + var(--safe-bottom));
-    transform: translateX(-50%);
-    gap: 4px;
+    left: max(10px, var(--safe-left));
+    top: calc(var(--safe-top) + 8px);
+    transform: none;
+    gap: 0;
     margin: 0;
-    padding: 5px 6px;
+    padding: 4px;
     border-radius: 999px;
     background: var(--lg-gloss), var(--surface-glass-2);
     border: 1px solid var(--lg-edge);
     -webkit-backdrop-filter: var(--glass-blur);
     backdrop-filter: var(--glass-blur);
-    box-shadow: var(--lg-slab), 0 14px 34px -12px rgba(0, 0, 0, .5);
+    box-shadow: var(--lg-slab);
     z-index: 40;
   }
+  body[data-mview="result"] .mobile-view-switch { display: flex; }
+  /* 结果视图：顶部工具行避让左上角返回胶囊 */
+  body[data-mview="result"] .result-header { padding-top: 46px; }
   .mobile-view-switch button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
-    min-width: 108px;
-    min-height: 44px; /* V26.9.29: 触控标准 */
-    padding: 8px 18px;
+    min-width: 0;
+    min-height: 36px; /* 返回胶囊紧凑即可，热区由 padding 保陪 */
+    padding: 6px 14px 6px 10px;
     border: none;
     border-radius: 999px;
     background: none;
     font-size: 13px;
     font-weight: 600;
-    color: var(--text-muted);
+    color: var(--text);
     cursor: pointer;
     transition: all var(--transition-fast);
   }
@@ -1704,8 +1881,9 @@ body[data-bgmedia] .theme-bg-grad { opacity: 0 !important; }
   /* 结果区单列 */
   .result-list { grid-template-columns: 1fr !important; grid-auto-rows: auto !important; gap: 10px; } /* V26.9.22: 单列必须同时复位 auto-rows，否则 8px 基准轨让卡片互相重叠成条 */
   .result-list .task-card { grid-row-end: auto !important; } /* V26.9.21: 单列取消 span，交还自然高度 */
-  /* 手机隐藏筛选功能 */
+  /* 手机隐藏筛选功能；V26.9.30 需求⑧：搜索+排序也隐藏，结果面板顶部只留工具图标 */
   .result-header .filter-tabs { display: none !important; }
+  .result-search-wrap, .result-header .sort-select { display: none !important; }
   .result-body {
     padding: 8px max(12px, var(--safe-left));
   }
@@ -1727,26 +1905,25 @@ body[data-bgmedia] .theme-bg-grad { opacity: 0 !important; }
     min-height: 40px;
     font-size: 16px;
   }
-  .param-panel textarea { min-height: 60px; }
+  .param-panel textarea { min-height: 140px; max-height: 42vh; /* V26.9.31 需求③：参数收纳腾出的空间给提示词（88→140），autoGrow 全端启用 */ overflow-y: auto; }
   /* V26.9.12: 移动端生成按钮贴底悬浮
-     V26.9.29: 渐变底(transparent→--bg-elev)在全出血动态背景上有色带断层 → 改液态玻璃条
-     （gloss+pop 磨砂+玻璃 blur+上缘 hairline+上投阴影），与全站弹卡材质统一；
-     safe-bottom 已由 app-body padding 承担，此处不再叠加避免双倍 */
+     V26.9.29: 渐变底改液态玻璃条
+     V26.9.30: 用户反馈玻璃条仍有「矩形渐变阴影+白色图层」→ 彻底净化：无底无影无边框，
+     只留生成按钮本体悬浮在动态背景上（safe-bottom 由 app-body 承担） */
   .generate-section {
     position: sticky;
     bottom: 0;
     left: 0;
     right: 0;
-    background: var(--lg-gloss), var(--surface-glass-pop);
-    border-top: 1px solid var(--lg-edge);
-    -webkit-backdrop-filter: var(--glass-blur);
-    backdrop-filter: var(--glass-blur);
-    box-shadow: 0 -14px 30px -18px rgba(0, 0, 0, .55);
-    padding: 10px max(12px, var(--safe-left));
+    background: none;
+    border-top: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none;
+    padding: 6px max(12px, var(--safe-left)) 2px;
     margin-top: auto;
     z-index: 10;
   }
-  .generate-section .workflow-row { display: none; }
   .estimate-cost { margin-bottom: 2px; }
   /* 弹窗移动化 */
   .settings-drawer {
@@ -1823,7 +2000,18 @@ body[data-bgmedia] .theme-bg-grad { opacity: 0 !important; }
   .batch-panel { padding: 10px; }
   /* V26.9.9: 手机端隐藏底栏最近项 */
   .result-strip { display: none !important; }
-  /* ===== V26.9.29 移动端布局优化批 ===== */
+  /* ===== V26.9.30 需求⑪：手机端禁用自定义背景，跟随系统深浅色（消除黑边/割裂感） =====
+     动态渐变幕/壁纸层/背景光球全部退场，body 用主题纯色直舖（含 overscroll 兑底） */
+  .theme-bg-layer, .theme-bg-grad, .orb { display: none !important; }
+  body { background: var(--bg) !important; }
+  html { background: var(--bg) !important; }
+  /* 设置页「背景主题」区块与导航 chip 仍隐藏（手机端自定义背景已退场，纯色防黑边）；
+     V26.9.31 需求③：.theme-toggle-row 恢复显示 —— 不再跟随系统后，手机用户需要手动深/浅开关 */
+  #setSecThemeBg, [data-setnav="setSecThemeBg"] { display: none !important; }
+  /* ===== V26.9.31 需求②③：三按钮行/弹出面板的移动端形态 =====
+     （V26.9.32：面板锚定生成按钮上方，left/width/bottom/maxHeight 全部 JS 内联定位，媒体查询不再干预） */
+  .ratio-grid { grid-template-columns: repeat(4, 1fr); }
+  .ratio-cell { padding: 8px 2px 6px; }
   /* iOS 防聚焦自动放大：全站其余触屏输入面统一 ≥16px（param-panel 主规则已改，此处兜底低频输入区） */
   .result-search-input, .settings-body input[type="text"], .settings-body input[type="password"],
   .modal-overlay input[type="text"], .modal-overlay input[type="password"], .modal-overlay input[type="number"],
@@ -1857,7 +2045,7 @@ body[data-bgmedia] .theme-bg-grad { opacity: 0 !important; }
   .result-search-wrap { min-width: 60px; }
 }
 
-/* 移动端专属组件：桌面隐藏（V26.9.29: 新增抽屉 grabber 同列） */
+/* 移动端专属组件：桌面隐藏（V26.9.29: 新增抽屉 grabber 同列；V26.9.30: 返回胶囊同列） */
 .mobile-view-switch { display: none; }
 .drawer-grabber { display: none; }
 
@@ -1930,13 +2118,13 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
 [data-theme="dark"] .param-group,
 [data-theme="dark"] .ref-section,
 [data-theme="dark"] .model-select-wrap,
-[data-theme="dark"] .ref-mode-section { box-shadow: inset 0 1px 0 rgba(255,255,255,.03); }
-/* 浅色主题：卡片轻微抬升阴影 */
+[data-theme="dark"] .ref-mode-section { box-shadow: var(--lift-card); } /* V26.9.32 需求③：令牌化三层微抬升（旧单层阴影退役） */
+/* 浅色主题：卡片玻璃叠玻璃微抬升 */
 [data-theme="light"] .prompt-module,
 [data-theme="light"] .param-group,
 [data-theme="light"] .ref-section,
 [data-theme="light"] .model-select-wrap,
-[data-theme="light"] .ref-mode-section { box-shadow: 0 1px 2px rgba(23,32,64,.05); }
+[data-theme="light"] .ref-mode-section { box-shadow: var(--lift-card); } /* V26.9.32 需求③：同步令牌 */
 /* 模型下拉箭头随主题适配 */
 [data-theme="dark"] .model-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23a8b2ce' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); }
 [data-theme="light"] .model-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23707aa0' d='M6 8L0 0h12z'/%3E%3C/svg%3E"); }
@@ -1972,15 +2160,27 @@ button:focus-visible, [role="button"]:focus-visible, input[type="range"]:focus-v
   --sh-inset: rgba(23,32,64,.10);
 }
 
-/* --- 1a. 渐变描边玻璃：边框上亮下暗，玻璃边缘有了厚度 --- */
+/* --- 1a. 渐变描边玻璃：边框上亮下暗，玻璃边缘有了厚度
+   V26.9.31 需求④：填充由 --surface 实底改 --surface-nested 半透（提示词/参考图层级面板提透明，渐变描边保留） --- */
 .prompt-module,
 .param-group,
 .ref-section,
 .ref-mode-section,
 .model-select-wrap {
   border: 1px solid transparent;
-  background: linear-gradient(var(--surface), var(--surface)) padding-box,
+  background: linear-gradient(var(--surface-nested), var(--surface-nested)) padding-box,
               var(--edge-border-grad) border-box;
+  /* V26.9.32 需求③：玻璃叠玻璃 L2 卡片层 —— 真实毛玻璃采样主面板已绘制结果（V26.9.28 Backdrop Root 语义：
+     嵌套 backdrop-filter 采样到的是外层面板的混合结果，正好形成「玻璃上再叠一层磨砂」），+ 微抬升投影 */
+  -webkit-backdrop-filter: blur(12px) saturate(1.5);
+  backdrop-filter: blur(12px) saturate(1.5);
+  box-shadow: var(--lift-card);
+}
+/* --- 1a-2. V26.9.32 需求③：第三级「控件层」内凹质感 —— 输入框/分段钮/比例格叠在卡片玻璃上轻微下沉；
+   :where() 零特异性，不与 ：focus/:active 的 ring 阴影竞争（同特异性源顺序覆盖防线） --- */
+:where(.param-panel) :where(input[type="text"], input[type="number"], input[type="url"], select, textarea),
+:where(.model-select, .pq-seg, .pq-seg-btn, .ratio-cell) {
+  box-shadow: var(--lift-ctrl);
 }
 
 /* --- 1b. 左上 1px 受光描边 + 右下 1px 暗边（保持实体边框的表面） --- */
@@ -2846,7 +3046,8 @@ body.is-generating .orb-a {
 
 </style>
 </head>
-<body>
+<body data-mview="param">
+<!-- V26.9.30 需求⑨：body[data-mview] 驱动返回胶囊显隐（param=编辑视图隐藏 / result=显示左上角返回） -->
 
 <!-- V26.9.23 Apple Liquid Glass：SVG 折射滤镜（feTurbulence→feDisplacementMap）
      背后内容透过玻璃产生轻微液态扭曲（V26.9.25: 低频单倍频程 noise + scale 10/6 微幅，配合 blur 柔化无锯齿）
@@ -2891,10 +3092,21 @@ body.is-generating .orb-a {
   <button class="guide-close" id="guideClose">×</button>
 </div>
 
-<!-- 移动端视图切换栏（V26.9.29: 移至底部玻璃 dock，带图标） -->
+<!-- 移动端返回胶囊（V26.9.30 需求⑨：底部胶囊删除，改左上角悬浮返回；仅结果视图显示，CSS 按 body[data-mview] 控制） -->
 <div class="mobile-view-switch" id="mobileViewSwitch">
-  <button class="active" data-mview="param"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/></svg>编辑</button>
-  <button data-mview="result"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>结果</button>
+  <button data-mview="param" aria-label="返回编辑">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>编辑
+  </button>
+</div>
+
+<!-- 工作流按钮停靠区（V26.9.31 需求②：按钮 DOM 由 JS 搬进三按钮并列行 wfActionsSlot，appendChild 移动保留事件绑定；导入工作流按用户口径改名「粘贴工作流」） -->
+<div id="wfPark" style="display:none">
+  <button class="workflow-btn" id="copyWorkflowBtn" title="复制工作流">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span class="wb-txt">复制工作流</span>
+  </button>
+  <button class="workflow-btn" id="importWorkflowBtn" title="粘贴工作流">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span class="wb-txt">粘贴工作流</span>
+  </button>
 </div>
 
 <!-- 主体 -->
@@ -2924,27 +3136,21 @@ body.is-generating .orb-a {
       <div class="model-desc" id="modelDesc"></div>
     </div>
 
+    <!-- V26.9.31 需求①②：参数/复制工作流/粘贴工作流三按钮并列（全端统一，参数弹出面板也全端化） -->
+    <div class="form-actions-row" id="formActionsRow">
+      <button type="button" class="param-quick-btn" id="paramQuickBtn" aria-expanded="false" aria-controls="paramQuickPanel">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 4h-7M10 4H3M21 12h-9M8 12H3M21 20h-5M12 20H3M14 2v4M8 10v4M16 18v4"/></svg>
+        <span class="pq-label">参数</span>
+        <span class="pq-summary" id="paramQuickSummary"></span>
+      </button>
+      <span class="wf-actions" id="wfActionsSlot"></span>
+    </div>
+
     <!-- 参数表单容器 (由 JS 动态渲染) -->
     <div id="paramForm" style="display:flex !important;flex-direction:column;gap:14px;"></div>
 
-    <!-- 生成操作区 -->
+    <!-- 生成操作区（V26.9.31：参数钮已上移至三按钮并列行，此处仅余估算+生成钮；批量按钮已删） -->
     <div class="generate-section">
-      <div class="workflow-row">
-        <button class="workflow-btn" id="copyWorkflowBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>复制工作流
-        </button>
-        <button class="workflow-btn" id="importWorkflowBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>导入工作流
-        </button>
-      </div>
-      <div class="workflow-row">
-        <button class="workflow-btn" id="batchGenBtn" title="批量生成：同提示词提交到多个模型">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>批量生成
-        </button>
-        <button class="workflow-btn" id="batchExportBtn" title="批量导出所有成功结果 URL">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>批量导出
-        </button>
-      </div>
       <div class="generate-row">
         <button class="generate-btn" id="generateBtn">
           <!-- V26.9.26: 四芒魔星图标 —— 主星淡填充+四点星光，idle 呼吸闪烁 / hover 弹旋 / 生成中自旋 -->
@@ -2954,6 +3160,18 @@ body.is-generating .orb-a {
       </div>
     </div>
   </aside>
+
+  <!-- 参数快启面板（V26.9.32 需求①②：遮罩退役，改锚定生成按钮上方的悬浮玻璃卡，点外/Esc/关闭钮/点生成 四路收起） -->
+  <div class="param-quick-panel" id="paramQuickPanel" role="dialog" aria-label="生成参数">
+    <div class="pq-head">
+      <span class="pq-title">生成参数</span>
+      <span class="pq-model" id="paramQuickModel"></span>
+      <button type="button" class="pq-close" id="paramQuickClose" aria-label="关闭参数面板">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="paramQuickBody"></div>
+  </div>
 
   <!-- 结果面板 -->
   <main class="result-panel" id="resultPanel">
@@ -3036,7 +3254,7 @@ body.is-generating .orb-a {
     <!-- V38: 偏好开关（每 ¥10 提醒移除开关，默认开启） -->
     <div class="settings-section" id="setSecPref">
       <h4>偏好</h4>
-      <div class="settings-toggle">
+      <div class="settings-toggle theme-toggle-row">
         <div>
           <div class="toggle-label">深色主题</div>
         </div>
@@ -3161,7 +3379,7 @@ body.is-generating .orb-a {
     <hr style="border:none;border-top:1px solid var(--border);margin:20px 0 16px">
     <div class="settings-section" style="text-align:center">
       <div style="font-size:12px;color:var(--text-dim);line-height:1.6">
-        修的媒体工作台 V26.9.29
+        修的媒体工作台 V26.9.32
       </div>
     </div>
   </div>
@@ -3457,7 +3675,9 @@ const CONFIG = {
   ],
   STORAGE_KEYS: {
     API_KEY: 'sc_api_key',
-    THEME: 'sc_theme',
+    /* V26.9.31 需求③：主题键升级 v2 —— 旧键在历史版本中可能残留 'dark'（旧默认值/系统跟随写入），
+       新文件首次打开一律白色；此后用户手动切换仍正常持久化 */
+    THEME: 'sc_theme_v2',
     SOUND: 'sc_sound',
     HISTORY: 'sc_history',
     TASKS: 'sc_tasks',
@@ -3980,11 +4200,14 @@ const Store = {
   /* V26.9.24: 判断用户是否自定义过（设置页状态区分「内置默认/已自定义」用） */
   hasCustomApiKey() { return !!(sessionGet(CONFIG.STORAGE_KEYS.API_KEY) || storageGet(CONFIG.STORAGE_KEYS.API_KEY)); },
   hasCustomR2() { return !!(storageGet(CONFIG.STORAGE_KEYS.R2_WORKER_URL) || storageGet(CONFIG.STORAGE_KEYS.R2_AUTH_TOKEN)); },
-  getTheme() { return storageGet(CONFIG.STORAGE_KEYS.THEME, 'dark'); },
+  getTheme() { return storageGet(CONFIG.STORAGE_KEYS.THEME, 'light'); }, /* V26.9.30 需求⑩：白天主题为默认值 */
   setTheme(t) { storageSet(CONFIG.STORAGE_KEYS.THEME, t); },
   // V26.9.22: 背景主题配置 { mode:'gradient'|'image'|'video', preset, url, dim, blur }
   getBgCfg() {
-    const def = { mode: 'gradient', preset: 'aurora', url: '', dim: 0, blur: 0 };
+    /* V26.9.31 需求③：默认背景预设 aurora（深色极光）→ cloud（云青浅色）——
+       用户反馈「打开文件是深色的」真凶：主题是 light 但默认动态背景是深色 aurora，观感即深色主题；
+       存过自定义背景的老用户不受影响 */
+    const def = { mode: 'gradient', preset: 'cloud', url: '', dim: 0, blur: 0 };
     try { return Object.assign(def, JSON.parse(storageGet(CONFIG.STORAGE_KEYS.BG_CFG, '{}'))); } catch { return def; }
   },
   setBgCfg(cfg) { try { storageSet(CONFIG.STORAGE_KEYS.BG_CFG, JSON.stringify(cfg)); } catch {} },
@@ -5303,6 +5526,9 @@ const UI = {
     this.renderHistoryBadge();
     this._bindMobileViewSwitch();
     this._bindDrawerSwipe();
+    this._bindQuickParams();
+    this._bindStripWheel();
+    /* V26.9.31 需求③：系统深浅色跟随已撤销（applyTheme 一律读用户存储，默认白色） */
     AmbientFX.setGenerating(Store.getTasks().some(t => t.status === 'processing'));
     // V56: init TaskCenter (async, non-blocking; falls back to local polling)
     if (typeof TaskCenter !== 'undefined') {
@@ -6159,9 +6385,61 @@ const UI = {
         data = await res.json();
       }
       this._sanitizeLottie(data);
+      /* V26.9.31 需求⑥：白云实化 —— r2 系列云朵 PNG 本体 alpha 仅 ~35-38%（原作者按深蓝底设计），
+         深色背景层被 _sanitizeLottie 剔除 + 默认浅色主题后，半透白云几乎隐形。
+         canvas 逐像素检测「云状白色资产」并实化 alpha（×3 封顶），柔边保留；幂等（二次加载 meanA≥190 跳过） */
+      await this._solidifyLottieClouds(data);
       this._lottieCache.set(url, data);
     }
     return JSON.parse(JSON.stringify(this._lottieCache.get(url)));
+  },
+
+  /* V26.9.31 需求⑥：白云实化 ——「类似错误需整治」的通用通道。
+     逐个内嵌 PNG 资产做云状检测：可见像素中白色系(r,g,b>200)占比 ≥50% 且白色平均 alpha<190
+     判定为「按深底设计的半透白云」，整图 alpha ×3 封顶 255（云体 85→255 实心，边缘 32→96 保留柔边）。
+     太阳/城市剪影/雨丝等彩色资产（白占比不足）自动跳过；已实化资产二次检测 meanA≥190 天然幂等 */
+  async _solidifyLottieClouds(data) {
+    try {
+      if (!data || !Array.isArray(data.assets) || typeof document === 'undefined') return;
+      for (const a of data.assets) {
+        if (typeof a.p !== 'string' || !a.p.startsWith('data:image/png')) continue;
+        try {
+          const img = await this._loadImg(a.p);
+          const cv = document.createElement('canvas');
+          cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+          const cx = cv.getContext('2d', { willReadFrequently: true });
+          if (!cx) continue;
+          cx.drawImage(img, 0, 0);
+          const id = cx.getImageData(0, 0, cv.width, cv.height);
+          const px = id.data;
+          let vis = 0, white = 0, wSum = 0;
+          for (let i = 0; i < px.length; i += 4) {
+            const al = px[i + 3];
+            if (al < 16) continue;
+            vis++;
+            if (px[i] > 200 && px[i + 1] > 200 && px[i + 2] > 200) { white++; wSum += al; }
+          }
+          if (!vis || white / vis < 0.5) continue;           /* 非白云资产（太阳/雨丝/城市）不动 */
+          const meanA = wSum / white;
+          if (meanA >= 190) continue;                        /* 已足够实（幂等出口） */
+          for (let i = 0; i < px.length; i += 4) {
+            if (px[i + 3] > 2) px[i + 3] = Math.min(255, px[i + 3] * 3);
+          }
+          cx.putImageData(id, 0, 0);
+          a.p = cv.toDataURL('image/png');
+          console.log('[weather] 白云实化:', a.id, `meanAlpha ${Math.round(meanA)}→255`);
+        } catch (e) { /* 单资产失败不影响整体渲染 */ }
+      }
+    } catch (e) { console.warn('[weather] 云朵实化跳过:', e.message); }
+  },
+
+  _loadImg(src) {
+    return new Promise((res, rej) => {
+      const im = new Image();
+      im.onload = () => res(im);
+      im.onerror = () => rej(new Error('img decode fail'));
+      im.src = src;
+    });
   },
 
   /* ---------- V35 taskD: 历史记录 R2 同步 ---------- */
@@ -6244,7 +6522,7 @@ const UI = {
       const elapsed = Date.now() - oldest.createdAt;
       document.title = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
     } else {
-      document.title = '修的媒体工作台 V26.9.29';
+      document.title = '修的媒体工作台 V26.9.32';
     }
   },
 
@@ -6271,8 +6549,7 @@ const UI = {
     $('#generateBtn').addEventListener('click', () => this.handleGenerate());
     $('#copyWorkflowBtn').addEventListener('click', () => { const task = this._buildCurrentTask(); if (task) Workflow.copy(task); });
     $('#importWorkflowBtn').addEventListener('click', () => { $('#workflowInput').value = ''; $('#workflowOverlay').classList.add('show'); });
-    $('#batchGenBtn').addEventListener('click', () => this._openBatchGenerate());
-    $('#batchExportBtn').addEventListener('click', () => this._openBatchExport());
+    /* V26.9.30 需求②：批量生成/导出按钮已删除，绑定同步清退（对比栏批量导出入口保留） */
     $('#workflowApply').addEventListener('click', () => { const text = $('#workflowInput').value.trim(); if (text) { Workflow.apply(text); $('#workflowOverlay').classList.remove('show'); } });
     $('#workflowCancel').addEventListener('click', () => $('#workflowOverlay').classList.remove('show'));
     $('#workflowClose').addEventListener('click', () => $('#workflowOverlay').classList.remove('show'));
@@ -6413,8 +6690,7 @@ const UI = {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') return;
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); this._openHistory(); $('#historySearchInput').focus(); return; }
       if ((e.ctrlKey || e.metaKey) && e.key === 'p') { e.preventDefault(); this._openPresetPicker(); return; }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'b') { e.preventDefault(); this._openBatchExport(); return; }
-      if ((e.ctrlKey || e.metaKey) && e.key === 'g') { e.preventDefault(); this._openBatchGenerate(); return; }
+      /* V26.9.30 需求②：批量入口已删，Ctrl+B / Ctrl+G 快捷键同步退役 */
       if (e.key === '/') { e.preventDefault(); const el = $('[data-key="prompt"], [data-key="text"]'); if (el) el.focus(); return; }
       if (e.key === '?') { e.preventDefault(); this._showKeyboardHelp(); return; }
     });
@@ -6437,7 +6713,10 @@ const UI = {
 
   /* ---------- THEME/SOUND ---------- */
   applyTheme() {
-    const theme = Store.getTheme();
+    /* V26.9.31 需求③：默认白色 —— 撤销 V26.9.30 需求⑪的「手机跟随系统」
+      （用户系统深色时打开文件是深色，违背「默认就是白色」）；
+      一律读存储（默认 light），手动切换双向可用 */
+    const theme = Store.getTheme() === 'dark' ? 'dark' : 'light';
     document.documentElement.setAttribute('data-theme', theme);
     const isDark = theme === 'dark';
     $('#themeToggle').classList.toggle('on', isDark);
@@ -6446,6 +6725,327 @@ const UI = {
       : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
   },
   toggleTheme() { const t = Store.getTheme() === 'dark' ? 'light' : 'dark'; Store.setTheme(t); this.applyTheme(); },
+
+  /* V26.9.30 需求⑥：最近栏纯缩略图——滚轮纵向增量转横向滚动 */
+  _bindStripWheel() {
+    const strip = $('#resultStrip');
+    if (!strip || strip.dataset.wheelBound) return;
+    strip.dataset.wheelBound = '1';
+    strip.addEventListener('wheel', (e) => {
+      if (!e.deltaY || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+      e.preventDefault();
+      strip.scrollLeft += e.deltaY;
+    }, { passive: false });
+  },
+
+  /* ===== V26.9.31 需求①③：参数收纳全端统一 =====
+     渲染后把参数行（select/range/datalist 两列行 + text/url 类单行）搬进弹出面板，
+     仅 提示词 / 参考图(ref-*)/遮罩(refGroups) 留主表单；手机与桌面同一行为（用户：电脑端也做收纳）。
+     搬迁后逐组注入图标，并把 比例/尺寸 select 替换为「比例形状网格」、短选项 select 替换为分段控件 */
+  _mountQuickParams() {
+    const body = $('#paramQuickBody');
+    if (!body) return;
+    const container = $('#paramForm');
+    if (!container) return;
+    body.innerHTML = ''; /* 幂等：重渲染后旧行不残留 */
+    const moved = [];
+    const emptyRows = [];
+    [...container.children].forEach(el => {
+      if (el.tagName !== 'DIV') return;
+      const st = el.getAttribute('style') || '';
+      if (st.includes('1fr 1fr')) {
+        /* 拆两列对：每组单独全宽进面板（比例网格等宽控件需要整行）；整行全是参数组时拆壳防多余 gap */
+        const groups = [...el.children].filter(g => g.classList?.contains('param-group'));
+        if (groups.length && groups.length === el.children.length) emptyRows.push(el);
+        groups.forEach(g => moved.push(g));
+      } else if (el.classList.contains('param-group')) {
+        moved.push(el); /* field 类单行（text/url/url-list） */
+      }
+      /* ref-section / ref-mode-section / prompt-module 不在此列 → 自然留主表单 */
+    });
+    emptyRows.forEach(r => r.remove());
+    moved.forEach(g => body.appendChild(g));
+    this._enhanceQuickParams(body);
+    const modelEl = $('#paramQuickModel');
+    if (modelEl) modelEl.textContent = this.state.model?.name || '';
+    this._updateQuickSummary();
+  },
+  /* V26.9.31 需求③：图标注入 + 比例形状网格 / 分段控件替换（精致图标参考用户截图） */
+  _enhanceQuickParams(body) {
+    body.querySelectorAll('.param-group').forEach(g => {
+      if (g.dataset.pqDone) return;
+      g.dataset.pqDone = '1';
+      const sel = g.querySelector('select[data-key]');
+      const anyInput = g.querySelector('[data-key]');
+      const label = (g.querySelector('.field-label')?.childNodes[0]?.textContent || '').trim();
+      const key = anyInput?.dataset.key || '';
+      const icon = this._pqIconFor(key, label, sel);
+      if (icon) {
+        g.classList.add('pq-param');
+        const fl = g.querySelector('.field-label');
+        if (fl && !fl.querySelector('.pq-ico')) fl.insertAdjacentHTML('afterbegin', `<span class="pq-ico" aria-hidden="true">${icon}</span>`);
+      }
+      if (sel) this._pqReplaceSelect(g, sel);
+    });
+  },
+  /* 参数图标映射（stroke 线性图标，24 viewBox；统一 svg 包装后返回） */
+  _pqIconFor(key, label, sel) {
+    const l = `${key} ${label}`.toLowerCase();
+    const I = {
+      ratio: '<rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M7 6v12M17 6v12" opacity=".45"/>',
+      hd: '<rect x="2.5" y="5" width="19" height="13" rx="2.5"/><path d="M8 21h8M12 18v3"/><path d="M14.5 9v4.5M12 9h2.5a2.25 2.25 0 0 1 0 4.5H12" opacity=".9"/>',
+      count: '<rect x="8.5" y="8.5" width="12" height="12" rx="2.5"/><path d="M4 15.5V6a2 2 0 0 1 2-2h9.5"/>',
+      clock: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+      gauge: '<path d="M5 19a9 9 0 1 1 14 0"/><path d="M12 13l3.5-3.5"/><circle cx="12" cy="13" r="1.6"/>',
+      volume: '<path d="M11 5.5 6.5 9H4a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h2.5L11 18.5z"/><path d="M15 9a4.2 4.2 0 0 1 0 6M17.5 6.8a7.6 7.6 0 0 1 0 10.4"/>',
+      mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3"/>',
+      link: '<path d="M10 14a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1 1"/><path d="M14 10a5 5 0 0 0-7.1 0l-2 2a5 5 0 0 0 7.1 7.1l1-1"/>',
+      sliders: '<path d="M4 8h10M18 8h2M4 16h4M12 16h8M14 5.5v5M8 13.5v5"/>'
+    };
+    let shape;
+    if (/aspectratio|ratio|比例|尺寸|画幅/.test(l)) shape = I.ratio;
+    else if (/分辨率|清晰度|resolution|quality|质量|size/.test(l)) shape = I.hd;
+    else if (/张数|count|__count|连发/.test(l)) shape = I.count;
+    else if (/时长|duration/.test(l)) shape = I.clock;
+    else if (/语速|speed|语调|pitch/.test(l)) shape = I.gauge;
+    else if (/音量|vol/.test(l)) shape = I.volume;
+    else if (/音色|voice|emoti/.test(l)) shape = I.mic;
+    else if (/url|链接|地址/.test(l)) shape = I.link;
+    else shape = I.sliders;
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${shape}</svg>`;
+  },
+  /* select → 比例形状网格（全选项形如 16:9/auto/WxH）或分段控件（≤5 个短选项） */
+  _pqReplaceSelect(g, sel) {
+    if (sel.dataset.pqReplaced) return;
+    const opts = [...sel.options].map(o => ({ v: o.value, t: o.textContent }));
+    if (!opts.length) return;
+    const isRatio = v => /^\d+:\d+$/.test(v) || /^auto$/i.test(v) || /^\d+\s*[x×]\s*\d+$/i.test(v);
+    const kind = opts.every(o => isRatio(o.v)) ? 'ratio'
+      : (opts.length <= 5 && opts.every(o => o.t.length <= 8)) ? 'seg' : null;
+    if (!kind) return;
+    sel.dataset.pqReplaced = kind;
+    sel.classList.add('pq-hidden-select');
+    const ctrl = document.createElement('div');
+    ctrl.className = kind === 'ratio' ? 'ratio-grid' : 'pq-seg';
+    ctrl.dataset.pqfor = sel.dataset.key;
+    if (kind === 'seg') {
+      ctrl.style.gridTemplateColumns = `repeat(${opts.length}, 1fr)`;
+      ctrl.innerHTML = opts.map(o => `<button type="button" class="pq-seg-btn${o.v === sel.value ? ' active' : ''}" data-v="${esc(o.v)}" aria-pressed="${o.v === sel.value}">${esc(o.t)}</button>`).join('');
+    } else {
+      ctrl.innerHTML = opts.map(o => {
+        const m = o.v.match(/^(\d+)\s*:\s*(\d+)$/);
+        const mx = o.v.match(/^(\d+)\s*[x×]\s*(\d+)$/i);
+        let box = '';
+        if (/^auto$/i.test(o.v)) {
+          box = `<span class="ratio-box auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg></span>`;
+        } else {
+          const w = mx ? +mx[1] : +m[1], h = mx ? +mx[2] : +m[2];
+          const r = w / h;
+          const bw = r >= 1 ? 30 : Math.round(22 * r);
+          const bh = r >= 1 ? Math.round(30 / r) : 22;
+          box = `<span class="ratio-box"><i style="width:${bw}px;height:${bh}px"></i></span>`;
+        }
+        return `<button type="button" class="ratio-cell${o.v === sel.value ? ' active' : ''}" data-v="${esc(o.v)}" aria-pressed="${o.v === sel.value}">${box}<span class="ratio-name">${esc(o.t)}</span></button>`;
+      }).join('');
+    }
+    ctrl.addEventListener('click', e => {
+      const btn = e.target.closest('[data-v]');
+      if (!btn) return;
+      sel.value = btn.dataset.v;
+      sel.dispatchEvent(new Event('change', { bubbles: true })); /* 触发 _onFieldChange（回显+估算） */
+      this._syncPqControl(sel);
+      this._updateQuickSummary();
+    });
+    g.appendChild(ctrl);
+  },
+  /* 由隐藏 select 的当前值刷新控件激活态（外部回填/撤销恢复后调用） */
+  _syncPqControl(sel) {
+    const ctrl = document.querySelector(`[data-pqfor="${sel.dataset.key}"]`);
+    if (!ctrl) return;
+    ctrl.querySelectorAll('[data-v]').forEach(b => {
+      const on = b.dataset.v === sel.value;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', String(on));
+    });
+  },
+  _syncAllPqControls() {
+    $('#paramQuickBody')?.querySelectorAll('select[data-key]').forEach(s => { if (s.dataset.pqReplaced) this._syncPqControl(s); });
+  },
+  _updateQuickSummary() {
+    const el = $('#paramQuickSummary');
+    const body = $('#paramQuickBody');
+    if (!el || !body) return;
+    const vals = [...body.querySelectorAll('select')].slice(0, 3).map(s => s.value).filter(Boolean);
+    el.textContent = vals.join(' · ');
+  },
+  /* V26.9.32 需求②：锚定定位 —— 面板底边贴生成按钮顶 +8px，水平对齐按钮内容区（桌面即参数列内容区），
+     maxHeight 顶到安全区下沿；手机/桌面同一体系（「面板永远悬在生成钮上方」语义，滚/旋/缩跟隨） */
+  _positionQuickPanel() {
+    const panel = $('#paramQuickPanel');
+    const anchor = $('.generate-section');
+    if (!panel || !anchor) return;
+    const gen = anchor.getBoundingClientRect();
+    const cs = getComputedStyle(anchor);
+    const pl = parseFloat(cs.paddingLeft) || 0, pr = parseFloat(cs.paddingRight) || 0;
+    panel.style.left = Math.round(gen.left + pl) + 'px';
+    panel.style.width = Math.round(gen.width - pl - pr) + 'px';
+    panel.style.bottom = Math.round(window.innerHeight - gen.top + 8) + 'px';
+    const safeTop = parseFloat(getComputedStyle($('.app-body') || document.body).paddingTop) || 0;
+    panel.style.maxHeight = Math.max(220, Math.round(gen.top - safeTop - 14)) + 'px';
+  },
+  _openQuickPanel() {
+    const panel = $('#paramQuickPanel');
+    if (!panel) return;
+    const body = $('#paramQuickBody');
+    if (body && !body.children.length) this._mountQuickParams(); /* 需求①兜底：渲染链路异常致空面板时自救 */
+    clearTimeout(this._pqCloseT);
+    /* 需求②前置：锚点（生成钮）滚进参数列视野——桌面列可滚时按钮可能被推到视口外。
+       手动瞬时 scrollTop（scrollIntoView 的 nearest 在 sticky/嵌套滚动下有测量时序坑），
+       ±2px 阈值守卫：手机 sticky 钉住态 g.bottom==a.bottom，天然零滚动不跳动 */
+    const anchor = $('.generate-section');
+    const aside = anchor?.closest('.param-panel');
+    if (aside) {
+      const g0 = anchor.getBoundingClientRect(), a0 = aside.getBoundingClientRect();
+      if (g0.bottom > a0.bottom + 2) aside.scrollTop += g0.bottom - a0.bottom + 12;
+      else if (g0.top < a0.top - 2) aside.scrollTop -= a0.top - g0.top + 12;
+    }
+    panel.classList.add('displayed'); /* 先解除 display:none */
+    this._positionQuickPanel();       /* 需求②：锚定生成按钮上方（内容注入后定位才准确） */
+    void panel.offsetWidth;           /* reflow：让 transform 过渡真实生效（display 不参与 transition） */
+    panel.classList.add('show');
+    requestAnimationFrame(() => this._positionQuickPanel()); /* 次帧复测：滚动/布局残余自愈 */
+    $('#paramQuickBtn')?.setAttribute('aria-expanded', 'true');
+  },
+  _closeQuickPanel() {
+    const panel = $('#paramQuickPanel');
+    if (!panel || !panel.classList.contains('show')) return;
+    panel.classList.remove('show'); /* 先播收起动画（transform+opacity），过渡完再摘 displayed */
+    clearTimeout(this._pqCloseT);
+    this._pqCloseT = setTimeout(() => panel.classList.remove('displayed'), 280);
+    $('#paramQuickBtn')?.setAttribute('aria-expanded', 'false');
+  },
+  /* V26.9.32 需求①：绑定重写 —— document 级事件委托（监听丢失/重复绑定免疫，真机点击失败兜底）
+     + 全屏遮罩退役改点外关闭；生成钮保持可见可点，点生成=收面板+生成一气呵成（需求②的交互闭环） */
+  _bindQuickParams() {
+    document.addEventListener('click', e => {
+      if (e.target.closest?.('#paramQuickBtn')) {
+        $('#paramQuickPanel')?.classList.contains('show') ? this._closeQuickPanel() : this._openQuickPanel();
+        return;
+      }
+      const panel = $('#paramQuickPanel');
+      if (panel?.classList.contains('show')
+          && !e.target.closest?.('#paramQuickPanel')
+          && !e.target.closest?.('.generate-section')) this._closeQuickPanel();
+    });
+    $('#paramQuickClose')?.addEventListener('click', () => this._closeQuickPanel());
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') this._closeQuickPanel(); });
+    $('#generateBtn')?.addEventListener('click', () => this._closeQuickPanel());
+    window.addEventListener('resize', () => { if ($('#paramQuickPanel')?.classList.contains('show')) this._positionQuickPanel(); });
+    let pqTick = false; /* rAF 节流的滚动跟随（桌面参数列可滚动，按钮动面板跟着动；手机 sticky 按钮本身不动） */
+    document.addEventListener('scroll', () => {
+      if (!$('#paramQuickPanel')?.classList.contains('show') || pqTick) return;
+      pqTick = true;
+      requestAnimationFrame(() => { pqTick = false; this._positionQuickPanel(); });
+    }, true);
+    /* 面板内隐藏 select 被外部回填时（缓存恢复/撤销），change 冒泡到此 → 刷新激活态与摘要 */
+    $('#paramQuickBody')?.addEventListener('change', () => {
+      this._updateQuickSummary();
+    });
+  },
+
+  /* V26.9.31 需求②：工作流按钮搬进「参数|复制|粘贴」三按钮并列行（appendChild 移节点，事件绑定保留） */
+  _mountWorkflowBtns() {
+    const slot = document.getElementById('wfActionsSlot');
+    if (!slot) return;
+    ['copyWorkflowBtn', 'importWorkflowBtn'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn && btn.parentElement !== slot) slot.appendChild(btn);
+    });
+  },
+
+  /* V26.9.31 需求②：@ 按钮弹层 —— 单按钮功能扩展（引用参考图占位 + 历史提示词入口） */
+  _toggleAtRefPop(ta, btn) {
+    let pop = document.querySelector('.cite-pop');
+    if (pop) { this._closeAtRefPop(); return; } /* 已开则关（toggle，含外点监听清理） */
+    this._closeAtRefPop();
+    pop = document.createElement('div');
+    pop.className = 'cite-pop show';
+    pop.setAttribute('role', 'menu');
+    pop.setAttribute('aria-label', '插入引用');
+    pop.innerHTML = `
+      <div class="cite-item" role="menuitem" data-cite="图1">
+        <span class="cite-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><i>1</i></span>
+        <span class="cite-txt"><b>【图1】</b><small>引用第 1 张参考图</small></span>
+      </div>
+      <div class="cite-item" role="menuitem" data-cite="图2">
+        <span class="cite-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg><i>2</i></span>
+        <span class="cite-txt"><b>【图2】</b><small>引用第 2 张参考图</small></span>
+      </div>
+      <div class="cite-divider"></div>
+      <div class="cite-item" role="menuitem" data-hist>
+        <span class="cite-ico hist"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15.5 14"/></svg></span>
+        <span class="cite-txt"><b>历史提示词</b><small>选择一条历史插入</small></span>
+      </div>`;
+    /* 挂 body（V26.9.31：.param-panel 的 backdrop-filter 会创建层叠上下文，
+       弹层若留在面板内会被参数快启面板(z65)盖住 —— 与天气弹卡 V26.9.28 同根因同方案） */
+    document.body.appendChild(pop);
+    const r = btn.getBoundingClientRect();
+    pop.style.visibility = 'hidden';
+    pop.classList.add('measuring');
+    requestAnimationFrame(() => {
+      const pw = pop.offsetWidth, ph = pop.offsetHeight;
+      const vw = window.innerWidth, vh = window.innerHeight;
+      let left = Math.min(Math.max(8, r.left), vw - pw - 8);
+      let top = r.bottom + 6;
+      if (top + ph > vh - 8) top = Math.max(8, r.top - ph - 6);
+      pop.style.left = left + 'px';
+      pop.style.top = top + 'px';
+      pop.classList.remove('measuring');
+      pop.style.visibility = '';
+    });
+    pop.querySelectorAll('[data-cite]').forEach(item => {
+      item.addEventListener('mousedown', e => e.preventDefault()); /* 保持 textarea 焦点 */
+      item.addEventListener('click', () => { this._insertRefCite(ta, item.dataset.cite); this._closeAtRefPop(); Toast.info(`已插入【${item.dataset.cite}】占位`); });
+    });
+    pop.querySelector('[data-hist]').addEventListener('mousedown', e => e.preventDefault());
+    pop.querySelector('[data-hist]').addEventListener('click', () => {
+      this._closeAtRefPop();
+      /* 在光标处插入 '@' 并直接唤起历史引用列表 —— 不走 _checkAtMention 正则
+        （中文后紧跟 @ 不满足 AT_MENTION_RE 的空白前置，会被吞掉；直接调 _showAtMention 空查询全量列出） */
+      const s = ta.selectionStart ?? ta.value.length, e2 = ta.selectionEnd ?? s;
+      ta.value = ta.value.slice(0, s) + '@' + ta.value.slice(e2);
+      const pos = s + 1;
+      ta.focus(); ta.setSelectionRange(pos, pos);
+      this._onPromptInput(ta);
+      this._showAtMention(ta, '', pos - 1);
+    });
+    /* 外点关闭（下一帧挂，避免本次 click 冒泡立刻自关） */
+    setTimeout(() => {
+      this._atRefOutside = ev => { if (!pop.contains(ev.target) && ev.target !== btn && !btn.contains(ev.target)) this._closeAtRefPop(); };
+      document.addEventListener('pointerdown', this._atRefOutside, true);
+    }, 0);
+  },
+  _closeAtRefPop() {
+    document.querySelectorAll('.cite-pop').forEach(p => p.remove());
+    if (this._atRefOutside) { document.removeEventListener('pointerdown', this._atRefOutside, true); this._atRefOutside = null; }
+  },
+
+  /* V26.9.30 需求⑤：插入参考图引用占位（【图1】/【图2】）到光标处 */
+  _insertRefCite(ta, label) {
+    const s = ta.selectionStart ?? ta.value.length, e = ta.selectionEnd ?? s;
+    const token = `【${label}】`;
+    ta.value = ta.value.slice(0, s) + token + ta.value.slice(e);
+    const pos = s + token.length;
+    ta.focus();
+    ta.setSelectionRange(pos, pos);
+    this._onPromptInput(ta);
+  },
+
+  /* V26.9.31 需求③：提示词智能拉高 —— 全端启用（参数收纳后两端都有富余空间），42vh 封顶 */
+  _autoGrowPrompt(ta) {
+    ta.style.height = 'auto';
+    ta.style.height = Math.min(ta.scrollHeight, Math.round(window.innerHeight * 0.42)) + 'px';
+  },
 
   /* ---------- V26.9.22 背景主题（动态渐变/图片/视频）---------- */
   _bgVideoSessionKey: 'sc_bg_video_session',
@@ -6652,13 +7252,13 @@ const UI = {
     /* V26.9.25: 预设重组（4 浅 4 深）——旧 obsidian/rose 迁移到 abyss/sakura，未知值回落默认极光 */
     const BG_PRESETS = ['dawn', 'jade', 'sakura', 'cloud', 'aurora', 'dusk', 'ember', 'abyss'];
     if (!BG_PRESETS.includes(cfg.preset)) {
-      cfg.preset = cfg.preset === 'obsidian' ? 'abyss' : cfg.preset === 'rose' ? 'sakura' : 'aurora';
+      cfg.preset = cfg.preset === 'obsidian' ? 'abyss' : cfg.preset === 'rose' ? 'sakura' : 'cloud'; /* V26.9.31: 默认回落改浅色云青 */
       Store.setBgCfg(cfg);
     }
     const img = $('#themeBgImg'), video = $('#themeBgVideo'), layer = $('#themeBgLayer');
     if (!layer) return;
     // 渐变预设（V26.9.23: .theme-bg-grad 动画幕接管视觉；媒体模式下 data-bgmedia 隐藏渐变幕）
-    document.body.dataset.bgpreset = cfg.mode === 'gradient' ? cfg.preset : 'aurora';
+    document.body.dataset.bgpreset = cfg.mode === 'gradient' ? cfg.preset : 'cloud'; /* V26.9.31: 媒体模式兑底同改浅色 */
     if (cfg.mode === 'gradient') delete document.body.dataset.bgmedia; else document.body.dataset.bgmedia = '1';
     let memUrl = this._bgMemUrl || '';
     if (!memUrl && cfg.mode === 'video') { try { memUrl = sessionStorage.getItem(this._bgVideoSessionKey) || ''; } catch {} }
@@ -6869,6 +7469,8 @@ const UI = {
     this._renderAllRefGrids();
     this._updateEstimate();
     this.renderPresets();
+    /* V26.9.30 需求③：手机端把 select 类参数行收进生成钮上方弹出面板（须在表单构建完成后执行） */
+    this._mountQuickParams();
   },
 
   _buildRefModeSection(model) {
@@ -6997,7 +7599,8 @@ const UI = {
       <div class="prompt-tools">
         <button class="tool-btn" data-action="recent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>最近</button>
         <button class="tool-btn" data-action="clear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>清空</button>
-        <span class="prompt-hint" title="输入 @ 可快速引用历史提示词">@引用</span>
+        <!-- V26.9.31 需求②：图1/图2 收敛回单个 @ 按钮，点击弹层扩展（引用参考图 + 历史提示词） -->
+        <button type="button" class="tool-btn at-ref-btn" data-at-ref title="引用：参考图 / 历史提示词" aria-haspopup="menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 14a5 5 0 0 0 7.1 0l2-2a5 5 0 0 0-7.1-7.1l-1 1"/><path d="M14 10a5 5 0 0 0-7.1 0l-2 2a5 5 0 0 0 7.1 7.1l1-1"/></svg></button>
         <span class="prompt-count" data-count>0字</span>
       </div>
       <div class="prompt-vars" data-vars hidden></div>
@@ -7011,6 +7614,10 @@ const UI = {
     ta.addEventListener('click', () => this._checkAtMention(ta));
     wrap.querySelector('[data-action="recent"]').addEventListener('click', e => { e.stopPropagation(); this._togglePromptHistory(e.currentTarget); });
     wrap.querySelector('[data-action="clear"]').addEventListener('click', () => this._clearPrompt(ta));
+    /* V26.9.31 需求②：@ 引用弹层（图1/图2/历史提示词） */
+    wrap.querySelector('[data-at-ref]')?.addEventListener('click', e => { e.stopPropagation(); this._toggleAtRefPop(ta, e.currentTarget); });
+    /* V26.9.31 需求②：工作流复制/粘贴按钮搬进三按钮并列行（移节点保绑定，二次渲染幂等） */
+    this._mountWorkflowBtns(wrap);
     $('#savePresetBtn', wrap) ?? wrap.querySelector('#savePresetBtn');
     wrap.querySelector('#savePresetBtn').addEventListener('click', () => this._openPresetModal());
     wrap.querySelector('#presetTrigger').addEventListener('click', () => this._openPresetPicker());
@@ -7027,6 +7634,7 @@ const UI = {
     this._renderPromptVars(ta);
     this._checkAtMention(ta);
     this._updateEstimate();
+    this._autoGrowPrompt(ta); /* V26.9.30 需求⑦：智能拉高 */
   },
 
   // V26.9.17: @ 引用历史 — 键盘导航（↑↓ 选择 / Enter 插入 / Esc 关闭）
@@ -7323,6 +7931,8 @@ const UI = {
         valEl.textContent = txt;
       }
     }
+    /* V26.9.31: select 值变化（含工作流恢复等程序化赋值）同步比例网格/分段控件激活态 */
+    if (el && el.tagName === 'SELECT') this._syncPqControl(el);
     this._updateEstimate();
   },
 
@@ -8864,7 +9474,7 @@ const UI = {
       .slice(0, 20);
     if (!history.length) { strip.classList.add('empty'); strip.innerHTML = ''; return; }
     strip.classList.remove('empty');
-    strip.innerHTML = `<div class="strip-count">最近 ${history.length} 项</div>`;
+    /* V26.9.30 需求⑥：去「最近 N 项」文字标签，纯缩略图横滚（滚动条已 CSS 隐藏，滚轮驱动由 _bindStripWheel） */
     history.forEach(h => {
       const thumb = this._buildGalleryCard(h);
       thumb.addEventListener('click', () => {
@@ -10107,6 +10717,7 @@ ${items.map(h => {
       cntEl.value = String(cnt);
       this._onFieldChange('__count', cntEl);
     }
+    this._syncAllPqControls(); /* V26.9.31: 缓存回填后同步比例网格/分段控件激活态 */
   },
 
   /* ---------- WORKFLOW UNDO ---------- */
@@ -10337,21 +10948,25 @@ ${items.map(h => {
     const sw = $('#mobileViewSwitch');
     if (!sw) return;
     sw.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const view = btn.dataset.mview;
-        sw.querySelectorAll('button').forEach(b => b.classList.toggle('active', b === btn));
-        $('#paramPanel').classList.toggle('mobile-active', view === 'param');
-        $('#resultPanel').classList.toggle('mobile-active', view === 'result');
-      });
+      btn.addEventListener('click', () => this._switchMobileView(btn.dataset.mview));
     });
-    // 切换到结果视图的快捷方式：点击生成后、点击结果缩略图
+    // V26.9.30 需求⑨：生成后自动切结果视图（左上角浮现返回胶囊，点回编辑）
     $('#generateBtn')?.addEventListener('click', () => {
       setTimeout(() => {
         if (window.innerWidth <= 768) {
-          sw.querySelector('[data-mview="result"]')?.click();
+          this._switchMobileView('result');
         }
       }, 500);
     });
+  },
+
+  /* V26.9.30 需求⑨：单一视图切换源 —— body[data-mview] 驱动返回胶囊显隐；
+     编辑视图无胶囊（全屏创作），结果视图左上角返回胶囊 */
+  _switchMobileView(view) {
+    $('#mobileViewSwitch')?.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.mview === view));
+    $('#paramPanel')?.classList.toggle('mobile-active', view === 'param');
+    $('#resultPanel')?.classList.toggle('mobile-active', view === 'result');
+    document.body.dataset.mview = view;
   },
 
   /* V26.9.29: 移动端底部抽屉 grabber 把手 + 下滑关闭手势
@@ -10824,4 +11439,4 @@ document.addEventListener('DOMContentLoaded', () => UI.init());
 </script>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
