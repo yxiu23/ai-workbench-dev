@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><!-- IMPL-115②：iOS standalone 沉浸机制——default=状态栏白色实心条压在页面顶部（内容不延伸），结果态深色网格上方永远隔一条系统白条+边缘融合渐变（用户"白黑羽化"根因之一）；black-translucent=页面内容延伸到状态栏下方、状态栏透明，iOS≥16.4 状态栏底色由 theme-color 染色+文字色系统自适应（配合 IMPL-114② 动态同步：结果态深底白字/编辑态白底黑字），iOS<16.4 恒白字（结果态深底无感，编辑态白底上时间/电量对比度低的已知权衡） -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffffff"><!-- IMPL-114②：默认=编辑态白(--bg-elev)；结果态由 __wbSyncThemeColor 动态切网格基底色——iOS standalone 把 theme-color 渲染在状态栏区（含系统边缘融合渐变），恒浅色=结果态状态栏白块+白黑过渡（用户截图实锤）；原 media 限定 light 在系统深色时整条失效 -->
-<title>修的媒体工作台 V26.9.151</title>
+<title>修的媒体工作台 V26.9.152</title>
 <link rel="icon" type="image/webp" id="faviconLink" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1434,7 +1434,7 @@ to{transform:translateX(20px);opacity:0}}
 .result-panel{flex:1;min-height:0;display:none}
 .result-panel.mobile-active{display:flex}
 .result-scroll{padding:12px 12px 20px}
-.mobile-view-switch{display:none;position:fixed;left:max(10px, var(--safe-left));top:calc(var(--safe-top) + 19.5px);transform:none;gap:0;margin:0;padding:0;border:none;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;z-index:40}/* IMPL-108①：下移收回一半（24→19.5=24-9/2） */
+.mobile-view-switch{display:none;position:fixed;left:max(10px, var(--safe-left));top:calc(var(--safe-top) + 19.5px);transform:translateZ(0);will-change:transform;gap:0;margin:0;padding:0;border:none;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;z-index:40}/* IMPL-108①：下移收回一半（24→19.5=24-9/2）；IMPL-121②：translateZ(0) 强制独立合成层原生分辨率光栅化——iOS 大面积画布上 fixed 元素的降档模糊保险 */
 body[data-mview="result"] .mobile-view-switch:not(.is-right){display:flex}
 /* IMPL-109③：手机结果页=纯网格空间——面板白蒙版/边线隐藏，媒体直接浮在网格上；
      顶栏改「悬浮菜单条」：与结果/编辑钮同语言（nested 底+渐变描边胶囊）、同水平
@@ -1442,7 +1442,7 @@ body[data-mview="result"] .mobile-view-switch:not(.is-right){display:flex}
 .result-panel::after{background:none}
 .result-panel{border-bottom:none}
 body[data-mview="result"] .result-panel::before{content:none}
-body[data-mview="result"] .result-header{position:fixed;top:calc(var(--safe-top) + 19.5px);right:max(10px,var(--safe-right));left:auto;width:auto;max-width:calc(100vw - 78px);height:36px;padding:0 4px;gap:1px;border-radius:999px;background:linear-gradient(var(--surface-nested),var(--surface-nested)) padding-box,var(--edge-border-grad) border-box;border:1px solid transparent;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;overflow-x:auto;scrollbar-width:none;align-items:center;z-index:40}
+body[data-mview="result"] .result-header{position:fixed;top:calc(var(--safe-top) + 19.5px);right:max(10px,var(--safe-right));left:auto;width:auto;max-width:calc(100vw - 78px);height:36px;padding:0 4px;gap:1px;border-radius:999px;background:linear-gradient(var(--surface-nested),var(--surface-nested)) padding-box,var(--edge-border-grad) border-box;border:1px solid transparent;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;overflow-x:auto;scrollbar-width:none;align-items:center;z-index:40;transform:translateZ(0);will-change:transform}/* IMPL-121②：同 translateZ(0) 光栅化保险 */
 body[data-mview="result"] .result-header::before{content:none}
 body[data-mview="result"] .result-header::-webkit-scrollbar{display:none}
 body[data-mview="result"] .result-header .icon-btn{width:30px;height:30px;flex-shrink:0;border-radius:999px;padding:0;justify-content:center}/* IMPL-110②：纯图标钮图标居中（基类 flex-start 且 padding 归零后图标偏左） */
@@ -1462,7 +1462,7 @@ body[data-mview="result"] .result-header #restoreBtn,body[data-mview="result"] .
 .mobile-view-switch button:active{transform:scale(.92)}
 .mobile-view-switch button:hover{background:linear-gradient(var(--surface-2),var(--surface-2)) padding-box,var(--edge-border-grad) border-box}/* IMPL-106③ */
 .mobile-view-switch button.active{color:var(--brand);background:linear-gradient(var(--surface-nested),var(--surface-nested)) padding-box,var(--edge-border-grad) border-box;border-color:transparent}/* IMPL-106③ */
-.mobile-view-switch.is-right{left:auto;right:max(10px, var(--safe-right));transform:none}
+.mobile-view-switch.is-right{left:auto;right:max(10px, var(--safe-right));transform:translateZ(0);will-change:transform}/* IMPL-121②：原 transform:none（清早期居中位移残留）改 translateZ(0)——语义等价且保合成层光栅化，否则 is-right 覆盖基类致光栅化保险失效 */
 body[data-mview="param"] .mobile-view-switch.is-right{display:flex}
 .app-body{padding:var(--safe-top) 0 var(--safe-bottom);gap:0}
 body[data-mview="param"] .app-body{background:var(--bg-elev)}/* IMPL-114①：编辑态全屏白一体——app-body 的 safe-top/bottom padding 区原透明，透出全页网格画布 #svFloorBg（用户：编辑界面底部见深色画布条+顶部透画布雾区；param-panel 白底只盖到 padding 之内），编辑态以 --bg-elev 铺满含 padding 区把画布完全盖住；结果态不命中，保持纯网格空间 */
@@ -2537,7 +2537,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
     </div>
     <div class="settings-section settings-about">
       <div class="about-app">修的媒体工作台</div>
-      <span class="about-ver">V26.9.151</span>
+      <span class="about-ver">V26.9.152</span>
     </div>
   </div>
 </aside>
@@ -10211,7 +10211,7 @@ const oldest = tasks.reduce((a, b) => a.createdAt < b.createdAt ? a : b);
 const elapsed = Date.now() - oldest.createdAt;
 next = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
 } else {
-next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.151");
+next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.152");
 }
 if (document.title !== next) document.title = next;
 },
@@ -15923,9 +15923,26 @@ document.documentElement.style.setProperty("background-color", base, "important"
 document.body.style.removeProperty("background-color");
 document.documentElement.style.removeProperty("background-color");
 }
+/* IMPL-121①：dvh 失效兜底（IMPL-118① 遗留缺口）——iOS<15.4 不支持 100dvh，
+   CSS 回落 height:100%（=lvh），URL 栏展开态底部 ~83px（含底部缩略图 dock 与
+   网格画布底缘）沉到工具栏后=「结果页下面网格又被截断」复发真根因；
+   不支持 dvh 的环境改用 visualViewport.height 同步 body 高（iOS13+ 均有 vv），
+   支持 dvh 的浏览器零干预（CSS 100dvh 继续生效）；键盘弹出 vv 缩矮同样受益 */
+try {
+if (mob && !(window.CSS && CSS.supports && CSS.supports("height", "100dvh"))) {
+var vv = window.visualViewport;
+if (vv) {
+document.body.style.setProperty("height", vv.height + "px", "important");
+if (!window.__wbVvBound) { window.__wbVvBound = true; vv.addEventListener("resize", function () { if (window.__wbSyncThemeColor) window.__wbSyncThemeColor(); }); }
+}
+} else if (document.body.style.height) {
+document.body.style.removeProperty("height"); /* 环境支持 dvh/跨断点回桌面：还权 CSS */
+}
+} catch (e) {}
 } catch (e) {}
 };
 window.addEventListener("resize", function () { if (window.__wbSyncThemeColor) window.__wbSyncThemeColor(); }, { passive: true });/* IMPL-115③：跨断点旋转/缩放即时回落，防深色内联残留到桌面态 */
+try { window.__wbSyncThemeColor(); } catch (e) {}/* IMPL-121①：首屏自调一次——dvh 失效环境不等首次 resize/切视图即修正 body 高 */
 }
 const sw = $("#mobileViewSwitch");
 if (sw) {
@@ -20530,7 +20547,7 @@ return { open: open, close: close };
 /* ============================================================
    SvFloor —— 画布真透视地台 V2（79-a：内核整体升级为用户优化版引擎）
    ------------------------------------------------------------
-   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.151 时点）。
+   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.152 时点）。
    相比 V1（IMPL-56/69 移植的旧版）内核升级点：
      ① 落影渲染重写：5 档模糊叠加，模糊半径正比「离接触边的距离」（近实远虚）——
         faceK 面光参数 × span，近端带 FLAT=0.22 非零项（离地 lift 自身摊出的半影）；
@@ -21089,7 +21106,10 @@ return { open: open, close: close };
       ctx.globalCompositeOperation = "destination-over";
       /* IMPL-85：空间明暗——基底沿纵深三段渐变（地平线处最暗、上下两侧回亮），
          「越远亮度越低」的氛围纵深；shade=0 或地平线在视口外时退化为平色 */
-      var shK = Math.max(0, Math.min(30, S.shade || 0)) / 100;
+      var shK = Math.max(0, Math.min(30, (window.matchMedia && window.matchMedia("(max-width:768px)").matches) ? 0 : (S.shade || 0))) / 100;
+/* IMPL-121②：手机端基底纵深渐变关闭（用户：顶部渐变过渡致顶部按钮图标发糊）——
+   地平线最暗/上下回亮三段渐变在竖屏上部形成大片明暗过渡雾区，顶部悬浮按钮（结果/编辑切换+菜单条）
+   正好浮在雾区上=视觉发糊；平色基底后顶部与 theme-color/body 染色同色纯净；桌面渐变氛围保留 */
       var hyT = (cam.hy + AY) / Math.max(1, VH);
       if (shK > 0.0015 && hyT > 0.02 && hyT < 0.98) {
         var gBase = ctx.createLinearGradient(0, -AY, 0, VH - AY);
