@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><!-- IMPL-115②：iOS standalone 沉浸机制——default=状态栏白色实心条压在页面顶部（内容不延伸），结果态深色网格上方永远隔一条系统白条+边缘融合渐变（用户"白黑羽化"根因之一）；black-translucent=页面内容延伸到状态栏下方、状态栏透明，iOS≥16.4 状态栏底色由 theme-color 染色+文字色系统自适应（配合 IMPL-114② 动态同步：结果态深底白字/编辑态白底黑字），iOS<16.4 恒白字（结果态深底无感，编辑态白底上时间/电量对比度低的已知权衡） -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffffff"><!-- IMPL-114②：默认=编辑态白(--bg-elev)；结果态由 __wbSyncThemeColor 动态切网格基底色——iOS standalone 把 theme-color 渲染在状态栏区（含系统边缘融合渐变），恒浅色=结果态状态栏白块+白黑过渡（用户截图实锤）；原 media 限定 light 在系统深色时整条失效 -->
-<title>修的媒体工作台 V26.9.149</title>
+<title>修的媒体工作台 V26.9.151</title>
 <link rel="icon" type="image/webp" id="faviconLink" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2537,7 +2537,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
     </div>
     <div class="settings-section settings-about">
       <div class="about-app">修的媒体工作台</div>
-      <span class="about-ver">V26.9.149</span>
+      <span class="about-ver">V26.9.151</span>
     </div>
   </div>
 </aside>
@@ -2772,7 +2772,8 @@ key: "aspectRatio",
 label: "比例",
 type: "select",
 default: "1:1",
-options: [ "auto", "1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "5:4", "4:5", "21:9", "9:21", "1:3", "3:1", "2:1", "1:2" ] /* IMPL-88：补 AUTO（模型自动决定比例），其余参数原样保留 */
+options: [ "auto", "1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "5:4", "4:5", "21:9", "9:21", "1:3", "3:1", "2:1", "1:2" ],
+hint: "自动＝不指定比例，由服务端默认决定" /* IMPL-120：官方枚举无 auto（速创 doc/78），auto=缺省不下发；老 gpt-image-2（doc/53）才是官方原生 auto */
 }, {
 key: "urls",
 label: "参考图",
@@ -2841,7 +2842,8 @@ key: "aspectRatio",
 label: "比例",
 type: "select",
 default: "1:1",
-options: [ "auto", "1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "5:4", "4:5", "21:9", "9:21", "1:3", "3:1", "2:1", "1:2" ] /* IMPL-88：补 AUTO（模型自动决定比例），其余参数原样保留 */
+options: [ "auto", "1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "5:4", "4:5", "21:9", "9:21", "1:3", "3:1", "2:1", "1:2" ],
+hint: "自动＝不指定比例，由服务端默认决定" /* IMPL-120：官方枚举无 auto（速创 doc/79），auto=缺省不下发 */
 }, {
 key: "quality",
 label: "生成质量",
@@ -2896,7 +2898,8 @@ key: "aspectRatio",
 label: "比例",
 type: "select",
 default: "1:1",
-options: [ "auto", "1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "5:4", "4:5", "21:9", "9:21", "1:3", "3:1", "2:1", "1:2" ] /* IMPL-88：补 AUTO（模型自动决定比例），其余参数原样保留 */
+options: [ "auto", "1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "5:4", "4:5", "21:9", "9:21", "1:3", "3:1", "2:1", "1:2" ],
+hint: "自动＝不指定比例，由服务端默认决定" /* IMPL-120：官方枚举无 auto（速创 doc/80），auto=缺省不下发 */
 }, {
 key: "quality",
 label: "生成质量",
@@ -3106,7 +3109,8 @@ key: "size",
 label: "分辨率",
 type: "text",
 default: "1024*1024",
-placeholder: "宽*高，如 1024*1024，可 auto"
+placeholder: "宽*高，如 1024*1024，可 auto",
+pattern: "^[0-9]+\\*[0-9]+$|^auto$" /* IMPL-119：池恢复校验门——阻断其他模型分辨率枚举（如 2K）泄入文本框 */
 }, {
 key: "n",
 label: "张数",
@@ -3144,6 +3148,7 @@ key: "urls",
 label: "参考图",
 type: "ref-image",
 output: "csv",
+max: 3,
 hint: "1-3 张（图生图/编辑）"
 } ]
 }, {
@@ -3833,7 +3838,8 @@ default: 8,
 min: 4,
 max: 8,
 step: 1,
-unit: "s"
+unit: "s",
+hint: "上游可能固定时长出片，以实际结果为准"
 }, {
 key: "firstFrameUrl",
 label: "首帧",
@@ -3907,7 +3913,7 @@ min: 2,
 max: 30,
 step: 1,
 unit: "s",
-hint: "-1=智能时长（直连请在生成前手动改档）"
+hint: "2~30 秒（官方另支持 -1 智能时长，滑杆无法表达）"
 }, {
 key: "audio",
 label: "音频",
@@ -3927,6 +3933,13 @@ label: "种子",
 type: "text",
 default: "",
 placeholder: "可选，留空随机"
+}, {
+key: "watermark",
+label: "水印",
+type: "select",
+default: "false",
+options: [ "false", "true" ],
+hint: "右下角「AI生成」水印标识"
 }, {
 key: "first_frame",
 label: "首帧",
@@ -4528,7 +4541,7 @@ const SKILL_MODEL_PRESETS = [
   { id: "auto", label: "智能选型", vision: true, think: true, desc: "按消息内容自动选千问旗舰 / 视觉模型，无需操心" },
   { id: "deepseek:deepseek-flash", label: "DeepSeek V4 Flash", vision: true, think: true, desc: "DeepSeek V4.1 Flash · 深度思考+原生看图（76-b 官方文档核实）" },
   { id: "dashscope:qwen3.8-omni-flash", label: "千问 Qwen3.8-Omni", vision: true, think: false, desc: "千问 3.8 全模态 · 看图对话（不支持深度思考开关）" },
-  { id: "siliconflow:Pro/moonshotai/Kimi-K2.6", label: "Kimi K2.6", vision: false, think: true, desc: "月之暗面旗舰 · 长文本强推理" },
+  { id: "siliconflow:Pro/moonshotai/Kimi-K2.6", label: "Kimi K2.6", vision: false, think: false, desc: "月之暗面旗舰 · 长文本强推理" } /* IMPL-119：think:false 诚实化——两版 Worker 均无 Kimi 注入分支，开关为 no-op，灰显防误导 */,
   { id: "siliconflow:zai-org/GLM-4.5V", label: "智谱 GLM-4.5V", vision: true, think: true, desc: "智谱视觉旗舰 · 看图思考" }
 ];
 
@@ -4536,8 +4549,9 @@ const SKILL_MODEL_PRESETS = [
    预设查表优先（人工核实），家族正则兜底（对齐 Worker v3 注入语义，IMPL-68）：
    · dashscope：Worker 恒注入 enable_thinking（76-b 文档核实：qwen3.8-omni 默认开启思考，恒注入 false 为保命设计；
      vl/omni 家族官方已支持 enable_thinking，UI 仍保守灰显属控速选择，放开须同步 Worker thinking_budget）；
-   · siliconflow：Worker 仅对 Qwen3 开头的模型注入（与注入语义严格对齐，UI 提示一致）
-   · deepseek：Worker 不注入，reasoner/v4 系天然思考 → 全系支持
+   · siliconflow：Worker 以 /qwen3/i contains 锚注入（Qwen/Qwen3-* 等组织前缀全名均覆盖，IMPL-76 修正），
+     另补 zai-org/GLM-4.5V/4.6V/5V-Turbo 与 deepseek-ai/DeepSeek-V3.x；Kimi 系无注入分支 → think:false 灰显（IMPL-119）
+   · deepseek：Worker 对 flash/v4 系注入顶层 thinking:{type:enabled|disabled}（IMPL-76 修正），reasoner/chat 不动 → 全系支持
    · auto：上游智能路由，IMPL-68 实测 thinking:true 正常 → 支持 */
 function _modelThinkCapable(model) {
   const id = String(model || "");
@@ -7354,7 +7368,7 @@ async _dsImage(model, body) {
   refs.slice(0, 3).forEach(u => content.push({ image: u }));
   content.push({ text: body.prompt || "" });
   const parameters = {};
-  if (body.size && String(body.size).toLowerCase() !== "auto") parameters.size = String(body.size).replace(/×/g, "*").replace(/x/gi, "*");
+  if (body.size && String(body.size).toLowerCase() !== "auto") parameters.size = String(body.size).replace(/\s+/g, "").replace(/×/g, "*").replace(/x/gi, "*"); /* IMPL-119：剥离空白——估算与发送同口径（"1024 * 1024" 原样发送上游不认） */
   const nn = parseInt(body.n, 10);
   if (Number.isFinite(nn) && nn >= 1 && nn <= 6) parameters.n = nn;
   if (body.negative_prompt) parameters.negative_prompt = body.negative_prompt;
@@ -7396,6 +7410,7 @@ async _dsVideo(model, body) {
   const seed = parseInt(body.seed, 10);
   if (Number.isFinite(seed) && seed >= 0) parameters.seed = seed;
   if (body.prompt_extend !== "" && body.prompt_extend != null) parameters.prompt_extend = body.prompt_extend === "true" || body.prompt_extend === true;
+  if (body.watermark !== "" && body.watermark != null) parameters.watermark = body.watermark === "true" || body.watermark === true; /* IMPL-119：官方 parameters.watermark（默认 false）透传——原 UI 缺失 */
   const payload = { model: model.modelId, input, parameters };
   const sub = await this._directReq("POST", "/api/v1/services/aigc/video-generation/video-synthesis", payload, { headers: { "X-DashScope-Async": "enable" }, timeout: 3e4 });
   const taskId = sub && sub.output && sub.output.task_id;
@@ -8298,7 +8313,8 @@ raw: text
 };
 }
 if (!res.ok) throw new Error(data.error || data.message || `HTTP ${res.status}`);
-const id = data.id || data.taskId;
+/* IMPL-119：Worker POST /task 返回 {task:{id:"tc…"}}——原只读顶层 id/taskId 必 throw → 已入队派发的上游任务叠加 Api.submit 直连二次提交=双倍计费，故补 task 解包 */
+const id = data.id || data.taskId || data.task && (data.task.id || data.task.taskId);
 if (!id) throw new Error("任务中心未返回任务 ID");
 this._submitted.set(task.id, {
 task: task,
@@ -8334,7 +8350,8 @@ const url = this.workerUrl + "/tasks?status=active&token=" + encodeURIComponent(
 const res = await fetch(url);
 if (!res.ok) return [];
 const data = await res.json();
-return Array.isArray(data) ? data : data.tasks || data.data || [];
+/* IMPL-119：Worker GET /tasks 返回 {active:[…],recent:[…]}——补 active 分支，原恒返空数组致轮询全走单任务兜底查询 */
+return Array.isArray(data) ? data : data.tasks || data.data || data.active || [];
 } catch (e) {
 return [];
 }
@@ -8348,7 +8365,8 @@ spentToday: 0
 try {
 const url = this.workerUrl + "/tasks?status=queued&token=" + encodeURIComponent(this.token);
 const res = await fetch(url);
-const queued = res.ok ? (await res.json()).length || 0 : 0;
+/* IMPL-119：Worker 返回对象非数组——补 active 计数（对象无 length 原恒 0） */
+const queued = res.ok ? ((await res.json()).active || []).length || 0 : 0;
 const running = Store.getTasks().filter(t => t.status === "processing").length;
 const spentToday = Store.getTodaySpend();
 return {
@@ -8391,7 +8409,8 @@ const url = this.workerUrl + "/task/" + encodeURIComponent(info.workerId) + "?to
 const r = await fetch(url);
 if (r.ok) {
 const data = await r.json();
-this._dispatchResult(taskId, data);
+/* IMPL-119：Worker GET /task/<id> 返回 {task:{…}}——解包后再派发，原顶层找不到 resultUrl */
+this._dispatchResult(taskId, data.task || data);
 this._submitted.delete(taskId);
 continue;
 }
@@ -8427,7 +8446,8 @@ steps: match.steps
 }
 },
 _dispatchResult(taskId, data) {
-let url = data.url || data.result_url || data.output_url || data.video_url || data.image_url || data.audio_url;
+/* IMPL-119：补 Worker 任务记录字段 resultUrl（activeList 直派场景整个 task 对象进来） */
+let url = data.url || data.resultUrl || data.result_url || data.output_url || data.video_url || data.image_url || data.audio_url;
 if (!url && data.result && typeof data.result === "string") url = data.result;
 if (!url && data.outputs) url = Array.isArray(data.outputs) ? data.outputs[0] : data.outputs.url || data.outputs.video || data.outputs.image;
 if (!url) {
@@ -8500,11 +8520,17 @@ return reject(`缺少必填参数: ${p.label}`);
 }
 }
 }
-if (mid === "nanoBanana2" || mid === "nanoBanana_pro") {
+if (mid === "nanoBanana2" || mid === "nanoBanana_pro" || mid === "gpt-image-2") {
 if (body.urls && Array.isArray(body.urls) && body.urls.length > 14) return reject("参考图最多 14 张");
 }
 if (mid === "veo3_fast" && body.urls && Array.isArray(body.urls) && body.urls.length > 3) return reject("参考图最多 3 张");
-if (mid === "wan3" || mid === "minimax_h3") {
+/* IMPL-119：qwen_image_30_pro 参考图上游上限 3（百炼 I2I 1~3 图）——csv 输出原先无校验，第 4 张起 _dsImage 静默丢弃 */
+if (mid === "qwen_image_30_pro") {
+const urlsN = Array.isArray(body.urls) ? body.urls.length : String(body.urls || "").split(",").map(s => s.trim()).filter(Boolean).length;
+if (urlsN > 3) return reject("参考图最多 3 张");
+}
+/* IMPL-119：wan3_video 同用 first_frame/last_frame 键——补入成对校验名单（"只填尾帧"原可提交，仅靠服务端报错） */
+if (mid === "wan3" || mid === "minimax_h3" || mid === "wan3_video") {
 const hasFrame = body.first_frame || body.last_frame;
 const hasMedia = body.images && body.images.length || body.videos && body.videos.length || body.audios && body.audios.length;
 if (hasFrame && hasMedia) return reject("首帧/尾帧与参考图/视频/音频不能同时使用");
@@ -10185,7 +10211,7 @@ const oldest = tasks.reduce((a, b) => a.createdAt < b.createdAt ? a : b);
 const elapsed = Date.now() - oldest.createdAt;
 next = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
 } else {
-next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.149");
+next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.151");
 }
 if (document.title !== next) document.title = next;
 },
@@ -11827,7 +11853,8 @@ return `<button type="button" class="cap-chip${on ? " on" : ""}" data-cap="${esc
 }).join("") + `</div>`;
 inner += `<div class="cap-desc" data-cap-desc="${esc(p.key)}">${esc(capOf(defVal))}</div>`;
 } else if (p.type === "datalist") {
-inner += `<select data-key="${esc(p.key)}">${p.options.map(o => `<option value="${esc(o.value)}">${esc(o.label)}</option>`).join("")}</select>`;
+/* IMPL-119：input+datalist 取代纯 select——hint 承诺可填复刻音色 id（qwen_audio_tts_plus），纯 select 阻断自由输入 */
+inner += `<input type="text" list="dl-${esc(p.key)}" data-key="${esc(p.key)}" value="${esc(defVal)}" placeholder="${esc(p.placeholder || "")}" aria-label="${esc(p.label)}"><datalist id="dl-${esc(p.key)}">${p.options.map(o => `<option value="${esc(o.value)}">${esc(o.label)}</option>`).join("")}</datalist>`;
 } else if (p.type === "url") {
 inner += `<div class="url-input-row"><input type="text" data-key="${esc(p.key)}" value="${esc(defVal)}" placeholder="${esc(p.placeholder || "https://...")}"><button data-add-url="${esc(p.key)}">添加</button></div>`;
 } else if (p.type === "url-list") {
@@ -12165,6 +12192,12 @@ return null;
 }
 const model = this.state.model || MODELS.image[0];
 const param = model?.params?.find(p => p.key === key);
+/* IMPL-119：URL 直添同样尊重参考素材上限（此前仅网格渲染计数，_addUrlRef 可绕过 UI 上限） */
+const maxN = param ? param.max || (param.output === "single" ? 1 : param.output === "csv" ? 99 : param.output === "array" ? 14 : 99) : 99;
+if (refs.length >= maxN) {
+Toast.warning(`最多 ${maxN} 个`);
+return null;
+}
 const isVideo = param && param.type === "ref-video";
 const isAudio = param && param.type === "ref-audio";
 const kind = isVideo ? "url-video" : isAudio ? "url-audio" : "url";
@@ -12390,7 +12423,7 @@ const model = this.state.model || MODELS.image[0];
 const param = model?.params?.find(p => p.key === key);
 const isVideo = param && param.type === "ref-video";
 const isAudio = param && param.type === "ref-audio";
-const max = param ? param.output === "single" ? 1 : param.output === "csv" ? 99 : param.output === "array" ? 14 : 99 : 99;
+const max = param ? param.max || (param.output === "single" ? 1 : param.output === "csv" ? 99 : param.output === "array" ? 14 : 99) : 99; /* IMPL-119：param.max 可覆盖输出类型推断上限（qwen 参考图 3） */
 let html = refs.map(r => {
 const isLocal = r.kind === "local" || r.kind === "local-video" || r.kind === "local-audio";
 const isUploading = isLocal && !r.uploaded && !r.uploadError;
@@ -12591,9 +12624,12 @@ delete body.aspectRatio;
 return;
 }
 if (String(ratio).toLowerCase() === "auto") {
-/* IMPL-88：AUTO=交给模型自动决定比例——不下发 aspectRatio，size 档位保留（参数不丢），
-   也不走映射表兜底（消除 console.warn 噪音） */
+/* IMPL-120 复核（速创 doc/78/79/80 实证）：官方 aspectRatio 枚举 15 比例，无 auto 值，
+   且官方参数表无独立 size 字段（1K/2K/4K 由 aspectRatio 的 WxH 值表达）——
+   选自动＝缺省：aspectRatio/size 均不下发（避免越界字段），走服务端默认比例；
+   表单 UI 档位不受影响（body 为发送专用副本）；仅老 gpt-image-2（doc/53）官方原生 auto */
 delete body.aspectRatio;
+delete body.size;
 return;
 }
 const sizes = this._GPT_RATIO_SIZE[ratio];
@@ -12626,13 +12662,18 @@ break;
 if (!out.aspectRatio) out.aspectRatio = model.params.find(p => p.key === "aspectRatio")?.default || "1:1";
 } else if (typeof wxh === "string" && wxh) {
 out.aspectRatio = wxh;
+} else {
+/* IMPL-120：auto 场景发送 body 已剥离 aspectRatio/size（官方无 auto 枚举）——
+   此处还原"自动"意图，供 _regen 表单回填（options 含 auto，select 校验可过） */
+out.aspectRatio = "auto";
 }
 return out;
 },
 _pruneEmptyRefs(model, body) {
 if (!model || !body) return;
 for (const p of model.params) {
-if ((p.type === "ref-image" || p.type === "ref-video" || p.type === "ref-audio") && body[p.key] === "") delete body[p.key];
+/* IMPL-119：空收集器返回 null——原只删 ""，空参考以 urls:null 下发上游 */
+if ((p.type === "ref-image" || p.type === "ref-video" || p.type === "ref-audio") && (body[p.key] == null || body[p.key] === "")) delete body[p.key];
 }
 },
 async _collectRefImageAsync(key) {
@@ -13923,7 +13964,9 @@ const el = $('[data-key="' + p.key + '"]');
 if (el) el.value = task.prompt || "";
 } else if (p.type !== "ref-image" && p.type !== "ref-video" && p.type !== "ref-audio") {
 const el = $('[data-key="' + p.key + '"]');
-if (el && task.body?.[p.key] != null) {
+if (el && (task.body?.[p.key] != null || dec[p.key] != null)) {
+/* IMPL-120：dec 优先——发送 body 已剥离 aspectRatio/size（auto 缺省或 WxH 合并），
+   decompose 还原值（auto 意图 / 16:9+4K 拆解）是唯一回填来源 */
 let val = dec[p.key] ?? task.body[p.key];
 if (el.tagName === "SELECT" && p.options && !p.options.map(String).includes(String(val))) val = p.default ?? "";
 el.value = val;
@@ -15586,9 +15629,15 @@ this._renderRefGrid(p.key);
 } else if (p.type !== "textarea") {
 const el = $(`[data-key="${p.key}"]`);
 const pool = this.state.formCache[this.state.tab + "_pool"] || {};
+/* IMPL-119：池值跨模型必须过类型门——原 datalist/text 无校验：audio_tts 速创音色（male-qn-qingse）可泄入
+   qwen_audio_tts_plus voice 发往百炼必无效；sunburst 分辨率枚举 "2K" 可泄入 qwen size 文本（应 宽*高）。
+   cache 同模型可信（datalist 自由输入的自定义音色照常保留）；select/cap-grid/range 原有校验不变 */
+const fromPool = !(cache && cache[p.key] != null);
 let val = cache && cache[p.key] != null ? cache[p.key] : pool[p.key] != null ? pool[p.key] : pool["l:" + p.label];
 if (val != null && p.type === "select" && Array.isArray(p.options) && !p.options.map(String).includes(String(val))) val = null;
 if (val != null && p.type === "cap-grid" && Array.isArray(p.options) && !p.options.map(o => String(o.value)).includes(String(val))) val = null;
+if (val != null && fromPool && p.type === "datalist" && Array.isArray(p.options) && !p.options.map(o => String(o.value)).includes(String(val))) val = null;
+if (val != null && fromPool && p.type === "text" && p.pattern && !new RegExp(p.pattern).test(String(val))) val = null;
 if (val != null && p.type === "range") {
 const n = Number(val);
 if (Number.isNaN(n) || p.min != null && n < p.min || p.max != null && n > p.max) val = null;
@@ -20481,7 +20530,7 @@ return { open: open, close: close };
 /* ============================================================
    SvFloor —— 画布真透视地台 V2（79-a：内核整体升级为用户优化版引擎）
    ------------------------------------------------------------
-   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.149 时点）。
+   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.151 时点）。
    相比 V1（IMPL-56/69 移植的旧版）内核升级点：
      ① 落影渲染重写：5 档模糊叠加，模糊半径正比「离接触边的距离」（近实远虚）——
         faceK 面光参数 × span，近端带 FLAT=0.22 非零项（离地 lift 自身摊出的半影）；
