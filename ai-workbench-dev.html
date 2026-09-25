@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><!-- IMPL-115②：iOS standalone 沉浸机制——default=状态栏白色实心条压在页面顶部（内容不延伸），结果态深色网格上方永远隔一条系统白条+边缘融合渐变（用户"白黑羽化"根因之一）；black-translucent=页面内容延伸到状态栏下方、状态栏透明，iOS≥16.4 状态栏底色由 theme-color 染色+文字色系统自适应（配合 IMPL-114② 动态同步：结果态深底白字/编辑态白底黑字），iOS<16.4 恒白字（结果态深底无感，编辑态白底上时间/电量对比度低的已知权衡） -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffffff"><!-- IMPL-114②：默认=编辑态白(--bg-elev)；结果态由 __wbSyncThemeColor 动态切网格基底色——iOS standalone 把 theme-color 渲染在状态栏区（含系统边缘融合渐变），恒浅色=结果态状态栏白块+白黑过渡（用户截图实锤）；原 media 限定 light 在系统深色时整条失效 -->
-<title>修的媒体工作台 V26.9.152</title>
+<title>修的媒体工作台 V26.9.153</title>
 <link rel="icon" type="image/webp" id="faviconLink" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1141,6 +1141,9 @@ to{opacity:1;transform:scale(1) translateY(0)}}
 .settings-section h4{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--text);margin:0;padding:0 2px 9px;border-bottom:1px solid var(--border-soft);letter-spacing:.3px}
 .set-sec-icon{display:inline-flex;width:15px;height:15px;color:var(--brand)}.set-sec-icon svg{width:100%;height:100%}
 .set-status{font-size:11px;color:var(--text-muted);padding:6px 0 2px;line-height:1.5}
+.drawer-ver{display:inline-block;margin-left:8px;padding:2px 9px;border-radius:999px;background:var(--brand-soft);color:var(--brand);font-size:10.5px;font-weight:600;letter-spacing:.5px;vertical-align:2px}/* IMPL-122：设置抽屉版本徽章——手机上 1 秒自证当前运行版本（about 弹窗之外的第二可见版本位，JS 回填不双维护） */
+.set-status[data-tone="warn"]{color:var(--warning-ink)}/* IMPL-122：云同步状态行两态——warn=未连接任务中心（AA 提示色） */
+.set-status[data-tone="ok"]{color:var(--success)}/* IMPL-122：ok=已连接（AA 成功色） */
 .vault-badge{display:inline-flex;align-items:center;gap:3px;margin-left:8px;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;vertical-align:1px;letter-spacing:.02em}.vault-badge svg{width:11px;height:11px}
 .vault-badge.locked{background:rgba(255,149,0,.14);color:var(--warning);box-shadow:inset 0 0 0 1px rgba(255,149,0,.25)}
 .vault-badge.open{background:rgba(52,199,89,.14);color:var(--success);box-shadow:inset 0 0 0 1px rgba(52,199,89,.28)}
@@ -2453,7 +2456,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
 <div class="modal-overlay" id="settingsOverlay"></div>
 <aside class="settings-drawer" id="settingsDrawer">
   <div class="settings-header">
-    <h3>设置</h3>
+    <h3>设置 <span class="drawer-ver" id="drawerVerBadge" hidden></span></h3><!-- IMPL-122：JS 打开抽屉时从 about-ver 回填（版本单源不双维护） -->
     <button class="modal-close" id="settingsClose" aria-label="关闭设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
   </div>
   <div class="settings-body">
@@ -2472,6 +2475,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
         </div>
         <div class="toggle-switch on" id="cloudSyncToggle"></div>
       </div>
+      <div id="cloudSyncStatus" class="set-status" style="display:none" data-tone=""></div><!-- IMPL-122：云同步状态可见化（未连接任务中心的中性指引/已连接+上次拉取时间——用户自查“最近结果为什么没同步”不再无解） -->
     </div>
     <div class="settings-section" id="setSecModel">
       <h4><span class="set-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg></span>技能模型 <span id="skillModelBadge" style="font-size:11px;font-weight:600;color:var(--brand);margin-left:6px"></span></h4>
@@ -2537,7 +2541,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
     </div>
     <div class="settings-section settings-about">
       <div class="about-app">修的媒体工作台</div>
-      <span class="about-ver">V26.9.152</span>
+      <span class="about-ver">V26.9.153</span>
     </div>
   </div>
 </aside>
@@ -10107,6 +10111,20 @@ if ($("#historySidebar")?.classList.contains("show")) this.renderHistory();
 }
 this._initHistoryThumbLoader();
 this._bindPromptGrowOnResize();
+/* IMPL-122：版本自证——版本变化首启 Toast（看到提示=页面确实加载了新版代码；
+   若更新后打开页面从未见过此提示，说明浏览器还在跑旧标签页或旧文件——
+   关闭该站点全部标签页重开，或重新获取最新文件。iOS Safari 常驻标签页恢复不重载 HTML） */
+try {
+const _v = document.querySelector(".about-ver")?.textContent?.trim() || "";
+if (_v) {
+let _lv = null;
+try { _lv = localStorage.getItem("sc_last_ver"); } catch (e) {}
+if (_lv !== _v) {
+setTimeout(() => { try { Toast.success("已更新到 " + _v + " —— 看到此提示说明页面已加载最新版"); } catch (e) {} }, 4200);
+try { localStorage.setItem("sc_last_ver", _v); } catch (e) {}
+}
+}
+} catch (e) {}
 setTimeout(() => {
 if (Store.getSync() && KeyVault.unlocked) this._archivePendingHistory();
 }, 3500);
@@ -10147,7 +10165,7 @@ body: JSON.stringify(top)
 },
 /* IMPL-118③：解锁=数据链就位——立即同步云端历史并刷新最近结果（不等重启/30s 轮询；手机端启动时 TaskCenter 未就位或 getSync 关闭时此路径是唯一触发点） */
 _vaultAfterUnlock() {
-if (typeof TaskCenter === "undefined" || !TaskCenter.isAvailable()) return;
+if (typeof TaskCenter === "undefined" || !TaskCenter.isAvailable()) { this._renderCloudSyncStatus(); return; }/* IMPL-122：不可用分支不再全静默（设置抽屉状态行可见中性指引） */
 this._syncHistoryFromCloud(true).then(() => {
 this._renderTaskList();
 this.renderHistoryBadge();
@@ -10165,6 +10183,8 @@ if (data.ok && data.data && Array.isArray(data.data)) {
 const local = Store.getHistory();
 const merged = this._mergeHistory(local, data.data);
 Store.saveHistory(merged);
+try { localStorage.setItem("sc_hist_sync_at", String(Date.now())); } catch (e) {}/* IMPL-122：上次云端拉取时间（设置抽屉状态行展示） */
+this._renderCloudSyncStatus();/* IMPL-122：抽屉开着时状态行即时刷新 */
 this._renderResultStrip();
 this._archivePendingHistory();
 }
@@ -10211,7 +10231,7 @@ const oldest = tasks.reduce((a, b) => a.createdAt < b.createdAt ? a : b);
 const elapsed = Date.now() - oldest.createdAt;
 next = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
 } else {
-next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.152");
+next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.153");
 }
 if (document.title !== next) document.title = next;
 },
@@ -15492,10 +15512,38 @@ _openSettings() {
 if ($("#historySidebar")?.classList.contains("show")) this._closeHistory();
 $("#soundToggle").classList.toggle("on", Store.getSound());
 $("#cloudSyncToggle").classList.toggle("on", Store.getSync());
+const dv = $("#drawerVerBadge");/* IMPL-122：版本徽章回填（从唯一版本源 about-ver 取文本） */
+if (dv) {
+const v = document.querySelector(".about-ver")?.textContent?.trim() || "";
+if (v) { dv.textContent = v; dv.hidden = false; }
+}
+this._renderCloudSyncStatus();/* IMPL-122：每次打开抽屉刷新云同步状态行 */
 this._updateVaultStatus();
 this.renderSkillModels();
 $("#settingsDrawer").classList.add("show");
 $("#settingsOverlay").classList.add("show");
+},
+_renderCloudSyncStatus() {/* IMPL-122：云同步状态可见化——用户自查“最近结果没同步”的诊断入口（TC 不可用时此前全程静默无感知） */
+const el = $("#cloudSyncStatus");
+if (!el) return;
+const tcOk = typeof TaskCenter !== "undefined" && TaskCenter.isAvailable();
+if (!tcOk) {
+el.textContent = "未连接任务中心——最近结果暂不能跨设备同步。可在「编辑密钥」中添加 TASK_CENTER_URL 与 TASK_CENTER_TOKEN 两项并上传新密钥簿，手机解锁后即自动同步。";
+el.dataset.tone = "warn";
+el.style.display = "";
+return;
+}
+let at = "—";
+try {
+const t = parseInt(localStorage.getItem("sc_hist_sync_at") || "0", 10) || 0;
+if (t) {
+const d = Date.now() - t;
+at = d < 60e3 ? "刚刚" : d < 36e5 ? Math.floor(d / 60e3) + " 分钟前" : d < 864e5 ? Math.floor(d / 36e5) + " 小时前" : Math.floor(d / 864e5) + " 天前";
+}
+} catch (e) {}
+el.textContent = "已连接 · 云同步" + (Store.getSync() ? "开" : "关") + " · 上次云端拉取 " + at;
+el.dataset.tone = "ok";
+el.style.display = "";
 },
 _updateBudgetStatus() {
 const el = $("#budgetStatus");
@@ -20547,7 +20595,7 @@ return { open: open, close: close };
 /* ============================================================
    SvFloor —— 画布真透视地台 V2（79-a：内核整体升级为用户优化版引擎）
    ------------------------------------------------------------
-   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.152 时点）。
+   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.153 时点）。
    相比 V1（IMPL-56/69 移植的旧版）内核升级点：
      ① 落影渲染重写：5 档模糊叠加，模糊半径正比「离接触边的距离」（近实远虚）——
         faceK 面光参数 × span，近端带 FLAT=0.22 非零项（离地 lift 自身摊出的半影）；
