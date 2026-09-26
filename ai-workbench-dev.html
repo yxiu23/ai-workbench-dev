@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><!-- IMPL-115②：iOS standalone 沉浸机制——default=状态栏白色实心条压在页面顶部（内容不延伸），结果态深色网格上方永远隔一条系统白条+边缘融合渐变（用户"白黑羽化"根因之一）；black-translucent=页面内容延伸到状态栏下方、状态栏透明，iOS≥16.4 状态栏底色由 theme-color 染色+文字色系统自适应（配合 IMPL-114② 动态同步：结果态深底白字/编辑态白底黑字），iOS<16.4 恒白字（结果态深底无感，编辑态白底上时间/电量对比度低的已知权衡） -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffffff"><!-- IMPL-114②：默认=编辑态白(--bg-elev)；结果态由 __wbSyncThemeColor 动态切网格基底色——iOS standalone 把 theme-color 渲染在状态栏区（含系统边缘融合渐变），恒浅色=结果态状态栏白块+白黑过渡（用户截图实锤）；原 media 限定 light 在系统深色时整条失效 -->
-<title>修的媒体工作台 V26.9.161</title>
+<title>修的媒体工作台 V26.9.162</title>
 <link rel="icon" type="image/webp" id="faviconLink" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -620,7 +620,7 @@ to{opacity:1;transform:translateY(0)}}
    ::before/::after 释放给缩略图热区方案（见下方 .strip-thumb::after） */
 .result-panel > .strip-dock{position:relative;flex-shrink:0;margin:12px 20px 20px;border-radius:var(--radius-md) var(--radius-md) var(--radius-lg) var(--radius-lg);/* IMPL-89③：底角=radius-lg 与窗底角孔/描边弧同心同径（圆心均为窗角内缩 r），消除 dock 圆角与内框描边交叉的溢出观感 */-webkit-backdrop-filter:none;backdrop-filter:none;background:none;border:0;box-shadow:none;-webkit-backdrop-filter:none} /* IMPL-88：镂空窗左右下三边等距 20px（左右=result-scroll padding 20、底=dock margin 20），历史结果随窗上移 10px */
 .strip-dock:has(.result-strip.empty){display:none}
-.result-strip{display:flex;align-items:center;gap:12px;padding:20px 16px;overflow-x:auto;overflow-y:hidden;flex-shrink:0;position:relative;scrollbar-width:none} /* IMPL-95⑦：2.1 并回 position:relative */ /* IMPL-87：删左右 14px 渐隐；IMPL-88：删 scroll-behavior:smooth——wheel 已 rAF 合帧直写，smooth 会让每次赋值重启平滑动画再被打断=橡皮筋滞后 */
+.result-strip{display:flex;align-items:center;gap:12px;padding:30px 16px 20px;overflow-x:auto;overflow-y:hidden;flex-shrink:0;position:relative;scrollbar-width:none} /* W5 反馈⑤：顶部余量 20→30px，纸片爆开不裁切 */ /* IMPL-95⑦：2.1 并回 position:relative */ /* IMPL-87：删左右 14px 渐隐；IMPL-88：删 scroll-behavior:smooth——wheel 已 rAF 合帧直写，smooth 会让每次赋值重启平滑动画再被打断=橡皮筋滞后 */
 .result-strip.empty{display:none}
 .result-strip::-webkit-scrollbar{display:none}
 /* 77-a：地台线随玻璃托盘带一并移除（实底卡片自带边界+rim 层次，双线语义冲突） */
@@ -761,6 +761,7 @@ body[data-mview="result"] #themeCycleBtn{display:flex}
 .sv-floatbar{position:relative;display:flex;align-items:center;margin-top:0;padding:7px 12px;border-radius:999px;width:fit-content;max-width:100%;overflow-x:auto;scrollbar-width:none;/* IMPL-105⑤：窄容器内滚防溢出 */background:var(--lg-gloss),var(--surface-glass-card);border:1px solid var(--lg-edge);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--lg-slab)}.sv-floatbar::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;border-radius:1px;background:linear-gradient(90deg,transparent,rgba(var(--glass-rgb),.5) 45%,rgba(var(--glass-rgb),.34) 70%,transparent);opacity:.75;pointer-events:none}.sv-fb-sep{width:1px;height:16px;background:var(--border-soft);margin:0 3px;flex-shrink:0}
 
 .sv-hb-btn{width:36px;height:36px;border-radius:999px;border:none;background:transparent;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;color:var(--text-muted);flex-shrink:0;transition:background var(--transition),color var(--transition),transform var(--transition)}
+.sv-hb-btn .ic-on{display:none}.sv-hb-btn.on .ic-add{display:none}.sv-hb-btn.on .ic-on{display:inline-block}.sv-hb-btn.on{color:var(--brand)} /* W5 反馈③：加入多选动态图标态 */
 .sv-hb-btn:hover{background:var(--brand-soft);color:var(--brand)}
 .sv-hb-btn:active{transform:scale(.93)}
 .sv-hb-btn.danger:hover{background:var(--danger-soft);color:var(--danger)}
@@ -1038,9 +1039,9 @@ body.svf-open>.sv-fpanel{opacity:1;visibility:visible;pointer-events:auto;transf
 .rf-folder:hover .rf-paper.p3{transform:translateX(-50%) translateY(-12px) rotate(6deg)}
 .rf-folder.drag-over{transform:translateY(-6px) scale(1.05)}
 /* IMPL-142：drag-over/open 纸片上飞幅度收敛在 strip 内边距空间（≤18px），不再被 overflow 裁掉（反馈2 截断修复）；.open=展开态纸片保持绽开（反馈4） */
-.rf-folder.drag-over .rf-paper.p1,.rf-folder.open .rf-paper.p1{transform:translateX(-50%) translateX(-14px) translateY(-13px) rotate(-12deg)}
-.rf-folder.drag-over .rf-paper.p2,.rf-folder.open .rf-paper.p2{transform:translateX(-50%) translateX(7px) translateY(-15px) rotate(10deg)}
-.rf-folder.drag-over .rf-paper.p3,.rf-folder.open .rf-paper.p3{transform:translateX(-50%) translateX(-4px) translateY(-17px) rotate(4deg)}
+.rf-folder.drag-over .rf-paper.p1,.rf-folder.open .rf-paper.p1{transform:translateX(-50%) translateX(-26px) translateY(-22px) rotate(-18deg)} /* W5 反馈⑤：爆开幅度 +~70% */
+.rf-folder.drag-over .rf-paper.p2,.rf-folder.open .rf-paper.p2{transform:translateX(-50%) translateX(13px) translateY(-26px) rotate(14deg)}
+.rf-folder.drag-over .rf-paper.p3,.rf-folder.open .rf-paper.p3{transform:translateX(-50%) translateX(1px) translateY(-30px) rotate(6deg)}
 .rf-badge{position:absolute;top:-7px;right:-7px;z-index:5;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:rgb(var(--fc-rgb,var(--brand-rgb)));color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.28);pointer-events:none}
 /* IMPL-142 反馈3：常驻「新建文件夹」入口移除——拖动缩略图时结果条尾浮现幽灵目标（手机桌面成组交互），drop 即建夹 */
 .rf-ghost{width:76px;height:64px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:1.5px dashed var(--brand);border-radius:10px;color:var(--brand);font-size:10px;background:rgba(var(--brand-rgb),.07);animation:rfGhostPulse 1.2s ease-in-out infinite}
@@ -2140,7 +2141,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
     </div>
     <div class="settings-section settings-about">
       <div class="about-app">修的媒体工作台</div>
-      <span class="about-ver">V26.9.161</span>
+      <span class="about-ver">V26.9.162</span>
     </div>
   </div>
 </aside>
@@ -9844,7 +9845,7 @@ const oldest = tasks.reduce((a, b) => a.createdAt < b.createdAt ? a : b);
 const elapsed = Date.now() - oldest.createdAt;
 next = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
 } else {
-next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.161");
+next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.162");
 }
 if (document.title !== next) document.title = next;
 },
@@ -13255,20 +13256,18 @@ const navHtml = n > 1 ? `<button class="sv-nav sv-prev" data-svnav="-1" title="�
 if (isPlain) {
 /* IMPL-142 反馈1：多选批量操作组注入 sv-floatbar——独立 sel-bar 悬浮条移除，复用结果卡片下方悬浮条菜单 */
 const selN = this.state.compareList.length;
-/* IMPL-143 反馈①③④：批量组排序规约=已选徽标→放入文件夹→编辑→对比（≥2 才渲染）→下载→导出→清除；条件不允许的按钮不渲染（不出禁用灰钮） */
+/* IMPL-143 反馈①③④：批量组排序规约=已选徽标→放入文件夹→编辑→对比（≥2 才渲染）→下载；导出/清除已按 W5 反馈②移除；条件不允许的按钮不渲染（不出禁用灰钮） */
 const bFAdd = `<button class="sv-hb-btn" data-batchact="folder" title="所选收入文件夹" aria-label="所选收入文件夹"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5v10a1.5 1.5 0 0 0 1.5 1.5h14a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5h-7l-2-2.5H5A1.5 1.5 0 0 0 3.5 7.5z"/><path d="M12 11v5M9.5 13.5h5"/></svg></button>`;
 const cmpSel = selN >= 2 ? `<button class="sv-hb-btn" data-batchact="compare" title="对比所选" aria-label="对比所选"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M12 4.5v15"/></svg></button>` : "";
-const selBatch = selN ? `<span class="sv-sel-tag">已选 ${selN}</span>` + bFAdd + `<button class="sv-hb-btn" data-batchact="edit" title="所选一起放入编辑器" aria-label="批量编辑"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/><path d="M18.4 2.6a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>` + cmpSel + `<button class="sv-hb-btn" data-batchact="download" title="批量下载所选" aria-label="批量下载"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11"/><path d="M7.5 10.5L12 15l4.5-4.5"/><path d="M4.5 19.5h15"/></svg></button>` + `<button class="sv-hb-btn" data-batchact="export" title="批量导出（URL / txt / 画廊 / JSON）" aria-label="批量导出"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4"/><path d="M8 8l4-4 4 4"/><path d="M4.5 15v3.5A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5V15"/></svg></button>` + `<button class="sv-hb-btn" data-batchact="clear" title="清除多选" aria-label="清除多选"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>` + sep : "";
+const selBatch = selN ? `<span class="sv-sel-tag">已选 ${selN}</span>` + bFAdd + `<button class="sv-hb-btn" data-batchact="edit" title="所选一起放入编辑器" aria-label="批量编辑"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/><path d="M18.4 2.6a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>` + cmpSel + `<button class="sv-hb-btn" data-batchact="download" title="批量下载所选" aria-label="批量下载"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11"/><path d="M7.5 10.5L12 15l4.5-4.5"/><path d="M4.5 19.5h15"/></svg></button>` + sep : "";
 const inCompare = this.state.compareList.some(t => t.id === task.id);
 /* bDown 上移至 bDel 旁（IMPL-105⑤：非 plain 成功态也提供下载） */
-const bCopy = `<button class="sv-hb-btn" data-act="copy" title="复制链接" aria-label="复制结果URL"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9.5" y="9.5" width="11.5" height="11.5" rx="2.5"/><path d="M6.5 15H5.5A2.5 2.5 0 0 1 3 12.5v-7A2.5 2.5 0 0 1 5.5 3h7A2.5 2.5 0 0 1 15 5.5v1"/></svg></button>`;
 const bRef = `<button class="sv-hb-btn" data-act="ref" title="用作参考素材" aria-label="用作参考素材"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>`;
-const bCut = `<button class="sv-hb-btn" data-act="cutout" title="抠图此图" aria-label="抠图此图"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.8 7.7L4.6 16.9a2 2 0 0 0 2.8 2.8l9.2-9.2"/><path d="M12.5 9l2.8-2.8"/><path d="M17.5 2.8l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9z" fill="currentColor" stroke="none"/></svg></button>`;
 const bEdit = selN ? "" : `<button class="sv-hb-btn" data-act="edit" title="编辑图片" aria-label="编辑图片"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/><path d="M18.4 2.6a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>`;/* IMPL-143 反馈①：选中态隐藏——批量 edit 已覆盖（重复图标合并） */
-const bCmp = `<button class="sv-hb-btn${inCompare ? " on" : ""}" data-act="compare" title="${inCompare ? "移出多选" : "加入多选（对比/编辑/下载）"}" aria-label="加入多选"${inCompare ? ' aria-pressed="true"' : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inCompare ? '<circle cx="12" cy="12" r="9"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/>' : '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>'}</svg></button>`;/* IMPL-143 反馈①：图标改「+圈/✓圈」——消除与批量对比（对比矩形）撞图标 */
+const bCmp = `<button class="sv-hb-btn${inCompare ? " on" : ""}" data-act="compare" title="${inCompare ? "已在多选中" : "加入多选"}" aria-label="${inCompare ? "已在多选中" : "加入多选"}"${inCompare ? ' aria-pressed="true"' : ""}><svg class="ic-add" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg><svg class="ic-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/></svg></button>`;/* W5 反馈③：按钮即「加入多选」+动态图标（未选=+圈/已选=✓圈，CSS 随 .on 实时切换，双 svg 内联免 JS 重绘） */
 const bRegen = `<button class="sv-hb-btn" data-act="regen" title="重新生成" aria-label="重新生成"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 12a8.5 8.5 0 1 1-2.49-6.01"/><path d="M21 3v5h-5"/></svg></button>`;
 const bVFull = `<button class="sv-hb-btn" data-act="vfull" title="全屏播放" aria-label="全屏播放"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9"/><path d="M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9"/><path d="M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15"/><path d="M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"/></svg></button>`;
-const hbBtns = selBatch + [(selN ? "" : bDown) + bCopy + bWf, type === "image" ? bRegen + bRef + bCut + bEdit + bCmp : type === "video" ? bRegen + bRef + bVFull : bRegen + bRef].join(sep) + sep + bDel;/* IMPL-107①：视频追加全屏；IMPL-142：头部批量操作组；IMPL-143 反馈①：选中态 bDown/bEdit 隐藏（批量组覆盖，重复图标合并）、排序=批量组|多选/生成/素材|复制/工作流|删除(danger) */
+const hbBtns = selBatch + [(selN ? "" : bDown) + bWf, type === "image" ? bRegen + bRef + bEdit + bCmp : type === "video" ? bRegen + bRef + bVFull : bRegen + bRef].join(sep) + sep + bDel;/* IMPL-107①：视频追加全屏；IMPL-142：头部批量操作组；IMPL-143 反馈①：选中态 bDown/bEdit 隐藏（批量组覆盖，重复图标合并）、W5 反馈②：抠图此图/复制链接移除，排序=批量组|多选/生成/素材|工作流|删除(danger) */
 el.innerHTML = `\n      <figure class="sv-stage is-plain">\n        ${navHtml}\n        <div class="sv-caption"><span class="sv-cap-model">${esc(task.model?.name || "未命名")}</span><span class="sv-cap-time">${fmtTime(task.createdAt)}${task.batchTotal > 1 && task.batchIndex ? ` · #${task.batchIndex}/${task.batchTotal}` : ""}</span>${task.prompt ? `<span class="sv-cap-prompt" title="${esc(task.prompt)}">${esc(task.prompt)}</span>` : ""}${headMeta.length ? `<span class="sv-hb-tags">${headMeta.join("")}</span>` : ""}</div>\n        ${mediaHtml}\n        <div class="sv-floatbar" role="toolbar" aria-label="结果操作">${hbBtns}</div>\n      </figure>`;
 } else {
 const stActs = [];
@@ -13380,18 +13379,14 @@ el.querySelectorAll(".sv-hb-btn[data-act]").forEach(btn => {
 btn.addEventListener("click", e => {
 e.stopPropagation();
 const act = btn.dataset.act;
-if (act === "zoom") this._openLightboxForTask(task); else if (act === "download") this._downloadFile(task.result.url, `${task.model?.id || "workbench"}_${task.id}`); else if (act === "copy") copy(task.result.url).then(ok => ok ? Toast.success("已复制") : Toast.error("复制失败")); else if (act === "cutout") SegStudio.prefillAsModel(task); else if (act === "compare") this._toggleCompare(task); else if (act === "delete") this._deleteTask(task.id); else if (act === "ref") this._useAsReference(task.result.url, task.model?.type); else if (act === "edit") this._openEditor(task.result.url); else if (act === "vfull") VideoFS.openFromTask(task);/* IMPL-107① */ else if (act === "wf") Workflow.copy(task); else if (act === "regen") this._regen(task); else if (act === "refresh") poller.manualRefresh(task.id); else if (act === "stop") poller.manualStop(task.id); else if (act === "retry") this._retryTask(task);
+if (act === "zoom") this._openLightboxForTask(task); else if (act === "download") this._downloadFile(task.result.url, `${task.model?.id || "workbench"}_${task.id}`); else if (act === "compare") this._toggleCompare(task); else if (act === "delete") this._deleteTask(task.id); else if (act === "ref") this._useAsReference(task.result.url, task.model?.type); else if (act === "edit") this._openEditor(task.result.url); else if (act === "vfull") VideoFS.openFromTask(task);/* IMPL-107① */ else if (act === "wf") Workflow.copy(task); else if (act === "regen") this._regen(task); else if (act === "refresh") poller.manualRefresh(task.id); else if (act === "stop") poller.manualStop(task.id); else if (act === "retry") this._retryTask(task);
 });
 });
 el.querySelectorAll(".sv-hb-btn[data-batchact]").forEach(btn => { /* IMPL-142：批量操作组（sv-floatbar 复用，反馈1） */
 btn.addEventListener("click", e => {
 e.stopPropagation();
 const act = btn.dataset.batchact;
-if (act === "clear") this._clearSelection(); else if (act === "folder") this._openMoveToMenu(btn); else if (act === "compare") this._showCompareGrid(); else if (act === "download") this._downloadSelected(); else if (act === "edit") this._editSelected(); else if (act === "export") {
-const list = this.state.compareList.filter(t => t.status === "succeeded" && t.result?.url);
-if (!list.length) { Toast.warning("所选结果暂无可导出的成功项"); return; }
-this._openBatchExport(list);
-}
+if (act === "folder") this._openMoveToMenu(btn); else if (act === "compare") this._showCompareGrid(); else if (act === "download") this._downloadSelected(); else if (act === "edit") this._editSelected();/* W5 反馈②：批量导出/清除多选图标移除（减选出口=再点选中卡片，归零自动退多选模式） */
 });
 });
 const hbPrompt = el.querySelector(".sv-cap-prompt");
@@ -13716,30 +13711,32 @@ return;
 this._addUrlRef(param.key, url);
 Toast.success("已添加为参考素材");
 },
-_regen(task) {
-if (task.model?.id) {
-this.switchTab(task.model.type);
-setTimeout(() => {
-this.renderParamForm(task.model.id);
-const dec = this._decomposeGptAspect(task.model, task.body || {});
-for (const p of task.model.params) {
-if (p.type === "textarea") {
-const el = $('[data-key="' + p.key + '"]');
-if (el) el.value = task.prompt || "";
-} else if (p.type !== "ref-image" && p.type !== "ref-video" && p.type !== "ref-audio") {
-const el = $('[data-key="' + p.key + '"]');
-if (el && (task.body?.[p.key] != null || dec[p.key] != null)) {
-/* IMPL-120：dec 优先——发送 body 已剥离 aspectRatio/size（auto 缺省或 WxH 合并），
-   decompose 还原值（auto 意图 / 16:9+4K 拆解）是唯一回填来源 */
-let val = dec[p.key] ?? task.body[p.key];
-if (el.tagName === "SELECT" && p.options && !p.options.map(String).includes(String(val))) val = p.default ?? "";
-el.value = val;
+_regen(task) { /* W5 反馈②：重新生成=直接生成——不再回填表单（原 switchTab+renderParamForm 会覆盖当前表单），按原任务 body 原样重提，生成卡片即现 */
+if (task.model && task.model.seg) { /* seg 抠图模型无 Api.submit 通道，维持抠图工作台重入 */
+SegStudio.prefillAsModel(task);
+Toast.info("已带入抠图工作台，请重新发起");
+return;
 }
-}
-}
-Toast.info("参数已恢复");
-}, 50);
-}
+if (!task.model?.id) { Toast.warning("该结果缺少模型信息，无法直接重新生成"); return; }
+const newTask = {
+...task,
+id: genId(),
+status: "processing",
+createdAt: Date.now(),
+apiId: null,
+error: null
+};
+delete newTask.completedAt;
+Api.submit(task.model, task.body).then(res => {
+newTask.apiId = res.id;
+const tasks = Store.getTasks();
+tasks.unshift(newTask);
+Store.saveTasks(tasks);
+this._renderTask(newTask);
+this._renderActiveTasks();
+poller.start(newTask);
+Toast.success("已按原参数直接重新生成");
+}).catch(e => Toast.error(e.message));
 },
 _retryTask(task) {
 if (task.model && task.model.seg) { /* IMPL-104：抠图等 seg 模型无 Api 提交通道（endpoint 缺失会拼出无效 URL），转抠图工作台重入 */
@@ -13780,11 +13777,11 @@ Toast.warning(`最多选择 ${this.state.selMax} 个（滑块对比建议 2 张�
 return;
 }
 this.state.compareList.push(task);
-Toast.info(this.state.selMode ? `多选模式 · 单击加选/减选（${this.state.compareList.length}/${this.state.selMax}）` : this.state.compareList.length === 1 ? "已选中 · 打开任一结果可批量 编辑 / 对比 / 下载 / 导出" : `已选中（${this.state.compareList.length}/${this.state.selMax}）`);
+Toast.info(this.state.selMode ? `多选模式 · 单击加选/减选（${this.state.compareList.length}/${this.state.selMax}）` : this.state.compareList.length === 1 ? "已选中 · 打开任一结果可批量 编辑 / 对比 / 下载" : `已选中（${this.state.compareList.length}/${this.state.selMax}）`); /* W5 反馈②：批量导出已移除 */
 }
 this._updateStripSelStates(); this._syncCardCmpBtn(); this._refreshFloatbarSel();
 },
-_clearSelection() { /* IMPL-142：清除多选（出口=sv-floatbar 批量组「清除」） */
+_clearSelection() { /* IMPL-142 建；W5 反馈②：批量组「清除」图标已删（减选出口=再点选中卡片/入夹收纳自动清空）——方法保留供文件夹收纳流调用 */
 this.state.compareList = [];
 this.state.selMode = false;
 this._updateStripSelStates(); this._syncCardCmpBtn(); this._refreshFloatbarSel();
@@ -13808,7 +13805,7 @@ if (cmpBtn) {
 const on = this.state.compareList.some(t => t.id === this.state.singleTaskId);
 cmpBtn.classList.toggle("on", on);
 if (on) cmpBtn.setAttribute("aria-pressed", "true"); else cmpBtn.removeAttribute("aria-pressed");
-cmpBtn.title = on ? "移出多选" : "加入多选";
+cmpBtn.title = on ? "已在多选中" : "加入多选"; cmpBtn.setAttribute("aria-label", on ? "已在多选中" : "加入多选");
 }
 },
 _downloadSelected() {
@@ -13888,7 +13885,7 @@ return true;
 }
 }
 });
-if (items.length > 1) Toast.info(`已带 ${items.length} 张图请求编辑器（当前版本载入第 1 张，多图同开等编辑器更新）`, 4200);
+if (items.length > 1) Toast.info(`已把 ${items.length} 张图一起放入编辑器`, 3200); /* W5 反馈①：多图同开已落地（loadFiles 数组直载） */
 },
 /* ── IMPL-138④/142 结果文件夹（引用集合语义；IMPL-142 反馈2/3/4/5：同栏内嵌+无命名+拖拽新建+展开收敛+右键菜单） ── */
 _loadFolders() {
@@ -13910,7 +13907,7 @@ el.setAttribute("role", "button");
 el.setAttribute("aria-label", (isOpen ? "文件夹（展开中），" : "文件夹，") + f.ids.length + " 项" + (isOpen ? "，点击收起" : "，点击展开"));
 const tasks = [...Store.getTasks(), ...Store.getHistory()];
 const thumbs = f.ids.map(id => tasks.find(t => t.id === id)).filter(t => t && t.status === "succeeded" && t.result?.url).slice(0, 3);
-el.innerHTML = `<div class="rf-back"></div>` + [0, 1, 2].map(i => thumbs[i] ? `<div class="rf-paper p${i + 1}"><img src="${esc(thumbs[i].result.thumbUrl || thumbs[i].result.url)}" alt="" loading="lazy" referrerpolicy="no-referrer"></div>` : `<div class="rf-paper p${i + 1}"></div>`).join("") + `<div class="rf-front"></div><span class="rf-badge">${f.ids.length}</span>`;
+el.innerHTML = `<div class="rf-back"></div>` + [0, 1, 2].map(i => { const t = thumbs[2 - i]; return t ? `<div class="rf-paper p${i + 1}"><img src="${esc(t.result.thumbUrl || t.result.url)}" alt="" loading="lazy" referrerpolicy="no-referrer"></div>` : `<div class="rf-paper p${i + 1}"></div>`; }).join("") + `<div class="rf-front"></div><span class="rf-badge">${f.ids.length}</span>`; /* W5 反馈④：首图固定落最外层白页（p3 露白最多）——放入第 1 张即见，不再等三张 */
 el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this._toggleFolder(f.id); } });
 return el;
 },
@@ -14244,7 +14241,7 @@ tb.style.display = "flex";
    （按钮 hover 态闪断），仅类型切换（图↔音视频）时重建一次 */
 if (tb.dataset.tbKey !== ((isAudio || isVideo) ? "av" : "img")) {
 tb.dataset.tbKey = (isAudio || isVideo) ? "av" : "img";
-tb.innerHTML = (isAudio || isVideo ? "" : `\n      <div class="lb-tgroup">\n        <button class="lb-tbtn" data-lbt="zo" title="缩小" aria-label="缩小"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg></button>\n        <span class="lb-zoomval" id="lbZoomVal">100%</span>\n        <button class="lb-tbtn" data-lbt="zi" title="放大" aria-label="放大"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg></button>\n        <button class="lb-tbtn" data-lbt="fit" title="适应窗口（双击同效）" aria-label="适应窗口"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>\n        <button class="lb-tbtn" data-lbt="zr" title="原图 1:1" aria-label="原图 1:1">1:1</button>\n      </div>`) + `\n      <div class="lb-tgroup">\n        <button class="lb-tbtn" data-lbt="download" title="下载" aria-label="下载"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>\n        <button class="lb-tbtn" data-lbt="copy" title="复制 URL" aria-label="复制链接"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>\n      </div>`;
+tb.innerHTML = (isAudio || isVideo ? "" : `\n      <div class="lb-tgroup">\n        <button class="lb-tbtn" data-lbt="zo" title="缩小" aria-label="缩小"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg></button>\n        <span class="lb-zoomval" id="lbZoomVal">100%</span>\n        <button class="lb-tbtn" data-lbt="zi" title="放大" aria-label="放大"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg></button>\n        <button class="lb-tbtn" data-lbt="fit" title="适应窗口（双击同效）" aria-label="适应窗口"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg></button>\n        <button class="lb-tbtn" data-lbt="zr" title="原图 1:1" aria-label="原图 1:1">1:1</button>\n      </div>`) + `\n      <div class="lb-tgroup">\n        <button class="lb-tbtn" data-lbt="download" title="下载" aria-label="下载"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>\n      </div>`;
 }
 let scale = 1, lx = 0, ly = 0;
 const wrapEl = $("#lbContent .lb-img-wrap");
@@ -14480,7 +14477,7 @@ scale = 1;
 lx = 0;
 ly = 0;
 applyXf();
-} else if (act === "download") this._downloadFile(url, rec ? `${rec.model?.id || "workbench"}_${rec.id || ""}` : "workbench_download"); else if (act === "copy") copy(url).then(ok => ok ? Toast.success("已复制") : Toast.error("复制失败"));
+} else if (act === "download") this._downloadFile(url, rec ? `${rec.model?.id || "workbench"}_${rec.id || ""}` : "workbench_download");
 };
 },
 _lbNav(dir) {
@@ -15308,92 +15305,7 @@ img.alt = "微信支付二维码";
 img.style.cssText = "width:200px;height:200px;border-radius:14px;background:#fff";
 canvas.replaceWith(img);
 },
-_openBatchExport(items) {
-const succeeded = (items && items.length ? items : Store.getHistory().filter(h => h.status === "succeeded" && h.result?.url)).filter(h => h.status === "succeeded" && h.result?.url);
-if (!succeeded.length) {
-Toast.warning("暂无可导出的成功结果");
-return;
-}
-const scopeTag = items && items.length ? `已选 ${items.length} 项` : "全部成功结果";
-const urls = succeeded.map(h => h.result.url);
-const text = urls.join("\n");
-const sizeKB = (new Blob([ text ]).size / 1024).toFixed(1);
-const imageCount = succeeded.filter(h => h.model?.type === "image").length;
-const videoCount = succeeded.filter(h => h.model?.type === "video").length;
-const audioCount = succeeded.filter(h => h.model?.type === "audio").length;
-let html = `<div style="margin-bottom:12px;padding:12px;background:var(--surface-2);border-radius:10px"><div style="font-size:13px;color:var(--text)"><strong>${succeeded.length}</strong> 个成功结果 · <strong>${sizeKB} KB</strong> · ${esc(scopeTag)}</div><div style="font-size:11px;color:var(--text-dim);margin-top:4px">图片 ${imageCount} · 视频 ${videoCount} · 音频 ${audioCount}</div></div>`;
-html += `<div style="max-height:200px;overflow-y:auto;background:var(--surface-2);border-radius:10px;padding:10px;font-family:var(--font-mono);font-size:11px;color:var(--text-muted);line-height:1.6;white-space:pre-wrap;word-break:break-all">${esc(text)}</div>`;
-this._showModal("批量导出结果", html, [ {
-label: "复制 URL",
-primary: true,
-fn: async () => {
-const ok = await copy(text);
-Toast[ok ? "success" : "error"](ok ? `已复制 ${urls.length} 个 URL` : "复制失败");
-}
-}, {
-label: "下载 txt",
-fn: () => {
-const blob = new Blob([ text ], {
-type: "text/plain"
-});
-const a = document.createElement("a");
-a.href = URL.createObjectURL(blob);
-a.download = `results_${Date.now()}.txt`;
-a.click();
-URL.revokeObjectURL(a.href);
-Toast.success("已下载 txt");
-}
-}, {
-label: "HTML 画廊",
-fn: () => this._downloadHtmlGallery(succeeded)
-}, {
-label: "JSON 数据",
-fn: () => {
-const data = JSON.stringify(succeeded.map(h => ({
-id: h.id,
-model: h.model?.name,
-modelId: h.model?.id,
-type: h.model?.type,
-prompt: h.prompt,
-body: h.body,
-status: h.status,
-resultUrl: h.result?.url,
-createdAt: h.createdAt,
-completedAt: h.completedAt,
-cost: h.cost
-})), null, 2);
-const blob = new Blob([ data ], {
-type: "application/json"
-});
-const a = document.createElement("a");
-a.href = URL.createObjectURL(blob);
-a.download = `results_${Date.now()}.json`;
-a.click();
-URL.revokeObjectURL(a.href);
-Toast.success("已下载 JSON");
-}
-}, {
-label: "关闭",
-fn: () => this._closeModal()
-} ]);
-},
-_downloadHtmlGallery(items) {
-const galleryHtml = `<!DOCTYPE html>\n<html lang="zh-CN"><head><meta charset="UTF-8"><title>生成结果画廊</title>\n<style>\nbody { font-family: -apple-system, sans-serif; background: #0a0e18; color: #e9edf8; margin: 0; padding: 20px; }\nh1 { font-size: 18px; margin: 0 0 20px; }\n.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; }\n.card { border: 1px solid rgba(148,163,209,.14); border-radius: 12px; overflow: hidden; background: #111726; }\n.card img, .card video { width: 100%; display: block; cursor: pointer; }\n.card audio { width: 100%; padding: 10px; }\n.card-info { padding: 10px; }\n.card-model { font-size: 12px; font-weight: 600; margin-bottom: 4px; }\n.card-prompt { font-size: 11px; color: #9aa5c0; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }\n.card-time { font-size: 10px; color: #5f6b8a; margin-top: 4px; }\n.card-actions { display: flex; gap: 4px; padding: 8px; border-top: 1px solid rgba(148,163,209,.08); }\n.card-actions a { flex: 1; text-align: center; padding: 6px; border-radius: 6px; background: #3b6ef5; color: #fff; text-decoration: none; font-size: 11px; }\n</style></head><body>\n<h1>生成结果画廊（${items.length} 项）</h1>\n<div class="grid">\n${items.map(h => {
-const url = h.result.url;
-const type = h.model?.type || "image";
-const media = type === "image" ? `<img src="${esc(url)}" loading="lazy">` : type === "video" ? `<video src="${esc(url)}" controls preload="metadata"></video>` : `<audio src="${esc(url)}" controls></audio>`;
-return `<div class="card">${media}<div class="card-info"><div class="card-model">${esc(h.model?.name || "")}</div><div class="card-prompt">${esc((h.prompt || "").slice(0, 100))}</div><div class="card-time">${new Date(h.createdAt).toLocaleString("zh-CN")}</div></div><div class="card-actions"><a href="${esc(safeUrl(url))}" download>下载</a></div></div>`;
-}).join("")}\n</div>\n</body></html>`;
-const blob = new Blob([ galleryHtml ], {
-type: "text/html"
-});
-const a = document.createElement("a");
-a.href = URL.createObjectURL(blob);
-a.download = `gallery_${Date.now()}.html`;
-a.click();
-URL.revokeObjectURL(a.href);
-Toast.success("已下载 HTML 画廊");
-},
+
 _updateVaultStatus() {
 const badge = $("#vaultStateBadge");
 if (!badge) return;
@@ -16134,16 +16046,20 @@ document.addEventListener("DOMContentLoaded", () => UI.init());
 window.StudioEditor = (function() {
 let api = null, ov = null, onSaveCb = null, escHandler = null, scriptP = null;
 const STUDIO_SRC = "image-studio.js";
-/* IMPL-143 P0：位图动作模型映射表（160 指令书拍板清单）——模型一律按表；通道不通不静默 fallback（错误 Toast 明确报「服务通道未配置」）
-   抠出主体→阿里抠图专用通道（SegStudio imageseg 三级 transport）｜擦除/扩图/局部重绘/图像拆解→Qwen-Image-3.0-Pro（sf edits）｜编辑文字→GPT-Image-2.5（sf edits） */
+/* IMPL-144 W5（2026-09-26 修拍板）：位图动作全换 GPT-Image-2.5 系——覆盖 IMPL-143 版映射（变更单第一节）
+   sunburst=最强档（精细编辑/参考保真，Arena 文生图 1420.7/编辑 1520.4 双第一）→扩图/局部重绘；flare=快车道（比 GPT-Image-2 快 50%）→消除/图像拆解/编辑文字；抠出主体维持阿里抠图专用通道
+   裸名审计落账：GPT-Image-2.5 裸名非 OpenAI 正式 model id（正式 id 仅 gpt-image-2.5-flare / gpt-image-2.5-sunburst，快照 -2026-09-08）；
+   IMPL-143 edit-text 裸名条目从未真实上游验证（我方零计费 mock 实测），无既有路由证据可查——本批全部改明确变体 id，不留裸名
+   quality 策略（变更单 4.2，速创无 auto 档不传=medium）：sunburst 系显式 high（按张计费不加价）；flare 系不传 quality */
 const BITMAP_MODEL_MAP = {
   "remove-background": { channel: "ali", model: null, label: "抠出主体" },
-  erase: { channel: "sf", model: "Qwen-Image-3.0-Pro", label: "消除" },
-  outpaint: { channel: "sf", model: "Qwen-Image-3.0-Pro", label: "扩图" },
-  inpaint: { channel: "sf", model: "Qwen-Image-3.0-Pro", label: "局部重绘" },
-  "edit-text": { channel: "sf", model: "GPT-Image-2.5", label: "编辑文字" },
-  "layer-decompose": { channel: "sf", model: "Qwen-Image-3.0-Pro", label: "图像拆解", soft: true }
+  erase: { channel: "sf", model: "gpt-image-2.5-flare", label: "消除" },
+  outpaint: { channel: "sf", model: "gpt-image-2.5-sunburst", label: "扩图", quality: "high" },
+  inpaint: { channel: "sf", model: "gpt-image-2.5-sunburst", label: "局部重绘", quality: "high" },
+  "edit-text": { channel: "sf", model: "gpt-image-2.5-flare", label: "编辑文字" },
+  "layer-decompose": { channel: "sf", model: "gpt-image-2.5-flare", label: "图像拆解", soft: true }
 };
+/* 旧条目存档（IMPL-143 版，Qwen-Image-3.0-Pro，变更单第二节第 5 条允许注释保留）：erase/outpaint/inpaint/layer-decompose→Qwen-Image-3.0-Pro、edit-text→GPT-Image-2.5（裸名，作废）——回退=按本注释还原表并去掉 studioEdits 第 5 参 */
 const SF_EDIT_MODEL = "Qwen/Qwen-Image-Edit"; /* 仅表外动作兜底（映射表已覆盖全部六个内建动作） */
 function loadStudio() {
 if (window.ImageStudio && window.ImageStudio.mount) return Promise.resolve(window.ImageStudio);
@@ -16232,14 +16148,19 @@ im.onerror = function() { rej(new Error("遮罩解码失败")); };
 im.src = dataUrl;
 });
 }
-async function studioEdits(imageData, maskData, prompt, modelId) { /* IMPL-143：modelId 入参（映射表传入；缺省=SF_EDIT_MODEL 兜底） */
+async function studioEdits(imageData, maskData, prompt, modelId, extra) { /* W5：第 5 参 extra={quality,aspectRatio,resolution,economized}——速创参数面（变更单第四节）；quality 仅 sunburst 系显式 high（flare 系不传=medium）；aspectRatio/resolution 仅扩图枚举档；省流标准生成型不带 quality */
 const fd = new FormData();
 fd.append("model", modelId || SF_EDIT_MODEL);
 fd.append("prompt", prompt || "");
 fd.append("image", dataUrlToBlob(imageData), "image.png");
-if (maskData) fd.append("mask", dataUrlToBlob(maskData), "mask.png");
+if (maskData) fd.append("mask", dataUrlToBlob(maskData), "mask.png"); /* 4.3：mask 与参考图同链路上行（multipart→Worker 转存公网 URL），宿主不重复实现上传——Worker 转存覆盖 mask 字段为修侧确认项 */
 fd.append("n", "1");
 fd.append("response_format", "b64_json");
+const ex = extra || {};
+if (ex.quality) fd.append("quality", ex.quality);
+if (ex.aspectRatio) fd.append("aspectRatio", ex.aspectRatio);
+if (ex.resolution) fd.append("resolution", ex.resolution);
+if (ex.economized) fd.append("interface", "image_gpt_2.5"); /* 4.5：省流=速创标准生成型接口（doc/78，0.1 元/张）；Worker 未配置该路由→上游 4xx 明示不静默回退 */
 const r = await Api._directReq("POST", "/v1/images/edits", fd, { sf: true, timeout: 3e5 });
 const img = r && r.images && r.images[0];
 const url = img && (img.url || (img.b64_json ? "data:image/png;base64," + img.b64_json : ""));
@@ -16269,6 +16190,23 @@ const outUrl = SegStudio.resultUrlOf(res.data);
 if (!outUrl) throw new Error("阿里抠图通道未返回结果图片");
 return { assetUrl: outUrl };
 }
+function imageDimsOf(dataUrl) { /* W5 4.5：目标画布长边判定需原图尺寸（惰性解码；失败不阻塞路由——按不可判定处理不降级） */
+return new Promise(function(res) {
+const im = new Image();
+im.onload = function() { res({ w: im.naturalWidth || 0, h: im.naturalHeight || 0 }); };
+im.onerror = function() { res({ w: 0, h: 0 }); };
+im.src = dataUrl;
+});
+}
+function pickAspectTier(w, h) { /* W5 4.4：比例→速创 aspectRatio 枚举最近档；长边<1024=1K 档、<2048=2K 档、否则 4K 档（枚举集按 doc/79 常规档，字段名/枚举全集为修侧确认项） */
+if (!w || !h) return { ratio: "", tier: "", long: 0 };
+const R = ["1:1", "4:3", "3:4", "16:9", "9:16", "3:2", "2:3", "21:9", "2:1"];
+const target = w / h;
+let best = R[0], bd = Infinity;
+R.forEach(function(r) { const p = r.split(":"); const d = Math.abs(p[0] / p[1] - target); if (d < bd) { bd = d; best = r; } });
+const long = Math.max(w, h);
+return { ratio: best, tier: long < 1024 ? "1K" : long < 2048 ? "2K" : "4K", long: long };
+}
 function actName(a) { const M = { erase: "消除", outpaint: "扩图", inpaint: "局部重绘", "remove-background": "去背景", "layer-decompose": "图层分解", "edit-text": "改字" }; return (M[a] || "位图结果") + "_" + Date.now(); } /* IMPL-129③：返回契约 name —— 编辑器自动注册资产用 */
 async function bitmapHandler(e) {
 try {
@@ -16286,7 +16224,7 @@ return false;
 const needPrompt = e.action === "inpaint" || e.action === "edit-text";
 if (e.action === "erase" && !maskData) { try { Toast.warning("消除动作需要先用选区工具框选区域，再执行"); } catch (_) {} return false; } /* IMPL-129③：消除语义依赖选区，无选区整图重绘必错 */
 const req = e.buildRequest(needPrompt ? { prompt: userData } : {});
-const finalPrompt = (req && req.fields && req.fields.prompt) || userData || "";
+let finalPrompt = (req && req.fields && req.fields.prompt) || userData || ""; /* W5：let——mask 动作需追加保真约束句 */
 const imgData = await blobUrlToDataURL(e.url);
 const m = (typeof UI !== "undefined" && UI.state && UI.state.model) ? UI.state.model : null;
 const canI2I = !maskData && m && (m.direct === "sf-image" || m.direct === "ds-image");
@@ -16298,8 +16236,22 @@ if (mm && mm.channel === "ali") { const r3 = await studioAliMatting(imgData); if
 if (mm && mm.channel === "sf") {
 const sfOk = (typeof KeyVault !== "undefined" && KeyVault.keys && KeyVault.keys().API_KEY) || (typeof Store !== "undefined" && Store.getR2WorkerUrl && Store.getR2WorkerUrl());
 if (!sfOk) { try { Toast.warning(mm.label + "的服务通道未配置：缺少图像服务凭据（设置页可配置）"); } catch (_) {} return false; } /* 通道不通不静默 fallback */
-const r1 = await studioEdits(imgData, maskData, finalPrompt, mm.model); r1.name = actName(e.action);
-try { Toast.success(mm.label + " 完成 · 模型 " + mm.model); } catch (_) {}
+/* W5 路由决策（变更单第四节）：quality 策略 + mask 保真约束句 + 省流自动路由 + 每次实际路由进日志 */
+let routedModel = mm.model;
+const ex = {};
+if (mm.quality) ex.quality = mm.quality; /* 4.2：sunburst 系=high；flare 系不传（=速创默认 medium） */
+if (maskData) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + "仅修改蒙版区域内的内容，蒙版外严格保持原样"; /* 4.3：input_fidelity 速创不透传，保真唯一硬手段=mask+约束句 */
+let economized = false;
+if (e.action === "outpaint" || e.action === "layer-decompose") { /* 4.5：省流仅这两个动作 + 目标长边<1024（两条件同时满足） */
+const dims = await imageDimsOf(imgData);
+const tgt = pickAspectTier(dims.w, dims.h);
+if (e.action === "outpaint") { ex.aspectRatio = tgt.ratio; ex.resolution = tgt.tier; } /* 4.4：扩图按目标画布比例取最近枚举档（编辑器未透传绝对目标尺寸，按原图长边估档——瞳侧透出 targetSize 后精化，已落账） */
+if (tgt.long && tgt.long < 1024) { economized = true; routedModel = "gpt-image-2.5"; ex.economized = true; delete ex.quality; } /* 标准生成型无 quality 参数（doc/78） */
+}
+console.info("[W5-route]", JSON.stringify({ action: e.action, channel: "sf", model: routedModel, economized: economized, quality: ex.quality || null, aspectRatio: ex.aspectRatio || null, resolution: ex.resolution || null, mask: !!maskData, ts: Date.now() }));
+studioBusy(mm.label + " 处理中… · 模型 " + routedModel + (economized ? "（标准生成型·省流）" : "") + (ex.quality ? " · quality=" + ex.quality : "") + (ex.aspectRatio ? " · " + ex.aspectRatio + "/" + ex.resolution : ""));
+const r1 = await studioEdits(imgData, maskData, finalPrompt, routedModel, ex); r1.name = actName(e.action);
+try { Toast.success(mm.label + " 完成 · 模型 " + routedModel + (economized ? "（省流）" : "")); } catch (_) {}
 return r1;
 }
 if (maskData) { const r1 = await studioEdits(imgData, maskData, finalPrompt); r1.name = actName(e.action); return r1; } /* IMPL-129③ 契约保持 */
@@ -16359,13 +16311,18 @@ inpaint: bitmapHandler,
 },
 on: { onError: function(err) { try { Toast.error(String((err && err.message) || err)); } catch (_) {} }, close: close } /* IMPL-129②：编辑器内点 ✕ → 调用宿主 close 关闭弹窗；旧版嵌入包忽略未知键无副作用 */
 });
-if (opts.url) {
+const imgList = (opts.images && opts.images.length ? opts.images.slice(0, 12) : (opts.url ? [opts.url] : [])); /* W5 反馈①：多选一起进编辑器——images 数组逐张拉取后一次性 loadFiles（编辑器 loadFiles 原生接受数组，红线⑦未改 js） */
+if (imgList.length) {
 (async function() {
 try {
-const res = await fetch(opts.url);
+const files = [];
+for (let i = 0; i < imgList.length; i++) {
+const res = await fetch(imgList[i]);
 if (!res.ok) throw new Error("HTTP " + res.status);
 const blob = await res.blob();
-await api.loadFiles([new File([blob], "reference.png", { type: blob.type || "image/png" })]);
+files.push(new File([blob], "reference" + (i + 1) + ".png", { type: blob.type || "image/png" }));
+}
+await api.loadFiles(files);
 } catch (err) {
 try { Toast.error("图片加载失败：" + ((err && err.message) || err)); } catch (_) {}
 }
@@ -16389,7 +16346,7 @@ return { open: open, close: close };
 /* ============================================================
    SvFloor —— 画布真透视地台 V2（79-a：内核整体升级为用户优化版引擎）
    ------------------------------------------------------------
-   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.161 时点）。
+   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.162 时点）。
    相比 V1（IMPL-56/69 移植的旧版）内核升级点：
      ① 落影渲染重写：5 档模糊叠加，模糊半径正比「离接触边的距离」（近实远虚）——
         faceK 面光参数 × span，近端带 FLAT=0.22 非零项（离地 lift 自身摊出的半影）；
