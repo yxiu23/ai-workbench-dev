@@ -7,10 +7,11 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><!-- IMPL-115②：iOS standalone 沉浸机制——default=状态栏白色实心条压在页面顶部（内容不延伸），结果态深色网格上方永远隔一条系统白条+边缘融合渐变（用户"白黑羽化"根因之一）；black-translucent=页面内容延伸到状态栏下方、状态栏透明，iOS≥16.4 状态栏底色由 theme-color 染色+文字色系统自适应（配合 IMPL-114② 动态同步：结果态深底白字/编辑态白底黑字），iOS<16.4 恒白字（结果态深底无感，编辑态白底上时间/电量对比度低的已知权衡） -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffffff"><!-- IMPL-114②：默认=编辑态白(--bg-elev)；结果态由 __wbSyncThemeColor 动态切网格基底色——iOS standalone 把 theme-color 渲染在状态栏区（含系统边缘融合渐变），恒浅色=结果态状态栏白块+白黑过渡（用户截图实锤）；原 media 限定 light 在系统深色时整条失效 -->
-<title>修的媒体工作台 V26.9.162</title>
+<title>修的媒体工作台 V26.9.163</title>
 <link rel="icon" type="image/webp" id="faviconLink" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="script" href="image-studio.js">/* Z8（第六批）：编辑器内核预取（gzip≈657KB 空闲预下载；执行仍由 loadStudio 注入，二次打开走缓存） */
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&display=swap">
 <link href="https://cdn.jsdelivr.net/npm/filepond@4.31.0/dist/filepond.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.min.css" rel="stylesheet"><style>:root{color-scheme:light;--safe-top:env(safe-area-inset-top, 0px);--safe-bottom:env(safe-area-inset-bottom, 0px);--safe-left:env(safe-area-inset-left, 0px);--safe-right:env(safe-area-inset-right, 0px);--brand:#4657ea;--brand-rgb:70,87,234;--glass-rgb:255,255,255;--ink-rgb:0,0,0;--brand-hover:#3d4fe9;--brand-soft:rgba(var(--brand-rgb),.13);--brand-press:rgba(var(--brand-rgb),.24);--danger:#cc3a3a;--danger-soft:rgba(204,58,58,.11);--ink-badge:#5f5f59;--warning-ink:#8a5608; /* IMPL-104：徽章/识图小字 AA 专用墨色 */ /* IMPL-102：严格 AA 补齐（94e 六对遗漏 danger），soft 同步基色 */--success:#177e58;--success-soft:rgba(23,126,88,.12);--warning:#9d6209;--warning-soft:rgba(157,98,9,.12);--radius-sm:10px;--radius-md:15px;--radius-lg:20px;--radius-ctrl:12px;--spring:cubic-bezier(.34, 1.36, .44, 1);--spring-soft:cubic-bezier(.32, 1.08, .44, 1);--transition:240ms cubic-bezier(.34,.72,.24,1) /* IMPL-95⑦：--spring 系自文末补丁带归位 */;--transition-fast:150ms cubic-bezier(.34,.72,.24,1);--font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;--font-mono:"SF Mono",Menlo,Monaco,Consolas,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",monospace;--gold:#d9b06a;--font-serif:"Noto Serif SC","Source Han Serif SC","思源宋体","Songti SC","STSong","SimSun",serif;--edge-border-grad:linear-gradient(168deg, rgba(28,28,26,.10) 0%, rgba(28,28,26,.10) 100%);--hl-inset:rgba(255,255,255,0);--sh-inset:rgba(28,28,26,.03)}
@@ -1014,7 +1015,7 @@ body.svf-open>.sv-fpanel{opacity:1;visibility:visible;pointer-events:auto;transf
 .sv-nav{display:none;width:36px;height:36px;font-size:17px}
 .sv-model{max-width:34%}}
 /* ── IMPL-142 反馈1：独立 sel-bar 悬浮条移除——多选批量操作组直接注入结果卡片下方 .sv-floatbar（已选徽标=品牌胶囊） ── */
-.sv-sel-tag{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;background:var(--brand);color:#fff;font-size:12px;font-weight:600;white-space:nowrap;flex-shrink:0;letter-spacing:.02em}
+.sv-sel-tag{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;background:var(--brand);color:#fff;font-size:12px;font-weight:600;white-space:nowrap;flex-shrink:0;letter-spacing:.02em;cursor:pointer;transition:filter .15s ease}.sv-sel-tag[data-batchact]:hover{filter:brightness(1.15)}.sv-sel-tag[data-batchact]:focus-visible{outline:2px solid #fff;outline-offset:1px}/* Z4（第六批）：徽标可点击=取消全部多选 */
 /* ── IMPL-138② strip-thumb 多选选中态（IMPL-143 反馈⑤：左上蓝色圆点移除——选中视觉=上浮+品牌描边+品牌薄雾） ── */
 .result-strip .strip-thumb.selected{transform:translateY(-4px);box-shadow:0 5px 10px rgba(var(--brand-rgb),.30),0 2px 6px rgba(28,28,26,.14)}
 .result-strip .strip-thumb.selected::before{opacity:1;border-width:2px}
@@ -2141,7 +2142,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
     </div>
     <div class="settings-section settings-about">
       <div class="about-app">修的媒体工作台</div>
-      <span class="about-ver">V26.9.162</span>
+      <span class="about-ver">V26.9.163</span>
     </div>
   </div>
 </aside>
@@ -9845,7 +9846,7 @@ const oldest = tasks.reduce((a, b) => a.createdAt < b.createdAt ? a : b);
 const elapsed = Date.now() - oldest.createdAt;
 next = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
 } else {
-next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.162");
+next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.163");
 }
 if (document.title !== next) document.title = next;
 },
@@ -13259,7 +13260,7 @@ const selN = this.state.compareList.length;
 /* IMPL-143 反馈①③④：批量组排序规约=已选徽标→放入文件夹→编辑→对比（≥2 才渲染）→下载；导出/清除已按 W5 反馈②移除；条件不允许的按钮不渲染（不出禁用灰钮） */
 const bFAdd = `<button class="sv-hb-btn" data-batchact="folder" title="所选收入文件夹" aria-label="所选收入文件夹"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5v10a1.5 1.5 0 0 0 1.5 1.5h14a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5h-7l-2-2.5H5A1.5 1.5 0 0 0 3.5 7.5z"/><path d="M12 11v5M9.5 13.5h5"/></svg></button>`;
 const cmpSel = selN >= 2 ? `<button class="sv-hb-btn" data-batchact="compare" title="对比所选" aria-label="对比所选"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M12 4.5v15"/></svg></button>` : "";
-const selBatch = selN ? `<span class="sv-sel-tag">已选 ${selN}</span>` + bFAdd + `<button class="sv-hb-btn" data-batchact="edit" title="所选一起放入编辑器" aria-label="批量编辑"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/><path d="M18.4 2.6a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>` + cmpSel + `<button class="sv-hb-btn" data-batchact="download" title="批量下载所选" aria-label="批量下载"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11"/><path d="M7.5 10.5L12 15l4.5-4.5"/><path d="M4.5 19.5h15"/></svg></button>` + sep : "";
+const selBatch = selN ? `<span class="sv-sel-tag" data-batchact="clearsel" role="button" tabindex="0" title="点击取消全部选择" aria-label="已选 ${selN}，点击取消全部选择">已选 ${selN}</span>` + bFAdd + `<button class="sv-hb-btn" data-batchact="edit" title="所选一起放入编辑器" aria-label="批量编辑"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/><path d="M18.4 2.6a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>` + cmpSel + `<button class="sv-hb-btn" data-batchact="download" title="批量下载所选" aria-label="批量下载"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11"/><path d="M7.5 10.5L12 15l4.5-4.5"/><path d="M4.5 19.5h15"/></svg></button>` + sep : "";
 const inCompare = this.state.compareList.some(t => t.id === task.id);
 /* bDown 上移至 bDel 旁（IMPL-105⑤：非 plain 成功态也提供下载） */
 const bRef = `<button class="sv-hb-btn" data-act="ref" title="用作参考素材" aria-label="用作参考素材"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>`;
@@ -13382,11 +13383,11 @@ const act = btn.dataset.act;
 if (act === "zoom") this._openLightboxForTask(task); else if (act === "download") this._downloadFile(task.result.url, `${task.model?.id || "workbench"}_${task.id}`); else if (act === "compare") this._toggleCompare(task); else if (act === "delete") this._deleteTask(task.id); else if (act === "ref") this._useAsReference(task.result.url, task.model?.type); else if (act === "edit") this._openEditor(task.result.url); else if (act === "vfull") VideoFS.openFromTask(task);/* IMPL-107① */ else if (act === "wf") Workflow.copy(task); else if (act === "regen") this._regen(task); else if (act === "refresh") poller.manualRefresh(task.id); else if (act === "stop") poller.manualStop(task.id); else if (act === "retry") this._retryTask(task);
 });
 });
-el.querySelectorAll(".sv-hb-btn[data-batchact]").forEach(btn => { /* IMPL-142：批量操作组（sv-floatbar 复用，反馈1） */
+el.querySelectorAll(".sv-hb-btn[data-batchact], .sv-sel-tag[data-batchact]").forEach(btn => { /* IMPL-142：批量操作组（sv-floatbar 复用，反馈1）；Z4（第六批）：sel-tag 徽标纳入委托=点击取消全部多选 */
 btn.addEventListener("click", e => {
 e.stopPropagation();
 const act = btn.dataset.batchact;
-if (act === "folder") this._openMoveToMenu(btn); else if (act === "compare") this._showCompareGrid(); else if (act === "download") this._downloadSelected(); else if (act === "edit") this._editSelected();/* W5 反馈②：批量导出/清除多选图标移除（减选出口=再点选中卡片，归零自动退多选模式） */
+if (act === "clearsel") { this._clearSelection(); try { Toast.info("已取消全部选择"); } catch (_) {} return; } else if (act === "folder") this._openMoveToMenu(btn); else if (act === "compare") this._showCompareGrid(); else if (act === "download") this._downloadSelected(); else if (act === "edit") this._editSelected();/* W5 反馈②：批量导出/清除多选图标移除（减选出口=再点选中卡片/点徽标，归零自动退多选模式） */
 });
 });
 const hbPrompt = el.querySelector(".sv-cap-prompt");
@@ -13573,7 +13574,12 @@ this._toggleSelect(task);
 if (task.status === "succeeded" && task.result?.url && !noDrag) {
 th.draggable = true;
 th.addEventListener("dragstart", e => {
-try { e.dataTransfer.setData("application/x-wb-task", task.id); e.dataTransfer.setData("text/plain", task.id); e.dataTransfer.effectAllowed = "copy"; } catch (err) {}
+try {
+e.dataTransfer.setData("application/x-wb-task", task.id); e.dataTransfer.setData("text/plain", task.id);
+const inSel = this.state.compareList.some(t => t.id === task.id); /* Z2（第六批）：uri-list 载荷（T2 契约，拖进画板即通）——多选拖拽=选中集整组 url（\n 多值标准形式），单拖=本卡 url */
+const dragUrls = (inSel && this.state.compareList.length > 1 ? this.state.compareList : [task]).map(t => t.result && t.result.url).filter(Boolean).join("\n");
+if (dragUrls) e.dataTransfer.setData("text/uri-list", dragUrls);
+e.dataTransfer.effectAllowed = "copy"; } catch (err) {}
 th.classList.add("dragging");
 this._showStripGhost();
 });
@@ -13845,38 +13851,20 @@ url: urls[0],
 images: urls,
 onSave: (dataURL, w, h) => {
 try {
-const refParam = model?.params?.find(p => p.type === "ref-image" && !isFrameKey(p.key)) || model?.params?.find(p => p.type === "ref-image");
-if (!refParam) {
-Toast.warning("当前模型不支持参考图");
-return true;
-}
-if (first && /^https?:\/\//.test(first)) {
-this._addUrlRef(refParam.key, first);
-}
-const item = {
+/* Z5（第六批）：「应用到节点」结果落结果区（修拍板）——不再写参考图区、不再回填原图、不再拼参考图提示词前缀 */
+const card = {
 id: genId(),
-kind: "local",
-src: dataURL,
-name: "编辑图_" + Date.now() + ".png",
-uploaded: false,
-remote: null
+model: { type: "image", name: (model && model.name) || "编辑器", id: "studio-apply" },
+prompt: "编辑器应用到节点",
+status: "succeeded",
+result: { url: dataURL, thumbUrl: dataURL },
+createdAt: Date.now(),
+completedAt: Date.now()
 };
-this._getRefs(refParam.key).push(item);
-this._renderRefGrid(refParam.key);
-const promptEl = $('[data-key="prompt"], [data-key="text"]') || document.querySelector("#promptInput") || document.querySelector('textarea[data-key="prompt"]');
-if (promptEl) {
-const prefix = "图1为原图，图2为编辑后的参考图，请根据图2的效果进行如下修改：";
-const existing = promptEl.value || "";
-if (!existing.startsWith(prefix)) {
-promptEl.value = prefix + existing;
-this._onPromptInput && this._onPromptInput(promptEl);
-promptEl.dispatchEvent(new Event("input", {
-bubbles: true
-}));
-}
-}
-Toast.success("编辑图已添加到参考图，正在后台上传...");
-this._uploadLocalImage(refParam.key, item);
+Store.addHistory(card);
+this._renderResultStrip();
+this._preloadResult(card).catch(() => {}); /* dataURL 后台转存（_archiveResult 门控 sync+凭据，同直连/同步补转存链） */
+Toast.success("已保存到结果区");
 return true;
 } catch (err) {
 console.error("onSave内部错误:", err.message, err.stack);
@@ -15803,6 +15791,12 @@ if (!target) return;
 const key = target.dataset.refGrid;
 const param = this.state.model.params.find(p => p.key === key);
 if (!param) return;
+const uriRaw = e.dataTransfer.getData("text/uri-list"); /* Z3（第六批）：uri-list 多值（\n 分隔，# 注释行跳过）——多选图一起拖入参考图区逐张入网格 */
+const uriList = (uriRaw || "").split(/\r?\n/).map(x => x.trim()).filter(x => x && !x.startsWith("#") && /^https?:\/\//.test(x));
+if (uriList.length) {
+uriList.forEach(u => this._addUrlRef(key, u));
+return;
+}
 const url = e.dataTransfer.getData("text/plain");
 if (url && /^https?:\/\//.test(url)) {
 this._addUrlRef(key, url);
@@ -15845,38 +15839,20 @@ window.StudioEditor.open({
 url: imgUrl,
 onSave: (dataURL, w, h) => {
 try {
-const refParam = model?.params?.find(p => p.type === "ref-image" && !isFrameKey(p.key)) || model?.params?.find(p => p.type === "ref-image");
-if (!refParam) {
-Toast.warning("当前模型不支持参考图");
-return true;
-}
-if (url && /^https?:\/\//.test(url)) {
-this._addUrlRef(refParam.key, url);
-}
-const item = {
+/* Z5（第六批）：「应用到节点」结果落结果区（修拍板）——不再写参考图区、不再回填原图、不再拼参考图提示词前缀 */
+const card = {
 id: genId(),
-kind: "local",
-src: dataURL,
-name: "编辑图_" + Date.now() + ".png",
-uploaded: false,
-remote: null
+model: { type: "image", name: (model && model.name) || "编辑器", id: "studio-apply" },
+prompt: "编辑器应用到节点",
+status: "succeeded",
+result: { url: dataURL, thumbUrl: dataURL },
+createdAt: Date.now(),
+completedAt: Date.now()
 };
-this._getRefs(refParam.key).push(item);
-this._renderRefGrid(refParam.key);
-const promptEl = $('[data-key="prompt"], [data-key="text"]') || document.querySelector("#promptInput") || document.querySelector('textarea[data-key="prompt"]');
-if (promptEl) {
-const prefix = "图1为原图，图2为编辑后的参考图，请根据图2的效果进行如下修改：";
-const existing = promptEl.value || "";
-if (!existing.startsWith(prefix)) {
-promptEl.value = prefix + existing;
-this._onPromptInput && this._onPromptInput(promptEl);
-promptEl.dispatchEvent(new Event("input", {
-bubbles: true
-}));
-}
-}
-Toast.success("编辑图已添加到参考图，正在后台上传...");
-this._uploadLocalImage(refParam.key, item);
+Store.addHistory(card);
+this._renderResultStrip();
+this._preloadResult(card).catch(() => {}); /* dataURL 后台转存（_archiveResult 门控 sync+凭据，同直连/同步补转存链） */
+Toast.success("已保存到结果区");
 return true;
 } catch (err) {
 console.error("onSave内部错误:", err.message, err.stack);
@@ -16081,6 +16057,7 @@ return scriptP;
 window.StudioEditorPreload = loadStudio; /* 预加载句柄（幂等）：可在 hover / 空闲时提前拉取 */
 function close() {
 if (api) { try { api.destroy(); } catch (e) {} api = null; }
+const ip = document.getElementById("studioInlinePrompt"); if (ip && ip._resolve) { try { ip._resolve(""); } catch (e) {} } /* Z6：编辑器关闭时输入条在场=取消（Promise 收口防挂起） */
 if (ov) { ov.remove(); ov = null; }
 if (escHandler) { document.removeEventListener("keydown", escHandler, true); escHandler = null; }
 onSaveCb = null;
@@ -16095,6 +16072,30 @@ r.readAsDataURL(f);
 }
 async function handleApply(p) {
 try {
+if (p && Array.isArray(p.files) && p.files.length > 1) { /* Z10（第六批·附录A）：目标节点>1 逐张产物 files[]——一次落成一组结果并整组入夹（p.files 缺失走单图 onSaveCb 原行为，向后兼容） */
+const cards = [];
+for (const f of p.files) {
+if (!f || !f.file) continue;
+const du = await fileToDataURL(f.file);
+cards.push({
+id: genId(),
+model: { type: "image", name: "编辑器应用", id: "studio-apply" },
+prompt: "编辑器应用到节点" + (p.nodeIds && p.nodeIds.length ? " · " + p.nodeIds.length + " 节点" : ""),
+status: "succeeded",
+result: { url: du, thumbUrl: du },
+createdAt: Date.now(),
+completedAt: Date.now()
+});
+}
+if (!cards.length) { try { Toast.warning("未收到可落位的多图产物"); } catch (_) {} return false; }
+cards.forEach(c => Store.addHistory(c));
+const ids = cards.map(c => c.id);
+if (typeof UI !== "undefined" && UI.state && UI.state.openFolderId) UI._folderAddMulti(UI.state.openFolderId, ids); else if (typeof UI !== "undefined") UI._folderCreateWithMulti(ids); /* Z10：整组入夹（有展开夹入展开夹，否则新建一夹收纳） */
+if (typeof UI !== "undefined") UI._renderResultStrip();
+try { Toast.success("已保存 " + cards.length + " 张到结果区（同组入夹）"); } catch (_) {}
+close();
+return true;
+}
 const dataURL = await fileToDataURL(p.file);
 const keep = onSaveCb ? (onSaveCb(dataURL, p.width || 0, p.height || 0) !== false) : true;
 if (keep) close();
@@ -16174,6 +16175,30 @@ const t = b.querySelector(".studioBusyText");
 if (t) t.textContent = text || "";
 b.hidden = !text;
 }
+function studioInlinePrompt(label) { /* Z6（第六批）：编辑器内就地提示词输入条（hostPrompt 为空时 inpaint/edit-text 就地输入；studioBusy 同层位置；Esc 语义不变——关闭编辑器由 close 清理条目并取消） */
+return new Promise(function(resolve) {
+const modal = document.getElementById("studioModal");
+if (!modal) { resolve(""); return; }
+const bar = document.createElement("div");
+bar.id = "studioInlinePrompt";
+bar.setAttribute("role", "dialog");
+bar.setAttribute("aria-label", label + "提示词输入");
+bar.style.cssText = "position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:8px;padding:8px 10px 8px 14px;border-radius:999px;background:rgba(16,17,18,.92);border:1px solid rgba(255,255,255,.18);box-shadow:0 6px 20px rgba(0,0,0,.4);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);max-width:92%";
+bar.innerHTML = '<span style="color:#e9e9e7;font-size:12px;white-space:nowrap">' + label + '提示词</span>'
++ '<input id="studioInlineInput" type="text" placeholder="描述要修改的内容…" aria-label="提示词" style="width:min(320px,42vw);height:28px;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:12px;padding:0 12px;outline:none" />'
++ '<button id="studioInlineOk" type="button" style="height:28px;padding:0 14px;border-radius:999px;border:none;background:var(--brand,#a78bfa);color:#fff;font-size:12px;font-weight:600;cursor:pointer">确定</button>'
++ '<button id="studioInlineNo" type="button" style="height:28px;padding:0 12px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#bbb;font-size:12px;cursor:pointer">取消</button>';
+modal.appendChild(bar);
+const inp = bar.querySelector("#studioInlineInput");
+let done = false;
+const finish = v => { if (done) return; done = true; if (bar.parentNode) bar.remove(); resolve(v); };
+bar._resolve = v => finish(String(v || "").trim());
+bar.querySelector("#studioInlineOk").addEventListener("click", () => finish(String(inp.value || "").trim()));
+bar.querySelector("#studioInlineNo").addEventListener("click", () => finish(""));
+inp.addEventListener("keydown", ev => { if (ev.key === "Enter") { ev.preventDefault(); finish(String(inp.value || "").trim()); } });
+setTimeout(function() { try { inp.focus(); } catch (e) {} }, 30);
+});
+}
 async function studioAliMatting(imgData) { /* IMPL-143 P0：remove-background → 阿里抠图专用通道（stageImage→probeSize→pickAction→_call；凭据=IMAGESEG_AK/SK，缺=Toast 通道未配置不静默回退） */
 if (!(Store.getSegAk() && Store.getSegSk())) { try { Toast.warning("抠出主体的服务通道未配置：请先在设置页解锁阿里云密钥（IMAGESEG_AK/SK）"); } catch (_) {} return false; }
 const staged = await SegStudio.stageImage(imgData, null, {});
@@ -16216,10 +16241,10 @@ let maskData = maskObj ? (maskObj.dataUrl || null) : null; /* ★ mask: e.mask?.
 const ruleTop = (e.maskRule === "alpha-transparent" || e.maskRule === "luma-white") ? e.maskRule : null;
 const maskMode = maskObj ? (maskObj.maskMode || ruleTop || "alpha-transparent") : "alpha-transparent";
 if (maskData && maskMode === "luma-white") maskData = await invertMaskToAlpha(maskData);
-const userData = hostPrompt();
-if ((e.action === "inpaint" || e.action === "edit-text") && !userData) {
-try { Toast.warning("请先在工作台输入框填写提示词，再执行该动作"); } catch (_) {}
-return false;
+let userData = hostPrompt();
+if ((e.action === "inpaint" || e.action === "edit-text") && !userData) { /* Z6（第六批）：宿主输入框为空 → 编辑器内就地输入条（官方案定：prompt 由嵌入方传入，替掉工作台硬门禁） */
+userData = await studioInlinePrompt(e.action === "inpaint" ? "局部重绘" : "编辑文字");
+if (!userData) { try { Toast.info("已取消：未填写提示词"); } catch (_) {} return false; }
 }
 const needPrompt = e.action === "inpaint" || e.action === "edit-text";
 if (e.action === "erase" && !maskData) { try { Toast.warning("消除动作需要先用选区工具框选区域，再执行"); } catch (_) {} return false; } /* IMPL-129③：消除语义依赖选区，无选区整图重绘必错 */
@@ -16267,8 +16292,12 @@ const r2 = await studioEdits(imgData, null, finalPrompt); r2.name = actName(e.ac
 } catch (err) {
 console.error("[StudioEditor] 位图动作失败:", err);
 const rawMsg = String((err && err.message) || err);
+const m9 = /HTTP\s+(\d{3})/.exec(rawMsg); const st = (err && err.status) || (m9 ? parseInt(m9[1], 10) : 0); /* Z9（第六批）：Api.request 抛错 Object.assign 附着 err.status */
 const mmL = (typeof BITMAP_MODEL_MAP !== "undefined" && BITMAP_MODEL_MAP[e.action] || {}).label || "位图动作";
-if (/HTTP\s+4\d\d/i.test(rawMsg)) { try { Toast.error(mmL + "的服务通道未配置或上游不可用（" + rawMsg.slice(0, 90) + "）——已按规约不静默回退"); } catch (_) {} }
+if (st === 401) { try { Toast.error(mmL + "的服务未授权（HTTP 401）：Worker 令牌无效或未配置——请到设置页检查 R2 Worker 地址与 Token（不静默回退）"); } catch (_) {} }
+else if (st === 404) { try { Toast.error(mmL + "的服务通道未部署（HTTP 404）：sf 编辑路由/模型白名单未覆盖该模型——已按规约不静默回退"); } catch (_) {} }
+else if (st >= 400 && st < 500) { try { Toast.error(mmL + "的服务通道未配置或上游不可用（HTTP " + st + "）——已按规约不静默回退"); } catch (_) {} }
+else if (/HTTP\s+4\d\d/i.test(rawMsg)) { try { Toast.error(mmL + "的服务通道未配置或上游不可用（" + rawMsg.slice(0, 90) + "）——已按规约不静默回退"); } catch (_) {} }
 else { try { Toast.error("位图动作失败: " + rawMsg); } catch (_) {} }
 return false;
 } finally { studioBusy(""); } /* IMPL-143 P2：无论成败收反馈条 */
@@ -16286,7 +16315,7 @@ ov.innerHTML = '<div class="studioModal" id="studioModal" role="dialog" aria-mod
 + '<div id="image-studio-root"><div class="studioLoading" role="status" aria-live="polite"><span class="studioLoadingSpin"></span>编辑器加载中…</div></div></div>';
 document.body.appendChild(ov);
 ov.querySelector(".studioClose").addEventListener("click", close);
-ov.addEventListener("pointerdown", function(e) { if (e.target === ov) close(); });
+/* Z1（第六批）：点遮罩空白不再关闭编辑器（修拍板）——原 pointerdown 关闭监听已删；✕ 与 Esc 关闭保留 */
 escHandler = function(e) { if (e.key === "Escape") { e.stopPropagation(); close(); } };
 document.addEventListener("keydown", escHandler, true);
 const myOv = ov; /* 连续开关守卫：挂起的 loadStudio 只服务当次弹框 */
@@ -16346,7 +16375,7 @@ return { open: open, close: close };
 /* ============================================================
    SvFloor —— 画布真透视地台 V2（79-a：内核整体升级为用户优化版引擎）
    ------------------------------------------------------------
-   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.162 时点）。
+   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.163 时点）。
    相比 V1（IMPL-56/69 移植的旧版）内核升级点：
      ① 落影渲染重写：5 档模糊叠加，模糊半径正比「离接触边的距离」（近实远虚）——
         faceK 面光参数 × span，近端带 FLAT=0.22 非零项（离地 lift 自身摊出的半影）；
