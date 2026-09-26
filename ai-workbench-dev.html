@@ -7,11 +7,11 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><!-- IMPL-115②：iOS standalone 沉浸机制——default=状态栏白色实心条压在页面顶部（内容不延伸），结果态深色网格上方永远隔一条系统白条+边缘融合渐变（用户"白黑羽化"根因之一）；black-translucent=页面内容延伸到状态栏下方、状态栏透明，iOS≥16.4 状态栏底色由 theme-color 染色+文字色系统自适应（配合 IMPL-114② 动态同步：结果态深底白字/编辑态白底黑字），iOS<16.4 恒白字（结果态深底无感，编辑态白底上时间/电量对比度低的已知权衡） -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffffff"><!-- IMPL-114②：默认=编辑态白(--bg-elev)；结果态由 __wbSyncThemeColor 动态切网格基底色——iOS standalone 把 theme-color 渲染在状态栏区（含系统边缘融合渐变），恒浅色=结果态状态栏白块+白黑过渡（用户截图实锤）；原 media 限定 light 在系统深色时整条失效 -->
-<title>修的媒体工作台 V26.9.163</title>
+<title>修的媒体工作台 V26.9.165</title>
 <link rel="icon" type="image/webp" id="faviconLink" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="script" href="image-studio.js">/* Z8（第六批）：编辑器内核预取（gzip≈657KB 空闲预下载；执行仍由 loadStudio 注入，二次打开走缓存） */
+<link rel="preload" as="script" href="image-studio.js"><!-- Z8（第六批）：编辑器内核预取（gzip≈657KB 空闲预下载；执行仍由 loadStudio 注入，二次打开走缓存）。Z14（第七批）：原行尾 /* */ 写法是 JS 注释而非 HTML 注释，解析器当正文处理致 head 提前闭合、该文字成 body 首节点，改 HTML 注释；preload 本体保留 -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@600;700&display=swap">
 <link href="https://cdn.jsdelivr.net/npm/filepond@4.31.0/dist/filepond.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.min.css" rel="stylesheet"><style>:root{color-scheme:light;--safe-top:env(safe-area-inset-top, 0px);--safe-bottom:env(safe-area-inset-bottom, 0px);--safe-left:env(safe-area-inset-left, 0px);--safe-right:env(safe-area-inset-right, 0px);--brand:#4657ea;--brand-rgb:70,87,234;--glass-rgb:255,255,255;--ink-rgb:0,0,0;--brand-hover:#3d4fe9;--brand-soft:rgba(var(--brand-rgb),.13);--brand-press:rgba(var(--brand-rgb),.24);--danger:#cc3a3a;--danger-soft:rgba(204,58,58,.11);--ink-badge:#5f5f59;--warning-ink:#8a5608; /* IMPL-104：徽章/识图小字 AA 专用墨色 */ /* IMPL-102：严格 AA 补齐（94e 六对遗漏 danger），soft 同步基色 */--success:#177e58;--success-soft:rgba(23,126,88,.12);--warning:#9d6209;--warning-soft:rgba(157,98,9,.12);--radius-sm:10px;--radius-md:15px;--radius-lg:20px;--radius-ctrl:12px;--spring:cubic-bezier(.34, 1.36, .44, 1);--spring-soft:cubic-bezier(.32, 1.08, .44, 1);--transition:240ms cubic-bezier(.34,.72,.24,1) /* IMPL-95⑦：--spring 系自文末补丁带归位 */;--transition-fast:150ms cubic-bezier(.34,.72,.24,1);--font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;--font-mono:"SF Mono",Menlo,Monaco,Consolas,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",monospace;--gold:#d9b06a;--font-serif:"Noto Serif SC","Source Han Serif SC","思源宋体","Songti SC","STSong","SimSun",serif;--edge-border-grad:linear-gradient(168deg, rgba(28,28,26,.10) 0%, rgba(28,28,26,.10) 100%);--hl-inset:rgba(255,255,255,0);--sh-inset:rgba(28,28,26,.03)}
@@ -1420,7 +1420,7 @@ from{opacity:0}}
 .stats-mtab{flex:1;text-align:center;padding:6px 0}}
 @media (prefers-reduced-motion: reduce){
 .trend-area,.donut-seg,.au-bar i{animation:none}}
-.toast-container{position:fixed;top:70px;right:16px;z-index:100001;display:flex;flex-direction:column;gap:8px;pointer-events:none}/* IMPL-138①：90→100001 盖过 .studioOverlay(99999)+blur 遮罩——编辑器打开时宿主 Toast 可见（修侧实测⑤ P0） */
+.toast-container{position:fixed;top:70px;right:16px;z-index:100001;display:flex;flex-direction:column;gap:8px;pointer-events:none}/* IMPL-138①：90→100001 盖过 .studioOverlay(99999)——编辑器打开时宿主 Toast 可见（修侧实测⑤ P0；Z13 后遮罩已无 blur/变暗） */
 .toast{padding:10px 14px;border-radius:var(--radius-md);background:var(--bg-elev);border:1px solid var(--border);box-shadow:var(--shadow-lg);font-size:13px;max-width:320px;pointer-events:auto;display:flex;align-items:center;gap:8px;animation:toast-in 280ms cubic-bezier(.32,.72,0,1)}
 .toast.success{border-color:var(--success);border-color:color-mix(in srgb, var(--success) 55%, var(--border))}
 .toast.error{border-color:var(--danger);border-color:color-mix(in srgb, var(--danger) 55%, var(--border))}
@@ -1781,7 +1781,7 @@ from{opacity:0;transform:translateY(6px) scale(.94)}}
 .sv-docklayer .sv-floatbar,.sv-caplayer .sv-caption,.sv-wrap,.lb-stage,.file-mode-hint,.toast,.undo-btn,.modal-overlay.show,.modal-content,.quick-starts .qs-chip,.ping-dot,.lb-progress::before{animation:none}}
 
 /* ==================== IMPL-126：图片工作台弹框壳样式（内核已外链 image-studio.js，Shadow DOM 自带样式） ==================== */
-.studioOverlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(10,12,18,.60) /* IMPL-129①：22px→12px */;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);animation:studioFade .18s ease}
+.studioOverlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px;animation:studioFade .18s ease}/* Z13（第七批）：删变暗+模糊三属性（原 background:rgba(10,12,18,.60) 与 -webkit-backdrop-filter/backdrop-filter blur(10px)）——背后工作台亮度与清晰度和打开前完全一致，编辑器「浮」于页面上；遮罩层保留负责居中；Z1 已删点外关闭监听，透明遮罩无误关风险 */
 .studioOverlay[hidden]{display:none}
 @keyframes studioFade{from{opacity:0}to{opacity:1}}
 .studioModal{position:relative;width:min(1720px,96vw);height:min(1080px,95vh) /* IMPL-129①：官方期望上限 min(95vw,1720px)×min(92vh,1080px)，旧值砍掉 542px 宽 */;border-radius:16px;overflow:hidden;box-shadow:0 30px 96px rgba(0,0,0,.55),0 3px 12px rgba(0,0,0,.30);background:#101112;display:flex;flex-direction:column;animation:studioPop .24s cubic-bezier(.32,1.08,.44,1)}
@@ -2142,7 +2142,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
     </div>
     <div class="settings-section settings-about">
       <div class="about-app">修的媒体工作台</div>
-      <span class="about-ver">V26.9.163</span>
+      <span class="about-ver">V26.9.165</span>
     </div>
   </div>
 </aside>
@@ -9846,7 +9846,7 @@ const oldest = tasks.reduce((a, b) => a.createdAt < b.createdAt ? a : b);
 const elapsed = Date.now() - oldest.createdAt;
 next = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
 } else {
-next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.163");
+next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.165");
 }
 if (document.title !== next) document.title = next;
 },
@@ -16325,7 +16325,7 @@ if (ov !== myOv) return;
 const loadingEl = myOv.querySelector(".studioLoading");
 if (loadingEl) loadingEl.remove();
 api = ImageStudio.mount(host, {
-theme: "dark",
+theme: (function() { try { return localStorage.getItem("sc_studio_theme") || "light"; } catch (_) { return "light"; } })(), /* Z12（第七批）：读缓存缺省浅色——首次打开=浅色；用户在编辑器内切换经 onThemeChange 写回缓存，下次打开沿用（getTheme 可作宿主查询兑底，本处缓存空时缺省与契约一致无需用） */
 layout: "fill", /* ★ 嵌入形态：填满卡片内部，不盖整页 */
 adapter: {
 applyToNode: function(p) { return handleApply(p); },
@@ -16338,16 +16338,36 @@ inpaint: bitmapHandler,
 "edit-text": bitmapHandler
 }
 },
-on: { onError: function(err) { try { Toast.error(String((err && err.message) || err)); } catch (_) {} }, close: close } /* IMPL-129②：编辑器内点 ✕ → 调用宿主 close 关闭弹窗；旧版嵌入包忽略未知键无副作用 */
+on: { onError: function(err) { try { Toast.error(String((err && err.message) || err)); } catch (_) {} }, close: close, onThemeChange: function(t) { try { if (t === "light" || t === "dark") localStorage.setItem("sc_studio_theme", t); } catch (_) {} } } /* IMPL-129②：编辑器内点 ✕ → 调用宿主 close 关闭弹窗；旧版嵌入包忽略未知键无副作用。Z12（第七批）：+onThemeChange 编辑器内置主题开关回告写缓存（附录 A 契约，向后兼容；挂载初值不回告防回环——白名单校验仅收 light/dark） */
 });
 const imgList = (opts.images && opts.images.length ? opts.images.slice(0, 12) : (opts.url ? [opts.url] : [])); /* W5 反馈①：多选一起进编辑器——images 数组逐张拉取后一次性 loadFiles（编辑器 loadFiles 原生接受数组，红线⑦未改 js） */
+const directOf = function(u) { /* Z15（第七批）：weserv 代理 URL 反解出原链，代理失败时回退直连用；data: 与非代理 URL 原样返回 */
+try {
+if (u.indexOf("https://images.weserv.nl/") === 0) {
+const m = /[?&]url=([^&]+)/.exec(u);
+if (m) return "https://" + decodeURIComponent(m[1]);
+}
+} catch (_) {}
+return u;
+};
+const fetchTO = function(u, ms) { /* Z15（第七批）：单图 fetch 10s 超时（AbortController），防 weserv 慢批次 20s+ 卡死「加载不进图片」 */
+const c = (typeof AbortController === "function") ? new AbortController() : null;
+if (!c) return fetch(u);
+const t = setTimeout(function() { try { c.abort(); } catch (_) {} }, ms);
+return fetch(u, { signal: c.signal }).finally(function() { clearTimeout(t); });
+};
 if (imgList.length) {
 (async function() {
 try {
 const files = [];
 for (let i = 0; i < imgList.length; i++) {
-const res = await fetch(imgList[i]);
-if (!res.ok) throw new Error("HTTP " + res.status);
+let res = null, lastErr = null; /* Z15（第七批）：先走 weserv 代理（crossOrigin 可导出语义保持），超时或 !ok 再试直连原 URL（weserv 抓不到源会回 404+json，直连或可救） */
+try { res = await fetchTO(imgList[i], 10000); } catch (e) { lastErr = e; }
+if (!res || !res.ok) {
+res = null;
+try { res = await fetchTO(directOf(imgList[i]), 10000); } catch (e) { lastErr = e; }
+}
+if (!res || !res.ok) throw new Error((res && !res.ok) ? ("HTTP " + res.status) : ((lastErr && lastErr.name === "AbortError") ? "请求超时(10s)" : ((lastErr && lastErr.message) || "fetch failed")));
 const blob = await res.blob();
 files.push(new File([blob], "reference" + (i + 1) + ".png", { type: blob.type || "image/png" }));
 }
@@ -16375,7 +16395,7 @@ return { open: open, close: close };
 /* ============================================================
    SvFloor —— 画布真透视地台 V2（79-a：内核整体升级为用户优化版引擎）
    ------------------------------------------------------------
-   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.163 时点）。
+   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.165 时点）。
    相比 V1（IMPL-56/69 移植的旧版）内核升级点：
      ① 落影渲染重写：5 档模糊叠加，模糊半径正比「离接触边的距离」（近实远虚）——
         faceK 面光参数 × span，近端带 FLAT=0.22 非零项（离地 lift 自身摊出的半影）；
