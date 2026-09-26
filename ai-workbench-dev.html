@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><!-- IMPL-115②：iOS standalone 沉浸机制——default=状态栏白色实心条压在页面顶部（内容不延伸），结果态深色网格上方永远隔一条系统白条+边缘融合渐变（用户"白黑羽化"根因之一）；black-translucent=页面内容延伸到状态栏下方、状态栏透明，iOS≥16.4 状态栏底色由 theme-color 染色+文字色系统自适应（配合 IMPL-114② 动态同步：结果态深底白字/编辑态白底黑字），iOS<16.4 恒白字（结果态深底无感，编辑态白底上时间/电量对比度低的已知权衡） -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffffff"><!-- IMPL-114②：默认=编辑态白(--bg-elev)；结果态由 __wbSyncThemeColor 动态切网格基底色——iOS standalone 把 theme-color 渲染在状态栏区（含系统边缘融合渐变），恒浅色=结果态状态栏白块+白黑过渡（用户截图实锤）；原 media 限定 light 在系统深色时整条失效 -->
-<title>修的媒体工作台 V26.9.158</title>
+<title>修的媒体工作台 V26.9.161</title>
 <link rel="icon" type="image/webp" id="faviconLink" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -568,7 +568,6 @@ to{transform:rotate(360deg)}}
 .sv-navlayer .sv-nav{pointer-events:auto}
 .sv-docklayer{position:absolute;left:0;right:0;bottom:14px;z-index:31;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:14px;pointer-events:none;padding:0 14px} /* IMPL-88：下移半栏高 26px（浮动菜单栏贴近预览底部），齿轮同高由 JS alignGear 接管 */
 .sv-docklayer .sv-floatbar{margin-top:0;pointer-events:auto;/* IMPL-109①：dock-in 入场动画移除——每次换卡浮动栏都是新元素，动画重放=「悬浮栏抖动」；栏锚定 bottom:14px 恒定，去动画后像素级固定 */background:linear-gradient(135deg,rgba(255,255,255,.42),rgba(255,255,255,.22));-webkit-backdrop-filter:blur(18px) saturate(175%);backdrop-filter:blur(18px) saturate(175%);box-shadow:0 10px 26px -18px rgba(9,14,30,.16),inset 0 1px 0 rgba(255,255,255,.45)}
-.sv-docklayer .compare-bar{pointer-events:auto;/* IMPL-109①：同①——换卡重挂 replay 抖动源一并移除 */background:var(--lg-gloss),var(--surface-glass-2);border:1px solid var(--lg-edge);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--lg-slab)} /* IMPL-95⑦：2.1 并回（等价补丁带生效值） */
 .sv-caplayer{position:absolute;top:46px;left:0;right:0;z-index:29;display:flex;justify-content:center;pointer-events:none;padding:0 36px} /* IMPL-87：信息栏下移 12px */
 .sv-caplayer .sv-caption{pointer-events:auto;margin:0;width:min(100%,640px);padding:5px 14px;border-radius:var(--radius-lg);/* IMPL-106④⑦：信息条恒定宽度不被媒体钳制（竖图同宽）+圆角矩形 */background:linear-gradient(135deg,rgba(255,255,255,.42),rgba(255,255,255,.24));border:1px solid var(--lg-edge);-webkit-backdrop-filter:blur(16px) saturate(170%);backdrop-filter:blur(16px) saturate(170%);box-shadow:0 8px 22px -16px rgba(9,14,30,.16),inset 0 1px 0 rgba(255,255,255,.45);animation:fade-in .28s ease}
 @keyframes dock-in{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
@@ -959,7 +958,7 @@ body.vfs-lock{overflow:hidden}
 /* IMPL-87：深色网格适配——基底亮度<128 时引擎写 html[data-svfloor="dark"]，
    液态玻璃按钮（浮动条/对比条/信息胶囊/导航箭头/齿轮）与设置面板整体切深色玻璃；
    backdrop-filter 保留（深底上模糊仍有效），高光换向（inset 白→弱白），文字提亮 */
-[data-svfloor="dark"] .sv-docklayer .sv-floatbar,[data-svfloor="dark"] .sv-floatbar,[data-svfloor="dark"] .sv-docklayer .compare-bar{background:linear-gradient(135deg,rgba(46,50,60,.62),rgba(24,27,34,.55));border-color:rgba(255,255,255,.14);box-shadow:0 10px 26px -18px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.10)}
+[data-svfloor="dark"] .sv-docklayer .sv-floatbar,[data-svfloor="dark"] .sv-floatbar{background:linear-gradient(135deg,rgba(46,50,60,.62),rgba(24,27,34,.55));border-color:rgba(255,255,255,.14);box-shadow:0 10px 26px -18px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.10)}
 [data-svfloor="dark"] .sv-caplayer .sv-caption{background:linear-gradient(135deg,rgba(46,50,60,.64),rgba(24,27,34,.58));border-color:rgba(255,255,255,.14);box-shadow:0 8px 22px -16px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.10)}
 [data-svfloor="dark"] .sv-nav{background:linear-gradient(135deg,rgba(46,50,60,.66),rgba(24,27,34,.56));border-color:rgba(255,255,255,.16);color:rgba(228,232,240,.88);box-shadow:0 8px 20px -14px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.10)}
 [data-svfloor="dark"] .sv-nav:hover{background:rgba(88,104,236,.30);border-color:rgba(140,154,255,.55);color:#bcc6ff}
@@ -994,7 +993,6 @@ body.vfs-lock{overflow:hidden}
 .sv-floorlayer .sv-gearbtn{position:static;display:flex;margin-bottom:6px}
 body>.sv-fpanel{position:fixed;left:10px;right:10px;top:auto;bottom:calc(36px + 96px);width:auto;max-height:min(64vh,500px);z-index:33;transform-origin:100% 100%} /* IMPL-88：补 top:auto 覆盖桌面停靠值 */
 body.svf-open>.sv-fpanel{opacity:1;visibility:visible;pointer-events:auto;transform:none;transition:transform 260ms cubic-bezier(.32,1.08,.44,1),opacity 200ms ease}
-body:has(.sv-docklayer .compare-bar:not(.empty)) .sv-floorlayer{bottom:calc(14px + 106px)} /* IMPL-88：基数随 docklayer 36→14 联动 */
 .sv-fpanel{transform-origin:100% 100%}}
 @media (max-width:480px){
 .sv-floorlayer{left:0;right:0}
@@ -1014,14 +1012,54 @@ body:has(.sv-docklayer .compare-bar:not(.empty)) .sv-floorlayer{bottom:calc(14px
 .sv-audio-disc svg{width:26px;height:26px}
 .sv-nav{display:none;width:36px;height:36px;font-size:17px}
 .sv-model{max-width:34%}}
-.compare-bar{position:relative;display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:var(--bg-elev);border:1px solid var(--border);box-shadow:var(--shadow-lg);pointer-events:auto;max-width:100%;transition:opacity .24s ease,transform .24s ease}
-.compare-bar.empty{display:none}
-.compare-bar .compare-count{font-size:12px;color:var(--text-muted);padding:0 4px}
-.compare-bar button{padding:4px 10px;border-radius:999px;font-size:12px}
-.compare-bar .compare-show{background:var(--brand);color:#fff}
-.compare-bar .compare-export{color:var(--text);background:var(--surface-3);border:1px solid var(--border-soft)}
-.compare-bar .compare-clear{color:var(--text-muted)}
-body:has(#compareGrid.show) .compare-bar{opacity:0;pointer-events:none;transform:translateY(10px)}
+/* ── IMPL-142 反馈1：独立 sel-bar 悬浮条移除——多选批量操作组直接注入结果卡片下方 .sv-floatbar（已选徽标=品牌胶囊） ── */
+.sv-sel-tag{display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:999px;background:var(--brand);color:#fff;font-size:12px;font-weight:600;white-space:nowrap;flex-shrink:0;letter-spacing:.02em}
+/* ── IMPL-138② strip-thumb 多选选中态（IMPL-143 反馈⑤：左上蓝色圆点移除——选中视觉=上浮+品牌描边+品牌薄雾） ── */
+.result-strip .strip-thumb.selected{transform:translateY(-4px);box-shadow:0 5px 10px rgba(var(--brand-rgb),.30),0 2px 6px rgba(28,28,26,.14)}
+.result-strip .strip-thumb.selected::before{opacity:1;border-width:2px}
+.result-strip .strip-thumb.selected::after{content:"";position:absolute;inset:0;border-radius:inherit;background:rgba(var(--brand-rgb),.14);pointer-events:none;z-index:1}
+.result-strip .strip-thumb.dragging{opacity:.55}
+/* ── IMPL-138④/142 文件夹（React Bits Folder 视觉复刻：背板+纸片+前板）——IMPL-142 起内嵌结果条同栏混排，不再有独立行容器 ── */
+.rf-folder{position:relative;width:76px;height:64px;flex-shrink:0;cursor:pointer;transition:transform .2s ease;touch-action:pan-x}
+.rf-folder:hover{transform:translateY(-6px)}
+.rf-folder:focus-visible{outline:2px solid var(--brand);outline-offset:3px;border-radius:10px}
+/* IMPL-143 反馈②：per-folder 色（--fc-rgb 由 _buildFolderEl 内联；无 color 旧数据=品牌蓝兜底） */
+.rf-back{position:absolute;left:0;right:0;bottom:0;height:52px;background:linear-gradient(180deg,rgba(var(--fc-rgb,var(--brand-rgb)),.78),rgba(var(--fc-rgb,var(--brand-rgb)),.60));border-radius:0 8px 8px 8px;z-index:0}
+.rf-back::after{content:"";position:absolute;bottom:100%;left:0;width:24px;height:8px;background:rgba(var(--fc-rgb,var(--brand-rgb)),.78);border-radius:5px 5px 0 0}
+.rf-paper{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);width:58px;height:40px;border-radius:6px;overflow:hidden;background:var(--surface-2);box-shadow:0 0 0 1px rgba(0,0,0,.06);transition:transform .25s ease}
+.rf-paper.p1{z-index:1}
+.rf-paper.p2{z-index:2;width:64px;height:44px;bottom:5px}
+.rf-paper.p3{z-index:3;width:70px;height:48px;bottom:4px}
+.rf-paper img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.rf-front{position:absolute;left:0;right:0;bottom:0;height:40px;background:linear-gradient(180deg,rgba(var(--fc-rgb,var(--brand-rgb)),.96),rgba(var(--fc-rgb,var(--brand-rgb)),.80));border-radius:4px 8px 8px 8px;z-index:4;transform-origin:bottom;transition:transform .3s ease}
+.rf-folder:hover .rf-front,.rf-folder.drag-over .rf-front,.rf-folder.open .rf-front{transform:skew(15deg) scaleY(.62)}
+.rf-folder.open .rf-front{filter:brightness(1.09)}
+.rf-folder:hover .rf-paper.p1{transform:translateX(-50%) translateY(-8px) rotate(-8deg)}
+.rf-folder:hover .rf-paper.p3{transform:translateX(-50%) translateY(-12px) rotate(6deg)}
+.rf-folder.drag-over{transform:translateY(-6px) scale(1.05)}
+/* IMPL-142：drag-over/open 纸片上飞幅度收敛在 strip 内边距空间（≤18px），不再被 overflow 裁掉（反馈2 截断修复）；.open=展开态纸片保持绽开（反馈4） */
+.rf-folder.drag-over .rf-paper.p1,.rf-folder.open .rf-paper.p1{transform:translateX(-50%) translateX(-14px) translateY(-13px) rotate(-12deg)}
+.rf-folder.drag-over .rf-paper.p2,.rf-folder.open .rf-paper.p2{transform:translateX(-50%) translateX(7px) translateY(-15px) rotate(10deg)}
+.rf-folder.drag-over .rf-paper.p3,.rf-folder.open .rf-paper.p3{transform:translateX(-50%) translateX(-4px) translateY(-17px) rotate(4deg)}
+.rf-badge{position:absolute;top:-7px;right:-7px;z-index:5;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:rgb(var(--fc-rgb,var(--brand-rgb)));color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.28);pointer-events:none}
+/* IMPL-142 反馈3：常驻「新建文件夹」入口移除——拖动缩略图时结果条尾浮现幽灵目标（手机桌面成组交互），drop 即建夹 */
+.rf-ghost{width:76px;height:64px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:1.5px dashed var(--brand);border-radius:10px;color:var(--brand);font-size:10px;background:rgba(var(--brand-rgb),.07);animation:rfGhostPulse 1.2s ease-in-out infinite}
+.rf-ghost svg{width:20px;height:20px}
+.rf-ghost.drag-over{transform:scale(1.07);background:rgba(var(--brand-rgb),.16);animation:none}
+@keyframes rfGhostPulse{0%,100%{opacity:.5}50%{opacity:1}}
+/* ── IMPL-142 反馈5：文件夹抽屉与命名移除——右键/长按菜单（挂 .context-menu 类：宿主 escHandler 的 Esc 关闭清单自动覆盖，零自管） ── */
+.rf-menu{position:fixed;z-index:950;display:none;flex-direction:column;min-width:172px;padding:5px;border-radius:12px;background:var(--bg-elev);border:1px solid var(--border);box-shadow:var(--shadow-lg)}
+.rf-menu.show{display:flex}
+.rf-menu button{padding:9px 12px;border:0;border-radius:8px;background:transparent;color:var(--text);font-size:13px;text-align:left;cursor:pointer;white-space:nowrap}
+.rf-menu button:hover{background:var(--surface-3);color:var(--brand)}
+.rf-menu button.danger{color:var(--danger)}
+.rf-menu button.danger:hover{background:rgba(204,58,58,.10);color:var(--danger)}
+/* IMPL-143 反馈③：放入文件夹选择菜单（rf-menu 复用）——色点+计数+新建收纳项 */
+.rf-menu [data-mv]{display:flex;align-items:center;gap:8px}
+.rf-mv-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 1px rgba(0,0,0,.12)}
+.rf-mv-n{margin-left:auto;font-size:11px;opacity:.6}
+.rf-mv-new{color:var(--brand);font-weight:600;border-top:1px solid var(--border);margin-top:3px;padding-top:7px;border-radius:0}
+.rf-mv-empty{padding:8px 10px;font-size:12px;opacity:.6}
 .compare-grid{position:fixed;inset:0;z-index:60;background:var(--overlay);display:none;align-items:center;justify-content:center;padding:40px;backdrop-filter:blur(8px)}
 .compare-grid.show{display:flex}
 .compare-grid-inner{display:flex;gap:12px;max-width:100%;max-height:100%}
@@ -1380,7 +1418,7 @@ from{opacity:0}}
 .stats-mtab{flex:1;text-align:center;padding:6px 0}}
 @media (prefers-reduced-motion: reduce){
 .trend-area,.donut-seg,.au-bar i{animation:none}}
-.toast-container{position:fixed;top:70px;right:16px;z-index:90;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast-container{position:fixed;top:70px;right:16px;z-index:100001;display:flex;flex-direction:column;gap:8px;pointer-events:none}/* IMPL-138①：90→100001 盖过 .studioOverlay(99999)+blur 遮罩——编辑器打开时宿主 Toast 可见（修侧实测⑤ P0） */
 .toast{padding:10px 14px;border-radius:var(--radius-md);background:var(--bg-elev);border:1px solid var(--border);box-shadow:var(--shadow-lg);font-size:13px;max-width:320px;pointer-events:auto;display:flex;align-items:center;gap:8px;animation:toast-in 280ms cubic-bezier(.32,.72,0,1)}
 .toast.success{border-color:var(--success);border-color:color-mix(in srgb, var(--success) 55%, var(--border))}
 .toast.error{border-color:var(--danger);border-color:color-mix(in srgb, var(--danger) 55%, var(--border))}
@@ -1502,7 +1540,7 @@ body[data-mview="param"] .app-body{background:var(--bg-elev)}/* IMPL-114①：�
 .batch-panel{padding:10px}
 /* IMPL-89②：移动端性能——backdrop-blur 降档（28/18→14/10），大 R 角屏 GPU 预算让给滚动与合成 */
 .sv-fpanel{-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%)}
-.sv-docklayer .sv-floatbar,.sv-docklayer .compare-bar{-webkit-backdrop-filter:blur(10px) saturate(150%);backdrop-filter:blur(10px) saturate(150%)}
+.sv-docklayer .sv-floatbar{-webkit-backdrop-filter:blur(10px) saturate(150%);backdrop-filter:blur(10px) saturate(150%)}
 .result-panel > .strip-dock{margin:8px 12px max(10px, var(--safe-bottom))}/* IMPL-118④：底距随安全区（cover 后 home 区不被压） */
 .result-strip{padding:12px 12px;gap:8px}/* IMPL-118④：纵向 padding 16→12 抵消 thumb 增高，dock 总高微增 */
 .result-strip .strip-thumb{height:66px;min-width:16px;border-radius:11px}/* IMPL-118④：46→66px（用户：太小）——触屏单条宽约 44-88px，封顶 1.6dpr 下清晰 */
@@ -1710,8 +1748,8 @@ to{transform:rotate(360deg)}}
 @keyframes emptyGlow{
 0%,100%{filter:drop-shadow(0 0 10px var(--brand-soft))}
 50%{filter:drop-shadow(0 0 22px var(--brand-soft))}}
-.result-panel::before,.modal-content::before,.compare-bar::before,.settings-drawer::before,.history-sidebar::before,.result-header::before{content:'';position:absolute;top:0;left:9%;right:9%;height:1px;z-index:3;pointer-events:none;border-radius:1px;background:linear-gradient(90deg, transparent, rgba(var(--glass-rgb),.55) 30%, rgba(var(--glass-rgb),.4) 68%, transparent);opacity:.8}
-[data-theme="light"] .result-panel::before,[data-theme="light"] .modal-content::before,[data-theme="light"] .compare-bar::before,[data-theme="light"] .settings-drawer::before,[data-theme="light"] .history-sidebar::before,[data-theme="light"] .result-header::before{background:linear-gradient(90deg, transparent, rgba(var(--glass-rgb),1) 30%, rgba(var(--glass-rgb),.8) 68%, transparent);opacity:.9}
+.result-panel::before,.modal-content::before,.settings-drawer::before,.history-sidebar::before,.result-header::before{content:'';position:absolute;top:0;left:9%;right:9%;height:1px;z-index:3;pointer-events:none;border-radius:1px;background:linear-gradient(90deg, transparent, rgba(var(--glass-rgb),.55) 30%, rgba(var(--glass-rgb),.4) 68%, transparent);opacity:.8}
+[data-theme="light"] .result-panel::before,[data-theme="light"] .modal-content::before,[data-theme="light"] .settings-drawer::before,[data-theme="light"] .history-sidebar::before,[data-theme="light"] .result-header::before{background:linear-gradient(90deg, transparent, rgba(var(--glass-rgb),1) 30%, rgba(var(--glass-rgb),.8) 68%, transparent);opacity:.9}
 .icon-btn:focus-visible,.filter-tab:focus-visible,.tab:focus-visible,.tool-btn:focus-visible,.mode-btn:focus-visible,.lb-tbtn:focus-visible,.sv-hb-btn:focus-visible,.sv-nav:focus-visible,.strip-thumb:focus-visible,.preset-trigger:focus-visible,.prompt-save-btn:focus-visible,.generate-btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 .modal-content{animation:modal-in 340ms var(--spring-soft)}
 @media (prefers-reduced-motion: reduce){
@@ -1738,13 +1776,18 @@ from{opacity:0;transform:translateY(6px) scale(.94)}}
 .gsp-item{transition:none}}
 /* 77-d：reduced-motion 补漏——入场/循环动画（dock-in/toast/modal/pulse-glow/fade 系）静态呈现 */
 @media (prefers-reduced-motion: reduce){
-.sv-docklayer .sv-floatbar,.sv-docklayer .compare-bar,.sv-caplayer .sv-caption,.sv-wrap,.lb-stage,.file-mode-hint,.toast,.undo-btn,.modal-overlay.show,.modal-content,.quick-starts .qs-chip,.ping-dot,.lb-progress::before{animation:none}}
+.sv-docklayer .sv-floatbar,.sv-caplayer .sv-caption,.sv-wrap,.lb-stage,.file-mode-hint,.toast,.undo-btn,.modal-overlay.show,.modal-content,.quick-starts .qs-chip,.ping-dot,.lb-progress::before{animation:none}}
 
 /* ==================== IMPL-126：图片工作台弹框壳样式（内核已外链 image-studio.js，Shadow DOM 自带样式） ==================== */
 .studioOverlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(10,12,18,.60) /* IMPL-129①：22px→12px */;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);animation:studioFade .18s ease}
 .studioOverlay[hidden]{display:none}
 @keyframes studioFade{from{opacity:0}to{opacity:1}}
 .studioModal{position:relative;width:min(1720px,96vw);height:min(1080px,95vh) /* IMPL-129①：官方期望上限 min(95vw,1720px)×min(92vh,1080px)，旧值砍掉 542px 宽 */;border-radius:16px;overflow:hidden;box-shadow:0 30px 96px rgba(0,0,0,.55),0 3px 12px rgba(0,0,0,.30);background:#101112;display:flex;flex-direction:column;animation:studioPop .24s cubic-bezier(.32,1.08,.44,1)}
+/* IMPL-143 P2：位图动作执行期反馈条（宿主级）——执行中常驻、finally 隐藏；不出现在编辑器动作条（嵌入包禁区） */
+.studioBusy{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:rgba(16,17,18,.82);border:1px solid rgba(255,255,255,.14);color:#e9e9e7;font-size:12px;box-shadow:0 6px 20px rgba(0,0,0,.35);pointer-events:none;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.studioBusy[hidden]{display:none}
+.studioBusySpin{width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;animation:studioBusySpin .8s linear infinite}
+@keyframes studioBusySpin{to{transform:rotate(360deg)}}
 @keyframes studioPop{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
 .studioTopbar{height:42px;flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:0 8px 0 14px;background:#141517;border-bottom:1px solid #292b2f;color:#f5f5f5}
 /* IMPL-130④ 已启用：嵌入包 adbd660（sha256 52af3d39 前缀）已发布并接线 onClose——宿主顶栏 42px 让位编辑器画布；关闭路径 = 编辑器顶栏右上角 ✕（on.close） / 遮罩点击 / Esc */
@@ -2097,7 +2140,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
     </div>
     <div class="settings-section settings-about">
       <div class="about-app">修的媒体工作台</div>
-      <span class="about-ver">V26.9.158</span>
+      <span class="about-ver">V26.9.161</span>
     </div>
   </div>
 </aside>
@@ -2221,12 +2264,6 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
     <button class="pp-option pp-cancel" id="pastePickerCancel">取消</button>
   </div>
 </div>
-<div class="compare-bar empty" id="compareBar">
-  <span class="compare-count" id="compareCount">已选 0</span>
-  <button class="compare-show" id="compareShow">对比</button>
-  <button class="compare-export" id="compareExport" title="批量导出选中结果（URL / txt / 画廊 / JSON）">导出</button>
-  <button class="compare-clear" id="compareClear">清除</button>
-</div>
 <div class="compare-grid" id="compareGrid">
   <button class="compare-close" id="compareGridClose" aria-label="关闭对比" title="关闭（Esc）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
   <div class="compare-grid-inner" id="compareGridInner"></div>
@@ -2280,6 +2317,7 @@ CLOUD_SYNC: "sc_cloud_sync",
 SOUND: "sc_sound",
 HISTORY: "sc_history",
 TASKS: "sc_tasks",
+FOLDERS: "sc_result_folders", /* IMPL-138④：结果文件夹（收藏夹语义，引用集合不移动原数据） */
 PROMPT_HISTORY: "sc_prompt_history",
 PRESETS: "sc_presets",
 R2_WORKER_URL: "sc_r2_worker_url",
@@ -9597,6 +9635,10 @@ formCache: {},
 promptPresetBase: {},
 promptPresetName: {},
 compareList: [],
+selMode: false, /* IMPL-138②：触屏多选模式（长按进入，单击即加选） */
+folders: [], /* IMPL-138④/142：无命名 {id,ids[]}，成员为引用集合 */
+openFolderId: null, /* IMPL-142 反馈4：当前展开的文件夹（展开态=结果栏只显夹内成员） */
+selMax: 12, /* IMPL-138②：多选上限（对比 grid 支持多张；滑块建议 2 张） */
 lightboxList: [],
 lightboxIdx: 0,
 singleList: [],
@@ -9627,6 +9669,7 @@ setTimeout(() => VaultSync.bootCheck(), 2200);
 this._initGlassSelects();
 this.bindEvents();
 this.switchTab("image");
+this._loadFolders();/* IMPL-142：文件夹数据先行（图标内嵌结果条由 _renderResultStrip 渲染） */
 this._renderResultStrip();
 this._renderTaskList();
 if (Store.useIDB) Store.getTasksAsync().then(t => {
@@ -9801,7 +9844,7 @@ const oldest = tasks.reduce((a, b) => a.createdAt < b.createdAt ? a : b);
 const elapsed = Date.now() - oldest.createdAt;
 next = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
 } else {
-next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.158");
+next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.161");
 }
 if (document.title !== next) document.title = next;
 },
@@ -10219,19 +10262,46 @@ localStorage.setItem("sc_preferred_version", "mobile");
 } catch (e) {}
 location.href = "ai-workbench-mobile-dev.html";
 });
-$("#compareShow").addEventListener("click", () => this._showCompareGrid());
-$("#compareClear").addEventListener("click", () => {
-this.state.compareList = [];
-this._renderCompareBar();
+/* ── IMPL-142：结果条统一委托——文件夹展开（反馈4）/右键菜单（反馈5）/拖拽入夹+幽灵新建（反馈3）；sel-bar 与 foldersRow 独立容器已移除 ── */
+const _strip = $("#resultStrip");
+_strip.addEventListener("click", e => {
+const f = e.target.closest(".rf-folder");
+if (f) this._toggleFolder(f.dataset.fid);
 });
-$("#compareExport").addEventListener("click", () => {
-const list = this.state.compareList.filter(t => t.status === "succeeded" && t.result?.url);
-if (!list.length) {
-Toast.warning("请先通过右键「加入对比」选择结果");
-return;
-}
-this._openBatchExport(list);
+_strip.addEventListener("contextmenu", e => {
+const f = e.target.closest(".rf-folder");
+if (!f) return;
+e.preventDefault();
+this._openFolderMenu(f.dataset.fid, f);
 });
+_strip.addEventListener("dragover", e => {
+const t = e.target.closest(".rf-folder,.rf-ghost");
+if (!t) return;
+e.preventDefault();
+t.classList.add("drag-over");
+});
+_strip.addEventListener("dragleave", e => {
+const t = e.target.closest(".rf-folder,.rf-ghost");
+if (t) t.classList.remove("drag-over");
+});
+_strip.addEventListener("drop", e => {
+const t = e.target.closest(".rf-folder,.rf-ghost");
+if (!t) return;
+e.preventDefault();
+t.classList.remove("drag-over");
+const tid = e.dataTransfer.getData("application/x-wb-task") || e.dataTransfer.getData("text/plain");
+if (!tid) return;
+if (t.classList.contains("rf-ghost")) this._folderCreateWith(tid); else this._folderAdd(t.dataset.fid, tid);
+});
+/* IMPL-142：展开态 Esc 收敛——自挂独立 capture 监听（宿主 escHandler 一字不改）；
+   IMPL-142c：宿主管理层（菜单/lightbox/modal/对比）开着时让宿主先处理，否则收敛展开态 */
+document.addEventListener("keydown", e => {
+if (e.key !== "Escape" || !this.state.openFolderId) return;
+if (document.querySelector(".context-menu.show, .lightbox.show, .modal-overlay.show, .compare-grid.show")) return;
+e.stopPropagation();
+this.state.openFolderId = null;
+this._renderResultStrip();
+}, true);
 $("#compareGridClose").addEventListener("click", () => $("#compareGrid").classList.remove("show"));
 $("#compareGridInner").addEventListener("click", e => {
 const b = e.target.closest("[data-cmpmode]");
@@ -12929,7 +12999,7 @@ if (s === "newest") filtered.sort((a, b) => (b.createdAt || 0) - (a.createdAt ||
 this.state.singleList = filtered;
 if (!filtered.length) {
 const dock = $("#svDockLayer");
-if (dock) { const cmpBar0 = $("#compareBar"); if (cmpBar0 && cmpBar0.parentElement) cmpBar0.remove(); dock.innerHTML = ""; if (cmpBar0) dock.appendChild(cmpBar0); }
+if (dock) { dock.innerHTML = ""; }/* IMPL-138③：compare-bar 移除——空态 dock 直接清空 */
 const navLayer = $("#svNavLayer");
 if (navLayer) navLayer.innerHTML = "";
 const capLayer0 = $("#svCapLayer");
@@ -12975,11 +13045,9 @@ list.innerHTML = "";
 list.appendChild(this._buildSingleView(task));
 const dock = $("#svDockLayer");
 if (dock) {
-const cmpBar0 = $("#compareBar");
-if (cmpBar0 && cmpBar0.parentElement) cmpBar0.remove();
+/* IMPL-138③：compare-bar 移除——dock 只重挂结果浮动菜单栏 */
 const bar = list.querySelector(".sv-floatbar");
 dock.innerHTML = "";
-if (cmpBar0) dock.appendChild(cmpBar0);
 if (bar) dock.appendChild(bar);
 }
 const navLayer = $("#svNavLayer");
@@ -13058,6 +13126,42 @@ this._singleNav(dx < 0 ? 1 : -1);
 body.addEventListener("touchcancel", () => {
 tracking = false;
 }, {passive: true});
+/* IMPL-138②/142：触屏长按 480ms——缩略图=进入多选（IMPL-142 起 floatbar 批量组「清除」退出）、文件夹图标=弹菜单（反馈5） */
+const strip = $("#resultStrip");
+if (strip && !strip.dataset.lpBound) {
+strip.dataset.lpBound = "1";
+let lpTimer = null, lpTarget = null;
+strip.addEventListener("touchstart", e => {
+/* IMPL-142：文件夹图标长按=菜单（与缩略图多选分支互斥） */
+const fo = e.target.closest(".rf-folder");
+if (fo && fo.dataset.fid) {
+lpTimer = setTimeout(() => {
+lpTimer = null;
+try { navigator.vibrate && navigator.vibrate(30); } catch (err) {}
+this._openFolderMenu(fo.dataset.fid, fo);
+}, 480);
+return;
+}
+const th = e.target.closest(".strip-thumb");
+if (!th || !th.dataset.tid) return;
+lpTarget = th;
+lpTimer = setTimeout(() => {
+lpTimer = null;
+this._lpSel = th.dataset.tid; this._lpSelAt = Date.now(); /* IMPL-139：登记长按已消费（抑制松手合成 click 翻转） */
+const task = [...Store.getTasks(), ...Store.getHistory()].find(t => t.id === th.dataset.tid);
+try { navigator.vibrate && navigator.vibrate(30); } catch (err) {}
+if (this.state.selMode) {
+/* IMPL-142b：已处多选模式时长按=打开该卡查看器——sv-floatbar 批量组即触屏批量操作入口（sel-bar 移除后的闭环） */
+if (task) this._showSingleTask(task);
+} else {
+this.state.selMode = true;
+if (task) this._toggleSelect(task);
+}
+}, 480);
+}, {passive: true});
+strip.addEventListener("touchend", () => { if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; } }, {passive: true});
+strip.addEventListener("touchmove", () => { if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; } }, {passive: true});
+}
 },
 _showSingleTask(task) {
 if (!task) return;
@@ -13149,16 +13253,22 @@ const bDel = `<button class="sv-hb-btn danger" data-act="delete" title="删除" 
 const bDown = `<button class="sv-hb-btn" data-act="download" title="下载" aria-label="下载结果"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11"/><path d="M7.5 10.5L12 15l4.5-4.5"/><path d="M4.5 19.5h15"/></svg></button>`;
 const navHtml = n > 1 ? `<button class="sv-nav sv-prev" data-svnav="-1" title="上一个（←）" aria-label="上一个结果">${navChev}</button><button class="sv-nav sv-next" data-svnav="1" title="下一个（→）" aria-label="下一个结果">${navChev}</button>` : "";
 if (isPlain) {
+/* IMPL-142 反馈1：多选批量操作组注入 sv-floatbar——独立 sel-bar 悬浮条移除，复用结果卡片下方悬浮条菜单 */
+const selN = this.state.compareList.length;
+/* IMPL-143 反馈①③④：批量组排序规约=已选徽标→放入文件夹→编辑→对比（≥2 才渲染）→下载→导出→清除；条件不允许的按钮不渲染（不出禁用灰钮） */
+const bFAdd = `<button class="sv-hb-btn" data-batchact="folder" title="所选收入文件夹" aria-label="所选收入文件夹"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5v10a1.5 1.5 0 0 0 1.5 1.5h14a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5h-7l-2-2.5H5A1.5 1.5 0 0 0 3.5 7.5z"/><path d="M12 11v5M9.5 13.5h5"/></svg></button>`;
+const cmpSel = selN >= 2 ? `<button class="sv-hb-btn" data-batchact="compare" title="对比所选" aria-label="对比所选"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M12 4.5v15"/></svg></button>` : "";
+const selBatch = selN ? `<span class="sv-sel-tag">已选 ${selN}</span>` + bFAdd + `<button class="sv-hb-btn" data-batchact="edit" title="所选一起放入编辑器" aria-label="批量编辑"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/><path d="M18.4 2.6a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>` + cmpSel + `<button class="sv-hb-btn" data-batchact="download" title="批量下载所选" aria-label="批量下载"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11"/><path d="M7.5 10.5L12 15l4.5-4.5"/><path d="M4.5 19.5h15"/></svg></button>` + `<button class="sv-hb-btn" data-batchact="export" title="批量导出（URL / txt / 画廊 / JSON）" aria-label="批量导出"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4"/><path d="M8 8l4-4 4 4"/><path d="M4.5 15v3.5A1.5 1.5 0 0 0 6 20h12a1.5 1.5 0 0 0 1.5-1.5V15"/></svg></button>` + `<button class="sv-hb-btn" data-batchact="clear" title="清除多选" aria-label="清除多选"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>` + sep : "";
 const inCompare = this.state.compareList.some(t => t.id === task.id);
 /* bDown 上移至 bDel 旁（IMPL-105⑤：非 plain 成功态也提供下载） */
 const bCopy = `<button class="sv-hb-btn" data-act="copy" title="复制链接" aria-label="复制结果URL"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9.5" y="9.5" width="11.5" height="11.5" rx="2.5"/><path d="M6.5 15H5.5A2.5 2.5 0 0 1 3 12.5v-7A2.5 2.5 0 0 1 5.5 3h7A2.5 2.5 0 0 1 15 5.5v1"/></svg></button>`;
 const bRef = `<button class="sv-hb-btn" data-act="ref" title="用作参考素材" aria-label="用作参考素材"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></button>`;
 const bCut = `<button class="sv-hb-btn" data-act="cutout" title="抠图此图" aria-label="抠图此图"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.8 7.7L4.6 16.9a2 2 0 0 0 2.8 2.8l9.2-9.2"/><path d="M12.5 9l2.8-2.8"/><path d="M17.5 2.8l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9z" fill="currentColor" stroke="none"/></svg></button>`;
-const bEdit = `<button class="sv-hb-btn" data-act="edit" title="编辑图片" aria-label="编辑图片"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/><path d="M18.4 2.6a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>`;
-const bCmp = `<button class="sv-hb-btn${inCompare ? " on" : ""}" data-act="compare" title="${inCompare ? "移出对比" : "加入对比"}" aria-label="对比"${inCompare ? ' aria-pressed="true"' : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="2.5"/><path d="M12 4.5v15"/></svg></button>`;
+const bEdit = selN ? "" : `<button class="sv-hb-btn" data-act="edit" title="编辑图片" aria-label="编辑图片"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-6"/><path d="M18.4 2.6a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg></button>`;/* IMPL-143 反馈①：选中态隐藏——批量 edit 已覆盖（重复图标合并） */
+const bCmp = `<button class="sv-hb-btn${inCompare ? " on" : ""}" data-act="compare" title="${inCompare ? "移出多选" : "加入多选（对比/编辑/下载）"}" aria-label="加入多选"${inCompare ? ' aria-pressed="true"' : ""}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inCompare ? '<circle cx="12" cy="12" r="9"/><path d="m8.5 12.2 2.4 2.4 4.6-5"/>' : '<circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/>'}</svg></button>`;/* IMPL-143 反馈①：图标改「+圈/✓圈」——消除与批量对比（对比矩形）撞图标 */
 const bRegen = `<button class="sv-hb-btn" data-act="regen" title="重新生成" aria-label="重新生成"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 12a8.5 8.5 0 1 1-2.49-6.01"/><path d="M21 3v5h-5"/></svg></button>`;
 const bVFull = `<button class="sv-hb-btn" data-act="vfull" title="全屏播放" aria-label="全屏播放"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9"/><path d="M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9"/><path d="M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15"/><path d="M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"/></svg></button>`;
-const hbBtns = [bDown + bCopy + bWf, type === "image" ? bRegen + bRef + bCut + bEdit + bCmp : type === "video" ? bRegen + bRef + bVFull : bRegen + bRef].join(sep) + sep + bDel;/* IMPL-107①：视频选中态浮动菜单栏追加全屏按钮 */
+const hbBtns = selBatch + [(selN ? "" : bDown) + bCopy + bWf, type === "image" ? bRegen + bRef + bCut + bEdit + bCmp : type === "video" ? bRegen + bRef + bVFull : bRegen + bRef].join(sep) + sep + bDel;/* IMPL-107①：视频追加全屏；IMPL-142：头部批量操作组；IMPL-143 反馈①：选中态 bDown/bEdit 隐藏（批量组覆盖，重复图标合并）、排序=批量组|多选/生成/素材|复制/工作流|删除(danger) */
 el.innerHTML = `\n      <figure class="sv-stage is-plain">\n        ${navHtml}\n        <div class="sv-caption"><span class="sv-cap-model">${esc(task.model?.name || "未命名")}</span><span class="sv-cap-time">${fmtTime(task.createdAt)}${task.batchTotal > 1 && task.batchIndex ? ` · #${task.batchIndex}/${task.batchTotal}` : ""}</span>${task.prompt ? `<span class="sv-cap-prompt" title="${esc(task.prompt)}">${esc(task.prompt)}</span>` : ""}${headMeta.length ? `<span class="sv-hb-tags">${headMeta.join("")}</span>` : ""}</div>\n        ${mediaHtml}\n        <div class="sv-floatbar" role="toolbar" aria-label="结果操作">${hbBtns}</div>\n      </figure>`;
 } else {
 const stActs = [];
@@ -13273,6 +13383,17 @@ const act = btn.dataset.act;
 if (act === "zoom") this._openLightboxForTask(task); else if (act === "download") this._downloadFile(task.result.url, `${task.model?.id || "workbench"}_${task.id}`); else if (act === "copy") copy(task.result.url).then(ok => ok ? Toast.success("已复制") : Toast.error("复制失败")); else if (act === "cutout") SegStudio.prefillAsModel(task); else if (act === "compare") this._toggleCompare(task); else if (act === "delete") this._deleteTask(task.id); else if (act === "ref") this._useAsReference(task.result.url, task.model?.type); else if (act === "edit") this._openEditor(task.result.url); else if (act === "vfull") VideoFS.openFromTask(task);/* IMPL-107① */ else if (act === "wf") Workflow.copy(task); else if (act === "regen") this._regen(task); else if (act === "refresh") poller.manualRefresh(task.id); else if (act === "stop") poller.manualStop(task.id); else if (act === "retry") this._retryTask(task);
 });
 });
+el.querySelectorAll(".sv-hb-btn[data-batchact]").forEach(btn => { /* IMPL-142：批量操作组（sv-floatbar 复用，反馈1） */
+btn.addEventListener("click", e => {
+e.stopPropagation();
+const act = btn.dataset.batchact;
+if (act === "clear") this._clearSelection(); else if (act === "folder") this._openMoveToMenu(btn); else if (act === "compare") this._showCompareGrid(); else if (act === "download") this._downloadSelected(); else if (act === "edit") this._editSelected(); else if (act === "export") {
+const list = this.state.compareList.filter(t => t.status === "succeeded" && t.result?.url);
+if (!list.length) { Toast.warning("所选结果暂无可导出的成功项"); return; }
+this._openBatchExport(list);
+}
+});
+});
 const hbPrompt = el.querySelector(".sv-cap-prompt");
 if (hbPrompt) hbPrompt.addEventListener("click", () => hbPrompt.classList.toggle("expanded"));
 },
@@ -13366,35 +13487,52 @@ panel.classList.remove("empty");
 panel.innerHTML = `<div class="atp-list" role="status" aria-label="${tasks.length} 个任务生成中"><span class="atp-label"><span class="ping-dot"></span>${tasks.length} 生成中</span>${tasks.map(t => `<div class="atp-card" data-tid="${t.id}"><span class="atp-orb" aria-hidden="true"></span><span class="atp-model">${esc(t.model?.name || "")}</span><span class="atp-phase">${esc(poller.getPhaseName(Date.now() - t.createdAt))}</span><span class="atp-timer">${fmtDur(Date.now() - t.createdAt)}</span><button class="atp-cancel" data-cancel="${t.id}" aria-label="停止任务"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>`).join("")}</div>`;
 panel.querySelectorAll("[data-cancel]").forEach(btn => btn.addEventListener("click", () => poller.manualStop(btn.dataset.cancel)));
 },
-_renderResultStrip() {
+_renderResultStrip() { /* IMPL-142：文件夹图标内嵌同栏（反馈2）+ 展开视图（反馈4）+ 入夹结果不重复显示（反馈2） */
 const strip = $("#resultStrip");
 const tasks = Store.getTasks();
 const history = Store.getHistory();
 const _tids = new Set(tasks.map(t => t.id));
 const all = [ ...tasks, ...history.filter(h => !_tids.has(h.id)) ];
-const list = all.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 40);
-if (!list.length) {
+const openF = this.state.openFolderId ? this.state.folders.find(f => f.id === this.state.openFolderId) : null;
+if (this.state.openFolderId && !openF) this.state.openFolderId = null;
+const grouped = new Set();
+this.state.folders.forEach(f => f.ids.forEach(id => grouped.add(id)));
+const list = openF
+? openF.ids.map(id => all.find(t => t.id === id)).filter(Boolean)
+: all.filter(t => !grouped.has(t.id)).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)).slice(0, 40);
+if (!list.length && !openF && !this.state.folders.length) {
 delete strip.dataset.sig;
 strip.classList.add("empty");
 strip.innerHTML = "";
 return;
 }
-/* 77-a：签名跳过——历史归并等路径会以相同清单二次全量渲染，innerHTML 重建会抹掉入场
-   stagger 延迟并造成整行无意义重绘；id+status 指纹一致时只刷新 active 态 */
-const sig = list.map(t => t.id + ":" + (t.status || "")).join(",");
-if (sig === strip.dataset.sig) { this._updateStripActive(); return; }
+/* 77-a：签名跳过——IMPL-142 起指纹含文件夹段（id:成员数）与展开态，文件夹增删/成员变化/展开收敛都会触发重渲；
+   id+status 指纹一致时只刷新 active/selected 态 */
+const sig = (openF ? "F" + openF.id : "-") + "#" + this.state.folders.map(f => f.id + ":" + f.ids.length).join("|") + "#" + list.map(t => t.id + ":" + (t.status || "")).join(",");
+if (sig === strip.dataset.sig) { this._updateStripActive(); this._updateStripSelStates(); return; } /* IMPL-139：sig 跳过路径同步 selected */
 strip.dataset.sig = sig;
 const wasEmpty = strip.classList.contains("empty");
 strip.classList.remove("empty");
 strip.innerHTML = "";
+let fi = 0;
+if (openF) {
+/* IMPL-142 反馈4：展开视图=[当前文件夹图标（绽开保持）]+[夹内成员]，外部其余结果隐藏 */
+strip.appendChild(this._buildFolderEl(openF, true));
+} else {
+this.state.folders.forEach(f => {
+const el = this._buildFolderEl(f, false);
+if (wasEmpty) el.style.animationDelay = Math.min(fi++ * 16, 320) + "ms";
+strip.appendChild(el);
+});
+}
 list.forEach((t, i) => {
-const th = this._buildStripThumb(t);
-if (wasEmpty) th.style.animationDelay = Math.min(i * 16, 320) + "ms";
+const th = this._buildStripThumb(t, !!openF);
+if (wasEmpty && !openF) th.style.animationDelay = Math.min((fi + i) * 16, 320) + "ms";
 strip.appendChild(th);
 });
-this._updateStripActive();
+this._updateStripActive(); this._updateStripSelStates(); /* IMPL-139：重建后重放 selected */
 },
-_buildStripThumb(task) {
+_buildStripThumb(task, noDrag) { /* IMPL-142：noDrag=展开视图成员（已在夹内，禁拖） */
 const th = document.createElement("div");
 th.className = "strip-thumb status-" + (task.status || "processing");
 th.dataset.tid = task.id;
@@ -13426,11 +13564,30 @@ mediaHtml = `<img src="${esc(thumbUrl || url)}" loading="lazy" decoding="async" 
 } else {
 mediaHtml = `<div class="strip-icon-only"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/></svg></div>`;
 }
-th.innerHTML = mediaHtml;
-th.addEventListener("click", () => this._showSingleTask(task));
+th.innerHTML = mediaHtml;/* IMPL-143 反馈⑤：左上蓝色圆点移除（strip-sel-dot 全删）——选中态视觉=上浮+品牌描边+品牌薄雾 */
+if (this.state.compareList.some(t => t.id === task.id)) th.classList.add("selected");
+th.addEventListener("click", e => {
+/* IMPL-138②：Ctrl/Cmd+点击=加选/减选；触屏多选模式（长按进入）下单击即切换选中 */
+if (this._lpSel === task.id && Date.now() - (this._lpSelAt || 0) < 700) return; /* IMPL-139：长按已选中，吞掉松手合成 click */
+if (e.ctrlKey || e.metaKey || this.state.selMode) {
+e.preventDefault();
+this._toggleSelect(task);
+} else this._showSingleTask(task);
+});
+/* IMPL-138④/142：成功态可拖拽 → 拖到文件夹图标收入 / 拖到条尾幽灵新建文件夹（反馈3）；拖动期间自动浮现幽灵 */
+if (task.status === "succeeded" && task.result?.url && !noDrag) {
+th.draggable = true;
+th.addEventListener("dragstart", e => {
+try { e.dataTransfer.setData("application/x-wb-task", task.id); e.dataTransfer.setData("text/plain", task.id); e.dataTransfer.effectAllowed = "copy"; } catch (err) {}
+th.classList.add("dragging");
+this._showStripGhost();
+});
+th.addEventListener("dragend", () => { th.classList.remove("dragging"); this._hideStripGhost(); });
+}
 return th;
 },
 _updateStripItem(task) {
+if (this.state.openFolderId) return; /* IMPL-142 反馈4：展开态锁定结果栏内容，新结果待收敛后可见 */
 const strip = $("#resultStrip");
 if (!strip || strip.classList.contains("empty")) {
 this._renderResultStrip();
@@ -13442,11 +13599,11 @@ if (existing) {
 const nu = this._buildStripThumb(task);
 nu.style.animation = "none";
 existing.replaceWith(nu);
-this._updateStripActive();
+this._updateStripActive(); this._updateStripSelStates(); /* IMPL-139：原位更新后重放 selected */
 } else if (task.status === "succeeded" || task.status === "processing" || task.status === "failed" || task.status === "timeout") {
 strip.prepend(this._buildStripThumb(task));
 while (strip.children.length > 40) strip.lastElementChild.remove();
-this._updateStripActive();
+this._updateStripActive(); this._updateStripSelStates(); /* IMPL-139：prepend 后重放 selected */
 }
 },
 _updateStripActive() {
@@ -13610,43 +13767,319 @@ poller.start(newTask);
 Toast.success("已重新提交");
 }).catch(e => Toast.error(e.message));
 },
-_toggleCompare(task) {
+/* ── IMPL-138②/142 多选体系（独立 sel-bar 移除：批量操作=结果卡片下方 sv-floatbar 批量组；compareList=唯一选中集合） ── */
+_toggleCompare(task) { this._toggleSelect(task); },
+_toggleSelect(task) {
 const idx = this.state.compareList.findIndex(t => t.id === task.id);
-if (idx >= 0) this.state.compareList.splice(idx, 1); else {
-if (this.state.compareList.length >= 6) {
-Toast.warning("最多选择 6 个（滑块对比建议 2 张）");
+if (idx >= 0) {
+this.state.compareList.splice(idx, 1);
+if (!this.state.compareList.length) this.state.selMode = false; /* IMPL-142b：减选到 0 自动退出多选模式（防触屏死锁） */
+} else {
+if (this.state.compareList.length >= this.state.selMax) {
+Toast.warning(`最多选择 ${this.state.selMax} 个（滑块对比建议 2 张）`);
 return;
 }
 this.state.compareList.push(task);
-Toast.info(this.state.compareList.length === 1 ? "已加入对比 · 可继续添加，底部可选对比/导出" : `已加入对比（${this.state.compareList.length}/6）`);
+Toast.info(this.state.selMode ? `多选模式 · 单击加选/减选（${this.state.compareList.length}/${this.state.selMax}）` : this.state.compareList.length === 1 ? "已选中 · 打开任一结果可批量 编辑 / 对比 / 下载 / 导出" : `已选中（${this.state.compareList.length}/${this.state.selMax}）`);
 }
-this._renderCompareBar();
+this._updateStripSelStates(); this._syncCardCmpBtn(); this._refreshFloatbarSel();
+},
+_clearSelection() { /* IMPL-142：清除多选（出口=sv-floatbar 批量组「清除」） */
+this.state.compareList = [];
+this.state.selMode = false;
+this._updateStripSelStates(); this._syncCardCmpBtn(); this._refreshFloatbarSel();
+},
+_refreshFloatbarSel() { /* IMPL-142c：查看器开着时仅重挂 sv-floatbar——批量组随选中集实时增减（构建时快照→实时） */
+const cur = this.state.singleTaskId;
+if (!cur || !document.querySelector(".sv-wrap")) return;
+const t = [...Store.getTasks(), ...Store.getHistory()].find(x => x.id === cur);
+if (!t) return;
+const fresh = this._buildSingleView(t);
+const bar = fresh.querySelector(".sv-floatbar");
+const dock = $("#svDockLayer");
+if (bar && dock) { dock.innerHTML = ""; dock.appendChild(bar); }
+},
+_updateStripSelStates() {
+$$("#resultStrip .strip-thumb").forEach(el => el.classList.toggle("selected", this.state.compareList.some(t => t.id === el.dataset.tid)));
+},
+_syncCardCmpBtn() {
 const cmpBtn = document.querySelector('#svDockLayer [data-act="compare"]');
 if (cmpBtn) {
-const on = this.state.compareList.some(t => t.id === task.id);
+const on = this.state.compareList.some(t => t.id === this.state.singleTaskId);
 cmpBtn.classList.toggle("on", on);
 if (on) cmpBtn.setAttribute("aria-pressed", "true"); else cmpBtn.removeAttribute("aria-pressed");
-cmpBtn.title = on ? "移出对比" : "加入对比";
+cmpBtn.title = on ? "移出多选" : "加入多选";
 }
 },
-_renderCompareBar() {
-const bar = $("#compareBar");
-const dock = $("#svDockLayer");
-if (bar && dock && bar.parentElement !== dock) {
-const fb0 = dock.querySelector(".sv-floatbar");
-if (fb0) dock.insertBefore(bar, fb0); else dock.appendChild(bar);
+_downloadSelected() {
+/* IMPL-138②：多选批量下载——复用 IMPL-101 并发池模式（3 并发 + 350ms 节流） */
+const items = this.state.compareList.filter(t => t.status === "succeeded" && t.result?.url && (t.model?.type === "image" || t.model?.type === "video"));
+if (!items.length) { Toast.warning("所选结果没有可下载的图片/视频"); return; }
+if (items.length < this.state.compareList.length) Toast.info(`已跳过 ${this.state.compareList.length - items.length} 项非图片/视频`, 2600);
+Toast.info(`开始批量下载 ${items.length} 项（并发 3）…`, 3000);
+let ok = 0, bad = 0, idx = 0;
+const worker = async () => {
+while (idx < items.length) {
+const it = items[idx++];
+try { await this._downloadFile(it.result.url, `${it.model?.id || "workbench"}_${it.id}`); ok++; } catch (e) { bad++; }
+await new Promise(r => setTimeout(r, 350));
 }
-const n = this.state.compareList.length;
-if (!n) {
-bar.classList.add("empty");
+};
+Promise.all(Array.from({ length: Math.min(3, items.length) }, worker)).then(() => Toast[bad ? "warning" : "success"](`批量下载完成：成功 ${ok}${bad ? ` · 失败 ${bad}` : ""}`, 4200));
+},
+_editSelected() {
+/* IMPL-138⑤：多选一起放入编辑器——open 参数前向携带 images:[url,…]（当前版编辑器忽略未知键仅载首张；对方接线 images 后即可多图同开） */
+const items = this.state.compareList.filter(t => t.status === "succeeded" && t.result?.url && t.model?.type === "image");
+if (!items.length) { Toast.warning("所选结果没有可编辑的图片"); return; }
+if (typeof window.StudioEditorPreload === "function") { try { window.StudioEditorPreload(); } catch (_) {} }
+if (!Store.getR2WorkerUrl() || !Store.getR2AuthToken()) {
+Toast.warning("编辑器需要 R2 凭据才能导出图 —— 请在 设置 → 密钥保险箱 解锁");
+this._openSettings();
 return;
 }
-bar.classList.remove("empty");
-$("#compareCount").textContent = `已选 ${n} 个`;
+if (!window.StudioEditor) { Toast.error("编辑器组件未加载"); return; }
+if (!this.state.model || !this.state.model.params) this.switchTab("image");
+const model = this.state.model;
+const toProxy = u => u.startsWith("data:") ? u : u.startsWith("https://images.weserv.nl/") ? u + (u.includes("?") ? "&" : "?") + "_=" + Date.now() : "https://images.weserv.nl/?url=" + encodeURIComponent(u.replace(/^https?:\/\//, "")) + "&_=" + Date.now();
+const urls = items.map(t => toProxy(t.result.url));
+const first = items[0].result.url;
+window.StudioEditor.open({
+url: urls[0],
+images: urls,
+onSave: (dataURL, w, h) => {
+try {
+const refParam = model?.params?.find(p => p.type === "ref-image" && !isFrameKey(p.key)) || model?.params?.find(p => p.type === "ref-image");
+if (!refParam) {
+Toast.warning("当前模型不支持参考图");
+return true;
+}
+if (first && /^https?:\/\//.test(first)) {
+this._addUrlRef(refParam.key, first);
+}
+const item = {
+id: genId(),
+kind: "local",
+src: dataURL,
+name: "编辑图_" + Date.now() + ".png",
+uploaded: false,
+remote: null
+};
+this._getRefs(refParam.key).push(item);
+this._renderRefGrid(refParam.key);
+const promptEl = $('[data-key="prompt"], [data-key="text"]') || document.querySelector("#promptInput") || document.querySelector('textarea[data-key="prompt"]');
+if (promptEl) {
+const prefix = "图1为原图，图2为编辑后的参考图，请根据图2的效果进行如下修改：";
+const existing = promptEl.value || "";
+if (!existing.startsWith(prefix)) {
+promptEl.value = prefix + existing;
+this._onPromptInput && this._onPromptInput(promptEl);
+promptEl.dispatchEvent(new Event("input", {
+bubbles: true
+}));
+}
+}
+Toast.success("编辑图已添加到参考图，正在后台上传...");
+this._uploadLocalImage(refParam.key, item);
+return true;
+} catch (err) {
+console.error("onSave内部错误:", err.message, err.stack);
+Toast.error("导出写入失败: " + err.message);
+return true;
+}
+}
+});
+if (items.length > 1) Toast.info(`已带 ${items.length} 张图请求编辑器（当前版本载入第 1 张，多图同开等编辑器更新）`, 4200);
+},
+/* ── IMPL-138④/142 结果文件夹（引用集合语义；IMPL-142 反馈2/3/4/5：同栏内嵌+无命名+拖拽新建+展开收敛+右键菜单） ── */
+_loadFolders() {
+try {
+const v = JSON.parse(storageGet(CONFIG.STORAGE_KEYS.FOLDERS, "[]") || "[]");
+this.state.folders = Array.isArray(v) ? v.filter(f => f && f.id && Array.isArray(f.ids)).map(f => ({ id: String(f.id), ids: f.ids.filter(x => typeof x === "string"), color: (typeof f.color === "string" && /^\d{1,3},\d{1,3},\d{1,3}$/.test(f.color)) ? f.color : undefined })) : []; /* IMPL-142：无命名结构 {id,ids}；IMPL-143 反馈②：color=r,g,b 元组（旧数据无 color=品牌蓝兜底） */
+} catch (e) { this.state.folders = []; }
+},
+_saveFolders() {
+try { storageSet(CONFIG.STORAGE_KEYS.FOLDERS, JSON.stringify(this.state.folders)); } catch (e) {}
+},
+_buildFolderEl(f, isOpen) { /* IMPL-142：文件夹图标（三层纸视觉；open=展开态纸片保持绽开） */
+const el = document.createElement("div");
+el.className = "rf-folder" + (isOpen ? " open" : "");
+el.dataset.fid = f.id;
+if (f.color) el.style.setProperty("--fc-rgb", f.color); /* IMPL-143 反馈②：per-folder 色 */
+el.tabIndex = 0;
+el.setAttribute("role", "button");
+el.setAttribute("aria-label", (isOpen ? "文件夹（展开中），" : "文件夹，") + f.ids.length + " 项" + (isOpen ? "，点击收起" : "，点击展开"));
+const tasks = [...Store.getTasks(), ...Store.getHistory()];
+const thumbs = f.ids.map(id => tasks.find(t => t.id === id)).filter(t => t && t.status === "succeeded" && t.result?.url).slice(0, 3);
+el.innerHTML = `<div class="rf-back"></div>` + [0, 1, 2].map(i => thumbs[i] ? `<div class="rf-paper p${i + 1}"><img src="${esc(thumbs[i].result.thumbUrl || thumbs[i].result.url)}" alt="" loading="lazy" referrerpolicy="no-referrer"></div>` : `<div class="rf-paper p${i + 1}"></div>`).join("") + `<div class="rf-front"></div><span class="rf-badge">${f.ids.length}</span>`;
+el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this._toggleFolder(f.id); } });
+return el;
+},
+_toggleFolder(fid) { /* IMPL-142 反馈4：点击文件夹=展开（结果栏只显夹内成员、纸片绽开保持）/再点=收敛（外部结果恢复） */
+this.state.openFolderId = this.state.openFolderId === fid ? null : fid;
+this._renderResultStrip();
+const f = this.state.folders.find(x => x.id === fid);
+if (this.state.openFolderId && f) Toast.info(`已展开（${f.ids.length} 项）——再次点击文件夹收起`, 2200);
+},
+_folderCreateWith(tid) { /* IMPL-142 反馈3：拖到条尾幽灵=新建文件夹并收入（手机桌面成组交互，无命名） */
+if (!tid) return;
+this.state.folders.unshift({ id: genId(), ids: [tid], color: this._nextFolderColor() });
+this._saveFolders(); this._renderResultStrip();
+Toast.success("已新建文件夹并收入 1 项");
+},
+_nextFolderColor() { /* IMPL-143 反馈②：新文件夹取未占用色板色（不与已有撞色；色板避开品牌蓝；色尽轮转） */
+const PAL = ["245,158,11", "244,63,94", "20,184,166", "168,85,247", "132,204,22", "249,115,22", "236,72,153", "139,92,246"];
+const used = new Set(this.state.folders.map(f => f.color).filter(Boolean));
+return PAL.find(c => !used.has(c)) || PAL[this.state.folders.length % PAL.length];
+},
+_folderCreateWithMulti(tids) { /* IMPL-143 反馈③：批量「放入文件夹→新建收纳」（多选集一次成夹，取未占用色） */
+const ids = (tids || []).filter(Boolean);
+if (!ids.length) return;
+this.state.folders.unshift({ id: genId(), ids, color: this._nextFolderColor() });
+this._saveFolders(); this._clearSelection(); this._renderResultStrip();
+Toast.success(`已新建文件夹并收入 ${ids.length} 项`);
+},
+_folderAddMulti(fid, tids) { /* IMPL-143 反馈③：批量入夹（逐项去重，已入项跳过） */
+const f = this.state.folders.find(x => x.id === fid);
+if (!f) return;
+let added = 0;
+(tids || []).forEach(tid => { if (tid && !f.ids.includes(tid)) { f.ids.push(tid); added++; } });
+if (!added) { Toast.info("所选结果均已在该文件夹中"); return; }
+this._saveFolders(); this._clearSelection(); this._renderResultStrip();
+Toast.success(`已收入文件夹（${f.ids.length}）`);
+},
+_openMoveToMenu(anchor) { /* IMPL-143 反馈③：floatbar「放入文件夹」——rf-menu 选择菜单（列已有文件夹+新建收纳；.context-menu 类→宿主 escHandler Esc 清单自动覆盖） */
+const sel = this.state.compareList.map(t => t.id).filter(Boolean);
+if (!sel.length) return;
+let menu = $("#rfMenuMv");
+if (!menu) {
+menu = document.createElement("div");
+menu.id = "rfMenuMv";
+menu.className = "rf-menu context-menu";
+menu.setAttribute("role", "menu");
+menu.addEventListener("click", e => {
+const b = e.target.closest("[data-mv]");
+if (!b) return;
+const act = b.dataset.mv;
+const ids = this._mvSel || [];
+this._closeMoveMenu();
+if (act === "new") this._folderCreateWithMulti(ids); else if (act) this._folderAddMulti(act, ids);
+});
+document.body.appendChild(menu);
+}
+const items = this.state.folders.map((f, i) => `<button type="button" role="menuitem" data-mv="${esc(f.id)}"><i class="rf-mv-dot" style="background:rgb(${f.color || "var(--brand-rgb)"})"></i>文件夹 ${i + 1}<span class="rf-mv-n">${f.ids.length} 项</span></button>`).join("");
+menu.innerHTML = (items || '<div class="rf-mv-empty">暂无文件夹</div>') + `<button type="button" role="menuitem" class="rf-mv-new" data-mv="new">新建文件夹收纳 ${sel.length} 项</button>`;
+this._mvSel = sel;
+menu.classList.add("show");
+menu.style.left = "0px"; menu.style.top = "0px";
+const r = anchor.getBoundingClientRect();
+const mw = menu.offsetWidth, mh = menu.offsetHeight;
+let x = Math.min(Math.max(8, r.left), window.innerWidth - mw - 8);
+let y = r.bottom + 8;
+if (y + mh > window.innerHeight - 8) y = Math.max(8, r.top - mh - 8);
+menu.style.left = x + "px"; menu.style.top = y + "px";
+setTimeout(() => {
+const closer = ev => { if (!menu.contains(ev.target)) this._closeMoveMenu(); };
+document.addEventListener("pointerdown", closer, true);
+this._mvMenuCloser = closer;
+}, 0);
+},
+_closeMoveMenu() {
+const menu = $("#rfMenuMv");
+if (menu) menu.classList.remove("show");
+if (this._mvMenuCloser) { document.removeEventListener("pointerdown", this._mvMenuCloser, true); this._mvMenuCloser = null; }
+},
+_showStripGhost() { /* IMPL-142 反馈3：拖动缩略图期间，结果条尾浮现「新建文件夹」幽灵目标 */
+if (this.state.openFolderId) return;
+const strip = $("#resultStrip");
+if (!strip || strip.querySelector(".rf-ghost")) return;
+const g = document.createElement("div");
+g.className = "rf-ghost";
+g.setAttribute("aria-label", "拖放到此处新建文件夹");
+g.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5v10a1.5 1.5 0 0 0 1.5 1.5h14a1.5 1.5 0 0 0 1.5-1.5v-8a1.5 1.5 0 0 0-1.5-1.5h-7l-2-2.5H5A1.5 1.5 0 0 0 3.5 7.5z"/><path d="M12 11v5M9.5 13.5h5"/></svg><span>新建</span>`;
+strip.appendChild(g);
+},
+_hideStripGhost() {
+const g = document.querySelector("#resultStrip .rf-ghost");
+if (g) g.remove();
+},
+_folderAdd(fid, tid) {
+const f = this.state.folders.find(x => x.id === fid);
+if (!f || !tid) return;
+if (f.ids.includes(tid)) { Toast.info("该结果已在此文件夹中"); return; }
+f.ids.push(tid);
+this._saveFolders(); this._renderResultStrip(); /* IMPL-142：入夹即从外部结果区隐藏（同栏过滤） */
+Toast.success(`已收入文件夹（${f.ids.length}）`);
+},
+_openFolderMenu(fid, anchor) { /* IMPL-142 反馈5：右键/长按菜单=解组+删除 两项（命名与抽屉已移除；.context-menu 类使宿主 escHandler 的 Esc 关闭清单自动覆盖） */
+const f = this.state.folders.find(x => x.id === fid);
+if (!f) return;
+let menu = $("#rfMenu");
+if (!menu) {
+menu = document.createElement("div");
+menu.id = "rfMenu";
+menu.className = "rf-menu context-menu";
+menu.setAttribute("role", "menu");
+menu.addEventListener("click", e => {
+const b = e.target.closest("[data-rfm]");
+if (!b) return;
+const id = this._rfMenuFid;
+this._closeFolderMenu();
+if (b.dataset.rfm === "ungroup") this._folderUngroup(id); else this._folderDeleteAll(id);
+});
+document.body.appendChild(menu);
+}
+menu.innerHTML = `<button type="button" role="menuitem" data-rfm="ungroup">解组 · 回到结果栏</button><button type="button" role="menuitem" class="danger" data-rfm="delete">删除 · 连同结果</button>`;
+menu.classList.add("show");
+this._rfMenuFid = fid;
+menu.style.left = "0px"; menu.style.top = "0px";
+const r = anchor.getBoundingClientRect();
+const mw = menu.offsetWidth, mh = menu.offsetHeight;
+let x = Math.min(Math.max(8, r.left), window.innerWidth - mw - 8);
+let y = r.top - mh - 10;
+if (y < 8) y = Math.min(r.bottom + 10, window.innerHeight - mh - 8);
+menu.style.left = x + "px"; menu.style.top = y + "px";
+setTimeout(() => {
+const closer = ev => { if (!menu.contains(ev.target)) this._closeFolderMenu(); };
+document.addEventListener("pointerdown", closer, true);
+this._rfMenuCloser = closer;
+}, 0);
+},
+_closeFolderMenu() {
+const menu = $("#rfMenu");
+if (menu) menu.classList.remove("show");
+if (this._rfMenuCloser) { document.removeEventListener("pointerdown", this._rfMenuCloser, true); this._rfMenuCloser = null; }
+},
+_folderUngroup(fid) { /* IMPL-142 反馈5：解组=仅删文件夹壳，成员回到结果栏（引用集合语义，结果数据不动） */
+const f = this.state.folders.find(x => x.id === fid);
+if (!f) return;
+const n = f.ids.length;
+this.state.folders = this.state.folders.filter(x => x.id !== fid);
+if (this.state.openFolderId === fid) this.state.openFolderId = null;
+this._closeFolderMenu();
+this._saveFolders(); this._renderResultStrip();
+Toast.success(n ? `已解组——${n} 项结果回到结果栏` : "已解组");
+},
+_folderDeleteAll(fid) { /* IMPL-142 反馈5：删除=文件夹+成员结果一并删除（走 _deleteTask 原生管线：本地 tasks/history + 云同步） */
+const f = this.state.folders.find(x => x.id === fid);
+if (!f) return;
+this._showModal("删除文件夹", `<div style="font-size:13px;color:var(--text);line-height:1.7">将删除该文件夹及其中 <b>${f.ids.length}</b> 项结果，<b>本地与云端同步一并删除，不可恢复</b>。仅想收回结果请用「解组」。</div>`, [
+{ label: "取消", fn: () => {} },
+{ label: "删除", primary: true, fn: () => {
+const ids = [...f.ids];
+this.state.folders = this.state.folders.filter(x => x.id !== fid);
+if (this.state.openFolderId === fid) this.state.openFolderId = null;
+this._closeFolderMenu();
+this._saveFolders();
+ids.forEach(id => this._deleteTask(id)); /* 本地+云同步（_syncHistoryToCloudNow 在 _deleteTask 内） */
+this._renderResultStrip();
+this._closeModal();
+Toast.success(`文件夹及 ${ids.length} 项结果已删除`);
+} }
+]);
 },
 _showCompareGrid() {
 const list = this.state.compareList.filter(t => t.result?.url);
-if (!list.length) return;
+if (!list.length) { Toast.warning("请先多选结果：底部缩略图 Ctrl+点击（触屏长按进入多选），或点卡片「加入多选」"); return; }
 if (this.state.compareMode == null) this.state.compareMode = "slider";
 if (list.length !== 2) this.state.compareMode = "grid";
 $("#compareGrid").classList.add("show");
@@ -15701,7 +16134,17 @@ document.addEventListener("DOMContentLoaded", () => UI.init());
 window.StudioEditor = (function() {
 let api = null, ov = null, onSaveCb = null, escHandler = null, scriptP = null;
 const STUDIO_SRC = "image-studio.js";
-const SF_EDIT_MODEL = "Qwen/Qwen-Image-Edit";
+/* IMPL-143 P0：位图动作模型映射表（160 指令书拍板清单）——模型一律按表；通道不通不静默 fallback（错误 Toast 明确报「服务通道未配置」）
+   抠出主体→阿里抠图专用通道（SegStudio imageseg 三级 transport）｜擦除/扩图/局部重绘/图像拆解→Qwen-Image-3.0-Pro（sf edits）｜编辑文字→GPT-Image-2.5（sf edits） */
+const BITMAP_MODEL_MAP = {
+  "remove-background": { channel: "ali", model: null, label: "抠出主体" },
+  erase: { channel: "sf", model: "Qwen-Image-3.0-Pro", label: "消除" },
+  outpaint: { channel: "sf", model: "Qwen-Image-3.0-Pro", label: "扩图" },
+  inpaint: { channel: "sf", model: "Qwen-Image-3.0-Pro", label: "局部重绘" },
+  "edit-text": { channel: "sf", model: "GPT-Image-2.5", label: "编辑文字" },
+  "layer-decompose": { channel: "sf", model: "Qwen-Image-3.0-Pro", label: "图像拆解", soft: true }
+};
+const SF_EDIT_MODEL = "Qwen/Qwen-Image-Edit"; /* 仅表外动作兜底（映射表已覆盖全部六个内建动作） */
 function loadStudio() {
 if (window.ImageStudio && window.ImageStudio.mount) return Promise.resolve(window.ImageStudio);
 if (!scriptP) {
@@ -15789,9 +16232,9 @@ im.onerror = function() { rej(new Error("遮罩解码失败")); };
 im.src = dataUrl;
 });
 }
-async function studioEdits(imageData, maskData, prompt) {
+async function studioEdits(imageData, maskData, prompt, modelId) { /* IMPL-143：modelId 入参（映射表传入；缺省=SF_EDIT_MODEL 兜底） */
 const fd = new FormData();
-fd.append("model", SF_EDIT_MODEL);
+fd.append("model", modelId || SF_EDIT_MODEL);
 fd.append("prompt", prompt || "");
 fd.append("image", dataUrlToBlob(imageData), "image.png");
 if (maskData) fd.append("mask", dataUrlToBlob(maskData), "mask.png");
@@ -15802,6 +16245,29 @@ const img = r && r.images && r.images[0];
 const url = img && (img.url || (img.b64_json ? "data:image/png;base64," + img.b64_json : ""));
 if (!url) throw new Error("位图动作未返回图片: " + JSON.stringify(r).slice(0, 200));
 return { assetUrl: url };
+}
+function studioBusy(text) { /* IMPL-143 P2：位图动作执行期反馈条（宿主级——编辑器动作条属嵌入包，红线⑦不改 js；开始显示/finally 隐藏） */
+const b = document.getElementById("studioBusy");
+if (!b) return;
+const t = b.querySelector(".studioBusyText");
+if (t) t.textContent = text || "";
+b.hidden = !text;
+}
+async function studioAliMatting(imgData) { /* IMPL-143 P0：remove-background → 阿里抠图专用通道（stageImage→probeSize→pickAction→_call；凭据=IMAGESEG_AK/SK，缺=Toast 通道未配置不静默回退） */
+if (!(Store.getSegAk() && Store.getSegSk())) { try { Toast.warning("抠出主体的服务通道未配置：请先在设置页解锁阿里云密钥（IMAGESEG_AK/SK）"); } catch (_) {} return false; }
+const staged = await SegStudio.stageImage(imgData, null, {});
+const size = await SegStudio.probeSize(staged);
+const action = SegStudio.pickAction("SegmentCommonImage", size) || "SegmentCommonImage";
+const params = {};
+params[action === "SegmentHDCommonImage" ? "ImageUrl" : action === "SegmentSkin" ? "URL" : "ImageURL"] = staged;
+const res = await SegStudio._call(action, params);
+if (!res || !res.ok) {
+if (res && res.code === "MissingCredential") { try { Toast.warning("抠出主体的服务通道未配置：请先在设置页解锁阿里云密钥（IMAGESEG_AK/SK）"); } catch (_) {} return false; }
+throw new Error((res && res.message) || "阿里抠图通道调用失败");
+}
+const outUrl = SegStudio.resultUrlOf(res.data);
+if (!outUrl) throw new Error("阿里抠图通道未返回结果图片");
+return { assetUrl: outUrl };
 }
 function actName(a) { const M = { erase: "消除", outpaint: "扩图", inpaint: "局部重绘", "remove-background": "去背景", "layer-decompose": "图层分解", "edit-text": "改字" }; return (M[a] || "位图结果") + "_" + Date.now(); } /* IMPL-129③：返回契约 name —— 编辑器自动注册资产用 */
 async function bitmapHandler(e) {
@@ -15824,9 +16290,19 @@ const finalPrompt = (req && req.fields && req.fields.prompt) || userData || "";
 const imgData = await blobUrlToDataURL(e.url);
 const m = (typeof UI !== "undefined" && UI.state && UI.state.model) ? UI.state.model : null;
 const canI2I = !maskData && m && (m.direct === "sf-image" || m.direct === "ds-image");
-/* e.model 只是编辑器建议值 —— 模型一律由宿主覆盖：
-   无 mask 且宿主选中直连图像模型 → 走宿主模型；否则走 SF edits（Qwen/Qwen-Image-Edit） */
-if (maskData) { const r1 = await studioEdits(imgData, maskData, finalPrompt); r1.name = actName(e.action); return r1; } /* IMPL-129③：返回 { assetUrl, name } → 编辑器自动注册资产+插节点 */
+/* IMPL-143 P0：模型一律按 BITMAP_MODEL_MAP（160 指令书清单）——e.model 仅编辑器建议值不透传；
+   表内动作：ali→阿里抠图专用通道、sf→studioEdits(modelId)；表外动作沿用旧决策链（宿主选中直连模型优先→SF_EDIT_MODEL 兜底） */
+const mm = BITMAP_MODEL_MAP[e.action] || null;
+studioBusy((mm ? mm.label : actName(e.action)) + " 处理中… · " + (mm ? (mm.channel === "ali" ? "阿里抠图专用通道" : "模型 " + mm.model) : (canI2I && m ? "宿主选中模型" : "SF 编辑模型")));
+if (mm && mm.channel === "ali") { const r3 = await studioAliMatting(imgData); if (!r3) return false; r3.name = actName(e.action); try { Toast.success("抠出主体完成"); } catch (_) {} return r3; } /* IMPL-143：返回 { assetUrl, name } → 编辑器自动注册资产（IMPL-129③ 契约） */
+if (mm && mm.channel === "sf") {
+const sfOk = (typeof KeyVault !== "undefined" && KeyVault.keys && KeyVault.keys().API_KEY) || (typeof Store !== "undefined" && Store.getR2WorkerUrl && Store.getR2WorkerUrl());
+if (!sfOk) { try { Toast.warning(mm.label + "的服务通道未配置：缺少图像服务凭据（设置页可配置）"); } catch (_) {} return false; } /* 通道不通不静默 fallback */
+const r1 = await studioEdits(imgData, maskData, finalPrompt, mm.model); r1.name = actName(e.action);
+try { Toast.success(mm.label + " 完成 · 模型 " + mm.model); } catch (_) {}
+return r1;
+}
+if (maskData) { const r1 = await studioEdits(imgData, maskData, finalPrompt); r1.name = actName(e.action); return r1; } /* IMPL-129③ 契约保持 */
 if (canI2I && m.direct === "sf-image") {
 const r = await Api._sfImage(m, { prompt: finalPrompt, image: imgData, image_size: "1024x1024" });
 return { assetUrl: r.url, name: actName(e.action) }; /* IMPL-129③ */
@@ -15838,9 +16314,12 @@ return { assetUrl: r.url, name: actName(e.action) }; /* IMPL-129③ */
 const r2 = await studioEdits(imgData, null, finalPrompt); r2.name = actName(e.action); return r2; /* IMPL-129③ */
 } catch (err) {
 console.error("[StudioEditor] 位图动作失败:", err);
-try { Toast.error("位图动作失败: " + ((err && err.message) || err)); } catch (_) {}
+const rawMsg = String((err && err.message) || err);
+const mmL = (typeof BITMAP_MODEL_MAP !== "undefined" && BITMAP_MODEL_MAP[e.action] || {}).label || "位图动作";
+if (/HTTP\s+4\d\d/i.test(rawMsg)) { try { Toast.error(mmL + "的服务通道未配置或上游不可用（" + rawMsg.slice(0, 90) + "）——已按规约不静默回退"); } catch (_) {} }
+else { try { Toast.error("位图动作失败: " + rawMsg); } catch (_) {} }
 return false;
-}
+} finally { studioBusy(""); } /* IMPL-143 P2：无论成败收反馈条 */
 }
 function open(opts) {
 opts = opts || {};
@@ -15849,6 +16328,7 @@ onSaveCb = opts.onSave || null;
 ov = document.createElement("div");
 ov.className = "studioOverlay";
 ov.innerHTML = '<div class="studioModal" id="studioModal" role="dialog" aria-modal="true" aria-label="图片工作台">'
++ '<div class="studioBusy" id="studioBusy" hidden><span class="studioBusySpin" aria-hidden="true"></span><span class="studioBusyText"></span></div>' /* IMPL-143 P2：位图动作执行期反馈条 */
 + '<div class="studioTopbar"><span class="studioTitle">图片工作台</span><span class="studioHint">编辑 · 裁切 · 排版 — 位图动作由工作台模型执行 · 提示词取自工作台输入框</span>'
 + '<div class="studioTopActions"><button class="studioClose" type="button" aria-label="关闭编辑器" title="关闭 (Esc)"><svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div></div>'
 + '<div id="image-studio-root"><div class="studioLoading" role="status" aria-live="polite"><span class="studioLoadingSpin"></span>编辑器加载中…</div></div></div>';
@@ -15909,7 +16389,7 @@ return { open: open, close: close };
 /* ============================================================
    SvFloor —— 画布真透视地台 V2（79-a：内核整体升级为用户优化版引擎）
    ------------------------------------------------------------
-   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.158 时点）。
+   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.161 时点）。
    相比 V1（IMPL-56/69 移植的旧版）内核升级点：
      ① 落影渲染重写：5 档模糊叠加，模糊半径正比「离接触边的距离」（近实远虚）——
         faceK 面光参数 × span，近端带 FLAT=0.22 非零项（离地 lift 自身摊出的半影）；
@@ -16961,7 +17441,7 @@ return { open: open, close: close };
     var scrollEl = hostPanel ? hostPanel.querySelector(".result-scroll") : null;
     if (!listEl || !bodyEl || !scrollEl || !listEl.classList.contains("single-view")) return;
     var cap = capLayerEl ? (capLayerEl.querySelector(".sv-caption") || capLayerEl.firstElementChild) : null;
-    var fb = dockLayerEl ? (dockLayerEl.querySelector(".sv-floatbar") || dockLayerEl.querySelector(".compare-bar")) : null;
+    var fb = dockLayerEl ? dockLayerEl.querySelector(".sv-floatbar") : null;/* IMPL-138③：compare-bar fallback 已移除 */
     var br = bodyEl.getBoundingClientRect(), sr = scrollEl.getBoundingClientRect();
     if (br.height < 120 || sr.height < 80) return;
     var pt = 12, pb = 12;
