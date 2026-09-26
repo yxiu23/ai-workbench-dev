@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><!-- IMPL-115②：iOS standalone 沉浸机制——default=状态栏白色实心条压在页面顶部（内容不延伸），结果态深色网格上方永远隔一条系统白条+边缘融合渐变（用户"白黑羽化"根因之一）；black-translucent=页面内容延伸到状态栏下方、状态栏透明，iOS≥16.4 状态栏底色由 theme-color 染色+文字色系统自适应（配合 IMPL-114② 动态同步：结果态深底白字/编辑态白底黑字），iOS<16.4 恒白字（结果态深底无感，编辑态白底上时间/电量对比度低的已知权衡） -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffffff"><!-- IMPL-114②：默认=编辑态白(--bg-elev)；结果态由 __wbSyncThemeColor 动态切网格基底色——iOS standalone 把 theme-color 渲染在状态栏区（含系统边缘融合渐变），恒浅色=结果态状态栏白块+白黑过渡（用户截图实锤）；原 media 限定 light 在系统深色时整条失效 -->
-<title>修的媒体工作台 V26.9.156</title>
+<title>修的媒体工作台 V26.9.158</title>
 <link rel="icon" type="image/webp" id="faviconLink" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1741,12 +1741,14 @@ from{opacity:0;transform:translateY(6px) scale(.94)}}
 .sv-docklayer .sv-floatbar,.sv-docklayer .compare-bar,.sv-caplayer .sv-caption,.sv-wrap,.lb-stage,.file-mode-hint,.toast,.undo-btn,.modal-overlay.show,.modal-content,.quick-starts .qs-chip,.ping-dot,.lb-progress::before{animation:none}}
 
 /* ==================== IMPL-126：图片工作台弹框壳样式（内核已外链 image-studio.js，Shadow DOM 自带样式） ==================== */
-.studioOverlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(10,12,18,.60);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);animation:studioFade .18s ease}
+.studioOverlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(10,12,18,.60) /* IMPL-129①：22px→12px */;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);animation:studioFade .18s ease}
 .studioOverlay[hidden]{display:none}
 @keyframes studioFade{from{opacity:0}to{opacity:1}}
-.studioModal{position:relative;width:min(1180px,97vw);height:min(820px,93vh);border-radius:16px;overflow:hidden;box-shadow:0 30px 96px rgba(0,0,0,.55),0 3px 12px rgba(0,0,0,.30);background:#101112;display:flex;flex-direction:column;animation:studioPop .24s cubic-bezier(.32,1.08,.44,1)}
+.studioModal{position:relative;width:min(1720px,96vw);height:min(1080px,95vh) /* IMPL-129①：官方期望上限 min(95vw,1720px)×min(92vh,1080px)，旧值砍掉 542px 宽 */;border-radius:16px;overflow:hidden;box-shadow:0 30px 96px rgba(0,0,0,.55),0 3px 12px rgba(0,0,0,.30);background:#101112;display:flex;flex-direction:column;animation:studioPop .24s cubic-bezier(.32,1.08,.44,1)}
 @keyframes studioPop{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
 .studioTopbar{height:42px;flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:0 8px 0 14px;background:#141517;border-bottom:1px solid #292b2f;color:#f5f5f5}
+/* IMPL-130④ 已启用：嵌入包 adbd660（sha256 52af3d39 前缀）已发布并接线 onClose——宿主顶栏 42px 让位编辑器画布；关闭路径 = 编辑器顶栏右上角 ✕（on.close） / 遮罩点击 / Esc */
+.studioTopbar{ display:none; }
 .studioTitle{font-size:12.5px;font-weight:600;letter-spacing:.03em}
 .studioHint{font-size:11px;color:#9c9c9c}
 .studioTopActions{margin-left:auto;display:flex;align-items:center;gap:2px}
@@ -2095,7 +2097,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
     </div>
     <div class="settings-section settings-about">
       <div class="about-app">修的媒体工作台</div>
-      <span class="about-ver">V26.9.156</span>
+      <span class="about-ver">V26.9.158</span>
     </div>
   </div>
 </aside>
@@ -9799,7 +9801,7 @@ const oldest = tasks.reduce((a, b) => a.createdAt < b.createdAt ? a : b);
 const elapsed = Date.now() - oldest.createdAt;
 next = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
 } else {
-next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.156");
+next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.158");
 }
 if (document.title !== next) document.title = next;
 },
@@ -15801,11 +15803,14 @@ const url = img && (img.url || (img.b64_json ? "data:image/png;base64," + img.b6
 if (!url) throw new Error("位图动作未返回图片: " + JSON.stringify(r).slice(0, 200));
 return { assetUrl: url };
 }
+function actName(a) { const M = { erase: "消除", outpaint: "扩图", inpaint: "局部重绘", "remove-background": "去背景", "layer-decompose": "图层分解", "edit-text": "改字" }; return (M[a] || "位图结果") + "_" + Date.now(); } /* IMPL-129③：返回契约 name —— 编辑器自动注册资产用 */
 async function bitmapHandler(e) {
 try {
 const maskObj = e.mask || null;
 let maskData = maskObj ? (maskObj.dataUrl || null) : null; /* ★ mask: e.mask?.dataUrl —— e.mask 直接传会变 "[object Object]" */
-const maskMode = maskObj ? (maskObj.maskMode || "alpha-transparent") : "alpha-transparent";
+/* IMPL-129③：maskMode 以 e.mask.maskMode（编辑器实传枚举）为准；顶层 e.maskRule 仅当为冻结枚举值时采纳（新版契约），中文文案形态一律忽略（IMPL-126 订正纪律不回退） */
+const ruleTop = (e.maskRule === "alpha-transparent" || e.maskRule === "luma-white") ? e.maskRule : null;
+const maskMode = maskObj ? (maskObj.maskMode || ruleTop || "alpha-transparent") : "alpha-transparent";
 if (maskData && maskMode === "luma-white") maskData = await invertMaskToAlpha(maskData);
 const userData = hostPrompt();
 if ((e.action === "inpaint" || e.action === "edit-text") && !userData) {
@@ -15813,6 +15818,7 @@ try { Toast.warning("请先在工作台输入框填写提示词，再执行该�
 return false;
 }
 const needPrompt = e.action === "inpaint" || e.action === "edit-text";
+if (e.action === "erase" && !maskData) { try { Toast.warning("消除动作需要先用选区工具框选区域，再执行"); } catch (_) {} return false; } /* IMPL-129③：消除语义依赖选区，无选区整图重绘必错 */
 const req = e.buildRequest(needPrompt ? { prompt: userData } : {});
 const finalPrompt = (req && req.fields && req.fields.prompt) || userData || "";
 const imgData = await blobUrlToDataURL(e.url);
@@ -15820,16 +15826,16 @@ const m = (typeof UI !== "undefined" && UI.state && UI.state.model) ? UI.state.m
 const canI2I = !maskData && m && (m.direct === "sf-image" || m.direct === "ds-image");
 /* e.model 只是编辑器建议值 —— 模型一律由宿主覆盖：
    无 mask 且宿主选中直连图像模型 → 走宿主模型；否则走 SF edits（Qwen/Qwen-Image-Edit） */
-if (maskData) return await studioEdits(imgData, maskData, finalPrompt);
+if (maskData) { const r1 = await studioEdits(imgData, maskData, finalPrompt); r1.name = actName(e.action); return r1; } /* IMPL-129③：返回 { assetUrl, name } → 编辑器自动注册资产+插节点 */
 if (canI2I && m.direct === "sf-image") {
 const r = await Api._sfImage(m, { prompt: finalPrompt, image: imgData, image_size: "1024x1024" });
-return { assetUrl: r.url };
+return { assetUrl: r.url, name: actName(e.action) }; /* IMPL-129③ */
 }
 if (canI2I && m.direct === "ds-image") {
 const r = await Api._dsImage(m, { prompt: finalPrompt, urls: imgData });
-return { assetUrl: r.url };
+return { assetUrl: r.url, name: actName(e.action) }; /* IMPL-129③ */
 }
-return await studioEdits(imgData, null, finalPrompt);
+const r2 = await studioEdits(imgData, null, finalPrompt); r2.name = actName(e.action); return r2; /* IMPL-129③ */
 } catch (err) {
 console.error("[StudioEditor] 位图动作失败:", err);
 try { Toast.error("位图动作失败: " + ((err && err.message) || err)); } catch (_) {}
@@ -15871,7 +15877,7 @@ inpaint: bitmapHandler,
 "edit-text": bitmapHandler
 }
 },
-on: { onError: function(err) { try { Toast.error(String((err && err.message) || err)); } catch (_) {} } }
+on: { onError: function(err) { try { Toast.error(String((err && err.message) || err)); } catch (_) {} }, close: close } /* IMPL-129②：编辑器内点 ✕ → 调用宿主 close 关闭弹窗；旧版嵌入包忽略未知键无副作用 */
 });
 if (opts.url) {
 (async function() {
@@ -15903,7 +15909,7 @@ return { open: open, close: close };
 /* ============================================================
    SvFloor —— 画布真透视地台 V2（79-a：内核整体升级为用户优化版引擎）
    ------------------------------------------------------------
-   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.156 时点）。
+   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.158 时点）。
    相比 V1（IMPL-56/69 移植的旧版）内核升级点：
      ① 落影渲染重写：5 档模糊叠加，模糊半径正比「离接触边的距离」（近实远虚）——
         faceK 面光参数 × span，近端带 FLAT=0.22 非零项（离地 lift 自身摊出的半影）；
