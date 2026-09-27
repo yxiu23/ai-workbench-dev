@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><!-- IMPL-115②：iOS standalone 沉浸机制——default=状态栏白色实心条压在页面顶部（内容不延伸），结果态深色网格上方永远隔一条系统白条+边缘融合渐变（用户"白黑羽化"根因之一）；black-translucent=页面内容延伸到状态栏下方、状态栏透明，iOS≥16.4 状态栏底色由 theme-color 染色+文字色系统自适应（配合 IMPL-114② 动态同步：结果态深底白字/编辑态白底黑字），iOS<16.4 恒白字（结果态深底无感，编辑态白底上时间/电量对比度低的已知权衡） -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffffff"><!-- IMPL-114②：默认=编辑态白(--bg-elev)；结果态由 __wbSyncThemeColor 动态切网格基底色——iOS standalone 把 theme-color 渲染在状态栏区（含系统边缘融合渐变），恒浅色=结果态状态栏白块+白黑过渡（用户截图实锤）；原 media 限定 light 在系统深色时整条失效 -->
-<title>修的媒体工作台 V26.9.170</title>
+<title>修的媒体工作台 V26.9.172</title>
 <link rel="icon" type="image/webp" id="faviconLink" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -386,6 +386,10 @@ to{opacity:1;transform:none}}
 .ref-audio-thumb svg{width:20px;height:20px;color:var(--brand);flex-shrink:0}
 .ref-audio-name{font-size:9px;color:var(--text-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;text-align:center;line-height:1.2}
 .ref-item{position:relative;aspect-ratio:1;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border);background:var(--surface-2)}
+.ref-seq{position:absolute;top:3px;left:3px;min-width:15px;height:15px;padding:0 4px;border-radius:8px;background:rgba(9,14,30,.62);color:#fff;font-size:10px;line-height:15px;text-align:center;font-weight:600;z-index:2;pointer-events:none /* 第十三批用户反馈②：参考图序号角标=发送顺序 */}
+.ref-reading{width:100%;height:100%;display:flex;align-items:center;justify-content:center /* 第十三批：FileReader 读取中占位（保序 push 的伴生态） */}
+.ref-reading::after{content:"";width:14px;height:14px;border:2px solid rgba(125,135,150,.35);border-top-color:#5b8def;border-radius:50%;animation:refspin .8s linear infinite}
+@keyframes refspin{to{transform:rotate(360deg)}}
 .ref-item-video{aspect-ratio:1}
 .ref-item img,.ref-item video{width:100%;height:100%;object-fit:cover;display:block}
 .ref-item .ref-badge{position:absolute;top:2px;left:2px;padding:1px 4px;border-radius:4px;font-size:9px;background:rgba(var(--ink-rgb),.6);color:#fff;transition:background .3s ease}
@@ -1789,7 +1793,8 @@ from{opacity:0;transform:translateY(6px) scale(.94)}}
 .studioModal{position:relative;width:min(1720px,96vw);height:min(1080px,95vh) /* IMPL-129①：官方期望上限 min(95vw,1720px)×min(92vh,1080px)，旧值砍掉 542px 宽 */;border-radius:16px;overflow:hidden;box-shadow:0 2px 6px rgba(9,14,30,.10),0 16px 40px rgba(9,14,30,.14) /* IMPL-152（用户工单③）：微小平滑真实浅阴影——贴地接触层+极淡环境层双层结构（Z13 删遮罩变暗后阴影是唯一浮起线索，保留接触层防「浮不起来」） */;background:#101112;display:flex;flex-direction:column;animation:studioPop .24s cubic-bezier(.32,1.08,.44,1)}
 /* IMPL-143 P2：位图动作执行期反馈条（宿主级）——执行中常驻、finally 隐藏；不出现在编辑器动作条（嵌入包禁区） */
 .studioBusy{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:rgba(16,17,18,.82);border:1px solid rgba(255,255,255,.14);color:#e9e9e7;font-size:12px;box-shadow:0 2px 8px rgba(0,0,0,.18);pointer-events:none /* IMPL-152：阴影调轻 */;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
-.studioBusy[hidden]{display:none}
+.studioBusy[hidden]{display:none} /* 第十三批用户反馈①：手机端处理中悬浮条与顶部动作栏重叠且无必要——手机隐藏（桌面保留），完成态仍由 Toast 提示 */
+@media (max-width:768px){.studioBusy{display:none}}
 .studioBusySpin{width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;animation:studioBusySpin .8s linear infinite}
 @keyframes studioBusySpin{to{transform:rotate(360deg)}}
 /* Z16（第七批）：就地提示词输入条——贴底居中（bottom:14px 原浮顶栏）+ textarea 自动增高 + 编辑器官方令牌镜像双套配色。--dc-editor-ui-* 系内核 Shadow DOM 内部令牌、宿主不可跨界继承→按 data-studio-theme 属性选套镜像官方值（初值=Z12 缓存 sc_studio_theme；内核切换经 mount.onThemeChange 实时回写打开中输入条） */
@@ -2155,7 +2160,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
     </div>
     <div class="settings-section settings-about">
       <div class="about-app">修的媒体工作台</div>
-      <span class="about-ver">V26.9.170</span>
+      <span class="about-ver">V26.9.172</span>
     </div>
   </div>
 </aside>
@@ -9900,7 +9905,7 @@ const oldest = tasks.reduce((a, b) => a.createdAt < b.createdAt ? a : b);
 const elapsed = Date.now() - oldest.createdAt;
 next = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
 } else {
-next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.170");
+next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.172");
 }
 if (document.title !== next) document.title = next;
 },
@@ -11840,17 +11845,12 @@ if (!this.state.refState[this.state.modelKey][key]) this.state.refState[this.sta
 return this.state.refState[this.state.modelKey][key];
 },
 _addLocalRef(key, file) {
+const item = { id: genId(), kind: "local", src: "", name: file.name, uploaded: false, remote: null };
+this._getRefs(key).push(item); /* 第十三批用户反馈②：占位同步 push 保序——refs 序=调用序=用户添加/多选 files 序；原 onload 内 push 是读取完成序，多图并发时乱序=参考图顺序错位根因①；读取完成后仅回填 src */
+this._renderRefGrid(key);
 const reader = new FileReader;
 reader.onload = e => {
-const item = {
-id: genId(),
-kind: "local",
-src: e.target.result,
-name: file.name,
-uploaded: false,
-remote: null
-};
-this._getRefs(key).push(item);
+item.src = e.target.result;
 this._renderRefGrid(key);
 this._uploadLocalImage(key, item);
 };
@@ -12140,7 +12140,7 @@ const param = model?.params?.find(p => p.key === key);
 const isVideo = param && param.type === "ref-video";
 const isAudio = param && param.type === "ref-audio";
 const max = param ? param.max || (param.output === "single" ? 1 : param.output === "csv" ? 99 : param.output === "array" ? 14 : 99) : 99; /* IMPL-119：param.max 可覆盖输出类型推断上限（qwen 参考图 3） */
-let html = refs.map(r => {
+let html = refs.map((r, seqIdx) => {
 const isLocal = r.kind === "local" || r.kind === "local-video" || r.kind === "local-audio";
 const isUploading = isLocal && !r.uploaded && !r.uploadError;
 const isUploadError = isLocal && r.uploadError;
@@ -12149,9 +12149,10 @@ if (isUploading) badge = '<span class="ref-badge uploading">上传中</span>'; e
 const localBadge = isLocal ? isUploadError ? badge : isUploading ? '<span class="ref-badge local">本地</span>' : r._justUploaded ? badge : "" : "";
 const progressHtml = isUploading ? '<div class="ref-upload-progress"><div class="ref-upload-bar" style="width:0%"></div></div><span class="ref-upload-pct">0%</span>' : "";
 let media;
-if (isVideo) media = `<video src="${esc(r.src)}" muted></video>`; else if (isAudio) media = `<div class="ref-audio-thumb"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect class="eqb e1" x="2.2" y="8.6" width="2.5" height="6.8" rx="1.25"/><rect class="eqb e2" x="6.5" y="5.2" width="2.5" height="13.6" rx="1.25"/><rect class="eqb e3" x="10.8" y="3.4" width="2.5" height="17.2" rx="1.25"/><rect class="eqb e4" x="15.1" y="6.4" width="2.5" height="11.2" rx="1.25"/><rect class="eqb e5" x="19.4" y="9.4" width="2.5" height="5.2" rx="1.25"/></svg><span class="ref-audio-name">${esc(trunc(r.name, 12))}</span></div>`; else media = `<img src="${esc(r.src)}" loading="lazy" referrerpolicy="no-referrer">`;
+if (isVideo) media = `<video src="${esc(r.src)}" muted></video>`; else if (isAudio) media = `<div class="ref-audio-thumb"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect class="eqb e1" x="2.2" y="8.6" width="2.5" height="6.8" rx="1.25"/><rect class="eqb e2" x="6.5" y="5.2" width="2.5" height="13.6" rx="1.25"/><rect class="eqb e3" x="10.8" y="3.4" width="2.5" height="17.2" rx="1.25"/><rect class="eqb e4" x="15.1" y="6.4" width="2.5" height="11.2" rx="1.25"/><rect class="eqb e5" x="19.4" y="9.4" width="2.5" height="5.2" rx="1.25"/></svg><span class="ref-audio-name">${esc(trunc(r.name, 12))}</span></div>`; else media = r.src ? `<img src="${esc(r.src)}" loading="lazy" referrerpolicy="no-referrer">` : `<div class="ref-reading" role="status" aria-label="读取中"></div>`; /* 第十三批：占位 push 保序——src 未回填（FileReader 读取中）显式占位不破图 */
+const seqHtml = `<span class="ref-seq" aria-label="第 ${seqIdx + 1} 张">${seqIdx + 1}</span>`; /* 第十三批用户反馈②：序号角标=发送顺序（urls 数组序=网格序） */
 const editBtn = !isVideo && !isAudio && r.remote ? `<button class="ref-edit" data-edit="${esc(r.id)}" title="编辑此图" aria-label="编辑此图"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>` : "";
-return `<div class="ref-item ${isVideo ? "ref-item-video" : ""} ${isAudio ? "ref-item-audio" : ""}" data-rid="${esc(r.id)}">${media}${localBadge}${progressHtml}<button class="ref-del" data-del="${esc(r.id)}" aria-label="删除参考图"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>${editBtn}<button class="ref-copy" data-copy-url="${esc(r.id)}" aria-label="复制图片URL"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>`;
+return `<div class="ref-item ${isVideo ? "ref-item-video" : ""} ${isAudio ? "ref-item-audio" : ""}" data-rid="${esc(r.id)}">${seqHtml}${media}${localBadge}${progressHtml}<button class="ref-del" data-del="${esc(r.id)}" aria-label="删除参考图"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>${editBtn}<button class="ref-copy" data-copy-url="${esc(r.id)}" aria-label="复制图片URL"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>`;
 }).join("");
 const isEmpty = refs.length === 0;
 if (grid.classList) grid.classList.toggle("is-empty", isEmpty);
@@ -12231,6 +12232,8 @@ warn.classList.toggle("show", hasLocal);
 },
 _collectRefImage(key) {
 const refs = this._getRefs(key);
+const pend = refs.find(r => r.kind === "local" && !r.uploaded); /* 第十三批用户反馈②：图片补齐视频/音频同款守卫——上传中/失败项原先被 /^https?/ 静默过滤=图片缺失+后续序号前移错位根因②，改为显式报错不静默 */
+if (pend) throw new Error("参考图尚未上传完成（或上传失败）——请等进度条完成或移除失败项后再提交，避免图片缺失导致顺序错位");
 const urls = refs.map(r => r.remote || r.src).filter(u => /^https?:\/\//.test(u));
 const param = this.state.model.params.find(p => p.key === key);
 if (!param) return null;
@@ -16086,12 +16089,27 @@ const BITMAP_MODEL_MAP = {
   "remove-background": { channel: "ali", model: null, label: "抠出主体" },
   erase: { channel: "wy", model: "gpt-image-2.5-flare", label: "消除" },
   outpaint: { channel: "wy", model: "gpt-image-2.5-sunburst", label: "扩图", quality: "high" },
-  inpaint: { channel: "wy", model: "gpt-image-2.5-sunburst", label: "局部重绘", quality: "high" },
+  inpaint: { channel: "wy", model: "gpt-image-2.5-sunburst", label: "重绘", quality: "high" }, /* 第十三批 H4：label「局部重绘」→「重绘」（W5 同步改名；有选区=局部，无选区=整层改图 H1b） */
+  "angle-adjust": { channel: "wy", model: "gpt-image-2.5-sunburst", label: "角度调整", quality: "high" }, /* 第十三批 H4：新增（默认模型按修拍板=sunburst）——2026-09-28 拍板中文名定「角度调整」（原暂叫多角度）；W5 工具菜单首项 */
   "edit-text": { channel: "wy", model: "gpt-image-2.5-flare", label: "编辑文字" },
   "layer-decompose": { channel: "wy", model: "gpt-image-2.5-flare", label: "图像拆解", soft: true }
 };
 /* 旧条目存档（IMPL-143 版，Qwen-Image-3.0-Pro，变更单第二节第 5 条允许注释保留）：erase/outpaint/inpaint/layer-decompose→Qwen-Image-3.0-Pro、edit-text→GPT-Image-2.5（裸名，作废）——回退=按本注释还原表并去掉 studioEdits 第 5 参 */
 const SF_EDIT_MODEL = "Qwen/Qwen-Image-Edit"; /* 仅表外动作兜底——IMPL-150 起速创通道只映射 gpt-image-2.5 系（wyModelPath），表外动作若真出现将显式报错不静默（六个内建动作已全在 BITMAP_MODEL_MAP 表内，channel 值 sf→wy 语义更名、模型映射与官方定位一致保持） */
+function buildModelCatalog() { /* 第十三批 H7：参数 schema 由宿主下发（修拍板「全站零重复定义」）——actions=BITMAP_MODEL_MAP 对外投影（7 动作）；models=MODELS.image 中速创 wy 通道 gpt-image-2.5 系投影（params 原样 + modelLogoOf 现成 SVG 徽标串；W5 按 params[].type textarea/select/ref-image 渲染，渲染器不改） */
+const cat = { actions: {}, models: {} };
+Object.keys(BITMAP_MODEL_MAP).forEach(function(k) { const v = BITMAP_MODEL_MAP[k]; cat.actions[k] = { channel: v.channel, model: v.model, label: v.label, quality: v.quality || "" }; });
+try {
+if (typeof MODELS !== "undefined" && Array.isArray(MODELS.image) && typeof modelLogoOf === "function") {
+["gpt-image-2.5", "gpt-image-2.5-flare", "gpt-image-2.5-sunburst"].forEach(function(id) {
+const m = MODELS.image.find(function(x) { return x.id === id; });
+if (!m) return;
+cat.models[id] = { name: m.name, price: m.price || "", desc: m.desc || "", icon: modelLogoOf(id) || "", params: (m.params || []).map(function(p) { return { key: p.key, label: p.label, type: p.type, required: !!p.required, default: p.default != null ? p.default : "", options: p.options || null, max: p.max != null ? p.max : null, output: p.output || "", placeholder: p.placeholder || "" }; }) };
+});
+}
+} catch (_) {}
+return cat;
+}
 function loadStudio() {
 if (window.ImageStudio && window.ImageStudio.mount) return Promise.resolve(window.ImageStudio);
 if (!scriptP) {
@@ -16316,7 +16334,7 @@ return ossUrl;
 }
 async function studioEdits(imageData, maskData, prompt, modelId, extra) { /* IMPL-150 Z19/Z20：通道改速创异步（P0 定论：gpt-image-2.5 系不属 SF——/v1/images/edits 在 SF 不存在，404 根因=上游通道配错）。
 流程：参考图/mask 先经 /upload&dir=tmp 转公网 URL（Z18 定稿：中间图专放 tmp 可清理前缀 + 长边压 ≤2048）→ POST /media/wy/api/async/<路径>（模型承载于路径，无 model 字段）→ data.id → 轮询 detail（4s 间隔·30min 上限，status 0=处理中 2=完成、非 0 非 2=失败读 message）→ result[0] OSS 链接 → /archive 转存 R2 → 落结果。
-失败语义：状态码/任务 id/耗时全留证，不静默回退（Z19）；第 5 参 extra={quality,aspectRatio,resolution}——quality 值域 low/medium/high（sunburst 另有 xhigh/max 本表未用；仅 sunburst 系显式 high，flare 系不传=medium）；aspectRatio/resolution 仅扩图枚举档（wyPixels 合并为像素）；economized 由 routedModel 路径承载（image_gpt_2.5 无后缀=标准生成型 doc/78 0.1 元/张） */
+失败语义：状态码/任务 id/耗时全留证，不静默回退（Z19）；第 5 参 extra={quality,aspectRatio,resolution,background,num}（十三批 H1/S1：+background/num）——quality 值域 low/medium/high/xhigh/max（sunburst 另有 xhigh/max；仅 sunburst 系显式 high，flare 系不传=medium）；aspectRatio/resolution 仅扩图枚举档（wyPixels 合并为像素）；economized 由 routedModel 路径承载（image_gpt_2.5 无后缀=标准生成型 doc/78 0.1 元/张） */
 const t0 = Date.now();
 const mp = wyModelPath(modelId);
 if (!mp) throw new Error("位图动作模型未映射速创路径（仅支持 gpt-image-2.5 系）: " + (modelId || "(空)"));
@@ -16326,6 +16344,8 @@ const ex = extra || {};
 const pix = wyPixels(ex.aspectRatio, ex.resolution);
 if (pix) body.aspectRatio = pix;
 if (ex.quality) body.quality = ex.quality;
+if (ex.background) body.background = ex.background; /* H1（十三批）：背景参数透传（auto/transparent） */
+if (ex.num) body.n = ex.num; /* S1（十三批）：张数透传（速创未知字段通常忽略；结果按 result 全量回传） */
 if (maskData) body.mask = await wyUploadDataUrl(maskData, "mask.png"); /* Z20：mask 由 multipart 部件改 URL 形态 */
 const r = await Api._directReq("POST", "/api/async/" + mp, body, { wy: true, timeout: 6e4 });
 const taskId = r && r.data && r.data.id;
@@ -16350,7 +16370,7 @@ const raced = await Promise.race([archP, new Promise(function(res) { setTimeout(
 const finalUrl = raced || out;
 console.info("[W5-route]", JSON.stringify({ phase: "wy-done", taskId: taskId, secs: Math.round((Date.now() - t0) / 1000), url: finalUrl, archived: raced ? "sync" : "async-continue" }));
 if (!raced) archP.then(function(a) { if (a && a !== out) console.info("[W5-route]", JSON.stringify({ phase: "wy-archived", taskId: taskId, url: a })); });
-return { assetUrl: finalUrl };
+return { assetUrl: finalUrl, candidates: (Array.isArray(dd.result) ? dd.result.filter(Boolean) : [finalUrl]) }; /* S1（十三批）：全量候选回传（接口预留，编辑器旧版忽略未知字段无副作用） */
 }
 if (lastSt !== 0) throw new Error("速创任务失败 (id=" + taskId + " status=" + lastSt + " message=" + (dd.message || "无") + ") · 耗时 " + Math.round((Date.now() - t0) / 1000) + "s");
 }
@@ -16424,7 +16444,23 @@ R.forEach(function(r) { const p = r.split(":"); const d = Math.abs(p[0] / p[1] -
 const long = Math.max(w, h);
 return { ratio: best, tier: long < 1024 ? "1K" : long < 2048 ? "2K" : "4K", long: long };
 }
-function actName(a) { const M = { erase: "消除", outpaint: "扩图", inpaint: "局部重绘", "remove-background": "去背景", "layer-decompose": "图层分解", "edit-text": "改字" }; return (M[a] || "位图结果") + "_" + Date.now(); } /* IMPL-129③：返回契约 name —— 编辑器自动注册资产用 */
+function actName(a) { const M = { erase: "消除", outpaint: "扩图", inpaint: "重绘", "angle-adjust": "角度调整", "remove-background": "去背景", "layer-decompose": "图层分解", "edit-text": "改字" }; return (M[a] || "位图结果") + "_" + Date.now(); } /* IMPL-129③：返回契约 name —— 编辑器自动注册资产用；第十三批 H4 同步重绘/角度调整（2026-09-28 拍板） */
+async function promptReverseForStudio(pngDataUrl) { /* 第十三批 H9：编辑器「提示词反推」handler——SKILL_PROMPTS["visual-prompt-reverse"] 直用不改（修拍板）+ 识图模型 Store.getSkillVisionModel()（默认 dashscope:qwen3.8-omni-flash=技能面板现役同款）+ Api.llmChatStream 单轮；返回纯文本提示词 */
+if (!pngDataUrl || !/^(data|https?):/i.test(String(pngDataUrl))) throw new Error("提示词反推需要位图 PNG 输入（data:/https: URL）");
+const sys = (typeof SKILL_PROMPTS !== "undefined" && SKILL_PROMPTS["visual-prompt-reverse"]) || "";
+if (!sys) throw new Error("SKILL_PROMPTS[visual-prompt-reverse] 缺失");
+const vm = (typeof Store !== "undefined" && Store.getSkillVisionModel) ? Store.getSkillVisionModel() : "dashscope:qwen3.8-omni-flash";
+const messages = [
+{ role: "system", content: sys },
+{ role: "user", content: [ { type: "text", text: "请按系统设定反推这张图的提示词，只输出最终那条中文提示词本身。" }, { type: "image_url", image_url: { url: pngDataUrl } } ] }
+];
+let out = "";
+await Api.llmChatStream(messages, { model: vm, temperature: 0.3, maxTokens: 1024, tag: "studio-prompt-reverse", onDelta: function(d) { out += d; } });
+out = String(out || "").trim();
+if (!out) throw new Error("识图返回为空（模型 " + vm + "）");
+return out;
+}
+if (typeof window !== "undefined") { try { window.__studioPromptReverse = promptReverseForStudio; } catch (_) {} } /* 调试可达（同 archiveDataUrlCard 先例） */
 async function bitmapHandler(e) {
 try {
 const maskObj = e.mask || null;
@@ -16435,14 +16471,17 @@ const maskMode = maskObj ? (maskObj.maskMode || ruleTop || "alpha-transparent") 
 if (maskData && maskMode === "luma-white") maskData = await invertMaskToAlpha(maskData);
 let userData = hostPrompt();
 if ((e.action === "inpaint" || e.action === "edit-text") && !userData) { /* Z6（第六批）：宿主输入框为空 → 编辑器内就地输入条（官方案定：prompt 由嵌入方传入，替掉工作台硬门禁） */
-userData = await studioInlinePrompt(e.action === "inpaint" ? "局部重绘" : "编辑文字");
+userData = await studioInlinePrompt(e.action === "inpaint" ? "重绘" : "编辑文字"); /* 第十三批 H4：标签同步「重绘」 */
 if (!userData) { try { Toast.info("已取消：未填写提示词"); } catch (_) {} return false; }
 }
-const needPrompt = e.action === "inpaint" || e.action === "edit-text";
+const needPrompt = e.action === "inpaint" || e.action === "edit-text"; /* H1b（十三批）：重绘无选区=整层改图——maskData=null 时 studioEdits 不传 mask 字段天然支持，不报错不二次确认（修拍板） */
 if (e.action === "erase" && !maskData) { try { Toast.warning("消除动作需要先用选区工具框选区域，再执行"); } catch (_) {} return false; } /* IMPL-129③：消除语义依赖选区，无选区整图重绘必错 */
 const req = e.buildRequest(needPrompt ? { prompt: userData } : {});
 let finalPrompt = (req && req.fields && req.fields.prompt) || userData || ""; /* W5：let——mask 动作需追加保真约束句 */
-if (e.outpaintOptions && e.outpaintOptions.prompt) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + e.outpaintOptions.prompt; /* 第十二批 T12-4：编辑器扩图面板的选填描述并入提示词（追加，非替换；空着则一字不加） */
+const op13 = (e.options && typeof e.options === "object") ? e.options : null; /* 第十三批 H1：统一参数透传通道（全位图动作）——{model,aspectRatio,resolution,quality,background,prompt,num} */
+const oo13 = op13 || e.outpaintOptions || null; /* 十二批 outpaintOptions 保留兼容（已上线件在用），options 优先 */
+const ooPrompt13 = (oo13 && oo13.prompt) || "";
+if (ooPrompt13) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + ooPrompt13; /* H3（十三批）：面板/参数条描述追加并入（全动作，追加非替换；空着一字不加）——T12-4 语义保持并推广 */
 const imgData = await blobUrlToDataURL(e.url);
 const m = (typeof UI !== "undefined" && UI.state && UI.state.model) ? UI.state.model : null;
 const canI2I = !maskData && m && (m.direct === "sf-image" || m.direct === "ds-image");
@@ -16455,18 +16494,31 @@ if (mm && mm.channel === "wy") { /* IMPL-150：channel 语义更名 sf→wy（�
 const sfOk = (typeof KeyVault !== "undefined" && KeyVault.keys && KeyVault.keys().API_KEY) || (typeof Store !== "undefined" && Store.getR2WorkerUrl && Store.getR2WorkerUrl());
 if (!sfOk) { try { Toast.warning(mm.label + "的服务通道未配置：缺少图像服务凭据（设置页可配置）"); } catch (_) {} return false; } /* 通道不通不静默 fallback */
 /* W5 路由决策（变更单第四节）：quality 策略 + mask 保真约束句 + 省流自动路由 + 每次实际路由进日志 */
+const ooRatio = (oo13 && oo13.aspectRatio) || "";
+const ooRes = (oo13 && oo13.resolution) || "";
 let routedModel = mm.model;
+if (op13 && op13.model) { if (wyModelPath(op13.model)) routedModel = String(op13.model); else console.info("[W5-route]", JSON.stringify({ phase: "route-reject", reason: "options.model 非 gpt-image-2.5 系，保留表内默认", given: String(op13.model), keep: routedModel, ts: Date.now() })); } /* H1：参数条显式选模型优先（wyModelPath 合法性闸门，表外拒绝回默认+日志留痕） */
 const ex = {};
-if (mm.quality) ex.quality = mm.quality; /* 4.2：sunburst 系=high；flare 系不传（=速创默认 medium） */
+ex.quality = (op13 && op13.quality) || mm.quality || undefined; /* 4.2+H1：显式 quality 优先；缺省 sunburst=high/flare 不传（=速创默认 medium） */
+if (ex.quality && ["low", "medium", "high", "xhigh", "max"].indexOf(String(ex.quality)) < 0) delete ex.quality; /* doc/78 值域白名单外丢弃 */
+if (op13 && op13.background) ex.background = String(op13.background); /* H1：背景 auto/transparent 直透 */
+if (op13 && op13.num) { const n0 = parseInt(op13.num, 10) || 0; if (n0 >= 1 && n0 <= 4) ex.num = n0; } /* S1：多候选张数 1~4 透传（接口预留） */
 if (maskData) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + "仅修改蒙版区域内的内容，蒙版外严格保持原样"; /* 4.3：input_fidelity 速创不透传，保真唯一硬手段=mask+约束句 */
 let economized = false;
-if (e.action === "outpaint" || e.action === "layer-decompose") { /* 4.5：省流仅这两个动作 + 目标长边<1024（两条件同时满足） */
 const dims = await imageDimsOf(imgData);
+if (!e.sourceImage) e.sourceImage = { width: dims.w, height: dims.h }; /* H2：源图像素真值回填（编辑器未带时宿主解码补齐；naturalWidth 级别真值） */
 const tgt = pickAspectTier(dims.w, dims.h);
-if (e.action === "outpaint") { const oo12 = e.outpaintOptions || {}; ex.aspectRatio = oo12.aspectRatio || tgt.ratio; ex.resolution = oo12.resolution || tgt.tier; } /* 第十二批 T12-4：编辑器扩图面板显式选的档位优先；面板停在「原图/自动」（空串）时沿用上面的估档，与改造前逐字一致 */ /* 4.4：扩图按目标画布比例取最近枚举档（编辑器未透传绝对目标尺寸，按原图长边估档——瞳侧透出 targetSize 后精化，已落账） */
-if (tgt.long && tgt.long < 1024 && !(e.outpaintOptions && e.outpaintOptions.resolution)) { economized = true; routedModel = "gpt-image-2.5"; ex.economized = true; delete ex.quality; } /* 第十二批 T12-4：省流判据用的是原图长边，会把面板显式选的清晰度档一起吃掉（实测选 4K 仍被降级）⇒ 仅「自动」档才应用省流 */ /* 标准生成型无 quality 参数（doc/78） */
+if (e.action === "outpaint") { ex.aspectRatio = ooRatio || tgt.ratio; ex.resolution = ooRes || tgt.tier; } /* B2/T12-4 规则保持：扩图显式档位优先，自动=估档（与十二批改造后逐字一致） */
+else if (ooRatio) ex.aspectRatio = ooRatio; /* H1：非扩图动作显式才透传比例，自动=维持原行为（不下发） */
+if (ooRes) ex.resolution = ooRes; /* H1：显式分辨率全动作透传（含非扩图） */
+if ((e.action === "outpaint" || e.action === "layer-decompose" || e.action === "angle-adjust") && tgt.long && tgt.long < 1024 && !ooRes && !(op13 && op13.model)) { economized = true; routedModel = "gpt-image-2.5"; ex.economized = true; delete ex.quality; } /* 4.5 省流：动作集+angle-adjust（H1 推广）；仅「自动」档应用（T12-4/B4 规则推广）；显式 options.model 同样尊重不降级（同一精神延伸） */ /* 标准生成型无 quality 参数（doc/78） */
+let ang13 = null; /* H4.1（十三批 2026-09-28）：angle-adjust 结构化形状 {operation:"multiangle",params:{horizontal_angle,vertical_angle,zoom},anglePrompt}——默认 31/-21/1、三轴值域照珊瑚镜像；宿主职责=日志对拍+文本兜底（速创 body 无结构化通道，不污染请求体） */
+if (e.action === "angle-adjust" && op13 && op13.operation === "multiangle" && op13.params && typeof op13.params === "object") {
+ang13 = { operation: "multiangle", horizontal_angle: op13.params.horizontal_angle, vertical_angle: op13.params.vertical_angle, zoom: op13.params.zoom }; /* 三轴原值透记（旋转 0-360 / 倾斜 -30~60 / 缩放 0.5-4，校验在 W5 面板侧） */
+const ap13 = String(op13.anglePrompt || "").trim();
+if (ap13) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + ap13; /* H4.1：速创仅收文本（prompt/urls/mask），params 无下发通道 → 按拍板用 anglePrompt 兜底并入（追加非替换，H3 同语义） */
 }
-console.info("[W5-route]", JSON.stringify({ phase: "route", action: e.action, channel: "wy", model: routedModel, economized: economized, quality: ex.quality || null, aspectRatio: ex.aspectRatio || null, resolution: ex.resolution || null, mask: !!maskData, ts: Date.now() })); /* Z21：+phase 区分路由决策/提交/完成三段日志 */
+console.info("[W5-route]", JSON.stringify({ phase: "route", action: e.action, channel: "wy", model: routedModel, economized: economized, quality: ex.quality || null, aspectRatio: ex.aspectRatio || null, resolution: ex.resolution || null, mask: !!maskData, operation: ang13 ? ang13.operation : null, angles: ang13 ? [ang13.horizontal_angle, ang13.vertical_angle, ang13.zoom] : null, ts: Date.now() })); /* Z21：+phase 区分路由决策/提交/完成三段日志；H4.1：angle-adjust 回显收到的 operation 与三角度（对拍 W5 面板实传值） */
 studioBusy(mm.label + " 处理中… · 模型 " + routedModel + (economized ? "（标准生成型·省流）" : "") + (ex.quality ? " · quality=" + ex.quality : "") + (ex.aspectRatio ? " · " + ex.aspectRatio + "/" + ex.resolution : ""));
 const r1 = await studioEdits(imgData, maskData, finalPrompt, routedModel, ex); r1.name = actName(e.action);
 try { Toast.success(mm.label + " 完成 · 模型 " + routedModel + (economized ? "（省流）" : "")); } catch (_) {}
@@ -16533,12 +16585,16 @@ bitmapActions: {
 erase: bitmapHandler,
 outpaint: bitmapHandler,
 inpaint: bitmapHandler,
+"angle-adjust": bitmapHandler, /* 第十三批 H4：角度调整注册（W5 工具菜单→宿主路由；2026-09-28 拍板定名） */
 "remove-background": bitmapHandler,
 "layer-decompose": bitmapHandler,
 "edit-text": bitmapHandler
-}
+},
+tools: { promptReverse: function(png) { return promptReverseForStudio(png); } } /* 第十三批 H9：提示词反推 handler——契约 adapter.tools.promptReverse(pngDataUrl)→Promise<string>（纯文本，编辑器落参数条提示词框） */
 },
 on: { onError: function(err) { try { Toast.error(String((err && err.message) || err)); } catch (_) {} }, close: close, onThemeChange: function(t) { try { if (t === "light" || t === "dark") { localStorage.setItem("sc_studio_theme", t); const b = document.getElementById("studioInlinePrompt"); if (b) b.setAttribute("data-studio-theme", t); } } catch (_) {} } /* Z16（第七批）：+回写打开中输入条主题 */ } /* IMPL-129②：编辑器内点 ✕ → 调用宿主 close 关闭弹窗；旧版嵌入包忽略未知键无副作用。Z12（第七批）：+onThemeChange 编辑器内置主题开关回告写缓存（附录 A 契约，向后兼容；挂载初值不回告防回环——白名单校验仅收 light/dark） */
+,
+modelCatalog: buildModelCatalog() /* 第十三批 H7：参数 schema 宿主下发（actions×7 + models×3 含 SVG 图标）；旧嵌入包忽略未知键无副作用 */
 });
 const imgList = (opts.images && opts.images.length ? opts.images.slice(0, 12) : (opts.url ? [opts.url] : [])); /* W5 反馈①：多选一起进编辑器——images 数组逐张拉取后一次性 loadFiles（编辑器 loadFiles 原生接受数组，红线⑦未改 js） */
 const directOf = function(u) { /* Z15（第七批）：weserv 代理 URL 反解出原链，代理失败时回退直连用；data: 与非代理 URL 原样返回 */
