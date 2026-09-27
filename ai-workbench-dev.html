@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><!-- IMPL-115②：iOS standalone 沉浸机制——default=状态栏白色实心条压在页面顶部（内容不延伸），结果态深色网格上方永远隔一条系统白条+边缘融合渐变（用户"白黑羽化"根因之一）；black-translucent=页面内容延伸到状态栏下方、状态栏透明，iOS≥16.4 状态栏底色由 theme-color 染色+文字色系统自适应（配合 IMPL-114② 动态同步：结果态深底白字/编辑态白底黑字），iOS<16.4 恒白字（结果态深底无感，编辑态白底上时间/电量对比度低的已知权衡） -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffffff"><!-- IMPL-114②：默认=编辑态白(--bg-elev)；结果态由 __wbSyncThemeColor 动态切网格基底色——iOS standalone 把 theme-color 渲染在状态栏区（含系统边缘融合渐变），恒浅色=结果态状态栏白块+白黑过渡（用户截图实锤）；原 media 限定 light 在系统深色时整条失效 -->
-<title>修的媒体工作台 V26.9.165</title>
+<title>修的媒体工作台 V26.9.166</title>
 <link rel="icon" type="image/webp" id="faviconLink" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1790,6 +1790,17 @@ from{opacity:0;transform:translateY(6px) scale(.94)}}
 .studioBusy[hidden]{display:none}
 .studioBusySpin{width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;animation:studioBusySpin .8s linear infinite}
 @keyframes studioBusySpin{to{transform:rotate(360deg)}}
+/* Z16（第七批）：就地提示词输入条——贴底居中（bottom:14px 原浮顶栏）+ textarea 自动增高 + 编辑器官方令牌镜像双套配色。--dc-editor-ui-* 系内核 Shadow DOM 内部令牌、宿主不可跨界继承→按 data-studio-theme 属性选套镜像官方值（初值=Z12 缓存 sc_studio_theme；内核切换经 mount.onThemeChange 实时回写打开中输入条） */
+#studioInlinePrompt{--sip-bg:#141517;--sip-border:#292b2f;--sip-text:#f5f5f5;--sip-muted:#6b6b6b;--sip-field:#1d1f22;--sip-accent:#f28a73;--sip-on-accent:#171717;position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:6;display:flex;align-items:flex-end;gap:8px;padding:8px 10px 8px 14px;border-radius:14px;background:var(--sip-bg);border:1px solid var(--sip-border);box-shadow:0 6px 20px rgba(0,0,0,.4);width:min(720px,76%)}
+#studioInlinePrompt[data-studio-theme="light"]{--sip-bg:#f7f7f7;--sip-border:rgb(0 0 0/.1);--sip-text:#171717;--sip-muted:#9c9c9c;--sip-field:rgba(0,0,0,.05);--sip-accent:#f07860;--sip-on-accent:#ffffff;box-shadow:0 6px 20px rgba(0,0,0,.14)}
+#studioInlinePrompt .sipLabel{color:var(--sip-muted);font-size:12px;white-space:nowrap;padding-bottom:7px}
+#studioInlinePrompt textarea#studioInlineInput{flex:1;min-width:0;resize:none;box-sizing:border-box;height:32px;min-height:32px;max-height:122px;border-radius:10px;border:1px solid var(--sip-border);background:var(--sip-field);color:var(--sip-text);font-size:12px;line-height:1.5;font-family:inherit;padding:6px 10px;outline:none;overflow-y:auto}/* Z16：min-height:32px 压全局 textarea{min-height:80px}（否则 height 被顶到 80px，e2e149 B1 实证） */
+#studioInlinePrompt textarea#studioInlineInput::placeholder{color:var(--sip-muted)}
+#studioInlinePrompt textarea#studioInlineInput:focus{border-color:var(--sip-accent)}
+#studioInlinePrompt .sipBtnOk{flex:none;height:30px;padding:0 14px;border-radius:999px;border:none;background:var(--sip-accent);color:var(--sip-on-accent);font-size:12px;font-weight:600;cursor:pointer}
+#studioInlinePrompt .sipBtnOk:hover{filter:brightness(1.06)}
+#studioInlinePrompt .sipBtnNo{flex:none;height:30px;padding:0 12px;border-radius:999px;border:1px solid var(--sip-border);background:transparent;color:var(--sip-muted);font-size:12px;cursor:pointer}
+#studioInlinePrompt .sipBtnNo:hover{color:var(--sip-text)}
 @keyframes studioPop{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
 .studioTopbar{height:42px;flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:0 8px 0 14px;background:#141517;border-bottom:1px solid #292b2f;color:#f5f5f5}
 /* IMPL-130④ 已启用：嵌入包 adbd660（sha256 52af3d39 前缀）已发布并接线 onClose——宿主顶栏 42px 让位编辑器画布；关闭路径 = 编辑器顶栏右上角 ✕（on.close） / 遮罩点击 / Esc */
@@ -2142,7 +2153,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
     </div>
     <div class="settings-section settings-about">
       <div class="about-app">修的媒体工作台</div>
-      <span class="about-ver">V26.9.165</span>
+      <span class="about-ver">V26.9.166</span>
     </div>
   </div>
 </aside>
@@ -9846,7 +9857,7 @@ const oldest = tasks.reduce((a, b) => a.createdAt < b.createdAt ? a : b);
 const elapsed = Date.now() - oldest.createdAt;
 next = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
 } else {
-next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.165");
+next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.166");
 }
 if (document.title !== next) document.title = next;
 },
@@ -16175,7 +16186,7 @@ const t = b.querySelector(".studioBusyText");
 if (t) t.textContent = text || "";
 b.hidden = !text;
 }
-function studioInlinePrompt(label) { /* Z6（第六批）：编辑器内就地提示词输入条（hostPrompt 为空时 inpaint/edit-text 就地输入；studioBusy 同层位置；Esc 语义不变——关闭编辑器由 close 清理条目并取消） */
+function studioInlinePrompt(label) { /* Z6（第六批）：编辑器内就地提示词输入条（hostPrompt 为空时 inpaint/edit-text 就地输入；studioBusy 同层位置；Esc 语义不变——关闭编辑器由 close 清理条目并取消）。Z16（第七批）：贴底居中 bottom:14px（原 top:14px 浮顶栏）+ textarea 自动增高 1→6 行封顶滚动（Enter 提交/Shift+Enter 换行）+ 编辑器官方令牌镜像双套配色：--dc-editor-ui-* 属内核 Shadow DOM 内部令牌、宿主不可跨界继承→data-studio-theme 属性选套（初值=Z12 缓存 sc_studio_theme；内核切换经 mount.onThemeChange 实时回写打开中输入条；样式收敛至壳样式块 #studioInlinePrompt 规则） */
 return new Promise(function(resolve) {
 const modal = document.getElementById("studioModal");
 if (!modal) { resolve(""); return; }
@@ -16183,20 +16194,24 @@ const bar = document.createElement("div");
 bar.id = "studioInlinePrompt";
 bar.setAttribute("role", "dialog");
 bar.setAttribute("aria-label", label + "提示词输入");
-bar.style.cssText = "position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:8px;padding:8px 10px 8px 14px;border-radius:999px;background:rgba(16,17,18,.92);border:1px solid rgba(255,255,255,.18);box-shadow:0 6px 20px rgba(0,0,0,.4);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);max-width:92%";
-bar.innerHTML = '<span style="color:#e9e9e7;font-size:12px;white-space:nowrap">' + label + '提示词</span>'
-+ '<input id="studioInlineInput" type="text" placeholder="描述要修改的内容…" aria-label="提示词" style="width:min(320px,42vw);height:28px;border-radius:999px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:12px;padding:0 12px;outline:none" />'
-+ '<button id="studioInlineOk" type="button" style="height:28px;padding:0 14px;border-radius:999px;border:none;background:var(--brand,#a78bfa);color:#fff;font-size:12px;font-weight:600;cursor:pointer">确定</button>'
-+ '<button id="studioInlineNo" type="button" style="height:28px;padding:0 12px;border-radius:999px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#bbb;font-size:12px;cursor:pointer">取消</button>';
+try { bar.setAttribute("data-studio-theme", localStorage.getItem("sc_studio_theme") === "dark" ? "dark" : "light"); } catch (_) { bar.setAttribute("data-studio-theme", "light"); }
+bar.innerHTML = '<span class="sipLabel">' + label + '提示词</span>'
++ '<textarea id="studioInlineInput" rows="1" placeholder="描述要修改的内容…（Enter 提交，Shift+Enter 换行）" aria-label="提示词"></textarea>'
++ '<button id="studioInlineOk" class="sipBtnOk" type="button">确定</button>'
++ '<button id="studioInlineNo" class="sipBtnNo" type="button">取消</button>';
 modal.appendChild(bar);
 const inp = bar.querySelector("#studioInlineInput");
 let done = false;
 const finish = v => { if (done) return; done = true; if (bar.parentNode) bar.remove(); resolve(v); };
+const grow = function() { /* Z16：自动增高 1→6 行（122px=行高 18×6+上下 padding 12+边框 2 封顶，超出滚动；border-box 下 +2 边框补偿）。空值恒 32px 定标——30ms 首测时布局/字体未稳，长 placeholder 会于窄态换行撑大 scrollHeight 造成锁高（e2e149 B1 实证），非空输入时布局已稳定走实测 */
+try { if (!inp.value) { inp.style.height = "32px"; return; } inp.style.height = "auto"; inp.style.height = Math.min(inp.scrollHeight + 2, 122) + "px"; } catch (_) {}
+};
 bar._resolve = v => finish(String(v || "").trim());
 bar.querySelector("#studioInlineOk").addEventListener("click", () => finish(String(inp.value || "").trim()));
 bar.querySelector("#studioInlineNo").addEventListener("click", () => finish(""));
-inp.addEventListener("keydown", ev => { if (ev.key === "Enter") { ev.preventDefault(); finish(String(inp.value || "").trim()); } });
-setTimeout(function() { try { inp.focus(); } catch (e) {} }, 30);
+inp.addEventListener("input", grow);
+inp.addEventListener("keydown", ev => { if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); finish(String(inp.value || "").trim()); } /* Z16：Shift+Enter=换行走默认行为不拦截 */ });
+setTimeout(function() { try { inp.focus(); grow(); } catch (e) {} }, 30);
 });
 }
 async function studioAliMatting(imgData) { /* IMPL-143 P0：remove-background → 阿里抠图专用通道（stageImage→probeSize→pickAction→_call；凭据=IMAGESEG_AK/SK，缺=Toast 通道未配置不静默回退） */
@@ -16338,7 +16353,7 @@ inpaint: bitmapHandler,
 "edit-text": bitmapHandler
 }
 },
-on: { onError: function(err) { try { Toast.error(String((err && err.message) || err)); } catch (_) {} }, close: close, onThemeChange: function(t) { try { if (t === "light" || t === "dark") localStorage.setItem("sc_studio_theme", t); } catch (_) {} } } /* IMPL-129②：编辑器内点 ✕ → 调用宿主 close 关闭弹窗；旧版嵌入包忽略未知键无副作用。Z12（第七批）：+onThemeChange 编辑器内置主题开关回告写缓存（附录 A 契约，向后兼容；挂载初值不回告防回环——白名单校验仅收 light/dark） */
+on: { onError: function(err) { try { Toast.error(String((err && err.message) || err)); } catch (_) {} }, close: close, onThemeChange: function(t) { try { if (t === "light" || t === "dark") { localStorage.setItem("sc_studio_theme", t); const b = document.getElementById("studioInlinePrompt"); if (b) b.setAttribute("data-studio-theme", t); } } catch (_) {} } /* Z16（第七批）：+回写打开中输入条主题 */ } /* IMPL-129②：编辑器内点 ✕ → 调用宿主 close 关闭弹窗；旧版嵌入包忽略未知键无副作用。Z12（第七批）：+onThemeChange 编辑器内置主题开关回告写缓存（附录 A 契约，向后兼容；挂载初值不回告防回环——白名单校验仅收 light/dark） */
 });
 const imgList = (opts.images && opts.images.length ? opts.images.slice(0, 12) : (opts.url ? [opts.url] : [])); /* W5 反馈①：多选一起进编辑器——images 数组逐张拉取后一次性 loadFiles（编辑器 loadFiles 原生接受数组，红线⑦未改 js） */
 const directOf = function(u) { /* Z15（第七批）：weserv 代理 URL 反解出原链，代理失败时回退直连用；data: 与非代理 URL 原样返回 */
@@ -16395,7 +16410,7 @@ return { open: open, close: close };
 /* ============================================================
    SvFloor —— 画布真透视地台 V2（79-a：内核整体升级为用户优化版引擎）
    ------------------------------------------------------------
-   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.165 时点）。
+   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.166 时点）。
    相比 V1（IMPL-56/69 移植的旧版）内核升级点：
      ① 落影渲染重写：5 档模糊叠加，模糊半径正比「离接触边的距离」（近实远虚）——
         faceK 面光参数 × span，近端带 FLAT=0.22 非零项（离地 lift 自身摊出的半影）；
