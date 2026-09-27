@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><!-- IMPL-115②：iOS standalone 沉浸机制——default=状态栏白色实心条压在页面顶部（内容不延伸），结果态深色网格上方永远隔一条系统白条+边缘融合渐变（用户"白黑羽化"根因之一）；black-translucent=页面内容延伸到状态栏下方、状态栏透明，iOS≥16.4 状态栏底色由 theme-color 染色+文字色系统自适应（配合 IMPL-114② 动态同步：结果态深底白字/编辑态白底黑字），iOS<16.4 恒白字（结果态深底无感，编辑态白底上时间/电量对比度低的已知权衡） -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffffff"><!-- IMPL-114②：默认=编辑态白(--bg-elev)；结果态由 __wbSyncThemeColor 动态切网格基底色——iOS standalone 把 theme-color 渲染在状态栏区（含系统边缘融合渐变），恒浅色=结果态状态栏白块+白黑过渡（用户截图实锤）；原 media 限定 light 在系统深色时整条失效 -->
-<title>修的媒体工作台 V26.9.168</title>
+<title>修的媒体工作台 V26.9.169</title>
 <link rel="icon" type="image/webp" id="faviconLink" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1033,6 +1033,8 @@ body.svf-open>.sv-fpanel{opacity:1;visibility:visible;pointer-events:auto;transf
 .rf-paper.p2{z-index:2;width:64px;height:44px;bottom:5px}
 .rf-paper.p3{z-index:3;width:70px;height:48px;bottom:4px}
 .rf-paper img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.rf-paper video{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;background:var(--surface-3)} /* IMPL-152：视频封面（metadata 首帧前浅底兜底，老 Safari 不出首帧不破相） */
+.rf-paper-audio{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgb(var(--fc-rgb,var(--brand-rgb)));background:linear-gradient(135deg,rgba(var(--fc-rgb,var(--brand-rgb)),.18),rgba(var(--fc-rgb,var(--brand-rgb)),.05))} /* IMPL-152：音频封面音波（仿结果条 is-audio 品牌渐变底） */
 .rf-front{position:absolute;left:0;right:0;bottom:0;height:40px;background:linear-gradient(180deg,rgba(var(--fc-rgb,var(--brand-rgb)),.96),rgba(var(--fc-rgb,var(--brand-rgb)),.80));border-radius:4px 8px 8px 8px;z-index:4;transform-origin:bottom;transition:transform .3s ease}
 .rf-folder:hover .rf-front,.rf-folder.drag-over .rf-front,.rf-folder.open .rf-front{transform:skew(15deg) scaleY(.62)}
 .rf-folder.open .rf-front{filter:brightness(1.09)}
@@ -1784,15 +1786,15 @@ from{opacity:0;transform:translateY(6px) scale(.94)}}
 .studioOverlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px;animation:studioFade .18s ease}/* Z13（第七批）：删变暗+模糊三属性（原 background:rgba(10,12,18,.60) 与 -webkit-backdrop-filter/backdrop-filter blur(10px)）——背后工作台亮度与清晰度和打开前完全一致，编辑器「浮」于页面上；遮罩层保留负责居中；Z1 已删点外关闭监听，透明遮罩无误关风险 */
 .studioOverlay[hidden]{display:none}
 @keyframes studioFade{from{opacity:0}to{opacity:1}}
-.studioModal{position:relative;width:min(1720px,96vw);height:min(1080px,95vh) /* IMPL-129①：官方期望上限 min(95vw,1720px)×min(92vh,1080px)，旧值砍掉 542px 宽 */;border-radius:16px;overflow:hidden;box-shadow:0 30px 96px rgba(0,0,0,.55),0 3px 12px rgba(0,0,0,.30);background:#101112;display:flex;flex-direction:column;animation:studioPop .24s cubic-bezier(.32,1.08,.44,1)}
+.studioModal{position:relative;width:min(1720px,96vw);height:min(1080px,95vh) /* IMPL-129①：官方期望上限 min(95vw,1720px)×min(92vh,1080px)，旧值砍掉 542px 宽 */;border-radius:16px;overflow:hidden;box-shadow:0 2px 6px rgba(9,14,30,.10),0 16px 40px rgba(9,14,30,.14) /* IMPL-152（用户工单③）：微小平滑真实浅阴影——贴地接触层+极淡环境层双层结构（Z13 删遮罩变暗后阴影是唯一浮起线索，保留接触层防「浮不起来」） */;background:#101112;display:flex;flex-direction:column;animation:studioPop .24s cubic-bezier(.32,1.08,.44,1)}
 /* IMPL-143 P2：位图动作执行期反馈条（宿主级）——执行中常驻、finally 隐藏；不出现在编辑器动作条（嵌入包禁区） */
-.studioBusy{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:rgba(16,17,18,.82);border:1px solid rgba(255,255,255,.14);color:#e9e9e7;font-size:12px;box-shadow:0 6px 20px rgba(0,0,0,.35);pointer-events:none;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+.studioBusy{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:5;display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:rgba(16,17,18,.82);border:1px solid rgba(255,255,255,.14);color:#e9e9e7;font-size:12px;box-shadow:0 2px 8px rgba(0,0,0,.18);pointer-events:none /* IMPL-152：阴影调轻 */;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 .studioBusy[hidden]{display:none}
 .studioBusySpin{width:12px;height:12px;border-radius:50%;border:2px solid rgba(255,255,255,.25);border-top-color:#fff;animation:studioBusySpin .8s linear infinite}
 @keyframes studioBusySpin{to{transform:rotate(360deg)}}
 /* Z16（第七批）：就地提示词输入条——贴底居中（bottom:14px 原浮顶栏）+ textarea 自动增高 + 编辑器官方令牌镜像双套配色。--dc-editor-ui-* 系内核 Shadow DOM 内部令牌、宿主不可跨界继承→按 data-studio-theme 属性选套镜像官方值（初值=Z12 缓存 sc_studio_theme；内核切换经 mount.onThemeChange 实时回写打开中输入条） */
-#studioInlinePrompt{--sip-bg:#141517;--sip-border:#292b2f;--sip-text:#f5f5f5;--sip-muted:#6b6b6b;--sip-field:#1d1f22;--sip-accent:#f28a73;--sip-on-accent:#171717;position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:6;display:flex;align-items:flex-end;gap:8px;padding:8px 10px 8px 14px;border-radius:14px;background:var(--sip-bg);border:1px solid var(--sip-border);box-shadow:0 6px 20px rgba(0,0,0,.4);width:min(720px,76%)}
-#studioInlinePrompt[data-studio-theme="light"]{--sip-bg:#f7f7f7;--sip-border:rgb(0 0 0/.1);--sip-text:#171717;--sip-muted:#9c9c9c;--sip-field:rgba(0,0,0,.05);--sip-accent:#f07860;--sip-on-accent:#ffffff;box-shadow:0 6px 20px rgba(0,0,0,.14)}
+#studioInlinePrompt{--sip-bg:#141517;--sip-border:#292b2f;--sip-text:#f5f5f5;--sip-muted:#6b6b6b;--sip-field:#1d1f22;--sip-accent:#f28a73;--sip-on-accent:#171717;position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:6;display:flex;align-items:flex-end;gap:8px;padding:8px 10px 8px 14px;border-radius:14px;background:var(--sip-bg);border:1px solid var(--sip-border);box-shadow:0 2px 8px rgba(0,0,0,.22);width:min(720px,76%)} /* IMPL-152：阴影调轻 */
+#studioInlinePrompt[data-studio-theme="light"]{--sip-bg:#f7f7f7;--sip-border:rgb(0 0 0/.1);--sip-text:#171717;--sip-muted:#9c9c9c;--sip-field:rgba(0,0,0,.05);--sip-accent:#f07860;--sip-on-accent:#ffffff;box-shadow:0 2px 6px rgba(0,0,0,.10)} /* IMPL-152：阴影调轻 */
 #studioInlinePrompt .sipLabel{color:var(--sip-muted);font-size:12px;white-space:nowrap;padding-bottom:7px}
 #studioInlinePrompt textarea#studioInlineInput{flex:1;min-width:0;resize:none;box-sizing:border-box;height:32px;min-height:32px;max-height:122px;border-radius:10px;border:1px solid var(--sip-border);background:var(--sip-field);color:var(--sip-text);font-size:12px;line-height:1.5;font-family:inherit;padding:6px 10px;outline:none;overflow-y:auto}/* Z16：min-height:32px 压全局 textarea{min-height:80px}（否则 height 被顶到 80px，e2e149 B1 实证） */
 #studioInlinePrompt textarea#studioInlineInput::placeholder{color:var(--sip-muted)}
@@ -2153,7 +2155,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
     </div>
     <div class="settings-section settings-about">
       <div class="about-app">修的媒体工作台</div>
-      <span class="about-ver">V26.9.168</span>
+      <span class="about-ver">V26.9.169</span>
     </div>
   </div>
 </aside>
@@ -2979,17 +2981,20 @@ hint: "需搭配首帧"
 key: "images",
 label: "参考图",
 type: "ref-image",
-output: "csv"
+output: "csv",
+max: 10
 }, {
 key: "videos",
 label: "参考视频",
 type: "ref-video",
-output: "csv"
+output: "csv",
+max: 5
 }, {
 key: "audios",
 label: "参考音频",
 type: "ref-audio",
-output: "csv"
+output: "csv",
+max: 5
 } ],
 refGroups: {
 title: "参考素材",
@@ -3067,17 +3072,20 @@ hint: "需搭配首帧"
 key: "images",
 label: "参考图",
 type: "ref-image",
-output: "csv"
+output: "csv",
+max: 9
 }, {
 key: "videos",
 label: "参考视频",
 type: "ref-video",
-output: "csv"
+output: "csv",
+max: 3
 }, {
 key: "audios",
 label: "参考音频",
 type: "ref-audio",
-output: "csv"
+output: "csv",
+max: 3
 } ],
 refGroups: {
 title: "参考素材",
@@ -3232,6 +3240,13 @@ key: "image_url",
 label: "图像参考URL",
 type: "text"
 }, {
+key: "video_url",
+label: "视频参考",
+type: "ref-video",
+output: "csv",
+max: 2, /* IMPL-152：doc/71 视频参考 1~2 个（非主体调用时使用）——原先端零通道 */
+hint: "最多 2 个，与主体/图像参考互斥"
+}, {
 key: "bgm",
 label: "BGM",
 type: "select",
@@ -3255,6 +3270,10 @@ params: [ "subjects" ]
 label: "图像参考",
 value: "image",
 params: [ "image_url" ]
+}, {
+label: "视频参考",
+value: "video",
+params: [ "video_url" ]
 } ]
 }
 }, {
@@ -3563,7 +3582,20 @@ label: "尾帧",
 type: "ref-image",
 output: "single",
 hint: "需搭配首帧"
+} ],
+refGroups: { /* IMPL-152：首尾帧面板统一（用户工单④）——对齐 wan3 四选一形态收缩为两档：百炼官方仅首尾帧图生视频有文档佐证，图片/视频/音频参考 _dsVideo 虽预留映射但百炼侧无文档支持暂不开放；none=纯文生视频（默认档，原语义不变），frame=首/尾帧（body 键名不变，_dsVideo L7005 映射零改动） */
+title: "参考素材",
+hint: "只能选择一种",
+modes: [ {
+label: "无参考",
+value: "none",
+params: [ ]
+}, {
+label: "首/尾帧",
+value: "frame",
+params: [ "first_frame", "last_frame" ]
 } ]
+}
 } ],
 audio: [ {
 id: "audio_tts",
@@ -6916,7 +6948,9 @@ if (res.data && typeof res.data === "object") return res.data;
 return res;
 },
 async submit(model, body) {
-const res = await this.request("POST", model.endpoint, body);
+const nv = normalizeAndValidateApiBody(model, body); /* IMPL-152 P1：重提/重新生成旁路补校验+布尔归一（主链已归一则幂等直通；历史 body 再过互斥校验仍成立） */
+if (!nv.ok) throw new Error(nv.error);
+const res = await this.request("POST", model.endpoint, nv.body);
 const data = this.normalizeResponse(res);
 const id = data.id || data.taskId || data.requestId;
 if (!id) throw new Error("服务未返回任务 ID，响应: " + JSON.stringify(data).slice(0, 200));
@@ -8162,6 +8196,7 @@ if (body.images && body.video) return reject("参考图与参考视频不能同�
 }
 if (mid === "video_vidu") {
 if (body.subjects && body.image_url) return reject("主体图与图像参考不能同时使用");
+if (body.video_url && (body.subjects || body.image_url)) return reject("视频参考与主体/图像参考不能同时使用"); /* IMPL-152：video_url 入互斥网（深度防御：工作流导入/直接调 API 不经 refGroups 面板） */
 }
 const urlPattern = /^https?:\/\/[^\s]+$/i;
 const badScheme = /^(blob:|data:|file:)/i;
@@ -8180,6 +8215,14 @@ const arr = Array.isArray(v) ? v : String(v).split(",").map(s => s.trim()).filte
 for (const u of arr) {
 if (badScheme.test(u)) return reject(`${p.label} 不能使用本地文件地址，请先上传`);
 }
+}
+}
+/* IMPL-152 P0：布尔语义归一——select options 全为 "true"/"false" 的参数，收集链原样透传字符串，而上游按布尔语义解析（速创 doc/77 generate_audio 标注「布尔值」），非空字符串 "false" 恒真 → wan3「音频」选关闭仍出音频（用户实测实锤，report-a/b 双审计定案）。统一在提交边界转真布尔（同 _dsVideo audio 归一范式）；sound(on/off)/watermark(1/0) 等字符串枚举不纳入；对已布尔值幂等 */
+for (const bp of model.params) {
+if (bp.type === "select" && Array.isArray(bp.options) && bp.options.length > 0 && bp.options.every(bo => bo === "true" || bo === "false")) {
+const bv = body[bp.key];
+if (bv === "true" || bv === true) body[bp.key] = true;
+else if (bv === "false" || bv === false) body[bp.key] = false;
 }
 }
 return {
@@ -9857,7 +9900,7 @@ const oldest = tasks.reduce((a, b) => a.createdAt < b.createdAt ? a : b);
 const elapsed = Date.now() - oldest.createdAt;
 next = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
 } else {
-next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.168");
+next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.169");
 }
 if (document.title !== next) document.title = next;
 },
@@ -13874,7 +13917,7 @@ completedAt: Date.now()
 };
 Store.addHistory(card);
 this._renderResultStrip();
-this._preloadResult(card).catch(() => {}); /* dataURL 后台转存（_archiveResult 门控 sync+凭据，同直连/同步补转存链） */
+archiveDataUrlCard(card).catch(() => {}); /* IMPL-152：dataURL 产物转存 R2+512 缩略图（原 _preloadResult 对 data: 门控直返=永驻 LS 配额杀手，换专用帮手；双表回写+重渲染在帮手内） */
 Toast.success("已保存到结果区");
 return true;
 } catch (err) {
@@ -13905,8 +13948,9 @@ el.tabIndex = 0;
 el.setAttribute("role", "button");
 el.setAttribute("aria-label", (isOpen ? "文件夹（展开中），" : "文件夹，") + f.ids.length + " 项" + (isOpen ? "，点击收起" : "，点击展开"));
 const tasks = [...Store.getTasks(), ...Store.getHistory()];
+const typeOf = t => { const mty = t.model && t.model.type; if (mty === "video" || mty === "audio") return mty; const u = String(t.result?.url || ""); if (/\.(mp4|webm|mov)(\?|$)/i.test(u)) return "video"; if (/\.(mp3|wav|m4a|aac|ogg|flac)(\?|$)/i.test(u)) return "audio"; return "image"; }; /* IMPL-152（用户工单①）：封面类型判定——model.type 优先，URL 扩展名兜底 */
 const thumbs = f.ids.map(id => tasks.find(t => t.id === id)).filter(t => t && t.status === "succeeded" && t.result?.url).slice(0, 3);
-el.innerHTML = `<div class="rf-back"></div>` + [0, 1, 2].map(i => { const t = thumbs[2 - i]; return t ? `<div class="rf-paper p${i + 1}"><img src="${esc(t.result.thumbUrl || t.result.url)}" alt="" loading="lazy" referrerpolicy="no-referrer"></div>` : `<div class="rf-paper p${i + 1}"></div>`; }).join("") + `<div class="rf-front"></div><span class="rf-badge">${f.ids.length}</span>`; /* W5 反馈④：首图固定落最外层白页（p3 露白最多）——放入第 1 张即见，不再等三张 */
+el.innerHTML = `<div class="rf-back"></div>` + [0, 1, 2].map(i => { const t = thumbs[2 - i]; if (!t) return `<div class="rf-paper p${i + 1}"></div>`; const ty = typeOf(t), u = t.result.thumbUrl || t.result.url; /* IMPL-152：封面按类型分派——video 无缩略图走 <video> metadata 首帧（复用结果条 L13565 范式），audio 音波 SVG（复用 .eqb 五柱）；原 <img> 对音视频必破图空白（音频 thumbUrl 恒无 L7576） */ const inner = ty === "audio" ? `<div class="rf-paper-audio"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect class="eqb e1" x="2.2" y="8.6" width="2.5" height="6.8" rx="1.25"/><rect class="eqb e2" x="6.5" y="5.2" width="2.5" height="13.6" rx="1.25"/><rect class="eqb e3" x="10.8" y="3.4" width="2.5" height="17.2" rx="1.25"/><rect class="eqb e4" x="15.1" y="6.4" width="2.5" height="11.2" rx="1.25"/><rect class="eqb e5" x="19.4" y="9.4" width="2.5" height="5.2" rx="1.25"/></svg></div>` : ty === "video" && !t.result.thumbUrl ? `<video src="${esc(u)}" muted preload="metadata" playsinline></video>` : `<img src="${esc(u)}" alt="" loading="lazy" referrerpolicy="no-referrer">`; return `<div class="rf-paper p${i + 1}">${inner}</div>`; }).join("") + `<div class="rf-front"></div><span class="rf-badge">${f.ids.length}</span>`; /* W5 反馈④：首图固定落最外层白页（p3 露白最多）——放入第 1 张即见，不再等三张 */
 el.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this._toggleFolder(f.id); } });
 return el;
 },
@@ -15862,7 +15906,7 @@ completedAt: Date.now()
 };
 Store.addHistory(card);
 this._renderResultStrip();
-this._preloadResult(card).catch(() => {}); /* dataURL 后台转存（_archiveResult 门控 sync+凭据，同直连/同步补转存链） */
+archiveDataUrlCard(card).catch(() => {}); /* IMPL-152：dataURL 产物转存 R2+512 缩略图（原 _preloadResult 对 data: 门控直返=永驻 LS 配额杀手，换专用帮手；双表回写+重渲染在帮手内） */
 Toast.success("已保存到结果区");
 return true;
 } catch (err) {
@@ -16099,7 +16143,7 @@ completedAt: Date.now()
 });
 }
 if (!cards.length) { try { Toast.warning("未收到可落位的多图产物"); } catch (_) {} return false; }
-cards.forEach(c => Store.addHistory(c));
+cards.forEach(c => { Store.addHistory(c); archiveDataUrlCard(c).catch(() => {}); }); /* IMPL-152：逐卡后台转存（+512 缩略图），dataURL 不再永驻 LS */
 const ids = cards.map(c => c.id);
 if (typeof UI !== "undefined" && UI.state && UI.state.openFolderId) UI._folderAddMulti(UI.state.openFolderId, ids); else if (typeof UI !== "undefined") UI._folderCreateWithMulti(ids); /* Z10：整组入夹（有展开夹入展开夹，否则新建一夹收纳） */
 if (typeof UI !== "undefined") UI._renderResultStrip();
@@ -16209,14 +16253,47 @@ img.src = dataUrl;
 } catch (e) { resolve(dataUrl); }
 });
 }
-async function wyUploadDataUrl(dataUrl, name) { /* IMPL-151 Z18 定稿（修拍板：复用现有 R2）：dataURL→R2 公网 URL（POST /upload 直传，速创 urls 只吃公网 URL——不支持 base64/数组/multipart）；生成必需链路故不依赖云同步开关。定稿三件：①dir=tmp 专放「给上游看的中间图」（可清理前缀，不混正式目录）②上传前长边压 ≤2048（wyCompressDataUrl）③返回 r2:// 形态（PUBLIC_BASE_URL 未配）=速创服务器无法抓取→显式报错指引，不静默 */
+try { if (typeof navigator !== "undefined" && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function() {}); } catch (_) {} /* IMPL-152（用户工单⑤）：申请持久化存储（best-effort）——降低 UA 磁盘紧张时清理本站数据的概率；被拒无副作用 */
+async function archiveDataUrlCard(card) { /* IMPL-152（用户工单⑤）：编辑器产物 dataURL 落 R2——三处 onSave 全尺寸 dataURL 内联写 history 是「网页缓存易满」根因（2K 图 base64 5-15MB vs LS 配额 5-10MB，且 _archiveResult 对 data: 门控直返永不转存）：原图上传换 R2 URL + 长边 512 缩略图双写，双表回写照 applyArchived 范式；失败静默保留 dataURL（本地可用性优先）。「无限扩容」由 R2 承担（本地只留 URL 指针）；LRU 淘汰与 IDB Blob 迁移为二期 */
+try {
+const url = card && card.result && card.result.url;
+if (!url || !/^data:/i.test(url)) return false;
+const w = (Store.getR2WorkerUrl() || "").trim().replace(/\/$/, "");
+const token = (Store.getR2AuthToken() || "").trim();
+if (!w || !token) return false;
+const full = await wyUploadDataUrl(url, "studio-apply.png", "results");
+if (!full || !/^https?:\/\//i.test(full)) return false;
+card.result.originalUrl = url;
+card.result.url = full;
+try {
+const thumb = await wyCompressDataUrl(url, 512);
+if (thumb && thumb !== url) {
+const fd = new FormData();
+fd.append("file", dataUrlToBlob(thumb), "studio-thumb.png");
+const r = await fetch(w + "/upload?token=" + encodeURIComponent(token) + "&dir=results", { method: "POST", body: fd });
+const d2 = await r.json().catch(function() { return null; });
+if (r.ok && d2 && d2.url && /^https?:\/\//i.test(d2.url)) card.result.thumbUrl = d2.url;
+}
+} catch (_) {}
+const tasks = Store.getTasks();
+const t = tasks.find(function(x) { return x.id === card.id; });
+if (t) { t.result = card.result; Store.saveTasks(tasks); }
+const hist = Store.getHistory();
+const h = hist.find(function(x) { return x.id === card.id; });
+if (h) { h.result = card.result; Store.saveHistory(hist); }
+if (typeof UI !== "undefined" && UI._renderResultStrip) { try { UI._renderResultStrip(); } catch (_) {} }
+return true;
+} catch (e) { console.warn("[IMPL-152] 编辑器产物转存失败（保留 dataURL 本地可用）:", (e && e.message) || e); return false; }
+}
+if (typeof window !== "undefined") window.archiveDataUrlCard = archiveDataUrlCard; /* IMPL-152：UI 层 onSave（StudioEditor IIFE 外）需调用本帮手——挂 window 供跨作用域可达（同 StudioEditorPreload 先例） */
+async function wyUploadDataUrl(dataUrl, name, dir) { /* IMPL-151 Z18 定稿（修拍板：复用现有 R2）：dataURL→R2 公网 URL（POST /upload 直传，速创 urls 只吃公网 URL——不支持 base64/数组/multipart）；生成必需链路故不依赖云同步开关。定稿三件：①dir=tmp 专放「给上游看的中间图」（可清理前缀，不混正式目录；IMPL-152：可选参 dir，编辑器产物归档传 "results" 正式目录）②上传前长边压 ≤2048（wyCompressDataUrl）③返回 r2:// 形态（PUBLIC_BASE_URL 未配）=速创服务器无法抓取→显式报错指引，不静默 */
 const w = (Store.getR2WorkerUrl() || "").trim().replace(/\/$/, "");
 const token = Store.getR2AuthToken() || "";
 if (!w || !token) throw new Error("no_worker_url: 参考图需先转公网 URL（速创只收 URL）——请在设置页配置 R2 Worker 地址与 Token");
 const up = await wyCompressDataUrl(dataUrl, 2048);
 const fd = new FormData();
 fd.append("file", dataUrlToBlob(up), name);
-const r = await fetch(w + "/upload?token=" + encodeURIComponent(token) + "&dir=tmp", { method: "POST", body: fd });
+const r = await fetch(w + "/upload?token=" + encodeURIComponent(token) + "&dir=" + encodeURIComponent(dir || "tmp"), { method: "POST", body: fd });
 const data = await r.json().catch(function() { return null; });
 if (!r.ok || !data || !data.url) throw new Error("参考图上传失败: HTTP " + r.status + (data && data.error ? " · " + data.error : ""));
 const pub = String(data.url || "");
@@ -16267,8 +16344,12 @@ lastSt = dd.status;
 if (lastSt === 2) {
 const out = Array.isArray(dd.result) ? String(dd.result[0] || "") : "";
 if (!out) throw new Error("速创任务完成但未返回结果图 (id=" + taskId + "): " + JSON.stringify(dd).slice(0, 200));
-const finalUrl = await wyArchiveUrl(out);
-console.info("[W5-route]", JSON.stringify({ phase: "wy-done", taskId: taskId, secs: Math.round((Date.now() - t0) / 1000), url: finalUrl }));
+/* IMPL-152（用户工单②）：转存与显示竞速——2.5s 内转存完成用 R2 永久链；超时立即返回 OSS 原链不阻塞编辑器（后台转存继续完成并留日志）。<img> 直挂上游不受 CORS 约束；竞速超时场景结果卡 url 为 OSS 临时链（时效风险留痕），编辑器保存经 onSave dataURL 全量落历史不受影响 */
+const archP = wyArchiveUrl(out).catch(function(e) { console.warn("[W5-route] 转存失败（留痕）:", (e && e.message) || e); return null; });
+const raced = await Promise.race([archP, new Promise(function(res) { setTimeout(function() { res(null); }, 2500); })]);
+const finalUrl = raced || out;
+console.info("[W5-route]", JSON.stringify({ phase: "wy-done", taskId: taskId, secs: Math.round((Date.now() - t0) / 1000), url: finalUrl, archived: raced ? "sync" : "async-continue" }));
+if (!raced) archP.then(function(a) { if (a && a !== out) console.info("[W5-route]", JSON.stringify({ phase: "wy-archived", taskId: taskId, url: a })); });
 return { assetUrl: finalUrl };
 }
 if (lastSt !== 0) throw new Error("速创任务失败 (id=" + taskId + " status=" + lastSt + " message=" + (dd.message || "无") + ") · 耗时 " + Math.round((Date.now() - t0) / 1000) + "s");
@@ -16361,6 +16442,7 @@ const needPrompt = e.action === "inpaint" || e.action === "edit-text";
 if (e.action === "erase" && !maskData) { try { Toast.warning("消除动作需要先用选区工具框选区域，再执行"); } catch (_) {} return false; } /* IMPL-129③：消除语义依赖选区，无选区整图重绘必错 */
 const req = e.buildRequest(needPrompt ? { prompt: userData } : {});
 let finalPrompt = (req && req.fields && req.fields.prompt) || userData || ""; /* W5：let——mask 动作需追加保真约束句 */
+if (e.outpaintOptions && e.outpaintOptions.prompt) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + e.outpaintOptions.prompt; /* 第十二批 T12-4：编辑器扩图面板的选填描述并入提示词（追加，非替换；空着则一字不加） */
 const imgData = await blobUrlToDataURL(e.url);
 const m = (typeof UI !== "undefined" && UI.state && UI.state.model) ? UI.state.model : null;
 const canI2I = !maskData && m && (m.direct === "sf-image" || m.direct === "ds-image");
@@ -16381,8 +16463,8 @@ let economized = false;
 if (e.action === "outpaint" || e.action === "layer-decompose") { /* 4.5：省流仅这两个动作 + 目标长边<1024（两条件同时满足） */
 const dims = await imageDimsOf(imgData);
 const tgt = pickAspectTier(dims.w, dims.h);
-if (e.action === "outpaint") { ex.aspectRatio = tgt.ratio; ex.resolution = tgt.tier; } /* 4.4：扩图按目标画布比例取最近枚举档（编辑器未透传绝对目标尺寸，按原图长边估档——瞳侧透出 targetSize 后精化，已落账） */
-if (tgt.long && tgt.long < 1024) { economized = true; routedModel = "gpt-image-2.5"; ex.economized = true; delete ex.quality; } /* 标准生成型无 quality 参数（doc/78） */
+if (e.action === "outpaint") { const oo12 = e.outpaintOptions || {}; ex.aspectRatio = oo12.aspectRatio || tgt.ratio; ex.resolution = oo12.resolution || tgt.tier; } /* 第十二批 T12-4：编辑器扩图面板显式选的档位优先；面板停在「原图/自动」（空串）时沿用上面的估档，与改造前逐字一致 */ /* 4.4：扩图按目标画布比例取最近枚举档（编辑器未透传绝对目标尺寸，按原图长边估档——瞳侧透出 targetSize 后精化，已落账） */
+if (tgt.long && tgt.long < 1024 && !(e.outpaintOptions && e.outpaintOptions.resolution)) { economized = true; routedModel = "gpt-image-2.5"; ex.economized = true; delete ex.quality; } /* 第十二批 T12-4：省流判据用的是原图长边，会把面板显式选的清晰度档一起吃掉（实测选 4K 仍被降级）⇒ 仅「自动」档才应用省流 */ /* 标准生成型无 quality 参数（doc/78） */
 }
 console.info("[W5-route]", JSON.stringify({ phase: "route", action: e.action, channel: "wy", model: routedModel, economized: economized, quality: ex.quality || null, aspectRatio: ex.aspectRatio || null, resolution: ex.resolution || null, mask: !!maskData, ts: Date.now() })); /* Z21：+phase 区分路由决策/提交/完成三段日志 */
 studioBusy(mm.label + " 处理中… · 模型 " + routedModel + (economized ? "（标准生成型·省流）" : "") + (ex.quality ? " · quality=" + ex.quality : "") + (ex.aspectRatio ? " · " + ex.aspectRatio + "/" + ex.resolution : ""));
@@ -16432,7 +16514,8 @@ if (e.key !== "Escape") return;
 const ip = document.getElementById("studioInlinePrompt");
 if (ip && ip._resolve) { e.stopPropagation(); try { ip._resolve(""); } catch (_) {} return; }
 e.stopPropagation();
-close();
+/* 第十二批 T12-2（修拍板「只去掉『关弹窗』这一句」）：Esc 不再关闭整个画板 —— 关闭入口只保留顶栏 ✕。
+   这里仍保留 stopPropagation：编辑器内部场景（选区/文字/扩图面板）各自消费完再放行，宿主不必也不应抢。 */
 };
 document.addEventListener("keydown", escHandler, true);
 const myOv = ov; /* 连续开关守卫：挂起的 loadStudio 只服务当次弹框 */
