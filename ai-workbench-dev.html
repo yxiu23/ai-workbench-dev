@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><!-- IMPL-115②：iOS standalone 沉浸机制——default=状态栏白色实心条压在页面顶部（内容不延伸），结果态深色网格上方永远隔一条系统白条+边缘融合渐变（用户"白黑羽化"根因之一）；black-translucent=页面内容延伸到状态栏下方、状态栏透明，iOS≥16.4 状态栏底色由 theme-color 染色+文字色系统自适应（配合 IMPL-114② 动态同步：结果态深底白字/编辑态白底黑字），iOS<16.4 恒白字（结果态深底无感，编辑态白底上时间/电量对比度低的已知权衡） -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffffff"><!-- IMPL-114②：默认=编辑态白(--bg-elev)；结果态由 __wbSyncThemeColor 动态切网格基底色——iOS standalone 把 theme-color 渲染在状态栏区（含系统边缘融合渐变），恒浅色=结果态状态栏白块+白黑过渡（用户截图实锤）；原 media 限定 light 在系统深色时整条失效 -->
-<title>修的媒体工作台 V26.9.166</title>
+<title>修的媒体工作台 V26.9.168</title>
 <link rel="icon" type="image/webp" id="faviconLink" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2153,7 +2153,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
     </div>
     <div class="settings-section settings-about">
       <div class="about-app">修的媒体工作台</div>
-      <span class="about-ver">V26.9.166</span>
+      <span class="about-ver">V26.9.168</span>
     </div>
   </div>
 </aside>
@@ -6948,11 +6948,11 @@ async directRun(model, body) {
 },
 /* IMPL-98：直连统一走 Worker 媒体代理（/media/sf|ds/*）——上游密钥收敛到 Worker 变量，前端零密钥 */
 _directReq(method, path, body, opts = {}) {
-  const sf = !!opts.sf;
+  const chan = opts.wy ? "wy" : (opts.sf ? "sf" : "ds"); /* IMPL-150：+wy 速创通道（/media/wy/* 透明代理 api.wuyinkeji.com，key 由 Worker 注入且密钥本体直接作鉴权头——速创形态） */
   const w = (Store.getR2WorkerUrl() || "").trim().replace(/\/$/, "");
   if (!w) throw new Error("no_worker_url: 未配置 R2 Worker 地址——直连模型的密钥已收敛到 Worker 变量（前端零密钥），请在 设置→编辑密钥 填入 R2 Worker 地址与 Token");
   const token = Store.getR2AuthToken() || "";
-  const url = w + "/media/" + (sf ? "sf" : "ds") + (path.charAt(0) === "/" ? path : "/" + path) + "?token=" + encodeURIComponent(token);
+  const url = w + "/media/" + chan + (path.charAt(0) === "/" ? path : "/" + path) + (path.indexOf("?") >= 0 ? "&" : "?") + "token=" + encodeURIComponent(token);
   return this.request(method, url, body, { skipAuth: true, ...opts });
 },
 async _sfImage(model, body) {
@@ -9857,7 +9857,7 @@ const oldest = tasks.reduce((a, b) => a.createdAt < b.createdAt ? a : b);
 const elapsed = Date.now() - oldest.createdAt;
 next = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
 } else {
-next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.166");
+next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.168");
 }
 if (document.title !== next) document.title = next;
 },
@@ -16040,14 +16040,14 @@ const STUDIO_SRC = "image-studio.js";
    quality 策略（变更单 4.2，速创无 auto 档不传=medium）：sunburst 系显式 high（按张计费不加价）；flare 系不传 quality */
 const BITMAP_MODEL_MAP = {
   "remove-background": { channel: "ali", model: null, label: "抠出主体" },
-  erase: { channel: "sf", model: "gpt-image-2.5-flare", label: "消除" },
-  outpaint: { channel: "sf", model: "gpt-image-2.5-sunburst", label: "扩图", quality: "high" },
-  inpaint: { channel: "sf", model: "gpt-image-2.5-sunburst", label: "局部重绘", quality: "high" },
-  "edit-text": { channel: "sf", model: "gpt-image-2.5-flare", label: "编辑文字" },
-  "layer-decompose": { channel: "sf", model: "gpt-image-2.5-flare", label: "图像拆解", soft: true }
+  erase: { channel: "wy", model: "gpt-image-2.5-flare", label: "消除" },
+  outpaint: { channel: "wy", model: "gpt-image-2.5-sunburst", label: "扩图", quality: "high" },
+  inpaint: { channel: "wy", model: "gpt-image-2.5-sunburst", label: "局部重绘", quality: "high" },
+  "edit-text": { channel: "wy", model: "gpt-image-2.5-flare", label: "编辑文字" },
+  "layer-decompose": { channel: "wy", model: "gpt-image-2.5-flare", label: "图像拆解", soft: true }
 };
 /* 旧条目存档（IMPL-143 版，Qwen-Image-3.0-Pro，变更单第二节第 5 条允许注释保留）：erase/outpaint/inpaint/layer-decompose→Qwen-Image-3.0-Pro、edit-text→GPT-Image-2.5（裸名，作废）——回退=按本注释还原表并去掉 studioEdits 第 5 参 */
-const SF_EDIT_MODEL = "Qwen/Qwen-Image-Edit"; /* 仅表外动作兜底（映射表已覆盖全部六个内建动作） */
+const SF_EDIT_MODEL = "Qwen/Qwen-Image-Edit"; /* 仅表外动作兜底——IMPL-150 起速创通道只映射 gpt-image-2.5 系（wyModelPath），表外动作若真出现将显式报错不静默（六个内建动作已全在 BITMAP_MODEL_MAP 表内，channel 值 sf→wy 语义更名、模型映射与官方定位一致保持） */
 function loadStudio() {
 if (window.ImageStudio && window.ImageStudio.mount) return Promise.resolve(window.ImageStudio);
 if (!scriptP) {
@@ -16160,24 +16160,120 @@ im.onerror = function() { rej(new Error("遮罩解码失败")); };
 im.src = dataUrl;
 });
 }
-async function studioEdits(imageData, maskData, prompt, modelId, extra) { /* W5：第 5 参 extra={quality,aspectRatio,resolution,economized}——速创参数面（变更单第四节）；quality 仅 sunburst 系显式 high（flare 系不传=medium）；aspectRatio/resolution 仅扩图枚举档；省流标准生成型不带 quality */
+function wyModelPath(modelId) { /* IMPL-150 Z20：速创模型由路径承载（无 model 字段，doc/79/80）——gpt-image-2.5[-flare|-sunburst]→image_gpt_2.5[_flare|_sunburst]；非该系返回 ""（显式报错不静默回退） */
+const m = /^gpt-image-2\.5(?:-([a-z]+))?$/.exec(String(modelId || "").trim());
+return m ? ("image_gpt_2.5" + (m[1] ? "_" + m[1] : "")) : "";
+}
+function wyPixels(ratio, tier) { /* IMPL-150 Z20：aspectRatio+resolution 合并为像素值——全表复制自 IMPL-120 官方换算表 _GPT_RATIO_SIZE（15 比例含竖版，doc/78/79/80 实证口径，与任务中心 _composeGptAspect 同源同数据）；分隔符用 "*"（瞳侧 0.42s 实测成功形态）；1K/2K/4K 取各比例数组第 0/1/2 项（缺项取末项，与 _composeGptAspect 同语义）；auto/空/表外比例→""＝不下发（服务端默认） */
+const T = {
+"1:1": ["1024*1024", "2048*2048", "2880*2880"],
+"16:9": ["1280*720", "2048*1152", "3840*2160"],
+"9:16": ["720*1280", "1152*2048", "2160*3840"],
+"4:3": ["1152*864", "2304*1728", "3264*2448"],
+"3:4": ["864*1152", "1728*2304", "2448*3264"],
+"3:2": ["1536*1024", "2048*1360", "3504*2336"],
+"2:3": ["1024*1536", "1360*2048", "2336*3504"],
+"5:4": ["1120*896", "2240*1792", "3200*2560"],
+"4:5": ["896*1120", "1792*2240", "2560*3200"],
+"21:9": ["1456*624", "2912*1248", "3840*1648"],
+"9:21": ["624*1456", "1248*2912", "1648*3840"],
+"1:3": ["688*2048", "1280*3840"],
+"3:1": ["2048*688", "3840*1280"],
+"2:1": ["1536*768", "3072*1536", "3840*1920"],
+"1:2": ["768*1536", "1536*3072", "1920*3840"]
+};
+if (!ratio || String(ratio).toLowerCase() === "auto") return "";
+const sizes = T[String(ratio).trim()];
+if (!sizes) return "";
+const idx = tier === "2K" ? 1 : tier === "4K" ? 2 : 0;
+return sizes[Math.min(idx, sizes.length - 1)];
+}
+function wyCompressDataUrl(dataUrl, maxEdge) { /* IMPL-151 Z18 定稿：中间图（参考图/mask）上传前长边压到 ≤2048——速创从自身服务器抓图，图越小抓取越快（工单建议）；mask 与参考图同源等比压缩后尺寸仍一致；不超限原样返回（零质量损失），解码/画布失败回退原图不阻断生成（上游报错留证） */
+return new Promise(function(resolve) {
+try {
+const img = new Image();
+img.onload = function() {
+try {
+const w0 = img.naturalWidth || 0, h0 = img.naturalHeight || 0, mx = Math.max(w0, h0);
+if (!mx || mx <= maxEdge) { resolve(dataUrl); return; }
+const k = maxEdge / mx;
+const c = document.createElement("canvas");
+c.width = Math.max(1, Math.round(w0 * k));
+c.height = Math.max(1, Math.round(h0 * k));
+c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+resolve(c.toDataURL("image/png")); /* PNG 保留 mask 透明通道 */
+} catch (e) { resolve(dataUrl); }
+};
+img.onerror = function() { resolve(dataUrl); };
+img.src = dataUrl;
+} catch (e) { resolve(dataUrl); }
+});
+}
+async function wyUploadDataUrl(dataUrl, name) { /* IMPL-151 Z18 定稿（修拍板：复用现有 R2）：dataURL→R2 公网 URL（POST /upload 直传，速创 urls 只吃公网 URL——不支持 base64/数组/multipart）；生成必需链路故不依赖云同步开关。定稿三件：①dir=tmp 专放「给上游看的中间图」（可清理前缀，不混正式目录）②上传前长边压 ≤2048（wyCompressDataUrl）③返回 r2:// 形态（PUBLIC_BASE_URL 未配）=速创服务器无法抓取→显式报错指引，不静默 */
+const w = (Store.getR2WorkerUrl() || "").trim().replace(/\/$/, "");
+const token = Store.getR2AuthToken() || "";
+if (!w || !token) throw new Error("no_worker_url: 参考图需先转公网 URL（速创只收 URL）——请在设置页配置 R2 Worker 地址与 Token");
+const up = await wyCompressDataUrl(dataUrl, 2048);
 const fd = new FormData();
-fd.append("model", modelId || SF_EDIT_MODEL);
-fd.append("prompt", prompt || "");
-fd.append("image", dataUrlToBlob(imageData), "image.png");
-if (maskData) fd.append("mask", dataUrlToBlob(maskData), "mask.png"); /* 4.3：mask 与参考图同链路上行（multipart→Worker 转存公网 URL），宿主不重复实现上传——Worker 转存覆盖 mask 字段为修侧确认项 */
-fd.append("n", "1");
-fd.append("response_format", "b64_json");
+fd.append("file", dataUrlToBlob(up), name);
+const r = await fetch(w + "/upload?token=" + encodeURIComponent(token) + "&dir=tmp", { method: "POST", body: fd });
+const data = await r.json().catch(function() { return null; });
+if (!r.ok || !data || !data.url) throw new Error("参考图上传失败: HTTP " + r.status + (data && data.error ? " · " + data.error : ""));
+const pub = String(data.url || "");
+if (!/^https?:\/\//i.test(pub)) throw new Error("R2 未配置公网域名：上传返回 “" + pub.slice(0, 40) + "” 速创服务器无法抓取——请为 R2 绑定公开访问域名（如 r2.dev）并在 Worker 配置 PUBLIC_BASE_URL，或在 Worker 增设无鉴权对象读路由后重试"); /* Z18 定稿：r2.dev 公开域对速创可用（其服务器抓图不受 CORS 约束——宿主「r2.dev 无跨源头」告警只约束浏览器侧读回，L8945 语境不冲突） */
+return pub;
+}
+async function wyArchiveUrl(ossUrl) { /* IMPL-150 Z19：速创结果托管阿里云 OSS 且链接有效期未知——拿到即经 Worker /archive 服务端转存 R2（浏览器直拉 OSS 有 CORS 不确定性，服务端无此问题）；转存失败不静默（warn 留痕）并回退 OSS 原链保可用 */
+try {
+const w = (Store.getR2WorkerUrl() || "").trim().replace(/\/$/, "");
+const token = Store.getR2AuthToken() || "";
+if (!w || !token) throw new Error("no_worker_url");
+const r = await fetch(w + "/archive?url=" + encodeURIComponent(ossUrl) + "&ext=png&token=" + encodeURIComponent(token), { method: "POST" });
+const data = await r.json().catch(function() { return null; });
+if (data && data.ok && data.url) return data.url;
+throw new Error((data && data.error) || "HTTP " + r.status);
+} catch (e) {
+console.warn("[W5-route] 结果转存 R2 失败，回退 OSS 原链（有效期未知）:", (e && e.message) || e);
+return ossUrl;
+}
+}
+async function studioEdits(imageData, maskData, prompt, modelId, extra) { /* IMPL-150 Z19/Z20：通道改速创异步（P0 定论：gpt-image-2.5 系不属 SF——/v1/images/edits 在 SF 不存在，404 根因=上游通道配错）。
+流程：参考图/mask 先经 /upload&dir=tmp 转公网 URL（Z18 定稿：中间图专放 tmp 可清理前缀 + 长边压 ≤2048）→ POST /media/wy/api/async/<路径>（模型承载于路径，无 model 字段）→ data.id → 轮询 detail（4s 间隔·30min 上限，status 0=处理中 2=完成、非 0 非 2=失败读 message）→ result[0] OSS 链接 → /archive 转存 R2 → 落结果。
+失败语义：状态码/任务 id/耗时全留证，不静默回退（Z19）；第 5 参 extra={quality,aspectRatio,resolution}——quality 值域 low/medium/high（sunburst 另有 xhigh/max 本表未用；仅 sunburst 系显式 high，flare 系不传=medium）；aspectRatio/resolution 仅扩图枚举档（wyPixels 合并为像素）；economized 由 routedModel 路径承载（image_gpt_2.5 无后缀=标准生成型 doc/78 0.1 元/张） */
+const t0 = Date.now();
+const mp = wyModelPath(modelId);
+if (!mp) throw new Error("位图动作模型未映射速创路径（仅支持 gpt-image-2.5 系）: " + (modelId || "(空)"));
+const refUrl = await wyUploadDataUrl(imageData, "reference.png");
+const body = { prompt: prompt || "", urls: refUrl };
 const ex = extra || {};
-if (ex.quality) fd.append("quality", ex.quality);
-if (ex.aspectRatio) fd.append("aspectRatio", ex.aspectRatio);
-if (ex.resolution) fd.append("resolution", ex.resolution);
-if (ex.economized) fd.append("interface", "image_gpt_2.5"); /* 4.5：省流=速创标准生成型接口（doc/78，0.1 元/张）；Worker 未配置该路由→上游 4xx 明示不静默回退 */
-const r = await Api._directReq("POST", "/v1/images/edits", fd, { sf: true, timeout: 3e5 });
-const img = r && r.images && r.images[0];
-const url = img && (img.url || (img.b64_json ? "data:image/png;base64," + img.b64_json : ""));
-if (!url) throw new Error("位图动作未返回图片: " + JSON.stringify(r).slice(0, 200));
-return { assetUrl: url };
+const pix = wyPixels(ex.aspectRatio, ex.resolution);
+if (pix) body.aspectRatio = pix;
+if (ex.quality) body.quality = ex.quality;
+if (maskData) body.mask = await wyUploadDataUrl(maskData, "mask.png"); /* Z20：mask 由 multipart 部件改 URL 形态 */
+const r = await Api._directReq("POST", "/api/async/" + mp, body, { wy: true, timeout: 6e4 });
+const taskId = r && r.data && r.data.id;
+if (!taskId) throw new Error("速创提交未返回任务 id: " + JSON.stringify(r).slice(0, 200) + " · 耗时 " + Math.round((Date.now() - t0) / 1000) + "s");
+const pollMs = 4000, deadline = Date.now() + 18e5; /* 4s 间隔·30min 上限（速创文档口径） */
+console.info("[W5-route]", JSON.stringify({ phase: "wy-submit", taskId: taskId, pollMs: pollMs, model: modelId, mask: !!maskData, ts: Date.now() })); /* Z21：路由日志带 taskId/pollMs */
+let lastSt = null, pollErr = null;
+while (Date.now() < deadline) {
+await new Promise(function(res) { setTimeout(res, pollMs); });
+let d = null;
+try { d = await Api._directReq("GET", "/api/async/detail?id=" + encodeURIComponent(taskId), undefined, { wy: true, timeout: 2e4 }); }
+catch (e) { pollErr = e; continue; } /* 单次查询失败不弃任务（网络抖动），续轮询直至超时 */
+pollErr = null;
+const dd = (d && d.data) || {};
+lastSt = dd.status;
+if (lastSt === 2) {
+const out = Array.isArray(dd.result) ? String(dd.result[0] || "") : "";
+if (!out) throw new Error("速创任务完成但未返回结果图 (id=" + taskId + "): " + JSON.stringify(dd).slice(0, 200));
+const finalUrl = await wyArchiveUrl(out);
+console.info("[W5-route]", JSON.stringify({ phase: "wy-done", taskId: taskId, secs: Math.round((Date.now() - t0) / 1000), url: finalUrl }));
+return { assetUrl: finalUrl };
+}
+if (lastSt !== 0) throw new Error("速创任务失败 (id=" + taskId + " status=" + lastSt + " message=" + (dd.message || "无") + ") · 耗时 " + Math.round((Date.now() - t0) / 1000) + "s");
+}
+throw new Error("速创任务轮询超时（30 分钟, id=" + taskId + ", 最后状态=" + lastSt + (pollErr ? ", 最近查询错误=" + ((pollErr && pollErr.message) || pollErr) : "") + "）");
 }
 function studioBusy(text) { /* IMPL-143 P2：位图动作执行期反馈条（宿主级——编辑器动作条属嵌入包，红线⑦不改 js；开始显示/finally 隐藏） */
 const b = document.getElementById("studioBusy");
@@ -16186,7 +16282,7 @@ const t = b.querySelector(".studioBusyText");
 if (t) t.textContent = text || "";
 b.hidden = !text;
 }
-function studioInlinePrompt(label) { /* Z6（第六批）：编辑器内就地提示词输入条（hostPrompt 为空时 inpaint/edit-text 就地输入；studioBusy 同层位置；Esc 语义不变——关闭编辑器由 close 清理条目并取消）。Z16（第七批）：贴底居中 bottom:14px（原 top:14px 浮顶栏）+ textarea 自动增高 1→6 行封顶滚动（Enter 提交/Shift+Enter 换行）+ 编辑器官方令牌镜像双套配色：--dc-editor-ui-* 属内核 Shadow DOM 内部令牌、宿主不可跨界继承→data-studio-theme 属性选套（初值=Z12 缓存 sc_studio_theme；内核切换经 mount.onThemeChange 实时回写打开中输入条；样式收敛至壳样式块 #studioInlinePrompt 规则） */
+function studioInlinePrompt(label) { /* Z6（第六批）：编辑器内就地提示词输入条（hostPrompt 为空时 inpaint/edit-text 就地输入；studioBusy 同层位置；Esc 语义 Z22 B案：输入条在场=Esc 只收口输入条（Toast 保留、编辑器不关；close 清理条目兜底保留）。Z16（第七批）：贴底居中 bottom:14px（原 top:14px 浮顶栏）+ textarea 自动增高 1→6 行封顶滚动（Enter 提交/Shift+Enter 换行）+ 编辑器官方令牌镜像双套配色：--dc-editor-ui-* 属内核 Shadow DOM 内部令牌、宿主不可跨界继承→data-studio-theme 属性选套（初值=Z12 缓存 sc_studio_theme；内核切换经 mount.onThemeChange 实时回写打开中输入条；样式收敛至壳样式块 #studioInlinePrompt 规则） */
 return new Promise(function(resolve) {
 const modal = document.getElementById("studioModal");
 if (!modal) { resolve(""); return; }
@@ -16273,7 +16369,7 @@ const canI2I = !maskData && m && (m.direct === "sf-image" || m.direct === "ds-im
 const mm = BITMAP_MODEL_MAP[e.action] || null;
 studioBusy((mm ? mm.label : actName(e.action)) + " 处理中… · " + (mm ? (mm.channel === "ali" ? "阿里抠图专用通道" : "模型 " + mm.model) : (canI2I && m ? "宿主选中模型" : "SF 编辑模型")));
 if (mm && mm.channel === "ali") { const r3 = await studioAliMatting(imgData); if (!r3) return false; r3.name = actName(e.action); try { Toast.success("抠出主体完成"); } catch (_) {} return r3; } /* IMPL-143：返回 { assetUrl, name } → 编辑器自动注册资产（IMPL-129③ 契约） */
-if (mm && mm.channel === "sf") {
+if (mm && mm.channel === "wy") { /* IMPL-150：channel 语义更名 sf→wy（速创通道），BITMAP_MODEL_MAP 已同步 */
 const sfOk = (typeof KeyVault !== "undefined" && KeyVault.keys && KeyVault.keys().API_KEY) || (typeof Store !== "undefined" && Store.getR2WorkerUrl && Store.getR2WorkerUrl());
 if (!sfOk) { try { Toast.warning(mm.label + "的服务通道未配置：缺少图像服务凭据（设置页可配置）"); } catch (_) {} return false; } /* 通道不通不静默 fallback */
 /* W5 路由决策（变更单第四节）：quality 策略 + mask 保真约束句 + 省流自动路由 + 每次实际路由进日志 */
@@ -16288,7 +16384,7 @@ const tgt = pickAspectTier(dims.w, dims.h);
 if (e.action === "outpaint") { ex.aspectRatio = tgt.ratio; ex.resolution = tgt.tier; } /* 4.4：扩图按目标画布比例取最近枚举档（编辑器未透传绝对目标尺寸，按原图长边估档——瞳侧透出 targetSize 后精化，已落账） */
 if (tgt.long && tgt.long < 1024) { economized = true; routedModel = "gpt-image-2.5"; ex.economized = true; delete ex.quality; } /* 标准生成型无 quality 参数（doc/78） */
 }
-console.info("[W5-route]", JSON.stringify({ action: e.action, channel: "sf", model: routedModel, economized: economized, quality: ex.quality || null, aspectRatio: ex.aspectRatio || null, resolution: ex.resolution || null, mask: !!maskData, ts: Date.now() }));
+console.info("[W5-route]", JSON.stringify({ phase: "route", action: e.action, channel: "wy", model: routedModel, economized: economized, quality: ex.quality || null, aspectRatio: ex.aspectRatio || null, resolution: ex.resolution || null, mask: !!maskData, ts: Date.now() })); /* Z21：+phase 区分路由决策/提交/完成三段日志 */
 studioBusy(mm.label + " 处理中… · 模型 " + routedModel + (economized ? "（标准生成型·省流）" : "") + (ex.quality ? " · quality=" + ex.quality : "") + (ex.aspectRatio ? " · " + ex.aspectRatio + "/" + ex.resolution : ""));
 const r1 = await studioEdits(imgData, maskData, finalPrompt, routedModel, ex); r1.name = actName(e.action);
 try { Toast.success(mm.label + " 完成 · 模型 " + routedModel + (economized ? "（省流）" : "")); } catch (_) {}
@@ -16310,7 +16406,7 @@ const rawMsg = String((err && err.message) || err);
 const m9 = /HTTP\s+(\d{3})/.exec(rawMsg); const st = (err && err.status) || (m9 ? parseInt(m9[1], 10) : 0); /* Z9（第六批）：Api.request 抛错 Object.assign 附着 err.status */
 const mmL = (typeof BITMAP_MODEL_MAP !== "undefined" && BITMAP_MODEL_MAP[e.action] || {}).label || "位图动作";
 if (st === 401) { try { Toast.error(mmL + "的服务未授权（HTTP 401）：Worker 令牌无效或未配置——请到设置页检查 R2 Worker 地址与 Token（不静默回退）"); } catch (_) {} }
-else if (st === 404) { try { Toast.error(mmL + "的服务通道未部署（HTTP 404）：sf 编辑路由/模型白名单未覆盖该模型——已按规约不静默回退"); } catch (_) {} }
+else if (st === 404) { try { Toast.error(mmL + "的服务通道未部署（HTTP 404）：速创 wy 代理路由未上线或接口路径不匹配——已按规约不静默回退"); } catch (_) {} }
 else if (st >= 400 && st < 500) { try { Toast.error(mmL + "的服务通道未配置或上游不可用（HTTP " + st + "）——已按规约不静默回退"); } catch (_) {} }
 else if (/HTTP\s+4\d\d/i.test(rawMsg)) { try { Toast.error(mmL + "的服务通道未配置或上游不可用（" + rawMsg.slice(0, 90) + "）——已按规约不静默回退"); } catch (_) {} }
 else { try { Toast.error("位图动作失败: " + rawMsg); } catch (_) {} }
@@ -16331,7 +16427,13 @@ ov.innerHTML = '<div class="studioModal" id="studioModal" role="dialog" aria-mod
 document.body.appendChild(ov);
 ov.querySelector(".studioClose").addEventListener("click", close);
 /* Z1（第六批）：点遮罩空白不再关闭编辑器（修拍板）——原 pointerdown 关闭监听已删；✕ 与 Esc 关闭保留 */
-escHandler = function(e) { if (e.key === "Escape") { e.stopPropagation(); close(); } };
+escHandler = function(e) { /* Z22 B案（IMPL-151 修拍板）：输入条在场=Esc 只收口输入（走输入条自身取消路径，Toast「已取消」保留），编辑器保留——再按一次 Esc 才退编辑器；无输入条=原语义不变（回归 A3） */
+if (e.key !== "Escape") return;
+const ip = document.getElementById("studioInlinePrompt");
+if (ip && ip._resolve) { e.stopPropagation(); try { ip._resolve(""); } catch (_) {} return; }
+e.stopPropagation();
+close();
+};
 document.addEventListener("keydown", escHandler, true);
 const myOv = ov; /* 连续开关守卫：挂起的 loadStudio 只服务当次弹框 */
 const host = ov.querySelector("#image-studio-root");
@@ -16410,7 +16512,7 @@ return { open: open, close: close };
 /* ============================================================
    SvFloor —— 画布真透视地台 V2（79-a：内核整体升级为用户优化版引擎）
    ------------------------------------------------------------
-   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.166 时点）。
+   【内核来源】upload/modeling-grid-shadow.html（2026-09 用户优化版，V26.9.167 时点）。
    相比 V1（IMPL-56/69 移植的旧版）内核升级点：
      ① 落影渲染重写：5 档模糊叠加，模糊半径正比「离接触边的距离」（近实远虚）——
         faceK 面光参数 × span，近端带 FLAT=0.22 非零项（离地 lift 自身摊出的半影）；
