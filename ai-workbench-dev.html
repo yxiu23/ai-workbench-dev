@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><!-- IMPL-115②：iOS standalone 沉浸机制——default=状态栏白色实心条压在页面顶部（内容不延伸），结果态深色网格上方永远隔一条系统白条+边缘融合渐变（用户"白黑羽化"根因之一）；black-translucent=页面内容延伸到状态栏下方、状态栏透明，iOS≥16.4 状态栏底色由 theme-color 染色+文字色系统自适应（配合 IMPL-114② 动态同步：结果态深底白字/编辑态白底黑字），iOS<16.4 恒白字（结果态深底无感，编辑态白底上时间/电量对比度低的已知权衡） -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffffff"><!-- IMPL-114②：默认=编辑态白(--bg-elev)；结果态由 __wbSyncThemeColor 动态切网格基底色——iOS standalone 把 theme-color 渲染在状态栏区（含系统边缘融合渐变），恒浅色=结果态状态栏白块+白黑过渡（用户截图实锤）；原 media 限定 light 在系统深色时整条失效 -->
-<title>修的媒体工作台 V26.9.172</title>
+<title>修的媒体工作台 V26.9.175</title>
 <link rel="icon" type="image/webp" id="faviconLink" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,7 +23,7 @@ html,body{height:100%;overflow:clip}/* IMPL-110④⑤⑥：根级双轴 clip—�
 *{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;font-feature-settings:"kern" 1,"liga" 1;font-variant-ligatures:common-ligatures;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;background:var(--bg-grad),var(--bg);background-attachment:fixed;color:var(--text);font-size:14px;line-height:1.55;overflow:hidden;display:flex;flex-direction:column;isolation:isolate}
 code,pre,.mono,[class*="mono"]{font-family:"SF Mono","Fira Code","JetBrains Mono","Cascadia Code",Consolas,"Liberation Mono",Menlo,"PingFang SC","Microsoft YaHei",monospace;font-feature-settings:"kern" 1,"liga" 0}
-h1,h2,h3,h4,h5,h6,.empty-title{letter-spacing:-0.01em}
+h1,h2,h3,h4,h5,h6{letter-spacing:-0.01em}
 p,span,div,button,input,textarea,select,a,label,li{letter-spacing:0}
 button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
 button{cursor:pointer;border:none;background:none}
@@ -334,6 +334,8 @@ textarea{resize:vertical;min-height:80px}
 /* IMPL-104：折叠头 21px<24px AA 底线——::after 零位移扩展热区 */
 @media (pointer:coarse){.disc-head[data-fold],.vis-head,.disc-hist summary{position:relative}.disc-head[data-fold]::after,.vis-head::after,.disc-hist summary::after{content:"";position:absolute;inset:-12px -6px}}
 @media (pointer:coarse){.doc-chip .dc-x::after{content:"";position:absolute;inset:-14px}.pp-del{width:24px;height:24px}.sp-vdot::after{inset:-8px}}
+/* IMPL-158-c：atp-cancel 22px / sv-hb-btn 36px 触屏热区补齐（22+22=44 / 36+8=44，零位移 ::after 扩展） */
+@media (pointer:coarse){.atp-card .atp-cancel{position:relative}.atp-card .atp-cancel::after{content:"";position:absolute;inset:-11px}.sv-hb-btn{position:relative}.sv-hb-btn::after{content:"";position:absolute;inset:-4px}}
 /* IMPL-74：reduced-motion 补漏（对齐 pp-item 先例） */
 @media (prefers-reduced-motion:reduce){.skill-panel,.skill-bubbles{animation:none}.sp-chip:hover{transform:none}}
 .prompt-history-list{position:absolute;z-index:50;max-height:240px;overflow-y:auto;min-width:200px;background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);display:none}
@@ -434,13 +436,11 @@ to{opacity:1;transform:none}}
 .range-row input[type=range]::-webkit-slider-thumb:hover{box-shadow:0 1px 5px rgba(9,14,30,.30),0 0 0 3px var(--brand-soft)}
 .range-row input[type=range]::-webkit-slider-thumb:active{transform:scale(1.15)}
 .range-row input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--brand);cursor:pointer;border:2px solid var(--bg-elev);box-shadow:0 1px 4px rgba(9,14,30,.28),0 0 0 1px var(--brand-soft)}
-.char-counter{font-size:11px;color:var(--text-dim);text-align:right;font-family:var(--font-mono)}
 .url-input-row{display:flex;gap:6px}
 .url-input-row input{flex:1}
 .url-input-row button{padding:0 10px;border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text-muted);font-size:12px;white-space:nowrap}
 .url-input-row button:hover{background:var(--brand-soft);color:var(--brand)}
 .generate-section{display:flex;flex-direction:column;gap:8px;margin-top:auto;padding-top:8px}
-.workflow-row{display:flex;gap:6px}
 .workflow-btn{flex:1;padding:8px;border-radius:var(--radius-sm);background:var(--surface-2);border:1px solid var(--border);color:var(--text-muted);font-size:12px;display:flex;align-items:center;justify-content:center;gap:4px;transition:all var(--transition)}
 .workflow-btn:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft)}
 .workflow-btn:active{transform:scale(.97)}
@@ -587,7 +587,6 @@ from{opacity:0;transform:translateY(8px)}
 to{opacity:1;transform:translateY(0)}}
 .empty-state{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:48px 24px;color:var(--text-dim);min-height:300px}
 .empty-state svg{width:56px;height:56px;margin-bottom:16px;opacity:.25;color:var(--brand)}
-.empty-state .empty-title{font-family:var(--font-serif);font-size:15px;font-weight:500;margin-bottom:6px;color:var(--text-muted);letter-spacing:.06em} /* IMPL-95⑦：2.2 归并（并后者值） */
 .empty-state .empty-sub{font-size:12px;letter-spacing:.01em}
 .active-tasks-panel{margin-bottom:10px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);overflow:hidden;position:relative;z-index:3;padding:6px 8px;width:100%;box-sizing:border-box}/* IMPL-105⑥ */
 .active-tasks-panel.empty{display:none}
@@ -705,7 +704,7 @@ to{opacity:1;transform:translateY(0)}}
    r 段）+四角 radial 弧环（与 ::after 圆角补丁同构），全由 --svw* 变量驱动逐帧跟随；
    直边/弧环带对齐（环带中心=窗缘内 0.75px）。max() 防御窗关闭时 calc 负尺寸（负
    background-size 会使声明整条失效）；非 single-view 时 :has 关 opacity；移动端 --svwr:0 */
-.result-panel .sv-holering{position:absolute;inset:0;z-index:5;pointer-events:none;border-radius:inherit;transform:translateZ(0);clip-path:inset(0 round var(--radius-lg,20px));/* IMPL-96④：环层同裁剪——描边线永不越过面板大外框圆角弧 */opacity:0;--svwr:var(--radius-lg,20px);transition:opacity .2s ease;background:linear-gradient(var(--lg-edge),var(--lg-edge)) calc(var(--svwx) + var(--svwr)) calc(var(--svwy) + .25px)/max(0px,calc(var(--svww) - 2*var(--svwr))) 1px no-repeat,linear-gradient(var(--lg-edge),var(--lg-edge)) calc(var(--svwx) + var(--svwr)) calc(var(--svwy) + var(--svwh) - 1.25px)/max(0px,calc(var(--svww) - 2*var(--svwr))) 1px no-repeat,linear-gradient(var(--lg-edge),var(--lg-edge)) calc(var(--svwx) + .25px) calc(var(--svwy) + var(--svwr))/1px max(0px,calc(var(--svwh) - 2*var(--svwr))) no-repeat,linear-gradient(var(--lg-edge),var(--lg-edge)) calc(var(--svwx) + var(--svww) - 1.25px) calc(var(--svwy) + var(--svwr))/1px max(0px,calc(var(--svwh) - 2*var(--svwr))) no-repeat,radial-gradient(circle var(--svwr) at 100% 100%,transparent calc(var(--svwr) - 1.25px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - 1.25px),var(--lg-edge) calc(var(--svwr) - .75px),var(--lg-edge) calc(var(--svwr) - .35px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - .25px),transparent var(--svwr)) var(--svwx) var(--svwy)/var(--svwr) var(--svwr) no-repeat,radial-gradient(circle var(--svwr) at 0 100%,transparent calc(var(--svwr) - 1.25px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - 1.25px),var(--lg-edge) calc(var(--svwr) - .75px),var(--lg-edge) calc(var(--svwr) - .35px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - .25px),transparent var(--svwr)) calc(var(--svwx) + var(--svww) - var(--svwr)) var(--svwy)/var(--svwr) var(--svwr) no-repeat,radial-gradient(circle var(--svwr) at 100% 0,transparent calc(var(--svwr) - 1.25px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - 1.25px),var(--lg-edge) calc(var(--svwr) - .75px),var(--lg-edge) calc(var(--svwr) - .35px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - .25px),transparent var(--svwr)) var(--svwx) calc(var(--svwy) + var(--svwh) - var(--svwr))/var(--svwr) var(--svwr) no-repeat,radial-gradient(circle var(--svwr) at 0 0,transparent calc(var(--svwr) - 1.25px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - 1.25px),var(--lg-edge) calc(var(--svwr) - .75px),var(--lg-edge) calc(var(--svwr) - .35px),color-mix(in srgb, var(--lg-edge) 45%, transparent) calc(var(--svwr) - .25px),transparent var(--svwr)) calc(var(--svwx) + var(--svww) - var(--svwr)) calc(var(--svwy) + var(--svwh) - var(--svwr))/var(--svwr) var(--svwr) no-repeat}/* IMPL-112①：四角弧末色标后补 transparent var(--svwr) 收尾——radial-gradient 超末色标延续末色，原 45% 灰延续出圆弧外对角月牙区=内框圆角旁灰色直角（用户①复发真根因：与蒙版层末色标 #000 语义不同，画线层圆外必须显式透明） */
+.result-panel .sv-holering{position:absolute;z-index:5;pointer-events:none;transform:translateZ(0);clip-path:inset(0 round var(--radius-lg,20px));/* IMPL-96④：环层同裁剪——描边线永不越过面板大外框圆角弧 */opacity:0;--svwr:var(--radius-lg,20px);transition:opacity .2s ease;left:var(--svwx);top:var(--svwy);width:var(--svww);height:var(--svwh);border-radius:var(--svwr);box-shadow:inset 0 0 0 1px var(--lg-edge)}/* IMPL-162：手绘渐变环→原生 inset 描边（用户③：面板圆角锯齿感）——原 4 角 radial-gradient 在 1px 内挤 5 档硬色标，1x DPI 呈台阶锯齿；改为浏览器原生抗锯齿的 box-shadow inset 1px + border-radius 弧，四边直线/四角弧一次成型；几何语义不变（1px 描边、外缘=洞矩形、radius=--svwr、同 clip 裁剪、同 opacity 门控、移动端 --svwr:0+隐藏规则保留），--svw* 消费方式不变；IMPL-112① 手绘色标问题随之消亡 */
 .result-panel .sv-holering{opacity:0}/* IMPL-111②：默认隐藏；单视图窗开时恢复=内框线（色随下行单行 sed 统一 var(--border)→var(--lg-edge)，与外框 border 同源） */
 .result-panel:has(.result-list.single-view) .sv-holering{opacity:1}/* IMPL-111②：内框线恢复（用户②：面板的内框线带个和外框一样的描边）——描边色=var(--lg-edge) 与外框一致；IMPL-106⑥ 全域隐藏撤销（矩形框真根因已由窗外扩 2px 根治） */
 @media (max-width:768px){.result-panel .sv-holering{--svwr:0px}.result-panel:has(.result-list.single-view) .sv-holering{opacity:0}}/* IMPL-111②：手机纯网格空间无蒙版，窗缘环不参与（特异性 0,4,0 与桌面 :has 同级，源序取胜） */
@@ -790,7 +789,6 @@ body[data-mview="result"] #themeCycleBtn{display:flex}
 .sv-model{font-weight:600;font-size:12.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:42%}
 .sv-time{color:var(--text-dim);font-size:11px;font-family:var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
 .sv-head .status-pill{flex-shrink:0}
-.sv-spacer{flex:1;min-width:0}
 .sv-media{position:relative;display:flex;align-items:center;justify-content:center;background:var(--surface-2);min-height:180px}
 .sv-media.is-image{cursor:zoom-in}
 /* IMPL-92③：结果图片尺寸模型 v3「双栏带高 × 等比缩放」——「图片高度」设置移除（用户），
@@ -1139,8 +1137,6 @@ to{opacity:1;transform:none}}
 .history-batchbar button{padding:5px 10px;border-radius:var(--radius-sm);font-size:11px;background:var(--surface-2);color:var(--text-muted);transition:all var(--transition);white-space:nowrap}
 .history-batchbar button:hover{color:var(--brand)}
 .history-batchbar button.danger:hover{color:var(--danger);background:var(--danger-soft)}
-.pu-badge{display:inline-block;margin-left:6px;padding:1px 5px;border-radius:999px;font-size:9px;line-height:1.4;background:var(--surface-3);color:var(--ink-badge);vertical-align:1px;font-style:normal;font-variant-numeric:tabular-nums}
-.pu-ago{float:right;font-size:9px;color:var(--text-dim);opacity:.85;margin-left:6px;font-style:normal}
 .lightbox{position:fixed;inset:0;z-index:70;background:rgba(var(--ink-rgb),.9);display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);overflow-y:auto;padding:40px 20px}
 .lightbox.show{display:flex}
 .lightbox img,.lightbox video{max-width:92vw;max-height:92vh;border-radius:var(--radius-md)}
@@ -1193,9 +1189,6 @@ to{opacity:1;transform:scale(1) translateY(0)}}
 .vault-badge{display:inline-flex;align-items:center;gap:3px;margin-left:8px;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;vertical-align:1px;letter-spacing:.02em}.vault-badge svg{width:11px;height:11px}
 .vault-badge.locked{background:rgba(255,149,0,.14);color:var(--warning);box-shadow:inset 0 0 0 1px rgba(255,149,0,.25)}
 .vault-badge.open{background:rgba(52,199,89,.14);color:var(--success);box-shadow:inset 0 0 0 1px rgba(52,199,89,.28)}
-.gh-row input{min-width:0;flex:1}
-.vault-actions{gap:6px;flex-wrap:wrap}
-.vault-actions button{flex:0 1 auto}
 .clean-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 2px}
 .clean-card{display:flex;align-items:center;gap:10px;padding:10px 12px;min-height:52px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer;text-align:left;transition:border-color var(--transition),box-shadow var(--transition),transform var(--transition)}
 .clean-card:hover{border-color:var(--brand);box-shadow:0 2px 10px rgba(20,20,18,.07);transform:translateY(-1px)}
@@ -1324,8 +1317,6 @@ to{opacity:1;transform:scale(1) translateY(0)}}
 .sv-asr-title{font-size:12px;font-weight:600;flex:1}
 .sv-asr-text{font-size:14px;line-height:1.8;color:var(--text);white-space:pre-wrap;word-break:break-word;max-height:40vh;overflow-y:auto}
 .workflow-modal-content textarea{min-height:280px;font-family:var(--font-mono);font-size:12px}
-input[type="color"].im-color{width:30px;height:28px;border:1px solid var(--border);border-radius:var(--radius-sm,10px);cursor:pointer;background:var(--surface);padding:1px;flex-shrink:0}
-input[type="range"].im-range{flex:1;height:4px;accent-color:var(--brand);cursor:pointer;min-width:0}
 @media (max-width: 900px){
 }
 .ref-upload-progress{position:absolute;left:0;right:0;bottom:0;height:3px;background:rgba(var(--ink-rgb),.3);overflow:hidden}
@@ -1367,7 +1358,6 @@ from{transform:scaleY(0)}}
 .trend-bar{animation:none}}
 [data-theme="light"] .trend-val{fill:var(--text);opacity:.78}
 [data-theme="light"] .trend-lbl{fill:var(--text-muted)}
-[data-theme="light"] .wp-ticks{color:var(--text-muted)}
 [data-theme="light"] .history-item .h-prompt,[data-theme="light"] .history-item .h-time{color:var(--text-muted)}
 /* ── 77-b Q6：统计界面重排版——双主 tab 一行两段式 + 4 KPI + 面积柱复合趋势图 + donut 环图 + API 用量视图（au-*） ── */
 .stats-modal-content{max-width:720px}
@@ -1545,7 +1535,6 @@ body[data-mview="param"] .app-body{background:var(--bg-elev)}/* IMPL-114①：�
 .prompt-actions{gap:2px;flex-wrap:wrap}
 .tool-btn{padding:4px 8px;font-size:11px}
 .ref-grid{grid-template-columns:repeat(auto-fill, minmax(72px, 1fr));gap:6px}
-.batch-panel{padding:10px}
 /* IMPL-89②：移动端性能——backdrop-blur 降档（28/18→14/10），大 R 角屏 GPU 预算让给滚动与合成 */
 .sv-fpanel{-webkit-backdrop-filter:blur(14px) saturate(160%);backdrop-filter:blur(14px) saturate(160%)}
 .sv-docklayer .sv-floatbar{-webkit-backdrop-filter:blur(10px) saturate(150%);backdrop-filter:blur(10px) saturate(150%)}
@@ -1732,30 +1721,6 @@ to{transform:translateX(294.12%)}}
 @keyframes lb-spin{
 to{transform:rotate(360deg)}}
 .param-panel::-webkit-scrollbar{width:0;height:0}
-.empty-anim{width:240px;height:240px;margin:0 auto 20px;max-width:60vw;animation:emptyGlow 3.6s ease-in-out infinite}
-.empty-state .empty-spark{display:inline-block;animation:emptyFloat 2.8s ease-in-out infinite}
-.quick-starts{margin-top:24px;animation:pvIn .3s ease .12s backwards}
-.quick-starts .qs-title{font-size:12px;color:var(--text-dim);margin-bottom:10px;letter-spacing:.04em}
-.quick-starts .qs-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:440px;margin:0 auto}
-.quick-starts .qs-chip{padding:7px 16px;border-radius:999px;font-size:12px;cursor:pointer;background:var(--lg-gloss),var(--surface-glass-card);color:var(--text-muted);border:1px solid var(--lg-edge);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);transition:all var(--transition);display:inline-flex;align-items:center;gap:7px;animation:fade-in-up .42s cubic-bezier(.32,.72,0,1) both}
-.quick-starts .qs-chip:nth-child(1){animation-delay:.05s}
-.quick-starts .qs-chip:nth-child(2){animation-delay:.11s}
-.quick-starts .qs-chip:nth-child(3){animation-delay:.17s}
-.quick-starts .qs-chip:nth-child(4){animation-delay:.23s}
-.quick-starts .qs-chip:nth-child(5){animation-delay:.29s}
-.quick-starts .qs-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg, rgba(var(--brand-rgb),.55), rgba(var(--brand-rgb),.22));transition:transform var(--transition),box-shadow var(--transition),background var(--transition)}
-.quick-starts .qs-chip:hover{background:var(--brand-soft);color:var(--brand);border-color:var(--brand)}
-.quick-starts .qs-chip:hover .qs-dot{background:var(--brand);transform:scale(1.45)}
-.quick-starts .qs-chip:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
-.quick-starts .qs-chip:active{transform:translateY(0)}
-@keyframes emptyFloat{
-0%,100%{transform:translateY(0) rotate(0deg)}
-50%{transform:translateY(-4px) rotate(9deg)}}
-@media (prefers-reduced-motion: reduce){
-.empty-anim,.empty-state .empty-spark{animation:none}}
-@keyframes emptyGlow{
-0%,100%{filter:drop-shadow(0 0 10px var(--brand-soft))}
-50%{filter:drop-shadow(0 0 22px var(--brand-soft))}}
 .result-panel::before,.modal-content::before,.settings-drawer::before,.history-sidebar::before,.result-header::before{content:'';position:absolute;top:0;left:9%;right:9%;height:1px;z-index:3;pointer-events:none;border-radius:1px;background:linear-gradient(90deg, transparent, rgba(var(--glass-rgb),.55) 30%, rgba(var(--glass-rgb),.4) 68%, transparent);opacity:.8}
 [data-theme="light"] .result-panel::before,[data-theme="light"] .modal-content::before,[data-theme="light"] .settings-drawer::before,[data-theme="light"] .history-sidebar::before,[data-theme="light"] .result-header::before{background:linear-gradient(90deg, transparent, rgba(var(--glass-rgb),1) 30%, rgba(var(--glass-rgb),.8) 68%, transparent);opacity:.9}
 .icon-btn:focus-visible,.filter-tab:focus-visible,.tab:focus-visible,.tool-btn:focus-visible,.mode-btn:focus-visible,.lb-tbtn:focus-visible,.sv-hb-btn:focus-visible,.sv-nav:focus-visible,.strip-thumb:focus-visible,.preset-trigger:focus-visible,.prompt-save-btn:focus-visible,.generate-btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
@@ -1772,7 +1737,7 @@ from{opacity:0;transform:translateY(-6px) scale(.94)}}
 @keyframes gselInUp{
 from{opacity:0;transform:translateY(6px) scale(.94)}}
 .gsp-item{display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--radius-sm);font-size:12.5px;color:var(--text);cursor:pointer;user-select:none;transition:background .13s ease,transform .16s var(--spring);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.gsp-item:hover,.gsp-item.hl{background:var(--surface-2)}
+.gsp-item:hover{background:var(--surface-2)}
 .gsp-item:active{transform:scale(.97)}
 .gsp-item.sel{color:var(--brand);font-weight:600;background:color-mix(in srgb, var(--brand) 11%, transparent)}
 .gsp-item.disabled{opacity:.38;pointer-events:none}
@@ -1784,7 +1749,7 @@ from{opacity:0;transform:translateY(6px) scale(.94)}}
 .gsp-item{transition:none}}
 /* 77-d：reduced-motion 补漏——入场/循环动画（dock-in/toast/modal/pulse-glow/fade 系）静态呈现 */
 @media (prefers-reduced-motion: reduce){
-.sv-docklayer .sv-floatbar,.sv-caplayer .sv-caption,.sv-wrap,.lb-stage,.file-mode-hint,.toast,.undo-btn,.modal-overlay.show,.modal-content,.quick-starts .qs-chip,.ping-dot,.lb-progress::before{animation:none}}
+.sv-docklayer .sv-floatbar,.sv-caplayer .sv-caption,.sv-wrap,.lb-stage,.file-mode-hint,.toast,.undo-btn,.modal-overlay.show,.modal-content,.ping-dot,.lb-progress::before{animation:none}}
 
 /* ==================== IMPL-126：图片工作台弹框壳样式（内核已外链 image-studio.js，Shadow DOM 自带样式） ==================== */
 .studioOverlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px;animation:studioFade .18s ease}/* Z13（第七批）：删变暗+模糊三属性（原 background:rgba(10,12,18,.60) 与 -webkit-backdrop-filter/backdrop-filter blur(10px)）——背后工作台亮度与清晰度和打开前完全一致，编辑器「浮」于页面上；遮罩层保留负责居中；Z1 已删点外关闭监听，透明遮罩无误关风险 */
@@ -1848,20 +1813,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
 }
 }
 } catch (e) {}
-})();</script><svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;pointer-events:none">
-  <defs>
-    <filter id="lgRefract" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
-      <feTurbulence type="fractalNoise" baseFrequency="0.005 0.008" numOctaves="1" seed="11" result="n"/>
-      <feGaussianBlur in="n" stdDeviation="5" result="nb"/>
-      <feDisplacementMap in="SourceGraphic" in2="nb" scale="10" xChannelSelector="R" yChannelSelector="G"/>
-    </filter>
-    <filter id="lgRefractSoft" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
-      <feTurbulence type="fractalNoise" baseFrequency="0.007 0.01" numOctaves="1" seed="7" result="n"/>
-      <feGaussianBlur in="n" stdDeviation="4" result="nb"/>
-      <feDisplacementMap in="SourceGraphic" in2="nb" scale="6" xChannelSelector="R" yChannelSelector="G"/>
-    </filter>
-  </defs>
-</svg>
+})();</script>
 <div class="ambient-stage" aria-hidden="true">
   <div class="ambient-pulse" id="ambientPulse"></div>
   <div class="ambient-tint" id="ambientTint"></div>
@@ -2160,7 +2112,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
     </div>
     <div class="settings-section settings-about">
       <div class="about-app">修的媒体工作台</div>
-      <span class="about-ver">V26.9.172</span>
+      <span class="about-ver">V26.9.175</span>
     </div>
   </div>
 </aside>
@@ -3587,8 +3539,29 @@ label: "尾帧",
 type: "ref-image",
 output: "single",
 hint: "需搭配首帧"
+}, {
+key: "images",
+label: "参考图",
+type: "ref-image",
+output: "csv",
+max: 10,
+hint: "内容参考 1-10 张，与首尾帧互斥"
+}, {
+key: "videos",
+label: "参考视频",
+type: "ref-video",
+output: "csv",
+max: 5,
+hint: "总时长 ≤15s，与首尾帧互斥"
+}, {
+key: "audios",
+label: "参考音频",
+type: "ref-audio",
+output: "csv",
+max: 5,
+hint: "总时长 ≤15s，与首尾帧互斥"
 } ],
-refGroups: { /* IMPL-152：首尾帧面板统一（用户工单④）——对齐 wan3 四选一形态收缩为两档：百炼官方仅首尾帧图生视频有文档佐证，图片/视频/音频参考 _dsVideo 虽预留映射但百炼侧无文档支持暂不开放；none=纯文生视频（默认档，原语义不变），frame=首/尾帧（body 键名不变，_dsVideo L7005 映射零改动） */
+refGroups: { /* IMPL-152：首尾帧面板统一（用户工单④）；IMPL-162 恢复五档——IMPL-152 以「百炼无文档」收缩为两档，与在库官方查证 tmp/impl95/models-doc.md §4 冲突（input.media[] 明列 reference_image≤10/reference_video≤5/reference_audio≤5，与首尾帧互斥）；_dsVideo 预留映射（body.images/videos/audios→reference_*，cap 10/5/5）与互斥校验（IMPL-119）早已在位，本次仅放开 UI 声明——执行器/Worker/校验零改动；none=纯文生视频（默认档，原语义不变），frame=首/尾帧（body 键名不变） */
 title: "参考素材",
 hint: "只能选择一种",
 modes: [ {
@@ -3599,6 +3572,18 @@ params: [ ]
 label: "首/尾帧",
 value: "frame",
 params: [ "first_frame", "last_frame" ]
+}, {
+label: "参考图片",
+value: "images",
+params: [ "images" ]
+}, {
+label: "参考视频",
+value: "videos",
+params: [ "videos" ]
+}, {
+label: "参考音频",
+value: "audios",
+params: [ "audios" ]
 } ]
 }
 } ],
@@ -3833,7 +3818,8 @@ label: "音色",
 type: "text",
 required: true,
 default: "",
-placeholder: "声音复刻/设计音色 id"
+placeholder: "声音复刻/设计音色 id",
+hint: "音色 id 需经百炼 voice-enrollment（复刻/设计）创建——速创「语音克隆」所得 id 不通用（IMPL-162 注）"
 }, {
 key: "format",
 label: "格式",
@@ -3909,7 +3895,7 @@ label: "龙安灵心（女 · 知心温暖）"
 value: "longanlufeng",
 label: "龙安鲁风（男 · 明亮开朗）"
 } ],
-hint: "也可填声音复刻音色 id"
+hint: "复刻/设计音色 id 需经百炼 voice-enrollment 创建，速创克隆 id 不通用（IMPL-162）"
 }, {
 key: "format",
 label: "格式",
@@ -4582,8 +4568,9 @@ const SkillSession = {
     ses.abort = new AbortController();
     this.renderPanel();
     this.wandSync();
-    /* IMPL-74（74-c P1-2）：段首看门狗预武装——主链首 delta 前沿用默认 15s 会被深度思考/非流式回退误杀 */
-    this._armWatchdog(Store.getSkillThinking() ? 40000 : 15000);
+    /* IMPL-74（74-c P1-2）：段首看门狗预武装——主链首 delta 前沿用默认 15s 会被深度思考/非流式回退误杀；
+       IMPL-157：预算按「思考/带图」分档提额（带图 prefill 实测 1~5s、大图慢集群 15s+；onActivity 字节级续命后此预算仅约束「完全静默」窗口） */
+    this._armWatchdog(Store.getSkillThinking() ? 60000 : (this._lastUserHasImg() ? 40000 : 25000));
     try {
       const relay = Store.getSkillRelay();
       const discuss = Store.getSkillDiscuss();
@@ -4598,9 +4585,14 @@ const SkillSession = {
       } else {
         /* 接棒模式（IMPL-71 需求③⑥）：识图→报告卡可视化→所选思考模型接棒；或直连（双关） */
         if (relay && hasImg) await this._visionStage();
+        /* IMPL-157（P0）：主链开跑前重新武装看门狗——识图段（含超时中止/失败静默回退）会把段首预算消耗殆尽，
+           此前主链沿用残缺预算（最坏剩 ~2s）必被误杀 →「响应超时已自动中止本轮」（接棒模式专属路径） */
+        const mainWatch = Store.getSkillThinking() ? 60000 : (hasImg ? 40000 : 25000);
+        this._armWatchdog(mainWatch);
         /* 79-c(b)：主链按实际生效模型决定图片去留——llmChatStream 取值序 modelOpt||_forceModel||Store.getSkillModel()
-           的落点（此处 modelOpt/_forceModel 均空传）= Store.getSkillModel()；auto 时 _prepareMsgs 内部落到同值 */
+           的落点（此处 modelOpt/_forceModel 均空传）= Store.getSkillModel()；auto 时 _prepareMsgs 内落到同值 */
         const full = await this._streamOnce(this._prepareMsgs(Store.getSkillModel()), {
+          watchMs: mainWatch,
           /* 76-c：技能级 maxTokens 覆盖——分页整稿 4096；其他技能 undefined → _streamOnce 回落 1024 原语义 */
           maxTokens: (this.get(ses.skillIds[0]) || {}).maxTokens || undefined,
           tag: "skill:" + (ses.skillIds[0] || "plain"),
@@ -4629,6 +4621,7 @@ const SkillSession = {
     } finally {
       this._stagePartial = null;
       this._watchdogFired = false;
+      this._disarmWatchdog(); /* IMPL-158-a：成功路径显式收口（防呆——此前依赖触发守卫+置空兜底） */
       if (ses.discussion) ses.discussion.forEach(d => { d.streaming = false; });
       ses.visionLive = false;
       ses.streaming = false;
@@ -4641,6 +4634,7 @@ const SkillSession = {
   async _streamOnce(messages, opts) {
     const o = opts || {};
     const buf = [];
+    let acc = ""; /* IMPL-160：运行式拼接——原每 delta buf.join("") 全量拷贝 O(n²)（12KB 输出 ≈18MB/轮字符串垃圾） */
     try {
       await Api.llmChatStream(messages, {
         temperature: o.temperature != null ? o.temperature : this.ses.lastTemp,
@@ -4649,10 +4643,11 @@ const SkillSession = {
         thinking: o.thinking,
         tag: o.tag,
         signal: this.ses.abort.signal,
+        onActivity: () => { this._disarmWatchdog(); this._armWatchdog(o.watchMs || 25000); }, /* IMPL-157：任意字节续命（真实语义=静默 watchMs 才算超时） */
         onThink: t => {
           if (o.onThink) { try { o.onThink(t); } catch (e) {} }
           this._disarmWatchdog();
-          this._armWatchdog(o.watchMs);
+          this._armWatchdog(o.watchMs || 25000); /* IMPL-158-a：兜底对齐 onActivity（漏传 watchMs 不再静默降级 15s） */
           const el = this.wrap?.querySelector(o.liveSel || "[data-sp-stream]");
           if (el && !el.textContent && !el.dataset.think) {
             el.dataset.think = "1";
@@ -4664,11 +4659,12 @@ const SkillSession = {
         },
         onDelta: d => {
           buf.push(d);
-          const fullText = buf.join("");
+          acc += d;
+          const fullText = acc;
           const el = this.wrap?.querySelector(o.liveSel || "[data-sp-stream]");
           if (el && el.dataset.think) { el.dataset.think = ""; el.style.opacity = ""; }
           this._disarmWatchdog();
-          this._armWatchdog(o.watchMs);
+          this._armWatchdog(o.watchMs || 25000); /* IMPL-158-a：兜底对齐 */
           if (o.onDelta) o.onDelta(d, fullText, el);
         }
       });
@@ -4700,12 +4696,23 @@ const SkillSession = {
       : Object.assign({}, m, { content: m.content.map(p => p && (p.type === "image_url" || p.type === "image") ? { type: "text", text: "（此处的参考图已由识图模型解析为文字报告，见下方）" } : p) }));
   },
   _liveText(sel, text) {
-    const el = this.wrap?.querySelector(sel);
-    if (el) {
-      el.textContent = text;
-      const body = this.wrap?.querySelector(".sp-body");
-      if (body) body.scrollTop = body.scrollHeight;
-    }
+    /* IMPL-160：rAF 合帧（同 _streamTick）——识图/辩手/终结者每 delta 调用，原版每次全量 textContent+scrollTop 强制同步重排；按 sel 分键互不吞帧 */
+    this._liveRaf = this._liveRaf || {};
+    const m = this._liveRaf;
+    m[sel] = text;
+    if (m[sel + "|p"]) return;
+    m[sel + "|p"] = 1;
+    requestAnimationFrame(() => {
+      m[sel + "|p"] = 0;
+      const t = m[sel];
+      if (t == null) return;
+      const el = this.wrap?.querySelector(sel);
+      if (el) {
+        el.textContent = t;
+        const body = this.wrap?.querySelector(".sp-body");
+        if (body) body.scrollTop = body.scrollHeight;
+      }
+    });
   },
   _skillLabel(id) {
     const hit = SKILL_MODEL_PRESETS.find(m => m.id === id)
@@ -4794,8 +4801,8 @@ const SkillSession = {
     ses.visionReport = "";
     ses.visionLive = true;
     this.renderPanel();
-    /* IMPL-74（74-c P1-2）：识图段首预武装（20s 与段内 watchMs 对齐）——否则默认 15s 架空 IMPL-72 的提额，prefill 慢时静默回退损失整份报告 */
-    this._armWatchdog(20000);
+    /* IMPL-74（74-c P1-2）+ IMPL-157：识图段首预武装（30s 与段内 watchMs 对齐；长报告提示词+大图 prefill 实测可达 15s+，20s 为边缘误杀值）——否则默认 15s 架空 IMPL-72 的提额，prefill 慢时静默回退损失整份报告 */
+    this._armWatchdog(30000);
     try {
       const full = await this._streamOnce([{ role: "user", content: [{ type: "text", text: SKILL_REPORT_PROMPT }, ...imgs] }], {
         model: vModel,
@@ -4803,7 +4810,7 @@ const SkillSession = {
         temperature: 0.2,
         thinking: false,
         tag: "vision",
-        watchMs: 20000,
+        watchMs: 30000,
         liveSel: "[data-vsp-live]",
         onDelta: (d, fullText) => { ses.visionReport = fullText; this._liveText("[data-vsp-live]", fullText); }
       });
@@ -4930,15 +4937,21 @@ const SkillSession = {
   _streamTick() {
     const ses = this.ses;
     if (!ses) return; /* IMPL-104：会话已销毁的迟到 tick 直接丢弃（此前 TypeError 被 llmChatStream 逐行 catch 静默吞掉） */
-    const el = this.wrap?.querySelector("[data-sp-stream]");
-    if (el) {
-      el.textContent = ses.streamText;
-      const body = this.wrap?.querySelector(".sp-body");
-      if (body) body.scrollTop = body.scrollHeight;
-    } else if (!ses.collapsed) {
-      /* IMPL-74（74-c P2-5）：流式期间面板已收起时不再全量重绘（每增量一次的 renderPanel 纯浪费） */
-      this.renderPanel();
-    }
+    if (this._tickRaf) return; /* IMPL-160：rAF 合帧——每帧最多应用一次（主链每 delta 调用 20-80 次/秒，原版每次全量 textContent+scrollTop=一次文档级强制同步重排，中低端手机长流式主线程 5-30% 耗在布局） */
+    this._tickRaf = requestAnimationFrame(() => {
+      this._tickRaf = null;
+      const cur = this.ses;
+      if (!cur || !cur.streaming) return;
+      const el = this.wrap?.querySelector("[data-sp-stream]");
+      if (el) {
+        el.textContent = cur.streamText;
+        const body = this.wrap?.querySelector(".sp-body");
+        if (body) body.scrollTop = body.scrollHeight;
+      } else if (!cur.collapsed) {
+        /* IMPL-74（74-c P2-5）：流式期间面板已收起时不再全量重绘（每增量一次的 renderPanel 纯浪费） */
+        this.renderPanel();
+      }
+    });
   },
 
   /* ── 契约 v3.1 三态解析：围栏块 / 【追问】 / 兜底 ── */
@@ -5866,15 +5879,6 @@ const v = sessionStorage.getItem(key);
 return v == null ? fallback : v;
 } catch {
 return fallback;
-}
-}
-
-function sessionSet(key, value) {
-try {
-sessionStorage.setItem(key, value);
-return true;
-} catch {
-return false;
 }
 }
 
@@ -7023,7 +7027,7 @@ async _dsImage(model, body) {
   if (Number.isFinite(nn) && nn >= 1 && nn <= 6) parameters.n = nn;
   if (body.negative_prompt) parameters.negative_prompt = body.negative_prompt;
   const seed = parseInt(body.seed, 10);
-  if (Number.isFinite(seed) && seed >= 0) parameters.seed = seed;
+  if (Number.isFinite(seed) && seed >= 0) parameters.seed = Math.min(seed, 9999999999); /* IMPL-160：对齐 _sfImage 封顶（漂移修复：UI seed 自由文本可发任意大值撞上游 400） */
   if (body.prompt_extend !== "" && body.prompt_extend != null) parameters.prompt_extend = body.prompt_extend === "true" || body.prompt_extend === true;
   if (body.watermark !== "" && body.watermark != null) parameters.watermark = body.watermark === "true" || body.watermark === true;
   const payload = { model: model.modelId, input: { messages: [{ role: "user", content }] }, parameters };
@@ -7058,7 +7062,7 @@ async _dsVideo(model, body) {
   if (Number.isFinite(dur)) parameters.duration = dur === -1 ? -1 : Math.round(dur);
   if (body.audio !== "" && body.audio != null) parameters.audio = body.audio === "true" || body.audio === true;
   const seed = parseInt(body.seed, 10);
-  if (Number.isFinite(seed) && seed >= 0) parameters.seed = seed;
+  if (Number.isFinite(seed) && seed >= 0) parameters.seed = Math.min(seed, 9999999999); /* IMPL-160：对齐 _sfImage 封顶（漂移修复） */
   if (body.prompt_extend !== "" && body.prompt_extend != null) parameters.prompt_extend = body.prompt_extend === "true" || body.prompt_extend === true;
   if (body.watermark !== "" && body.watermark != null) parameters.watermark = body.watermark === "true" || body.watermark === true; /* IMPL-119：官方 parameters.watermark（默认 false）透传——原 UI 缺失 */
   const payload = { model: model.modelId, input, parameters };
@@ -7147,7 +7151,7 @@ const res = await this.request("GET", `${CONFIG.DETAIL_PATH}?id=${encodeURICompo
 return this.normalizeResponse(res);
 },
 async llmChatStream(messages, opts) {
-const { temperature = 0.5, maxTokens = 1024, signal, onDelta, onThink, thinking, _forceModel, tag, model: modelOpt } = opts || {};
+const { temperature = 0.5, maxTokens = 1024, signal, onDelta, onThink, onActivity, thinking, _forceModel, tag, model: modelOpt } = opts || {}; /* IMPL-157：onActivity=字节级存活信号（任意 chunk/事件），看门狗据此续命——此前只认内容增量，慢 prefill/心跳上游被 15s 看门狗误杀 */
 const endpoints = Store.llmEndpoints();
 if (!endpoints.length) throw this._llmErr("技能端点未配置——请解锁保险箱（配置 Worker 地址后自动连接），或把交付件 worker-llm-chat-route.js 挂入生产 Worker", true);
 /* IMPL-100：发送前结构规范化——连续 user（讨论模式指令注入）/散落 system/空消息 一次收口，
@@ -7223,6 +7227,7 @@ throw this._llmErr("技能服务错误 HTTP " + res.status + (detail ? "：" + d
 const ct = (res.headers.get("content-type") || "").toLowerCase();
 if (!res.body || ct.includes("application/json")) {
 const j = await res.json().catch(() => null);
+if (onActivity) { try { onActivity(); } catch (e) {} } /* IMPL-157：非流式分支响应到达同样续命 */
 if (j?.usage) usage = j.usage;
 const txt = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content || "";
 if (!txt) throw this._llmErr("技能服务返回为空", i >= endpoints.length - 1);
@@ -7236,6 +7241,7 @@ let sbuf = "";
 for (;;) {
 const { done, value } = await reader.read();
 if (done) break;
+if (onActivity && value && value.length) { try { onActivity(); } catch (e) {} } /* IMPL-157：字节级存活续命 */
 sbuf += dec.decode(value, { stream: true });
 let nl;
 while ((nl = sbuf.indexOf("\n")) !== -1) {
@@ -7462,13 +7468,6 @@ return new Blob([ arr ], {
 type: mime
 });
 },
-async uploadDataUrl(dataUrl) {
-const blob = this.dataUrlToBlob(dataUrl);
-const file = new File([ blob ], "editor_" + Date.now() + ".png", {
-type: "image/png"
-});
-return this.uploadToR2(file);
-}
 };
 
 const ThumbService = {
@@ -7586,6 +7585,7 @@ try {
 const result = record.result || {};
 const url = result.url;
 if (!url) return null;
+if (this._failAt && this._failAt[url] && Date.now() - this._failAt[url] < 3e5) return url; /* IMPL-160：失败负缓存 5min——恒失败图源（crossOrigin 非 CORS 等）不再随每次 _renderTaskList 重放 ≤10 张全图解码 */
 if (this._memCache.has(url)) return this._memCache.get(url);
 if (window._thumbDB) {
 try {
@@ -7615,7 +7615,7 @@ if (!workerUrl || !token) return url;
 const type = record.model?.type === "video" ? "video" : record.model?.type === "audio" ? null : "image";
 if (!type) return url;
 const blob = await this.makeThumb(url, type);
-if (!blob) return url;
+if (!blob) { (this._failAt = this._failAt || {})[url] = Date.now(); return url; }
 const thumbFile = new File([ blob ], "thumb_" + (record.id || Date.now()) + ".webp", {
 type: "image/webp"
 });
@@ -7807,10 +7807,17 @@ delete this.timers[taskId];
 }
 if (this.polls[taskId]) {
 this.polls[taskId].stopped = true;
+delete this.polls[taskId]; /* IMPL-160：终态任务全对象（prompt/body/result，单条 1-5KB）不再整会话驻留——_scheduleNext/_poll 对 !p 即 return，语义等价 stopped */
+delete this.failCount[taskId];
 }
 }
 manualStop(taskId) {
 this.stop(taskId);
+/* IMPL-157：任务中心任务停止时同步请求 Worker 侧取消——此前只停本地轮询，上游继续生成继续计费（best-effort 不阻塞 UI） */
+try {
+const _mt = Store.getTasks().find(x => x.id === taskId);
+if (_mt && (_mt.dispatchedVia === "taskcenter" || /^tc_/.test(String(_mt.apiId || "")))) TaskCenter.cancel(taskId).catch(() => {});
+} catch (e) {}
 UI.onTaskResult(taskId, {
 status: "failed",
 error: "已手动停止"
@@ -7860,6 +7867,12 @@ t.status = "timeout";
 t.completedAt = now;
 expired++;
 addOnce(t);
+return;
+}
+/* IMPL-157（P0）：任务中心任务（apiId=Worker 侧 tc_ id）绝不本地直连轮询——上游 detail 必回「错误的ID」，
+   连续 5 次=把进行中的任务误标 failed（刷新页面后本函数曾整批触发，全部异步模型同病）；改挂任务中心监视通道 */
+if (t.dispatchedVia === "taskcenter" || /^tc_/.test(String(t.apiId || ""))) {
+TaskCenter.reattach(t);
 return;
 }
 if (t.apiId) this.start(t);
@@ -7994,6 +8007,23 @@ return res.ok;
 return false;
 }
 },
+/* IMPL-157：断线/刷新恢复——把任务中心任务重新挂回监视通道（不发起新提交，仅登记 workerId 走 5s 轮询）；
+   此前刷新后 resumeAll 把 tc_ apiId 当上游 id 直连 detail 轮询 → 上游「错误的ID」×5 → 进行中任务被误标 failed */
+reattach(task) {
+if (!task || !task.apiId) return false;
+if (!/^tc_/.test(String(task.apiId))) { console.warn("[TaskCenter] reattach 拒绝非 tc_ 形态 apiId（防上游 id 误挂监视通道）:", task.apiId); return false; } /* IMPL-158：最后防线 */
+
+if (!this._submitted.has(task.id)) {
+this._submitted.set(task.id, {
+task: task,
+lastStatus: "processing",
+startTime: task.createdAt || Date.now(),
+workerId: String(task.apiId)
+});
+}
+if (this.enabled && !this.pollTimer) this.startPolling();
+return true;
+},
 async list() {
 try {
 const url = this.workerUrl + "/tasks?status=active&token=" + encodeURIComponent(this.token);
@@ -8060,8 +8090,18 @@ const r = await fetch(url);
 if (r.ok) {
 const data = await r.json();
 /* IMPL-119：Worker GET /task/<id> 返回 {task:{…}}——解包后再派发，原顶层找不到 resultUrl */
-this._dispatchResult(taskId, data.task || data);
+const rec = data.task || data;
+const recStr = String((rec && rec.status) || "").toLowerCase();
+const recNum = Number(rec && rec.status);
+/* IMPL-158：终态校验后才派发——此前 failed/canceled 记录也被派成 succeeded(url=null) 入历史并虚增今日花费 */
+if (recStr === "failed" || recStr === "error" || recStr === "canceled" || recStr === "cancelled" || recNum === 3) {
+this._fire("error", { taskId: taskId, error: (rec && (rec.error || rec.message)) || "任务中心任务失败" });
 this._submitted.delete(taskId);
+} else if (recStr === "succeeded" || recStr === "success" || recNum === 2 || (rec && (rec.resultUrl || rec.url || rec.result))) {
+this._dispatchResult(taskId, rec);
+this._submitted.delete(taskId);
+}
+/* queued/running/未知状态：保持监视等待下一轮（不误派不误删） */
 continue;
 }
 } catch (e) {}
@@ -9821,20 +9861,7 @@ body: JSON.stringify(top)
 } catch (e) {}
 },
 async _syncHistoryToCloudNow() {
-if (!Store.getSync()) return;
-const c = this._histCloudBase();
-if (!c) return;
-try {
-const hist = Store.getHistory();
-const top = hist.slice(0, 500);
-await fetch(c.base + "/userdata?key=history&token=" + encodeURIComponent(c.token), {
-method: "PUT",
-headers: {
-"Content-Type": "application/json"
-},
-body: JSON.stringify(top)
-});
-} catch (e) {}
+return this._syncHistoryToCloud(); /* IMPL-160：与 _syncHistoryToCloud 逐字节同体（IMPL-118 复制分裂）——收敛为委托防漂移 */
 },
 /* IMPL-118③：解锁=数据链就位——立即同步云端历史并刷新最近结果（不等重启/30s 轮询；手机端启动时 TaskCenter 未就位或 getSync 关闭时此路径是唯一触发点） */
 _vaultAfterUnlock() {
@@ -9905,7 +9932,7 @@ const oldest = tasks.reduce((a, b) => a.createdAt < b.createdAt ? a : b);
 const elapsed = Date.now() - oldest.createdAt;
 next = `⏳ ${tasks.length} 个任务生成中 · 已等 ${fmtDur(elapsed)}`;
 } else {
-next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.172");
+next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textContent?.trim() || "V26.9.175");
 }
 if (document.title !== next) document.title = next;
 },
@@ -9940,13 +9967,6 @@ this.state.resultSearch = v;
 this._renderTaskList();
 }, 120);
 $("#resultSearchInput").addEventListener("input", e => this._searchDebounce(e.target.value));
-$("#resultList").addEventListener("click", e => {
-const chip = e.target.closest(".qs-chip");
-if (!chip) return;
-const p = this._quickStartsFor(this.state.tab).find(x => x.name === chip.dataset.qsName);
-if (p) this._applyQuickStart(p);
-});
-this._initQuickStartsStatic();
 $("#sortSelect").addEventListener("change", e => {
 this.state.sortOrder = e.target.value;
 this._renderTaskList();
@@ -10316,13 +10336,6 @@ $("#lightbox").addEventListener("click", e => {
 if (e.target === $("#lightbox")) this._closeLightbox();
 });
 $("#clearScreenBtn").addEventListener("click", () => this._clearScreen());
-const _swMobile = $("#switchMobileBtn");
-if (_swMobile) _swMobile.addEventListener("click", () => {
-try {
-localStorage.setItem("sc_preferred_version", "mobile");
-} catch (e) {}
-location.href = "ai-workbench-mobile-dev.html";
-});
 /* ── IMPL-142：结果条统一委托——文件夹展开（反馈4）/右键菜单（反馈5）/拖拽入夹+幽灵新建（反馈3）；sel-bar 与 foldersRow 独立容器已移除 ── */
 const _strip = $("#resultStrip");
 _strip.addEventListener("click", e => {
@@ -10982,8 +10995,6 @@ this.state.modelKey = `${tab}/${model.id}`;
 this._updateModelBar();
 this.renderParamForm(model.id);
 this._restoreFormFromCache();
-const qsBox = $("#qsChipsStatic");
-if (qsBox) qsBox.innerHTML = this._buildQuickStartsHTML(tab);
 if (typeof SkillSession !== "undefined") SkillSession.onTabSwitch();
 },
 _updateModelBar() {
@@ -11074,38 +11085,6 @@ if ($("#modelPickList")?.classList.contains("show")) this._positionModelPick();
 document.addEventListener("keydown", e => {
 if (e.key === "Escape") this._closeModelPick();
 });
-},
-_quickStartsFor(tab) {
-if (tab === "image") return PROMPT_PRESETS.slice(1, 5).map(p => ({
-name: p.name,
-prompt: p.prompt
-}));
-if (tab === "video") return VIDEO_PROMPT_PRESETS.slice(1, 5).map(p => ({
-name: p.name,
-prompt: p.prompt
-}));
-return [ {
-name: "语音合成",
-prompt: "你好，我是AI语音助手，很高兴为你朗读这段文字，希望你的每一天都阳光明媚。"
-} ];
-},
-_buildQuickStartsHTML(tab) {
-return this._quickStartsFor(tab).map(p => `<button type="button" class="qs-chip" data-qs-name="${esc(p.name)}" title="${esc(trunc(p.prompt, 60))}"><i class="qs-dot" aria-hidden="true"></i>${esc(p.name)}</button>`).join("");
-},
-_applyQuickStart(p) {
-const ta = $("#paramForm textarea");
-if (!ta || !p) return;
-ta.value = ta.value.trim() ? ta.value.trim() + "\n\n" + p.prompt : p.prompt;
-this._onPromptInput(ta);
-ta.focus();
-try {
-ta.setSelectionRange(ta.value.length, ta.value.length);
-} catch {}
-Toast.info(`已填入「${p.name}」模板，可直接生成或继续编辑`);
-},
-_initQuickStartsStatic() {
-const box = $("#qsChipsStatic");
-if (box) box.innerHTML = this._buildQuickStartsHTML(this.state.tab);
 },
 _parkWorkflowBtns() {
 const park = document.getElementById("wfPark");
@@ -12899,9 +12878,14 @@ onTaskResult(taskId, result) {
 const tasks = Store.getTasks();
 const task = tasks.find(t => t.id === taskId);
 if (!task) return;
-/* IMPL-104：终态幂等门控——manualRefresh 双击或与在途轮询竞态时同一结果双写历史双倍计费 */
-if ((task.status === "succeeded" || task.status === "failed" || task.status === "timeout" || task.status === "stopped")
-  && (result.status === "succeeded" || result.status === "failed")) return;
+/* IMPL-104：终态幂等门控——manualRefresh 双击或与在途轮询竞态时同一结果双写历史双倍计费
+   IMPL-158-d（v2）：①timeout 迟到派发一并拦截（v1 只挡 succeeded/failed，stop 后迟到 timeout 可改写已终态任务）；
+   ②唯一例外：手动停止/失败后迟到 succeeded 一次性放行（用户已计费的成果可取回，替换式写入防同 id 双历史） */
+const _terminalTask = task.status === "succeeded" || task.status === "failed" || task.status === "timeout" || task.status === "stopped";
+if (_terminalTask) {
+const _upgrade = (task.status === "failed" || task.status === "stopped") && result.status === "succeeded" && result.data;
+if (!_upgrade) return;
+}
 if (result.status === "succeeded") {
 task.status = "succeeded";
 task.result = {
@@ -12911,6 +12895,10 @@ data: result.data
 task.completedAt = Date.now();
 const cost = calcEstimate(task.model, task.body);
 task.cost = cost?.amount;
+/* IMPL-158-d：同 id 旧历史条目替换式写入（停止→迟到成功升级路径防双条目；常规路径无旧条目时为无害 no-op） */
+const _histArr = Store.getHistory();
+const _histIdx = _histArr.findIndex(h => h.id === task.id);
+if (_histIdx >= 0) { _histArr.splice(_histIdx, 1); Store.saveHistory(_histArr); }
 Store.addHistory({
 id: task.id,
 model: task.model,
@@ -12968,7 +12956,6 @@ const remaining = tasks.filter(t => t.id !== taskId);
 Store.saveTasks(remaining);
 this._updateTaskCard(task);
 this._renderActiveTasks();
-this._updateBudgetStatus();
 this._renderResultStrip();
 this.renderHistoryBadge();
 this._updateTitle();
@@ -13027,7 +13014,6 @@ if (phaseEl) phaseEl.textContent = phase;
 }, 1e3);
 },
 _renderTask(task) {
-$("#emptyState")?.remove();
 this.state.singleTaskId = task.id;
 const arr = this.state.singleList || [];
 let idx = arr.findIndex(t => t.id === task.id);
@@ -13277,10 +13263,10 @@ el.className = "sv-wrap" + (isPlain ? " sv-plain" : "") + (task.status === "proc
 let mediaHtml = "";
 if (status === "processing") {
 /* 81-b：等待卡片——细线圆环+微光带（样式见 .sv-waiting-*），.sv-media.is-loading 外壳类名保留（JS 无查询点，纯语义标记） */
-mediaHtml = `<div class="sv-media is-loading"><div class="sv-waiting" role="status"><svg class="sv-waiting-ring" viewBox="0 0 30 30" aria-hidden="true"><circle class="wr-track" cx="15" cy="15" r="12.5"></circle><circle class="wr-arc" cx="15" cy="15" r="12.5"></circle></svg><span class="sv-waiting-bar" aria-hidden="true"></span></div></div>`;
+mediaHtml = `<div class="sv-media is-loading"><div class="sv-waiting" role="status" aria-label="生成中，请稍候"><svg class="sv-waiting-ring" viewBox="0 0 30 30" aria-hidden="true"><circle class="wr-track" cx="15" cy="15" r="12.5"></circle><circle class="wr-arc" cx="15" cy="15" r="12.5"></circle></svg><span class="sv-waiting-bar" aria-hidden="true"></span></div></div>`;
 } else if (status === "failed" || status === "timeout") {
 const err = classifyErr(task.error || "未知错误");
-mediaHtml = `<div class="sv-error"><div class="sv-error-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="sv-err-category">${esc(err.category)}错误</div><div class="sv-err-hint">${esc(err.hint)}</div></div>`;
+mediaHtml = `<div class="sv-error" role="alert"><div class="sv-error-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div><div class="sv-err-category">${esc(err.category)}错误</div><div class="sv-err-hint">${esc(err.hint)}</div></div>`;
 } else if (isPlain && type === "video") {
 mediaHtml = `<div class="sv-media is-plain is-video" title="单击播放/暂停"><video src="${esc(url)}" playsinline preload="metadata"></video></div>`;/* IMPL-107①：裸播——单击播放/单击暂停，控制面板移除（全屏走浮动菜单栏按钮） */
 } else if (type === "audio") {
@@ -13290,7 +13276,7 @@ const txt = (task.result && (task.result.text || (task.result.data && task.resul
 mediaHtml = `<div class="sv-asr"><div class="sv-asr-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/></svg><span class="sv-asr-title">语音识别结果</span><button class="sv-hb-btn" data-act="copyText" title="复制文本" aria-label="复制文本"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9.5" y="9.5" width="11.5" height="11.5" rx="2.5"/><path d="M6.5 15H5.5A2.5 2.5 0 0 1 3 12.5v-7A2.5 2.5 0 0 1 5.5 3h7A2.5 2.5 0 0 1 15 5.5v1"/></svg></button></div><div class="sv-asr-text">${esc(txt)}</div></div>`;
 } else {
 const lqip = thumbUrl ? ` data-lqip="1" style="background-image:url('${esc(thumbUrl)}');background-size:contain;background-position:center;background-repeat:no-repeat"` : "";
-mediaHtml = `<div class="sv-media ${isPlain ? "is-plain " : ""}is-image" data-lightbox="${esc(url)}" title="点击放大查看原图"${lqip}><img src="${esc(url)}" loading="eager" decoding="async" referrerpolicy="no-referrer" alt="${esc(trunc(task.prompt || "生成结果", 60))}"></div>`;
+mediaHtml = `<div class="sv-media ${isPlain ? "is-plain " : ""}is-image" data-lightbox="${esc(url)}" role="button" tabindex="0" aria-label="查看大图" title="点击放大查看原图"${lqip}><img src="${esc(url)}" loading="eager" decoding="async" referrerpolicy="no-referrer" alt="${esc(trunc(task.prompt || "生成结果", 60))}"></div>`;
 }
 let progressRowHtml = "";
 if (status === "processing") {
@@ -13423,6 +13409,12 @@ once: true
 const media = el.querySelector(".sv-media.is-image");
 if (media) media.addEventListener("click", e => {
 if (e.target.closest("[data-act],[data-svnav]")) return;
+this._openLightboxForTask(task);
+});
+if (media) media.addEventListener("keydown", e => { /* IMPL-158-c：灯箱入口键盘可达（此前 click-only） */
+if (e.key !== "Enter" && e.key !== " ") return;
+if (e.target.closest("[data-act],[data-svnav]")) return;
+e.preventDefault();
 this._openLightboxForTask(task);
 });
 if (media) {
@@ -13760,7 +13752,7 @@ a.click();
 a.remove();
 setTimeout(() => URL.revokeObjectURL(objUrl), 1e3);
 } catch (e) {
-window.open(url, "_blank");
+window.open(safeUrl(url), "_blank"); /* IMPL-158-d：降级打开同样过协议白名单（防 javascript: 一键 XSS） */
 }
 },
 _useAsReference(url, type) {
@@ -13774,8 +13766,8 @@ return;
 this._addUrlRef(param.key, url);
 Toast.success("已添加为参考素材");
 },
-_regen(task) { /* W5 反馈②：重新生成=直接生成——不再回填表单（原 switchTab+renderParamForm 会覆盖当前表单），按原任务 body 原样重提，生成卡片即现 */
-if (task.model && task.model.seg) { /* seg 抠图模型无 Api.submit 通道，维持抠图工作台重入 */
+_resubmit(task, okMsg) { /* IMPL-160：_regen/_retryTask 复制分裂收敛（2×28 行仅成功文案差）；守卫两路共用——原 _retryTask 缺 !task.model?.id 守卫=漂移 bug（无 model.id 的失败任务走 retry 由 Api.submit 抛裸错而非友好 Toast） */
+if (task.model && task.model.seg) { /* IMPL-104：抠图等 seg 模型无 Api.submit 通道（endpoint 缺失会拼出无效 URL），转抠图工作台重入 */
 SegStudio.prefillAsModel(task);
 Toast.info("已带入抠图工作台，请重新发起");
 return;
@@ -13787,9 +13779,11 @@ id: genId(),
 status: "processing",
 createdAt: Date.now(),
 apiId: null,
-error: null
+error: null,
+dispatchedVia: "direct" /* IMPL-158：重提走 Api.submit 直连——若继承 taskcenter，resumeAll 会把上游 apiId 挂上任务中心监视通道（tc_ 守卫与「丢失任务」30s 双重误杀），必须显式改标 */
 };
 delete newTask.completedAt;
+delete newTask.result;
 Api.submit(task.model, task.body).then(res => {
 newTask.apiId = res.id;
 const tasks = Store.getTasks();
@@ -13798,34 +13792,14 @@ Store.saveTasks(tasks);
 this._renderTask(newTask);
 this._renderActiveTasks();
 poller.start(newTask);
-Toast.success("已按原参数直接重新生成");
+Toast.success(okMsg);
 }).catch(e => Toast.error(e.message));
 },
+_regen(task) { /* W5 反馈②：重新生成=直接生成——不再回填表单（原 switchTab+renderParamForm 会覆盖当前表单），按原任务 body 原样重提 */
+this._resubmit(task, "已按原参数直接重新生成");
+},
 _retryTask(task) {
-if (task.model && task.model.seg) { /* IMPL-104：抠图等 seg 模型无 Api 提交通道（endpoint 缺失会拼出无效 URL），转抠图工作台重入 */
-  SegStudio.prefillAsModel(task);
-  Toast.info("已带入抠图工作台，请重新发起");
-  return;
-}
-const newTask = {
-...task,
-id: genId(),
-status: "processing",
-createdAt: Date.now(),
-apiId: null,
-error: null
-};
-delete newTask.completedAt;
-Api.submit(task.model, task.body).then(res => {
-newTask.apiId = res.id;
-const tasks = Store.getTasks();
-tasks.unshift(newTask);
-Store.saveTasks(tasks);
-this._renderTask(newTask);
-this._renderActiveTasks();
-poller.start(newTask);
-Toast.success("已重新提交");
-}).catch(e => Toast.error(e.message));
+this._resubmit(task, "已重新提交");
 },
 /* ── IMPL-138②/142 多选体系（独立 sel-bar 移除：批量操作=结果卡片下方 sv-floatbar 批量组；compareList=唯一选中集合） ── */
 _toggleCompare(task) { this._toggleSelect(task); },
@@ -13887,26 +13861,22 @@ await new Promise(r => setTimeout(r, 350));
 };
 Promise.all(Array.from({ length: Math.min(3, items.length) }, worker)).then(() => Toast[bad ? "warning" : "success"](`批量下载完成：成功 ${ok}${bad ? ` · 失败 ${bad}` : ""}`, 4200));
 },
-_editSelected() {
-/* IMPL-138⑤：多选一起放入编辑器——open 参数前向携带 images:[url,…]（当前版编辑器忽略未知键仅载首张；对方接线 images 后即可多图同开） */
-const items = this.state.compareList.filter(t => t.status === "succeeded" && t.result?.url && t.model?.type === "image");
-if (!items.length) { Toast.warning("所选结果没有可编辑的图片"); return; }
+_weservProxy(u) { /* IMPL-160：_editSelected/_openEditor 双份 weserv 代理 lambda 收敛（IMPL-99：crossOrigin=anonymous 可导出，data: 直用） */
+return u.startsWith("data:") ? u : u.startsWith("https://images.weserv.nl/") ? u + (u.includes("?") ? "&" : "?") + "_=" + Date.now() : "https://images.weserv.nl/?url=" + encodeURIComponent(u.replace(/^https?:\/\//, "")) + "&_=" + Date.now();
+},
+_studioGuard() { /* IMPL-160：编辑器打开前置守卫双份收敛（预载/R2 凭据/内核判空/回 image 页签），通过返回当前 model、被拒返回 null */
 if (typeof window.StudioEditorPreload === "function") { try { window.StudioEditorPreload(); } catch (_) {} }
 if (!Store.getR2WorkerUrl() || !Store.getR2AuthToken()) {
 Toast.warning("编辑器需要 R2 凭据才能导出图 —— 请在 设置 → 密钥保险箱 解锁");
 this._openSettings();
-return;
+return null;
 }
-if (!window.StudioEditor) { Toast.error("编辑器组件未加载"); return; }
+if (!window.StudioEditor) { Toast.error("编辑器组件未加载"); return null; }
 if (!this.state.model || !this.state.model.params) this.switchTab("image");
-const model = this.state.model;
-const toProxy = u => u.startsWith("data:") ? u : u.startsWith("https://images.weserv.nl/") ? u + (u.includes("?") ? "&" : "?") + "_=" + Date.now() : "https://images.weserv.nl/?url=" + encodeURIComponent(u.replace(/^https?:\/\//, "")) + "&_=" + Date.now();
-const urls = items.map(t => toProxy(t.result.url));
-const first = items[0].result.url;
-window.StudioEditor.open({
-url: urls[0],
-images: urls,
-onSave: (dataURL, w, h) => {
+return this.state.model;
+},
+_studioOnSave(model) { /* IMPL-160：编辑器 onSave 落卡 23 行双份收敛（Z5/IMPL-152 语义原样） */
+return (dataURL, w, h) => {
 try {
 /* Z5（第六批）：「应用到节点」结果落结果区（修拍板）——不再写参考图区、不再回填原图、不再拼参考图提示词前缀 */
 const card = {
@@ -13928,7 +13898,19 @@ console.error("onSave内部错误:", err.message, err.stack);
 Toast.error("导出写入失败: " + err.message);
 return true;
 }
-}
+};
+},
+_editSelected() {
+/* IMPL-138⑤：多选一起放入编辑器——open 参数前向携带 images:[url,…]（当前版编辑器忽略未知键仅载首张；对方接线 images 后即可多图同开） */
+const items = this.state.compareList.filter(t => t.status === "succeeded" && t.result?.url && t.model?.type === "image");
+if (!items.length) { Toast.warning("所选结果没有可编辑的图片"); return; }
+const model = this._studioGuard();
+if (!model) return;
+const urls = items.map(t => this._weservProxy(t.result.url));
+window.StudioEditor.open({
+url: urls[0],
+images: urls,
+onSave: this._studioOnSave(model)
 });
 if (items.length > 1) Toast.info(`已把 ${items.length} 张图一起放入编辑器`, 3200); /* W5 反馈①：多图同开已落地（loadFiles 数组直载） */
 },
@@ -15525,23 +15507,6 @@ el.textContent = (tcOk ? "已连接 · " : "已连接（R2 直连）· ") + "云
 el.dataset.tone = "ok";
 el.style.display = "";
 },
-_updateBudgetStatus() {
-const el = $("#budgetStatus");
-if (!el) return;
-const budget = Store.getBudget();
-const spent = Store.getTodaySpend();
-if (budget <= 0) {
-el.innerHTML = "当前未设置预算限制";
-el.style.color = "var(--text-dim)";
-return;
-}
-const pct = (spent / budget * 100).toFixed(0);
-const remaining = budget - spent;
-const color = remaining < 0 ? "var(--danger)" : remaining < budget * .2 ? "var(--warning)" : "var(--success)";
-const status = remaining < 0 ? `已超支 ¥${Math.abs(remaining).toFixed(2)}` : `剩余 ¥${remaining.toFixed(2)}`;
-el.innerHTML = `今日已消费 <strong style="color:${color}">¥${spent.toFixed(2)}</strong> / ¥${budget.toFixed(2)}（${pct}%）· ${status}`;
-el.style.color = "var(--text-muted)";
-},
 _checkBudget() {
 if (Store.getSpendAlert()) {
 const spent = Store.getTodaySpend();
@@ -15877,47 +15842,11 @@ return null;
 },
 _openEditor(url) {
 if (!url) return;
-if (typeof window.StudioEditorPreload === "function") { try { window.StudioEditorPreload(); } catch (_) {} } /* IMPL-126：点编辑即预载（遮罩/加载态与脚本下载并行） */
-if (!Store.getR2WorkerUrl() || !Store.getR2AuthToken()) {
-Toast.warning("编辑器需要 R2 凭据才能导出图 —— 请在 设置 → 密钥保险箱 解锁");
-this._openSettings();
-return;
-}
-if (!window.StudioEditor) { /* IMPL-126：内核已外链懒加载，此处只查宿主壳 */
-Toast.error("编辑器组件未加载");
-return;
-}
-if (!this.state.model || !this.state.model.params) {
-this.switchTab("image");
-}
-const model = this.state.model;
-/* IMPL-99：weserv 代理 URL（crossOrigin=anonymous 可导出），data: 直用 */
-const imgUrl = url.startsWith("data:") ? url : url.startsWith("https://images.weserv.nl/") ? url + (url.includes("?") ? "&" : "?") + "_=" + Date.now() : "https://images.weserv.nl/?url=" + encodeURIComponent(url.replace(/^https?:\/\//, "")) + "&_=" + Date.now();
+const model = this._studioGuard(); /* IMPL-126：预载在 _studioGuard 内（点编辑即预载，遮罩/加载态与脚本下载并行）；内核已外链懒加载，此处只查宿主壳 */
+if (!model) return;
 window.StudioEditor.open({
-url: imgUrl,
-onSave: (dataURL, w, h) => {
-try {
-/* Z5（第六批）：「应用到节点」结果落结果区（修拍板）——不再写参考图区、不再回填原图、不再拼参考图提示词前缀 */
-const card = {
-id: genId(),
-model: { type: "image", name: (model && model.name) || "编辑器", id: "studio-apply" },
-prompt: "编辑器应用到节点",
-status: "succeeded",
-result: { url: dataURL, thumbUrl: dataURL },
-createdAt: Date.now(),
-completedAt: Date.now()
-};
-Store.addHistory(card);
-this._renderResultStrip();
-archiveDataUrlCard(card).catch(() => {}); /* IMPL-152：dataURL 产物转存 R2+512 缩略图（原 _preloadResult 对 data: 门控直返=永驻 LS 配额杀手，换专用帮手；双表回写+重渲染在帮手内） */
-Toast.success("已保存到结果区");
-return true;
-} catch (err) {
-console.error("onSave内部错误:", err.message, err.stack);
-Toast.error("导出写入失败: " + err.message);
-return true;
-}
-}
+url: this._weservProxy(url),
+onSave: this._studioOnSave(model)
 });
 },
 _bindMobileViewSwitch() {
@@ -16081,13 +16010,13 @@ window.StudioEditor = (function() {
 let api = null, ov = null, onSaveCb = null, escHandler = null, scriptP = null;
 const STUDIO_SRC = "image-studio.js";
 /* IMPL-144 W5（2026-09-26 修拍板）：位图动作全换 GPT-Image-2.5 系——覆盖 IMPL-143 版映射（变更单第一节）
-   sunburst=最强档（精细编辑/参考保真，Arena 文生图 1420.7/编辑 1520.4 双第一）→扩图/局部重绘；flare=快车道（比 GPT-Image-2 快 50%）→消除/图像拆解/编辑文字；抠出主体维持阿里抠图专用通道
+   sunburst=最强档（精细编辑/参考保真，Arena 文生图 1420.7/编辑 1520.4 双第一）→扩图/局部重绘；flare=快车道（比 GPT-Image-2 快 50%）→擦除/图像拆解/编辑文字；抠出主体维持阿里抠图专用通道
    裸名审计落账：GPT-Image-2.5 裸名非 OpenAI 正式 model id（正式 id 仅 gpt-image-2.5-flare / gpt-image-2.5-sunburst，快照 -2026-09-08）；
    IMPL-143 edit-text 裸名条目从未真实上游验证（我方零计费 mock 实测），无既有路由证据可查——本批全部改明确变体 id，不留裸名
    quality 策略（变更单 4.2，速创无 auto 档不传=medium）：sunburst 系显式 high（按张计费不加价）；flare 系不传 quality */
 const BITMAP_MODEL_MAP = {
   "remove-background": { channel: "ali", model: null, label: "抠出主体" },
-  erase: { channel: "wy", model: "gpt-image-2.5-flare", label: "消除" },
+  erase: { channel: "wy", model: "gpt-image-2.5-flare", label: "擦除" },/* IMPL-162：label 消除→擦除——与编辑器 R6 UI 定名对齐（W5 对拍：宿主提示与编辑器按钮双名） */
   outpaint: { channel: "wy", model: "gpt-image-2.5-sunburst", label: "扩图", quality: "high" },
   inpaint: { channel: "wy", model: "gpt-image-2.5-sunburst", label: "重绘", quality: "high" }, /* 第十三批 H4：label「局部重绘」→「重绘」（W5 同步改名；有选区=局部，无选区=整层改图 H1b） */
   "angle-adjust": { channel: "wy", model: "gpt-image-2.5-sunburst", label: "角度调整", quality: "high" }, /* 第十三批 H4：新增（默认模型按修拍板=sunburst）——2026-09-28 拍板中文名定「角度调整」（原暂叫多角度）；W5 工具菜单首项 */
@@ -16180,7 +16109,7 @@ return false;
 }
 }
 function hostPrompt() {
-const el = document.querySelector('[data-key="prompt"], [data-key="text"]') || document.querySelector("#promptInput");
+const el = document.querySelector('[data-key="prompt"], [data-key="text"]');
 return el && el.value ? String(el.value).trim() : "";
 }
 function blobUrlToDataURL(url) {
@@ -16444,7 +16373,7 @@ R.forEach(function(r) { const p = r.split(":"); const d = Math.abs(p[0] / p[1] -
 const long = Math.max(w, h);
 return { ratio: best, tier: long < 1024 ? "1K" : long < 2048 ? "2K" : "4K", long: long };
 }
-function actName(a) { const M = { erase: "消除", outpaint: "扩图", inpaint: "重绘", "angle-adjust": "角度调整", "remove-background": "去背景", "layer-decompose": "图层分解", "edit-text": "改字" }; return (M[a] || "位图结果") + "_" + Date.now(); } /* IMPL-129③：返回契约 name —— 编辑器自动注册资产用；第十三批 H4 同步重绘/角度调整（2026-09-28 拍板） */
+function actName(a) { const M = { erase: "擦除", outpaint: "扩图", inpaint: "重绘", "angle-adjust": "角度调整", "remove-background": "去背景", "layer-decompose": "图层分解", "edit-text": "改字" }; return (M[a] || "位图结果") + "_" + Date.now(); } /* IMPL-129③：返回契约 name —— 编辑器自动注册资产用；第十三批 H4 同步重绘/角度调整（2026-09-28 拍板）；IMPL-162 消除→擦除命名同步 */
 async function promptReverseForStudio(pngDataUrl) { /* 第十三批 H9：编辑器「提示词反推」handler——SKILL_PROMPTS["visual-prompt-reverse"] 直用不改（修拍板）+ 识图模型 Store.getSkillVisionModel()（默认 dashscope:qwen3.8-omni-flash=技能面板现役同款）+ Api.llmChatStream 单轮；返回纯文本提示词 */
 if (!pngDataUrl || !/^(data|https?):/i.test(String(pngDataUrl))) throw new Error("提示词反推需要位图 PNG 输入（data:/https: URL）");
 const sys = (typeof SKILL_PROMPTS !== "undefined" && SKILL_PROMPTS["visual-prompt-reverse"]) || "";
@@ -16475,7 +16404,7 @@ userData = await studioInlinePrompt(e.action === "inpaint" ? "重绘" : "编辑�
 if (!userData) { try { Toast.info("已取消：未填写提示词"); } catch (_) {} return false; }
 }
 const needPrompt = e.action === "inpaint" || e.action === "edit-text"; /* H1b（十三批）：重绘无选区=整层改图——maskData=null 时 studioEdits 不传 mask 字段天然支持，不报错不二次确认（修拍板） */
-if (e.action === "erase" && !maskData) { try { Toast.warning("消除动作需要先用选区工具框选区域，再执行"); } catch (_) {} return false; } /* IMPL-129③：消除语义依赖选区，无选区整图重绘必错 */
+if (e.action === "erase" && !maskData) { try { Toast.warning("擦除动作需要先用选区工具框选区域，再执行"); } catch (_) {} return false; } /* IMPL-129③：擦除语义依赖选区，无选区整图重绘必错；文案 IMPL-162 消除→擦除（正常路径由编辑器 R6 选区门禁先拦，本条保留为宿主自保） */
 const req = e.buildRequest(needPrompt ? { prompt: userData } : {});
 let finalPrompt = (req && req.fields && req.fields.prompt) || userData || ""; /* W5：let——mask 动作需追加保真约束句 */
 const op13 = (e.options && typeof e.options === "object") ? e.options : null; /* 第十三批 H1：统一参数透传通道（全位图动作）——{model,aspectRatio,resolution,quality,background,prompt,num} */
@@ -16511,7 +16440,7 @@ const tgt = pickAspectTier(dims.w, dims.h);
 if (e.action === "outpaint") { ex.aspectRatio = ooRatio || tgt.ratio; ex.resolution = ooRes || tgt.tier; } /* B2/T12-4 规则保持：扩图显式档位优先，自动=估档（与十二批改造后逐字一致） */
 else if (ooRatio) ex.aspectRatio = ooRatio; /* H1：非扩图动作显式才透传比例，自动=维持原行为（不下发） */
 if (ooRes) ex.resolution = ooRes; /* H1：显式分辨率全动作透传（含非扩图） */
-if ((e.action === "outpaint" || e.action === "layer-decompose" || e.action === "angle-adjust") && tgt.long && tgt.long < 1024 && !ooRes && !(op13 && op13.model)) { economized = true; routedModel = "gpt-image-2.5"; ex.economized = true; delete ex.quality; } /* 4.5 省流：动作集+angle-adjust（H1 推广）；仅「自动」档应用（T12-4/B4 规则推广）；显式 options.model 同样尊重不降级（同一精神延伸） */ /* 标准生成型无 quality 参数（doc/78） */
+if ((e.action === "outpaint" || e.action === "layer-decompose") && tgt.long && tgt.long < 1024 && !ooRes && !(op13 && op13.model)) { economized = true; routedModel = "gpt-image-2.5"; ex.economized = true; delete ex.quality; } /* 4.5 省流：动作集（IMPL-162 拍板 2026-09-28：angle-adjust 移出——几何重绘细节优先，W5 嵌入态实测长边<1024 输入被降级 sunburst→标准档、economized:true 不达 §6-2 验收判据；原 H1 推广对该动作撤销，outpaint/layer-decompose 维持；W5 侧无需带 model，显式 options.model 不降级语义不变）；仅「自动」档应用（T12-4/B4 规则推广） */ /* 标准生成型无 quality 参数（doc/78） */
 let ang13 = null; /* H4.1（十三批 2026-09-28）：angle-adjust 结构化形状 {operation:"multiangle",params:{horizontal_angle,vertical_angle,zoom},anglePrompt}——默认 31/-21/1、三轴值域照珊瑚镜像；宿主职责=日志对拍+文本兜底（速创 body 无结构化通道，不污染请求体） */
 if (e.action === "angle-adjust" && op13 && op13.operation === "multiangle" && op13.params && typeof op13.params === "object") {
 ang13 = { operation: "multiangle", horizontal_angle: op13.params.horizontal_angle, vertical_angle: op13.params.vertical_angle, zoom: op13.params.zoom }; /* 三轴原值透记（旋转 0-360 / 倾斜 -30~60 / 缩放 0.5-4，校验在 W5 面板侧） */
@@ -17407,6 +17336,7 @@ return { open: open, close: close };
       if (dr.right - pr.left > nr) nr = Math.ceil(dr.right - pr.left) + 2;
       if (dr.bottom - pr.top > nb) nb = Math.ceil(dr.bottom - pr.top) + 2;
     }
+    if (!dr) nb = Math.min(nb, Math.max(0, pr.height - 18)); /* IMPL-162：空态窗底边距回位（用户②：结果区没结果时下边框变窄）——dock 经 :has(.result-strip.empty) 隐藏时 dr=null，列表矩形直贴 scroll 底 padding（12px），窗底距仅 ~11px，破坏「左右下三边等距 20px」设计；钳到与左右侧及常态 dock（margin-bottom 20px−2px 窗外扩）同款 18px；dr=null ⇔ 空态，有结果路径零改动 */
     /* IMPL-94②：窗顶上移至备注信息条（.sv-caption）之上——信息条悬于窗内网格上（与 dock 胶囊对称观感）；
        caption 隐藏/空态时 offsetHeight=0 跳过回落列表矩形；签名 k4 含 ny → mask/ring 经 --svw* 自动联动 */
     var cp = holePanel.querySelector(".sv-caplayer .sv-caption");
@@ -18111,4 +18041,3 @@ return { open: open, close: close };
 })();
 </script></body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   
