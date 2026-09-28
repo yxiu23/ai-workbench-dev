@@ -16398,7 +16398,7 @@ let maskData = maskObj ? (maskObj.dataUrl || null) : null; /* ★ mask: e.mask?.
 const ruleTop = (e.maskRule === "alpha-transparent" || e.maskRule === "luma-white") ? e.maskRule : null;
 const maskMode = maskObj ? (maskObj.maskMode || ruleTop || "alpha-transparent") : "alpha-transparent";
 if (maskData && maskMode === "luma-white") maskData = await invertMaskToAlpha(maskData);
-let userData = hostPrompt();
+let userData = hostPrompt() || ((e.options && typeof e.options === "object" && e.options.prompt) ? String(e.options.prompt) : ""); /* R8（2026-09-29）：**先认编辑器面板那一份** —— 面板写的提示词走 e.options.prompt，而旧版只读宿主自己的输入框 ⇒ 面板里写过了宿主也不知道 ⇒ 判空 ⇒ 弹就地输入条 = 逼用户写第二遍（修 09-28 第 3 条）。⚠ 这里**不能引 op13**：op13 在本行之后（16410 行）才 const 定义，提前引用会踩 TDZ 直接抛 ReferenceError ⇒ 必须直接读 e.options */
 if ((e.action === "inpaint" || e.action === "edit-text") && !userData) { /* Z6（第六批）：宿主输入框为空 → 编辑器内就地输入条（官方案定：prompt 由嵌入方传入，替掉工作台硬门禁） */
 userData = await studioInlinePrompt(e.action === "inpaint" ? "重绘" : "编辑文字"); /* 第十三批 H4：标签同步「重绘」 */
 if (!userData) { try { Toast.info("已取消：未填写提示词"); } catch (_) {} return false; }
@@ -16410,7 +16410,7 @@ let finalPrompt = (req && req.fields && req.fields.prompt) || userData || ""; /*
 const op13 = (e.options && typeof e.options === "object") ? e.options : null; /* 第十三批 H1：统一参数透传通道（全位图动作）——{model,aspectRatio,resolution,quality,background,prompt,num} */
 const oo13 = op13 || e.outpaintOptions || null; /* 十二批 outpaintOptions 保留兼容（已上线件在用），options 优先 */
 const ooPrompt13 = (oo13 && oo13.prompt) || "";
-if (ooPrompt13) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + ooPrompt13; /* H3（十三批）：面板/参数条描述追加并入（全动作，追加非替换；空着一字不加）——T12-4 语义保持并推广 */
+if (ooPrompt13 && finalPrompt.indexOf(ooPrompt13) < 0) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + ooPrompt13; /* H3（十三批）：面板/参数条描述追加并入（全动作，追加非替换；空着一字不加）——T12-4 语义保持并推广；R8（2026-09-29）：**去重** —— 改判据为「**该句已经出现在 finalPrompt 里就不再加**」而不是「与 userData 比字符串相等」：因为 buildRequest 会加工提示词（edit-text 套模板「把遮罩区域内的文字内容改为「X」…」、layer-decompose 前置内置提示词、inpaint 原样返回）⇒ userData 与 req.fields.prompt 在多数动作下**并不相等**，按相等判据会重复拼接。用 indexOf 判"已包含"对全部动作都成立：inpaint 时 finalPrompt 就是它本身、edit-text/拆解时它已在模板内、扩图/擦除时 finalPrompt 是内置 spec 词不含它 ⇒ 照旧追加（H3 语义不变） */
 const imgData = await blobUrlToDataURL(e.url);
 const m = (typeof UI !== "undefined" && UI.state && UI.state.model) ? UI.state.model : null;
 const canI2I = !maskData && m && (m.direct === "sf-image" || m.direct === "ds-image");
@@ -16440,7 +16440,7 @@ const tgt = pickAspectTier(dims.w, dims.h);
 if (e.action === "outpaint") { ex.aspectRatio = ooRatio || tgt.ratio; ex.resolution = ooRes || tgt.tier; } /* B2/T12-4 规则保持：扩图显式档位优先，自动=估档（与十二批改造后逐字一致） */
 else if (ooRatio) ex.aspectRatio = ooRatio; /* H1：非扩图动作显式才透传比例，自动=维持原行为（不下发） */
 if (ooRes) ex.resolution = ooRes; /* H1：显式分辨率全动作透传（含非扩图） */
-if ((e.action === "outpaint" || e.action === "layer-decompose") && tgt.long && tgt.long < 1024 && !ooRes && !(op13 && op13.model)) { economized = true; routedModel = "gpt-image-2.5"; ex.economized = true; delete ex.quality; } /* 4.5 省流：动作集（IMPL-162 拍板 2026-09-28：angle-adjust 移出——几何重绘细节优先，W5 嵌入态实测长边<1024 输入被降级 sunburst→标准档、economized:true 不达 §6-2 验收判据；原 H1 推广对该动作撤销，outpaint/layer-decompose 维持；W5 侧无需带 model，显式 options.model 不降级语义不变）；仅「自动」档应用（T12-4/B4 规则推广） */ /* 标准生成型无 quality 参数（doc/78） */
+if ((e.action === "layer-decompose") && tgt.long && tgt.long < 1024 && !ooRes && !(op13 && op13.model)) { economized = true; routedModel = "gpt-image-2.5"; ex.economized = true; delete ex.quality; } /* 4.5 省流：动作集（IMPL-162 拍板 2026-09-28：angle-adjust 移出——几何重绘细节优先，W5 嵌入态实测长边<1024 输入被降级 sunburst→标准档、economized:true 不达 §6-2 验收判据；原 H1 推广对该动作撤销，layer-decompose 维持（R8 2026-09-29：**outpaint 也移出**——扩图是编辑型动作，而省流档 gpt-image-2.5 是「标准生成型」= 按提示词**重画整张图** ⇒ 背景全变、原图被重构；且「长边<1024 + 扩图面板分辨率默认=自动档(value 空串) ⇒ !ooRes + 扩图不传 model」四个条件**默认全中**，用户点一次扩图就必然命中；正常路径 BITMAP_MODEL_MAP.outpaint = sunburst 本就带 mask。⚠ 代价：小图扩图由 0.1 元档改走 0.3 元档，修已拍板接受）；W5 侧无需带 model，显式 options.model 不降级语义不变）；仅「自动」档应用（T12-4/B4 规则推广） */ /* 标准生成型无 quality 参数（doc/78） */
 let ang13 = null; /* H4.1（十三批 2026-09-28）：angle-adjust 结构化形状 {operation:"multiangle",params:{horizontal_angle,vertical_angle,zoom},anglePrompt}——默认 31/-21/1、三轴值域照珊瑚镜像；宿主职责=日志对拍+文本兜底（速创 body 无结构化通道，不污染请求体） */
 if (e.action === "angle-adjust" && op13 && op13.operation === "multiangle" && op13.params && typeof op13.params === "object") {
 ang13 = { operation: "multiangle", horizontal_angle: op13.params.horizontal_angle, vertical_angle: op13.params.vertical_angle, zoom: op13.params.zoom }; /* 三轴原值透记（旋转 0-360 / 倾斜 -30~60 / 缩放 0.5-4，校验在 W5 面板侧） */
