@@ -16390,6 +16390,92 @@ if (!out) throw new Error("识图返回为空（模型 " + vm + "）");
 return out;
 }
 if (typeof window !== "undefined") { try { window.__studioPromptReverse = promptReverseForStudio; } catch (_) {} } /* 调试可达（同 archiveDataUrlCard 先例） */
+
+/* ══════════════════════════════════════════════════════════════════════════════════
+   R15（2026-09-30）：「技能 + 大模型」通道 —— 把宿主**早已有**的技能系统开放给 W5 编辑器
+   变更单：studio/W5-宿主R15-变更单-2026-09-30.md（修已授权我方直接改宿主件）
+   ★ 原则「零新逻辑」：
+     · 图片**原样透传 data:** —— 与上一段 H9 的 promptReverseForStudio 逐字同一先例（它就这么传的）
+     · system 由**宿主**组（SKILL_PROMPTS + SKILL_CONTRACT）⇒ 编辑器不复制那 15 段提示词，避免两处漂移
+     · model 直传（含 "auto"）⇒ 带图自动切视觉 / 思考守卫 / 端点链重试 / 15s 看门狗 / 用量账本 **全部自动生效**
+     · 编辑器**不碰网络、不持 Key** 这条原则不破：所有请求都从这三个函数里出去
+   ⚠ 与 SkillSession（技能面板）的**差别**：这里**不做编排**——没有识图接棒 / 多模型会诊 / 文档注入 /
+     会话态 / 追问态。它就是**单次调用**；多轮由编辑器自己累积 messages 后再次调用（会话式迭代）。
+   ══════════════════════════════════════════════════════════════════════════════════ */
+
+/* messages 形状收口：role / string↔parts / 丢空件。**不动图片内容**。
+   ⚠ 刻意**不**在这里把 data: 转存 R2 —— H9 已实证 data: 能直接进 llmChatStream（同一条端点链），
+     多一道 R2 依赖反而多一个失败点（R2 未配置时整条通道会挂）。 */
+function studioNormalizeMsgs(messages) {
+const out = [];
+(Array.isArray(messages) ? messages : []).forEach(function(m) {
+if (!m || typeof m !== "object") return;
+const role = (m.role === "assistant" || m.role === "system") ? m.role : "user";
+if (typeof m.content === "string") { if (m.content.trim()) out.push({ role: role, content: m.content }); return; }
+if (!Array.isArray(m.content)) return;
+const parts = [];
+m.content.forEach(function(p) {
+if (!p || typeof p !== "object") return;
+if (p.type === "text") { const t = String(p.text == null ? "" : p.text); if (t.trim()) parts.push({ type: "text", text: t }); return; } /* 空白 text 与空串同样丢弃——与上面的字符串分支同一口径 */
+if (p.type === "image_url" || p.type === "image") {
+const u = String((p.image_url && p.image_url.url) || p.url || "");
+if (!u || !/^(data|https?):/i.test(u)) return; /* 只放行 data:/http(s)——与 H9 的入参校验同一口径 */
+parts.push({ type: "image_url", image_url: { url: u } });
+}
+});
+if (parts.length) out.push({ role: role, content: parts });
+});
+return out;
+}
+
+/* 契约：adapter.tools.llm.chat({ messages, model, skillId, maxTokens, thinking, temperature, signal, onDelta, tag })
+         → Promise<string>（纯文本；技能契约要求"只给最终提示词"，编辑器直接落进提示词框）
+   thinking 只认显式 boolean；不传则沿用 Store.getSkillThinking()（思考守卫仍在 llmChatStream 内生效）。 */
+async function studioSkillChat(opts) {
+const o = (opts && typeof opts === "object") ? opts : {};
+const skill = o.skillId ? SKILLS.find(function(s) { return s.skillId === String(o.skillId); }) : null;
+if (o.skillId && !skill) throw new Error("未知技能：" + String(o.skillId));
+if (skill && skill.tab !== "image") throw new Error("该技能不属于图像分类（编辑器只应拿到 image tab）：" + skill.skillId);
+const msgs = studioNormalizeMsgs(o.messages);
+if (skill) msgs.unshift({ role: "system", content: (SKILL_PROMPTS[skill.skillId] || "") + "\n" + SKILL_CONTRACT }); /* 与 SkillSession.firstRound 逐字同构 */
+if (!msgs.length) throw new Error("消息为空——请先写想法或挂参考图");
+const mt = Number(o.maxTokens) > 0 ? Number(o.maxTokens) : ((skill && skill.maxTokens) ? skill.maxTokens : 1024);
+return Api.llmChatStream(msgs, {
+model: o.model, /* 直传，含 "auto" */
+temperature: (typeof o.temperature === "number") ? o.temperature : undefined,
+maxTokens: mt,
+thinking: (typeof o.thinking === "boolean") ? o.thinking : undefined,
+signal: o.signal,
+onDelta: (typeof o.onDelta === "function") ? o.onDelta : undefined,
+tag: o.tag ? String(o.tag) : "studio-skill"
+});
+}
+
+/* 契约：adapter.tools.skills → [{ skillId, name, description, group, requiredCapabilities, allowEmpty, maxTokens }]
+   ★ 只给 image tab（10 条）—— 编辑器是图片编辑器，给 video 技能是误导。
+   ★ 由**宿主**给而不是编辑器硬编码：技能表是宿主的数据，两处维护必漂移。 */
+function studioSkills() {
+return SKILLS.filter(function(s) { return s.tab === "image"; }).map(function(s) {
+return {
+skillId: s.skillId, name: s.name, description: s.description, group: s.group,
+requiredCapabilities: (s.requiredCapabilities || []).slice(),
+allowEmpty: s.allowEmpty === true,
+maxTokens: s.maxTokens || null
+};
+});
+}
+
+/* 契约：adapter.tools.models → [{ id, label, desc, vision, think }]
+   ★ vision / think 用宿主**自己的**判定函数（isVisionModelName / _modelThinkCapable）——
+     那两处本来就是「单处收口」（见 4207 附近注释）。编辑器据此灰显，
+     **不许**让用户选了之后被静默切换 / 静默降级（"我选的不算数"是最差的反馈）。 */
+function studioModels() {
+return SKILL_MODEL_PRESETS.map(function(m) {
+return { id: m.id, label: m.label, desc: m.desc || "", vision: !!isVisionModelName(m.id), think: !!_modelThinkCapable(m.id) };
+});
+}
+if (typeof window !== "undefined") { try { window.__studioSkillChat = studioSkillChat; window.__studioSkills = studioSkills; window.__studioModels = studioModels; } catch (_) {} } /* 调试可达（同 __studioPromptReverse 先例） */
+
 async function bitmapHandler(e) {
 try {
 const maskObj = e.mask || null;
@@ -16519,7 +16605,16 @@ inpaint: bitmapHandler,
 "layer-decompose": bitmapHandler,
 "edit-text": bitmapHandler
 },
-tools: { promptReverse: function(png) { return promptReverseForStudio(png); } } /* 第十三批 H9：提示词反推 handler——契约 adapter.tools.promptReverse(pngDataUrl)→Promise<string>（纯文本，编辑器落参数条提示词框） */
+tools: {
+promptReverse: function(png) { return promptReverseForStudio(png); }, /* 第十三批 H9：提示词反推 handler——契约 adapter.tools.promptReverse(pngDataUrl)→Promise<string>（纯文本，编辑器落参数条提示词框） */
+/* ★ R15（2026-09-30）：以下三条为**纯新增**（修已授权我方直接改宿主件）——
+   定义见文件上方 studioSkillChat / studioSkills / studioModels；
+   契约形状、四条硬要求、以及「不需要你们做的事」7 条见 studio/W5-宿主R15-变更单-2026-09-30.md。
+   ⚠ `promptReverse` 逐字未动；旧嵌入件只读它，新增字段对旧件不可见 ⇒ 零影响。 */
+llm: { chat: function(opts) { return studioSkillChat(opts); } },
+skills: studioSkills(),
+models: studioModels()
+} /* tools 结束 */
 },
 on: { onError: function(err) { try { Toast.error(String((err && err.message) || err)); } catch (_) {} }, close: close, onThemeChange: function(t) { try { if (t === "light" || t === "dark") { localStorage.setItem("sc_studio_theme", t); const b = document.getElementById("studioInlinePrompt"); if (b) b.setAttribute("data-studio-theme", t); } } catch (_) {} } /* Z16（第七批）：+回写打开中输入条主题 */ } /* IMPL-129②：编辑器内点 ✕ → 调用宿主 close 关闭弹窗；旧版嵌入包忽略未知键无副作用。Z12（第七批）：+onThemeChange 编辑器内置主题开关回告写缓存（附录 A 契约，向后兼容；挂载初值不回告防回环——白名单校验仅收 light/dark） */
 ,
