@@ -1274,6 +1274,13 @@ to{opacity:1;transform:scale(1) translateY(0)}}
 #setSecModel .sm-search::placeholder{color:var(--text-dim)}
 #setSecModel .skill-model-catalog{max-height:180px;overflow-y:auto;border:1px solid var(--border-soft);border-radius:10px;padding:8px 10px;margin-bottom:8px}
 #setSecModel .sm-cat-h{font-weight:600;color:var(--text-dim);margin:6px 0 3px;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em}
+/* R21-7：模型目录按来源折叠（details/summary 原生元素，零 JS） */
+#setSecModel .sm-cat-grp{margin:2px 0}
+#setSecModel .sm-cat-grp>summary{list-style:none;cursor:pointer;user-select:none}
+#setSecModel .sm-cat-grp>summary::-webkit-details-marker{display:none}
+#setSecModel .sm-cat-grp>summary::after{content:'▾';float:right;color:var(--text-dim);transition:transform .15s}
+#setSecModel .sm-cat-grp[open]>summary::after{content:'▴'}
+#setSecModel .sm-cat-grp>summary.sm-cat-h{margin:6px 0 3px}
 #setSecModel .sm-cat-row{display:block;width:100%;text-align:left;background:none;border:0;color:var(--text-muted);padding:4px 6px;cursor:pointer;border-radius:6px;font:inherit;font-size:11.5px;min-height:24px}
 #setSecModel .sm-cat-row:hover{color:var(--text);background:rgba(127,127,127,.1)}
 #setSecModel .sm-cat-row.sel{color:var(--brand);font-weight:600}
@@ -2900,8 +2907,8 @@ async: false,
 type: "image",
 channel: "apiyi",
 modelId: "gpt-image-2.5-sunburst",
-desc: "官转 · 编辑精度最高 · 与速创同款可对照",
-billing: { type: "perToken", inUsdPerM: 5, outUsdPerM: 30, source: "api", note: "按 Token（入 $5/M · 出 $30/M，成本随用量浮动）" },
+desc: "官转 · 编辑精度最高 · 按Token计费·随分辨率 · 与速创同款可对照",
+billing: { type: "perToken", inUsdPerM: 5, outUsdPerM: 30, refCny: 0.33, refNote: "实测 1K 单张 ≈$0.047 · 按 Token（入 $5/M · 出 $30/M，成本随用量浮动）" },
 params: [ {
 key: "prompt",
 label: "提示词",
@@ -2953,8 +2960,8 @@ async: false,
 type: "image",
 channel: "apiyi",
 modelId: "gpt-image-2.5-flare",
-desc: "官转 · 速度型",
-billing: { type: "perToken", inUsdPerM: 5, outUsdPerM: 30, source: "api", note: "按 Token（入 $5/M · 出 $30/M，成本随用量浮动）" },
+desc: "官转 · 速度型 · 按Token计费·随分辨率",
+billing: { type: "perToken", inUsdPerM: 5, outUsdPerM: 30, refCny: 0.33, refNote: "实测 1K 单张 ≈$0.047 · 按 Token（入 $5/M · 出 $30/M，成本随用量浮动）" },
 params: [ {
 key: "prompt",
 label: "提示词",
@@ -3007,7 +3014,7 @@ type: "image",
 channel: "apiyi",
 modelId: "gpt-image-2.5-all",
 desc: "官逆 · 固定单价 · 省钱档",
-billing: { type: "perToken", inUsdPerM: 5, outUsdPerM: 30, source: "api", note: "按 Token（入 $5/M · 出 $30/M，成本随用量浮动）" },
+billing: { type: "perImage", unit: 0.21 },
 params: [ {
 key: "prompt",
 label: "提示词",
@@ -3060,7 +3067,7 @@ type: "image",
 channel: "apiyi",
 modelId: "gpt-image-2.5-vip",
 desc: "官逆 · 与 sunburst-vip 同线",
-billing: { type: "perToken", inUsdPerM: 5, outUsdPerM: 30, source: "api", note: "按 Token（入 $5/M · 出 $30/M，成本随用量浮动）" },
+billing: { type: "perImage", unit: 0.21 },
 params: [ {
 key: "prompt",
 label: "提示词",
@@ -3112,8 +3119,8 @@ async: false,
 type: "image",
 channel: "apiyi",
 modelId: "gpt-image-2",
-desc: "上一代官转 · 参数与 2.5 同形",
-billing: { type: "perToken", inUsdPerM: 5, outUsdPerM: 30, source: "api", note: "按 Token（入 $5/M · 出 $30/M，成本随用量浮动）" },
+desc: "上一代官转 · 参数与 2.5 同形 · 按Token计费·随分辨率",
+billing: { type: "perToken", inUsdPerM: 5, outUsdPerM: 30, refCny: 0.33, refNote: "实测 1K 单张 ≈$0.047 · 按 Token（入 $5/M · 出 $30/M，成本随用量浮动）" },
 params: [ {
 key: "prompt",
 label: "提示词",
@@ -3166,7 +3173,7 @@ type: "image",
 channel: "apiyi",
 modelId: "seedream-5-0-flash-260915",
 desc: "字节系 · 全系最便宜 · 约 15~20 秒",
-billing: { type: "perToken", inUsdPerM: 5, outUsdPerM: 30, source: "api", note: "按 Token（入 $5/M · 出 $30/M，成本随用量浮动）" },
+billing: { type: "perImage", unit: 0.13 },
 params: [ {
 key: "prompt",
 label: "提示词",
@@ -3214,7 +3221,7 @@ type: "image",
 channel: "apiyi",
 modelId: "seedream-5-0-260128",
 desc: "字节系 · 官方当前推荐档",
-billing: { type: "perToken", inUsdPerM: 5, outUsdPerM: 30, source: "api", note: "按 Token（入 $5/M · 出 $30/M，成本随用量浮动）" },
+billing: { type: "perImage", unit: 0.25 },
 params: [ {
 key: "prompt",
 label: "提示词",
@@ -3262,7 +3269,7 @@ type: "image",
 channel: "apiyi",
 modelId: "flux-2-pro",
 desc: "Black Forest Labs · 写实/设计向",
-billing: { type: "perToken", inUsdPerM: 5, outUsdPerM: 30, source: "api", note: "按 Token（入 $5/M · 出 $30/M，成本随用量浮动）" },
+billing: { type: "perImage", unit: 0.21 },
 params: [ {
 key: "prompt",
 label: "提示词",
@@ -3466,8 +3473,76 @@ max: 14
 } ]
 } ],
 video: [ {
+/* ★ R21-5（修 2026-10-01「视频模型需要更新到宿主模型列表」）：APIYI 视频档进列表。
+   ⚠ 诚实口径：**生成适配器未接**（Worker 白名单 /v1/videos 已备，适配器属 Phase 2）
+   ⇒ desc 明确标注「Phase 2 接入中，暂不可生成」—— 用户选了点生成会得到明确报错，不静默。
+   定价真值 = api/pricing：veo-3.1 按次（$1.2/$0.3 每次换算 ¥×7）；Seedance 系按Token（ratio 35/23/18.5）。 */
+id: "apiyi:seedance-2-5-260628",
+name: "Seedance 2.5（APIYI）",
+endpoint: "/v1/videos",
+price: "按Token·约¥2.45起/条",
+async: false,
+type: "video",
+channel: "apiyi",
+modelId: "doubao-seedance-2-5-260628",
+desc: "字节最新 · 30秒直出 · 最多30张参考图 · Phase 2 接入中，暂不可生成",
+billing: { type: "perToken", refCny: 2.45, refNote: "ratio 35 档估算，按实际用量计" },
+params: [ {
+key: "prompt",
+label: "提示词",
+type: "textarea",
+required: true,
+default: "",
+placeholder: "描述视频"
+}, {
+key: "urls",
+label: "参考图",
+type: "ref-image",
+output: "csv",
+max: 30
+} ]
+}, {
+id: "apiyi:veo-3.1-generate-preview",
+name: "VEO 3.1（APIYI）",
+endpoint: "/v1/videos",
+price: "¥8.40/次（$1.2）",
+async: false,
+type: "video",
+channel: "apiyi",
+modelId: "veo-3.1-generate-preview",
+desc: "谷歌官转 · 最高4K · 带音轨 · Phase 2 接入中，暂不可生成",
+billing: { type: "perImage", unit: 8.4 },
+params: [ {
+key: "prompt",
+label: "提示词",
+type: "textarea",
+required: true,
+default: "",
+placeholder: "描述视频"
+} ]
+}, {
+id: "apiyi:wan3.0-video",
+name: "Wan3.0 视频（APIYI）",
+endpoint: "/v1/videos",
+price: "按Token·约¥0.02起/秒",
+async: false,
+type: "video",
+channel: "apiyi",
+modelId: "wan3.0-video",
+desc: "阿里通义万相 · Phase 2 接入中，暂不可生成",
+billing: { type: "perToken", refCny: 0.02, refNote: "ratio 0.24 档估算" },
+params: [ {
+key: "prompt",
+label: "提示词",
+type: "textarea",
+required: true,
+default: "",
+placeholder: "描述视频"
+} ]
+}, {
 id: "wan3",
 name: "Wan3.0",
+
 endpoint: "/api/async/video_wan_3.0",
 price: "0.3元/秒",
 async: true,
@@ -4763,7 +4838,12 @@ const SKILL_MODEL_PRESETS = [
   /* ★ 2026-10-01 APIYI 通道档位（Worker 侧 llmProviderConfig.apiyi；模型名经 /v1/models 实拉核实可见）
      ⚠ think:false 是**诚实标注**而非保守 —— Worker 的 thinking 注入只覆盖 dashscope/siliconflow/deepseek
        三家，apiyi 分支**没有任何注入** ⇒ 这个开关是 no-op，灰显防误导（同 IMPL-119 Kimi 先例）。 */
-  { id: "apiyi:gpt-5.6-luna", label: "GPT-5.6 Luna（APIYI）", vision: false, think: false, desc: "性价比旗舰 · $0.2/$1.2 每 M tokens", billing: { type: "perToken", inUsdPerM: 0.2, outUsdPerM: 1.2, source: "api", note: "APIYI 官转（入 $0.2/M · 出 $1.2/M，与 desc 交叉吻合）" } },
+  /* ★ R21-6（修 2026-10-01「GPT-5.6 Luna 不支持视觉？换个支持视觉的强大 GPT」）：
+     Luna 档（vision:false，H7 当时就标了）实测没视觉 ⇒ 换 GPT-6.1 Sol —— APIYI 当前最新的
+     6 代旗舰档（gpt-6.1-sol，入 $2/M · 出 $10/M），比 5.6 Sol（$4/$20）便宜一半还新一代，
+     GPT-6 系原生多模态（视觉）。费率真值 = pricing 端点 enable_groups 含 default ✓。
+     ⚠ think:false 仍是诚实标注（Worker 的 apiyi 分支无 thinking 注入，开关是 no-op）。 */
+  { id: "apiyi:gpt-6.1-sol", label: "GPT-6.1 Sol（APIYI）", vision: true, think: false, desc: "最新 6 代旗舰 · 支持视觉 · $2/$10 每 M tokens", billing: { type: "perToken", inUsdPerM: 2, outUsdPerM: 10, source: "api", note: "APIYI 官转（入 $2/M · 出 $10/M，pricing 端点 ratio 1.0 × 2 / × 5）" } },
   { id: "apiyi:claude-opus-5-5", label: "Claude Opus 5.5（APIYI）", vision: true, think: false, desc: "Anthropic 旗舰 · 长文与代码强", billing: { type: "perToken", inUsdPerM: 4, outUsdPerM: 20, source: "api", note: "APIYI 官转（入 $4/M · 出 $20/M）" } },
   { id: "apiyi:gemini-3.1-pro-preview", label: "Gemini 3.1 Pro（APIYI）", vision: true, think: false, desc: "Google 多模态旗舰 · 看图理解强", billing: { type: "perToken", inUsdPerM: 1.8, outUsdPerM: 10.8, source: "api", note: "APIYI 官转（入 $1.8/M · 出 $10.8/M）" } }
 ];
@@ -10152,7 +10232,11 @@ voice: _badgeGlyph("#0D9488", '<path d="M4.5 10v4M8.5 7v10M12 4.5v15M15.5 7v10M1
 /* IMPL-96①：直连 8 模型品牌徽标——通义（Z-Image 紫）/千问（阿里橙）/ASR 麦克风徽 */
 tongyi: _badgeText("#615CED", "通"),
 qwen: _badgeText("#FF6A00", "千"),
-mic: _badgeGlyph("#64748B", '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/>')
+mic: _badgeGlyph("#64748B", '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/>'),
+/* ★ R21-4：APIYI 新模型品牌 —— 字节 Seed 系（Seedream/Seedance）与 FLUX（Black Forest Labs）。
+   不新造 SVG：用现成 _badgeText 色块字徽（与 云/W/M/V/K 同一套形制）。 */
+seed: _badgeText("#325AB4", "S"),
+flux: _badgeText("#8A2BE2", "F")
 };
 
 const MODEL_LOGO = {
@@ -10186,10 +10270,38 @@ qwen_audio_tts_plus: "voice",
 qwen3_asr_flash: "mic",
 tele_speech_asr: "mic",
 xingchen_asr_v3: "mic",
-qwen3_asr_17b: "mic"
+qwen3_asr_17b: "mic",
+/* ★ R21-4：APIYI 通道模型 logo（键 = MODELS.image/video 的完整 id，含 apiyi: 前缀） */
+"apiyi:gpt-image-2.5-sunburst": "openai",
+"apiyi:gpt-image-2.5-flare": "openai",
+"apiyi:gpt-image-2.5-all": "openai",
+"apiyi:gpt-image-2.5-vip": "openai",
+"apiyi:gpt-image-2": "openai",
+"apiyi:seedream-5-0-flash-260915": "seed",
+"apiyi:seedream-5-0-260128": "seed",
+"apiyi:flux-2-pro": "flux",
+"apiyi:nano-banana": "google",
+"apiyi:nano-banana-2-lite": "google",
+"apiyi:nano-banana-2": "google",
+"apiyi:nano-banana-pro": "google",
+"apiyi:seedance-2-5-260628": "seed",
+"apiyi:seedance-2-0-260128": "seed",
+"apiyi:seedance-2-0-fast-260128": "seed",
+"apiyi:veo-3.1-generate-preview": "google",
+"apiyi:veo-3.1-fast-generate-preview": "google"
 };
 
 const modelLogoOf = id => MODEL_BRANDS[MODEL_LOGO[id] || ""] || "";
+/* ★ R21-4（修 2026-10-01「价格太长、模型名都看不清」）：宿主列表价格列改**纯人民币短价**。
+   与编辑器 priceCnyText 同一口径：perImage=¥x.xx（精确）、perToken=≈¥x.xx（实测参考价）；
+   无结构化 billing ⇒ 原文案兜底。完整价签仍在 modelMeta 的 tag 里（hover/详情可见）。 */
+function priceCnyOf(mm) {
+  const b = mm && mm.billing;
+  if (b && b.type === "perImage" && isFinite(Number(b.unit))) return "¥" + Number(b.unit).toFixed(2);
+  if (b && b.type === "perSecond" && isFinite(Number(b.unit))) return "¥" + Number(b.unit).toFixed(2) + "/秒";
+  if (b && b.type === "perToken" && isFinite(Number(b.refCny))) return "≈¥" + Number(b.refCny).toFixed(2);
+  return (mm && mm.price) || "";
+}
 
 /* IMPL-96③：语音输入 VoiceInput——高品质录音（getUserMedia 回声消除/降噪/自动增益）→
    解码重采样 16k 单声道 WAV（消除 webm/mp4 容器差异，ASR 全兼容）→直连 ASR 链
@@ -11636,10 +11748,14 @@ const pickLogo = $("#modelPickLogo"), pickName = $("#modelPickName"), pickList =
 if (pickLogo) pickLogo.innerHTML = modelLogoOf(m.id);
 if (pickName) pickName.textContent = m.name;
 if (pickList) {
-const models = MODELS[this.state.tab];
-pickList.innerHTML = models.map(mm => `\n        <button type="button" role="option" aria-selected="${mm.id === m.id}" class="model-pick-opt${mm.id === m.id ? " active" : ""}" data-mp-id="${esc(mm.id)}">\n          <span class="mp-logo" aria-hidden="true">${modelLogoOf(mm.id)}</span>\n          <span class="mp-opt-name">${esc(mm.name)}</span>\n          <span class="mp-opt-price">${esc(mm.price || "")}</span>\n        </button>`).join("");
+const models0 = MODELS[this.state.tab];
+/* ★ R21-4：与编辑器同序 —— APIYI 在前、其余（速创等）置底；tab 不是 image 时原序。 */
+const models = this.state.tab === "image"
+  ? models0.filter(function(x) { return x.channel === "apiyi"; }).concat(models0.filter(function(x) { return x.channel !== "apiyi"; }))
+  : models0;
+pickList.innerHTML = models.map(mm => `\n        <button type="button" role="option" aria-selected="${mm.id === m.id}" class="model-pick-opt${mm.id === m.id ? " active" : ""}" data-mp-id="${esc(mm.id)}">\n          <span class="mp-logo" aria-hidden="true">${modelLogoOf(mm.id)}</span>\n          <span class="mp-opt-name">${esc(mm.name)}</span>\n          <span class="mp-opt-price">${esc(priceCnyOf(mm))}</span>\n        </button>`).join("");
 }
-$("#modelMeta").innerHTML = `<span class="tag type-${m.type}">${typeName(m.type)}</span><span class="tag price">${m.price}</span>${m.desc ? `<span class="tag desc-tag">${esc(m.desc)}</span>` : ""}`;
+$("#modelMeta").innerHTML = `<span class="tag type-${m.type}">${typeName(m.type)}</span><span class="tag price">${priceCnyOf(m)}</span><span class="tag price-full" title="${esc(m.price || "")}">详情</span>${m.desc ? `<span class="tag desc-tag">${esc(m.desc)}</span>` : ""}`; /* R21-4：主价签=纯人民币短价；完整文案进 title（hover 可见），信息不删 */
 const descEl = $("#modelDesc");
 if (descEl) descEl.textContent = "";
 },
@@ -16078,14 +16194,19 @@ btn.classList.remove("busy");
 },
 _renderModelCatalogHTML(data) {
 const cur = Store.getSkillModel();
-const names = { dashscope: "DashScope（千问）", deepseek: "DeepSeek", siliconflow: "SiliconFlow" };
+/* R21-7（修 2026-10-01「刷新出来的模型列表太长」）：按来源 <details> 折叠 —— 原生元素零 JS。
+   当前选中模型所在组默认展开；组标题带计数；apiyi 中文名补进表。 */
+const names = { dashscope: "DashScope（千问）", deepseek: "DeepSeek", siliconflow: "SiliconFlow", apiyi: "APIYI" };
 let html = "";
 for (const [p, items] of Object.entries(data.providers || {})) {
-html += `<div class="sm-cat-h">${esc(names[p] || p)}${!items ? " · 未配置/未就绪" : ""}</div>`;
-if (!Array.isArray(items) || !items.length) continue;
+const n = Array.isArray(items) ? items.length : 0;
+const open = !!(cur && cur.indexOf(p + ":") === 0);
+html += `<details class="sm-cat-grp"${open ? " open" : ""}><summary class="sm-cat-h">${esc(names[p] || p)}${n ? " · " + n : " · 未配置/未就绪"}</summary>`;
+if (!n) { html += "</details>"; continue; }
 html += items.slice(0, 60).map(m => `<button type="button" class="sm-cat-row${cur === p + ":" + m.id ? " sel" : ""}" data-mid="${esc(p + ":" + m.id)}">${esc(m.id)}</button>`).join("");
+html += "</details>";
 }
-return html || '<div class="sm-cat-empty">三上游清单均为空</div>';
+return html || '<div class="sm-cat-empty">清单均为空</div>';
 },
 _bindCatalogRows(cat) {
 if (!cat) return;
@@ -16666,7 +16787,7 @@ if (typeof MODELS !== "undefined" && Array.isArray(MODELS.image) && typeof model
     .concat(["gpt-image-2.5", "gpt-image-2.5-flare", "gpt-image-2.5-sunburst"]).forEach(function(id) {
 const m = MODELS.image.find(function(x) { return x.id === id; });
 if (!m) return;
-cat.models[id] = { name: m.name, price: m.price || "", desc: m.desc || "", icon: modelLogoOf(id) || "", channel: m.channel || "wy", modelId: m.modelId || id, params: (m.params || []).map(function(p) { return { key: p.key, label: p.label, type: p.type, required: !!p.required, default: p.default != null ? p.default : "", options: p.options || null, max: p.max != null ? p.max : null, output: p.output || "", placeholder: p.placeholder || "" }; }) }; /* 2026-10-01：+channel/modelId（编辑器据此在模型键上标通道）；旧嵌入包忽略未知键无副作用 */
+cat.models[id] = { name: m.name, price: m.price || "", desc: m.desc || "", icon: modelLogoOf(id) || "", channel: m.channel || "wy", modelId: m.modelId || id, billing: m.billing || null, params: (m.params || []).map(function(p) { return { key: p.key, label: p.label, type: p.type, required: !!p.required, default: p.default != null ? p.default : "", options: p.options || null, max: p.max != null ? p.max : null, output: p.output || "", placeholder: p.placeholder || "" }; }) }; /* 2026-10-01：+channel/modelId（编辑器据此在模型键上标通道）；R21-2：+billing（编辑器价格列按它算纯人民币）；旧嵌入包忽略未知键无副作用 */
 });
 }
 } catch (_) {}
