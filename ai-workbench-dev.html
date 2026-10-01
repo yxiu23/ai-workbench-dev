@@ -10312,6 +10312,35 @@ function usageOfResult(data) {
     return { inTokens: Number(it) || 0, outTokens: Number(ot) || 0 };
   } catch (e) { return null; }
 }
+/* ★ R22-e（修「模型列表后面也跟上动态的费用参数」）：
+   ① 当前表单里跟计费相关的键（画质/尺寸/张数/时长/参考图）⇒ 给每个候选模型算各自的价；
+   ② 计费方式文案（按次一口价 / 按 Token 随画质·尺寸 / 按秒）。 */
+function billParamsOf() {
+  try {
+    var b = (window.UI && UI._collectParamsSync) ? UI._collectParamsSync() : {};
+    var out = {};
+    if (b.quality != null && b.quality !== "") out.quality = b.quality;
+    if (b.size != null && b.size !== "") out.size = b.size;
+    if (b.num != null && b.num !== "") out.num = b.num;
+    if (b.duration != null && b.duration !== "") out.duration = b.duration;
+    var rc = String(b.urls || "");
+    if (rc) out.urls = rc;
+    return out;
+  } catch (e) { return {}; }
+}
+function billKindOf(mm) {
+  var t = mm && mm.billing && mm.billing.type;
+  if (t === "perSecond") return "按秒计费";
+  if (t === "perToken") return "按 Token 计费（随画质·尺寸·参考图）";
+  if (t === "perImage") return "按次一口价（与参数无关）";
+  return "";
+}
+function billTextOf(mm) {
+  var est = null;
+  try { est = estCostCny(mm, billParamsOf()); } catch (e) {}
+  if (!est || !(est.cny > 0)) return "";
+  return (est.approx ? "≈¥" : "¥") + (est.cny < 1 ? est.cny.toFixed(2) : est.cny.toFixed(1));
+}
 function estCostCny(model, body) {
   try {
     var b = model && model.billing;
@@ -11807,9 +11836,9 @@ const models0 = MODELS[this.state.tab];
 const models = this.state.tab === "image"
   ? models0.filter(function(x) { return x.channel === "apiyi"; }).concat(models0.filter(function(x) { return x.channel !== "apiyi"; }))
   : models0;
-pickList.innerHTML = models.map(mm => `\n        <button type="button" role="option" aria-selected="${mm.id === m.id}" class="model-pick-opt${mm.id === m.id ? " active" : ""}" data-mp-id="${esc(mm.id)}">\n          <span class="mp-logo" aria-hidden="true">${modelLogoOf(mm.id)}</span>\n          <span class="mp-opt-name">${esc(mm.name)}</span>\n          <span class="mp-opt-price">${esc(priceCnyOf(mm))}</span>\n        </button>`).join("");
+pickList.innerHTML = models.map(mm => `\n        <button type="button" role="option" aria-selected="${mm.id === m.id}" class="model-pick-opt${mm.id === m.id ? " active" : ""}" data-mp-id="${esc(mm.id)}">\n          <span class="mp-logo" aria-hidden="true">${modelLogoOf(mm.id)}</span>\n          <span class="mp-opt-name">${esc(mm.name)}</span>\n          <span class="mp-opt-price" title="${esc(billKindOf(mm))}${(estCostCny(mm, billParamsOf()) || {}).detail ? " · " + esc((estCostCny(mm, billParamsOf()) || {}).detail) : ""}">${esc(billTextOf(mm) || priceCnyOf(mm))}</span>\n        </button>`).join("");
 }
-$("#modelMeta").innerHTML = `<span class="tag type-${m.type}">${typeName(m.type)}</span><span class="tag price">${priceCnyOf(m)}</span><span class="tag price-full" title="${esc(m.price || "")}">详情</span>${m.desc ? `<span class="tag desc-tag">${esc(m.desc)}</span>` : ""}`; /* R21-4：主价签=纯人民币短价；完整文案进 title（hover 可见），信息不删 */
+$("#modelMeta").innerHTML = `<span class="tag type-${m.type}">${typeName(m.type)}</span><span class="tag price">${esc(billTextOf(m) || priceCnyOf(m))}</span>${billKindOf(m) ? `<span class="tag desc-tag">${esc(billKindOf(m))}</span>` : ""}<span class="tag price-full" title="${esc(m.price || "")}">详情</span>${m.desc ? `<span class="tag desc-tag">${esc(m.desc)}</span>` : ""}`; /* R21-4：主价签=纯人民币短价；完整文案进 title（hover 可见），信息不删 */
 const descEl = $("#modelDesc");
 if (descEl) descEl.textContent = "";
 },
