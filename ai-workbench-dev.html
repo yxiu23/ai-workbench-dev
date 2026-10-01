@@ -472,6 +472,21 @@ to{transform:rotate(360deg)}}
 .form-actions-row .param-quick-btn{gap:3px;padding:0 6px}
 .form-actions-row .param-quick-btn svg{width:12px;height:12px}
 .form-actions-row .param-quick-btn .pq-summary{font-size:10px;letter-spacing:0}
+/* ★ R24-D：按钮图标 —— 统一 1.8 描边；第3按钮双形态用 class 切（hidden 属性会被别处 CSS 覆盖成 display:block ⇒ 两个图标同显，踩过） */
+.form-actions-row .param-quick-btn .pq-btn-ico{width:13px;height:13px;flex-shrink:0}
+.param-quick-btn .pq-ico-d{display:none}
+.param-quick-btn.is-video .pq-ico-d{display:block}
+.param-quick-btn.is-video .pq-ico-q{display:none}
+.param-quick-btn.pq-switch-btn[hidden]{display:none}
+.param-quick-btn.pq-switch-btn .pq-summary.on{color:var(--brand);font-weight:700}
+/* ★ R24-G：时长液态进度条（--fill 由 JS 同步；渐变液体 + 顶部高光 + 拖头发光） */
+.range-row input[type=range].is-liquid{-webkit-appearance:none;appearance:none;flex:1;height:12px;border-radius:999px;padding:0;cursor:pointer;background-image:linear-gradient(180deg,rgba(255,255,255,.38),rgba(255,255,255,0) 52%),linear-gradient(90deg,#3b82f6,#60a5fa 55%,#7cc7ff);background-size:var(--fill,50%) 100%,var(--fill,50%) 100%;background-repeat:no-repeat;background-color:rgba(9,14,30,.14);box-shadow:inset 0 1px 2px rgba(9,14,30,.28),0 0 0 1px rgba(9,14,30,.06);transition:box-shadow .15s}
+.range-row input[type=range].is-liquid:hover{box-shadow:inset 0 1px 2px rgba(9,14,30,.28),0 0 0 3px rgba(var(--brand-rgb),.18)}
+.range-row input[type=range].is-liquid::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.92);background:radial-gradient(circle at 34% 28%,#ffffff,#a9d4ff 46%,#3b82f6);box-shadow:0 0 8px rgba(79,156,249,.75),0 1px 3px rgba(9,14,30,.35);cursor:grab;transition:transform .12s}
+.range-row input[type=range].is-liquid::-webkit-slider-thumb:active{transform:scale(1.18);cursor:grabbing}
+.range-row input[type=range].is-liquid::-moz-range-thumb{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,.92);background:radial-gradient(circle at 34% 28%,#ffffff,#a9d4ff 46%,#3b82f6);box-shadow:0 0 8px rgba(79,156,249,.75)}
+.range-row input[type=range].is-liquid::-moz-range-track{height:12px;border-radius:999px;background:rgba(9,14,30,.14)}
+.range-row input[type=range].is-liquid::-moz-range-progress{height:12px;border-radius:999px;background:linear-gradient(90deg,#3b82f6,#60a5fa 55%,#7cc7ff)}
 @media (max-width: 420px){
 .param-quick-btn.has-sum .pq-label{display:inline}
 .param-quick-btn .pq-summary{font-size:11px}}
@@ -1869,25 +1884,30 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
     </div>
     <div id="paramForm" style="display:flex !important;flex-direction:column;gap:14px;"></div>
     <div class="generate-section">
-      <div class="form-actions-row" id="formActionsRow">
-        <button type="button" class="param-quick-btn" id="paramQuickBtnRatio" data-pq-mode="ratio" aria-expanded="false" aria-controls="paramQuickPanel" aria-label="比例与分辨率参数">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2.5"/><path d="M7 6v12M17 6v12" opacity=".45"/></svg>
+            <div class="form-actions-row" id="formActionsRow">
+        <button type="button" class="param-quick-btn" id="paramQuickBtnRatio" data-pq-mode="ratio" aria-expanded="false" aria-controls="paramQuickPanel" aria-label="比例参数">
+          <svg class="pq-btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.8" y="7.4" width="13.4" height="9.4" rx="2.2"/><rect x="7.8" y="3.2" width="13.4" height="9.4" rx="2.2" opacity=".45"/></svg>
           <span class="pq-label">比例</span>
           <span class="pq-summary" id="pqSummaryRatio"></span>
         </button>
         <button type="button" class="param-quick-btn" id="paramQuickBtnResolution" data-pq-mode="resolution" aria-expanded="false" aria-controls="paramQuickPanel" aria-label="分辨率参数">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="13" rx="2.5"/><path d="M8 21h8M12 18v3"/><path d="M14.5 9v4.5M12 9h2.5a2.25 2.25 0 0 1 0 4.5H12" opacity=".9"/></svg>
+          <svg class="pq-btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.4" width="19" height="13.2" rx="2.5"/><path d="M8 20.9h8M12 17.6v3.3"/><path d="M12 4.4v13.2M2.5 11h19" opacity=".38"/></svg>
           <span class="pq-label">分辨率</span>
           <span class="pq-summary" id="pqSummaryResolution"></span>
         </button>
         <button type="button" class="param-quick-btn" id="paramQuickBtnQuality" data-pq-mode="quality" aria-expanded="false" aria-controls="paramQuickPanel" aria-label="质量参数">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ico-quality><path d="M5 19a9 9 0 1 1 14 0"/><path d="M12 13l3.5-3.5"/><circle cx="12" cy="13" r="1.6"/></svg>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ico-duration hidden><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+          <svg class="pq-btn-ico pq-ico-q" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.3 3.6h9.4l3.7 5.3-8.4 11.5L3.6 8.9z"/><path d="M3.6 8.9h16.8M12 20.4 8.7 8.9l1.6-5.3M12 20.4l3.3-11.5-1.6-5.3" opacity=".42"/></svg>
+          <svg class="pq-btn-ico pq-ico-d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.4"/><path d="M12 7.3V12l3.2 1.9"/><path d="M12 3.6v1.7M20.4 12h-1.7M12 20.4v-1.7M3.6 12h1.7" opacity=".5"/></svg>
           <span class="pq-label" id="pqLabelQuality">质量</span>
           <span class="pq-summary" id="pqSummaryQuality"></span>
         </button>
+        <button type="button" class="param-quick-btn pq-switch-btn" id="paramQuickBtnSwitch" aria-expanded="false" hidden>
+          <svg class="pq-btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.2v3.6M8 7v10M12 4.4v15.2M16 7v10M20 10.2v3.6"/></svg>
+          <span class="pq-label" id="pqLabelSwitch">音频</span>
+          <span class="pq-summary" id="pqSummarySwitch"></span>
+        </button>
         <button type="button" class="count-chip" id="countChipBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="countPop" aria-label="生成张数">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8.5" y="8.5" width="12" height="12" rx="2.5"/><path d="M4 15.5V6a2 2 0 0 1 2-2h9.5"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8.4" y="8.4" width="12" height="12" rx="2.6"/><path d="M5.6 15.6A2.6 2.6 0 0 1 3.6 13V5.9a2.6 2.6 0 0 1 2.6-2.6h7.1a2.6 2.6 0 0 1 2.6 2" opacity=".85"/></svg>
           <span id="countChipVal">×1</span>
         </button>
       </div>
@@ -10331,7 +10351,23 @@ qwen_audio_tts_plus: "voice",
 qwen3_asr_flash: "mic",
 tele_speech_asr: "mic",
 xingchen_asr_v3: "mic",
-qwen3_asr_17b: "mic"
+qwen3_asr_17b: "mic",
+/* ★ R24-A：apiyi: 前缀映射（15 条）—— 宿主列表 logo 一直是空的：MODEL_LOGO 只认裸 id，apiyi 档带前缀查不到。（R21-B 当时只留了注释没写代码，断言又是全局计数 ⇒ 假绿） */
+"apiyi:gpt-image-2.5-sunburst": "openai",
+"apiyi:gpt-image-2.5-flare": "openai",
+"apiyi:gpt-image-2.5-all": "openai",
+"apiyi:gpt-image-2.5-vip": "openai",
+"apiyi:gpt-image-2": "openai",
+"apiyi:seedream-5-0-flash-260915": "seed",
+"apiyi:seedream-5-0-260128": "seed",
+"apiyi:flux-2-pro": "flux",
+"apiyi:nano-banana": "google",
+"apiyi:nano-banana-2-lite": "google",
+"apiyi:nano-banana-2": "google",
+"apiyi:nano-banana-pro": "google",
+"apiyi:seedance-2-5-260628": "seed",
+"apiyi:veo-3.1-generate-preview": "google",
+"apiyi:wan3.0-video": "wan"
 };
 
 const modelLogoOf = id => MODEL_BRANDS[MODEL_LOGO[id] || ""] || "";
@@ -11451,12 +11487,46 @@ _mountQuickParams() {
   if (qLabel) qLabel.textContent = isVideo ? "时长" : "质量";
   const icoQ = $("#paramQuickBtnQuality [data-ico-quality]"), icoD = $("#paramQuickBtnQuality [data-ico-duration]");
   if (icoQ && icoD) { icoQ.hidden = isVideo; icoD.hidden = !isVideo; }
+  /* ★ R24-E/F/H：按钮**按该模型实际参数**显隐，不再永远四个 ——
+     · 三桶为空 ⇒ 对应按钮隐藏；全空（音频模型）⇒ 整行收起（修原话「音频生成下面四个按钮有点多余」）
+     · 张数只给图片 tab；视频第 4 槽位换成音频/水印**双向开关**
+     · 其余参数（音频/背景/种子）**挪到参考区之后**（修原话「除了参考 参数尽量放在下面」） */
+  const swP = this._pqSwitchParam();
+  const showBtn = (id, on) => { const b = $(id); if (b) { b.style.display = on ? "" : "none"; if (!on) b.setAttribute("aria-expanded", "false"); } };
+  showBtn("#paramQuickBtnRatio", buckets.ratio.length > 0);
+  showBtn("#paramQuickBtnResolution", buckets.resolution.length > 0);
+  showBtn("#paramQuickBtnQuality", buckets.quality.length > 0);
+  showBtn("#countChipBtn", this.state.tab === "image");
+  const swBtn = $("#paramQuickBtnSwitch");
+  /* ⚠ hidden 属性必须同步：UA 的 [hidden]{display:none} 会压住 style.display=""（踩过） */
+  if (swBtn) { const swOn = isVideo && !!swP; swBtn.hidden = !swOn; swBtn.style.display = swOn ? "" : "none"; }
+  const swLab = $("#pqLabelSwitch");
+  if (swLab) swLab.textContent = swP ? String(swP.label || "开关") : "开关";
+  const qBtn = $("#paramQuickBtnQuality");
+  if (qBtn) qBtn.classList.toggle("is-video", isVideo);
+  if (!isVideo) this._closeCountPop();
+  const others = [ ...container.children ].filter(el => el.classList && el.classList.contains("param-group") && this._pqClassOf(el) === "other");
+  if (others.length) {
+    others.forEach(g => {
+      const row = g.parentElement;
+      g.remove();
+      if (row && row !== container && row.classList && !row.classList.contains("param-group") && !row.querySelector(".param-group")) row.remove();
+    });
+    for (let i = 0; i < others.length; i += 2) {
+      const row = document.createElement("div");
+      row.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:10px;";
+      row.appendChild(others[i]);
+      if (others[i + 1]) row.appendChild(others[i + 1]);
+      container.appendChild(row);
+    }
+  }
+  const rowEl = $("#formActionsRow");
+  if (rowEl) {
+    const anyOn = [ "#paramQuickBtnRatio", "#paramQuickBtnResolution", "#paramQuickBtnQuality", "#paramQuickBtnSwitch", "#countChipBtn" ].some(id => { const b = $(id); return b && b.style.display !== "none"; });
+    rowEl.style.display = anyOn ? "" : "none";
+  }
   this._pqGroups = buckets;
   this._pqMode = null;
-  [ "#paramQuickBtnRatio", "#paramQuickBtnResolution", "#paramQuickBtnQuality" ].forEach(id => {
-    const b = $(id);
-    if (b) b.style.display = "";
-  });
   this._enhanceQuickParams(body);
   const modelEl = $("#paramQuickModel");
   if (modelEl) modelEl.textContent = this.state.model?.name || "";
@@ -11475,6 +11545,30 @@ _pqClassOf(g) {
   if (k === "quality" || l.indexOf("质量") >= 0 || l.indexOf("画质") >= 0) return "quality";
   return "other";
 },
+_pqSwitchParam() {
+    /* R24-F：双向开关参数 —— 优先音频（generate_audio），其次水印（watermark）。
+       options 兼容 true/false 与 1/0 两种枚举（宿主各模型两种都有）。 */
+    const ps = (this.state.model && this.state.model.params) || [];
+    const pairOk = p => {
+      const o = (p.options || []).map(String);
+      return o.length === 2 && o.every(x => x === "true" || x === "false" || x === "0" || x === "1");
+    };
+    return ps.find(p => p.key === "generate_audio" && pairOk(p)) || ps.find(p => p.key === "watermark" && pairOk(p)) || null;
+  },
+  _pqToggleSwitch() {
+    const p = this._pqSwitchParam();
+    if (!p) return;
+    const el = document.querySelector('[data-key="' + p.key + '"]');
+    if (!el) return;
+    const o = (p.options || []).map(String);
+    const cur = String(el.value);
+    const next = o.find(x => x.toLowerCase() !== cur.toLowerCase()) || o[0];
+    el.value = next;
+    el.dispatchEvent(new Event("change", {
+      bubbles: true
+    }));
+    this._updateQuickSummary();
+  },
 _enhanceQuickParams(body) {
 body.querySelectorAll(".param-group").forEach(g => {
 if (g.dataset.pqDone) return;
@@ -11599,6 +11693,18 @@ _updateQuickSummary() {
   set("#pqSummaryRatio", pick(sums.ratio));
   set("#pqSummaryResolution", pick(sums.resolution));
   set("#pqSummaryQuality", pick(sums.quality));
+  /* ★ R24-F：开关按钮摘要（开/关） */
+  const swP = this._pqSwitchParam();
+  const swEl = $("#pqSummarySwitch");
+  if (swEl) {
+    if (swP) {
+      const el = document.querySelector('[data-key="' + swP.key + '"]');
+        const v = el ? String(el.value) : String(swP.default || "");
+        const on = v === "true" || v === "1";
+        swEl.textContent = on ? "开" : "关";
+        swEl.classList.toggle("on", on);
+      } else swEl.textContent = "";
+  }
 },
 _positionQuickPanel() {
 const panel = $("#paramQuickPanel");
@@ -11665,6 +11771,7 @@ if (this._pqMode === mode) this._closeQuickPanel(); else this._openQuickPanel(mo
 } else this._openQuickPanel(mode);
 return;
 }
+if (e.target.closest?.("#paramQuickBtnSwitch")) { this._pqToggleSwitch(); return; }
 if (!e.target.closest?.("#countChipBtn") && !e.target.closest?.("#countPop")) this._closeCountPop();
 const panel = $("#paramQuickPanel");
 if (panel?.classList.contains("show") && !e.target.closest?.("#paramQuickPanel") && !e.target.closest?.(".generate-section")) this._closeQuickPanel();
@@ -11921,21 +12028,35 @@ if (typeof SkillSession !== "undefined") SkillSession.onTabSwitch();
 },
 _updateModelBar() {
 const m = this.state.model;
+/* ★ R24-B：列表排序 —— GPT 系置顶 → 名称（去通道后缀，中文/数字友好）→ 同名按性价比（便宜在前）。
+   ★ R24-C：通道徽标统一在这里拼（非 apiyi ⇒ （创），apiyi ⇒ （易）），name 里不再手写后缀。
+   ⚠ select 与 pickList 必须走同一份序，否则两处顺序不一致。 */
+const _mpBase = mm => String(mm.name || "").replace(/（[易创]）s*$/, "").trim();
+const _mpDisp = mm => _mpBase(mm) + (mm.channel === "apiyi" ? "（易）" : "（创）");
+const _mpCost = mm => { try { const c = estCostCny(mm, billParamsOf()); return c && isFinite(c.cny) ? c.cny : Infinity; } catch (e) { return Infinity; } };
+const _mpSorted = arr => arr.slice().sort((a, b) => {
+  const ga = /gpt/i.test(String(a.id) + " " + _mpBase(a)) ? 0 : 1;
+  const gb = /gpt/i.test(String(b.id) + " " + _mpBase(b)) ? 0 : 1;
+  if (ga !== gb) return ga - gb;
+  const na = _mpBase(a), nb = _mpBase(b);
+  if (na !== nb) return na.localeCompare(nb, "zh-Hans-CN", { numeric: true, sensitivity: "base" });
+  const ca = _mpCost(a), cb = _mpCost(b);
+  if (ca !== cb) return ca - cb;
+  return String(a.id).localeCompare(String(b.id));
+});
 const sel = $("#modelSelect");
 if (sel) {
-const models = MODELS[this.state.tab];
-sel.innerHTML = models.map(mm => `<option value="${esc(mm.id)}" ${mm.id === m.id ? "selected" : ""}>${esc(mm.name)}</option>`).join("");
+sel.innerHTML = _mpSorted(MODELS[this.state.tab]).map(mm => '<option value="' + esc(mm.id) + '"' + (mm.id === m.id ? " selected" : "") + ">" + esc(_mpDisp(mm)) + "</option>").join("");
 }
 const pickLogo = $("#modelPickLogo"), pickName = $("#modelPickName"), pickList = $("#modelPickList");
 if (pickLogo) pickLogo.innerHTML = modelLogoOf(m.id);
-if (pickName) pickName.textContent = m.name;
+if (pickName) pickName.textContent = _mpDisp(m);
 if (pickList) {
-const models0 = MODELS[this.state.tab];
-/* ★ R21-4：与编辑器同序 —— APIYI 在前、其余（速创等）置底；tab 不是 image 时原序。 */
-const models = this.state.tab === "image"
-  ? models0.filter(function(x) { return x.channel === "apiyi"; }).concat(models0.filter(function(x) { return x.channel !== "apiyi"; }))
-  : models0;
-pickList.innerHTML = models.map(mm => `\n        <button type="button" role="option" aria-selected="${mm.id === m.id}" class="model-pick-opt${mm.id === m.id ? " active" : ""}" data-mp-id="${esc(mm.id)}">\n          <span class="mp-logo" aria-hidden="true">${modelLogoOf(mm.id)}</span>\n          <span class="mp-opt-name">${esc(mm.name)}</span>\n          <span class="mp-opt-price" title="${esc(billKindOf(mm))}${(estCostCny(mm, billParamsOf()) || {}).detail ? " · " + esc((estCostCny(mm, billParamsOf()) || {}).detail) : ""}">${esc(billTextOf(mm) || priceCnyOf(mm))}</span>\n        </button>`).join("");
+pickList.innerHTML = _mpSorted(MODELS[this.state.tab]).map(mm => '<button type="button" role="option" aria-selected="' + (mm.id === m.id) + '" class="model-pick-opt' + (mm.id === m.id ? " active" : "") + '" data-mp-id="' + esc(mm.id) + '">'
+  + '<span class="mp-logo" aria-hidden="true">' + modelLogoOf(mm.id) + '</span>'
+  + '<span class="mp-opt-name">' + esc(_mpDisp(mm)) + '</span>'
+  + '<span class="mp-opt-price" title="' + esc(billKindOf(mm)) + esc((estCostCny(mm, billParamsOf()) || {}).detail ? " · " + (estCostCny(mm, billParamsOf()) || {}).detail : "") + '">' + esc(billTextOf(mm) || priceCnyOf(mm)) + '</span>'
+  + '</button>').join("");
 }
 $("#modelMeta").innerHTML = `<span class="tag type-${m.type}">${typeName(m.type)}</span><span class="tag price">${esc(billTextOf(m) || priceCnyOf(m))}</span>${billKindOf(m) ? `<span class="tag desc-tag">${esc(billKindOf(m))}</span>` : ""}<span class="tag price-full" title="${esc(m.price || "")}">详情</span>${m.desc ? `<span class="tag desc-tag">${esc(m.desc)}</span>` : ""}`; /* R21-4：主价签=纯人民币短价；完整文案进 title（hover 可见），信息不删 */
 const descEl = $("#modelDesc");
@@ -12460,7 +12581,10 @@ let inner = p.type === "cap-grid" ? '<div class="field-row">' : `<div class="fie
 if (p.type === "select") {
 inner += `<select data-key="${esc(p.key)}">${p.options.map(o => `<option value="${esc(o)}" ${o === defVal ? "selected" : ""}>${esc(this._enumLabel(p.key, o))}</option>`).join("")}</select>`;
 } else if (p.type === "range") {
-inner += `<div class="range-row"><input type="range" data-key="${esc(p.key)}" min="${p.min}" max="${p.max}" step="${p.step}" value="${defVal}"></div>`;
+/* ★ R24-G：时长等 range 走液态进度条（--fill 同步填充比例） */
+const _mn = Number(p.min || 0), _mx = Number(p.max || 100), _v0 = Number(defVal || 0);
+const _fill = Math.max(0, Math.min(100, ((_v0 - _mn) / ((_mx - _mn) || 1)) * 100));
+inner += `<div class="range-row"><input type="range" class="is-liquid" style="--fill:${_fill.toFixed(1)}%" data-key="${esc(p.key)}" min="${p.min}" max="${p.max}" step="${p.step}" value="${defVal}"></div>`;
 } else if (p.type === "number") {
 inner += `<input type="number" data-key="${esc(p.key)}" value="${esc(defVal)}" ${p.min != null ? `min="${p.min}"` : ""} ${p.max != null ? `max="${p.max}"` : ""}>`;
 } else if (p.type === "cap-grid") {
@@ -12524,6 +12648,9 @@ const valEl = el?.closest?.(".param-group")?.querySelector(`[data-val="${key}"]`
 if (valEl && el) {
 if (el.type === "range") {
 valEl.textContent = el.value;
+/* ★ R24-G：液态进度条填充比例同步 */
+const _mn = Number(el.min || 0), _mx = Number(el.max || 100), _v = Number(el.value || 0);
+el.style.setProperty("--fill", Math.max(0, Math.min(100, ((_v - _mn) / ((_mx - _mn) || 1)) * 100)).toFixed(1) + "%");
 } else {
 const p = (this.state.model?.params || []).find(pp => pp.key === key);
 let txt = el.value;
