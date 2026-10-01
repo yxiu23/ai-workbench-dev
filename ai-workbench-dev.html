@@ -16270,6 +16270,19 @@ if (!mp) throw new Error("位图动作模型未映射速创路径（仅支持 gp
 const refUrl = await wyUploadDataUrl(imageData, "reference.png");
 const body = { prompt: prompt || "", urls: refUrl };
 const ex = extra || {};
+/* ★ R15.3：编辑器挂的参考图（data URL）→ 逐张上传成公网 URL，拼在**源图之后**（速创 urls 是 csv）。
+   ⚠ 顺序语义：**第 1 张永远是源图（要改的那张）**，其后才是参考图 ⇒ 与蒙版指向的图一致、
+     也与编辑器里 @ 引用重排后的顺序一致（编辑器已把「参考图N」与数组位置对齐）。
+   ⚠ 单张上传失败**不阻断**整次编辑（源图才是关键），但必须留痕、不许静默。 */
+if (Array.isArray(ex.refDataUrls) && ex.refDataUrls.length) {
+const _refs = [];
+for (let _i = 0; _i < ex.refDataUrls.length; _i++) {
+try { _refs.push(await wyUploadDataUrl(ex.refDataUrls[_i], "ref-" + (_i + 1) + ".png")); }
+catch (_e) { console.info("[W5-route]", JSON.stringify({ phase: "ref-upload-fail", idx: _i, msg: String((_e && _e.message) || _e).slice(0, 120), ts: Date.now() })); }
+}
+if (_refs.length) body.urls = [refUrl].concat(_refs).join(",");
+console.info("[W5-route]", JSON.stringify({ phase: "ref-attach", refs: _refs.length, ts: Date.now() }));
+}
 const pix = wyPixels(ex.aspectRatio, ex.resolution);
 if (pix) body.aspectRatio = pix;
 if (ex.quality) body.quality = ex.quality;
@@ -16517,8 +16530,23 @@ const ex = {};
 ex.quality = (op13 && op13.quality) || mm.quality || undefined; /* 4.2+H1：显式 quality 优先；缺省 sunburst=high/flare 不传（=速创默认 medium） */
 if (ex.quality && ["low", "medium", "high", "xhigh", "max"].indexOf(String(ex.quality)) < 0) delete ex.quality; /* doc/78 值域白名单外丢弃 */
 if (op13 && op13.background) ex.background = String(op13.background); /* H1：背景 auto/transparent 直透 */
-if (op13 && op13.num) { const n0 = parseInt(op13.num, 10) || 0; if (n0 >= 1 && n0 <= 4) ex.num = n0; } /* S1：多候选张数 1~4 透传（接口预留） */
+if (op13 && op13.num) { const n0 = parseInt(op13.num, 10) || 0; if (n0 >= 1 && n0 <= 4) ex.num = n0; }
+/* ★ R15.3（修 2026-10-01 拍板「要动，且要符合实际的工作流程」）：**把编辑器面板挂的参考图送进请求**。
+   编辑器通过 `options.urls` 给的是 `[{dataUrl,width,height,name}]`（编辑器只产 dataUrl、不碰网络，
+   与 H9「提示词反推」同一条纪律）⇒ 宿主这边只做"透出"，真正的上传与拼装放在 studioEdits
+   （它本来就是 async，且已经有 wyUploadDataUrl）。
+   ⚠ 上限 3 张（与技能执行拿的参考图数一致）；超出**留痕不静默**（W5-route 日志）。 */
+if (op13 && Array.isArray(op13.urls) && op13.urls.length) {
+const rds = op13.urls.map(function (u) { return u && u.dataUrl; }).filter(Boolean);
+if (rds.length) {
+ex.refDataUrls = rds.slice(0, 3);
+if (rds.length > 3) console.info("[W5-route]", JSON.stringify({ phase: "ref-cap", got: rds.length, send: 3, ts: Date.now() }));
+}
+} /* S1：多候选张数 1~4 透传（接口预留） */
 if (maskData) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + "仅修改蒙版区域内的内容，蒙版外严格保持原样"; /* 4.3：input_fidelity 速创不透传，保真唯一硬手段=mask+约束句 */
+/* ★ R15.3：参考图存在时补一句**事实声明** —— 源图与参考图同处 urls 一个数组，不说清模型只能靠蒙版猜。
+   ⚠ 与第 16521 行那条「仅修改蒙版区域内的内容…」同一性质：只说事实，不写风格。 */
+if (ex.refDataUrls && ex.refDataUrls.length) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + "第 1 张为待修改的原图，其余为参考图，只修改第 1 张上蒙版圈出的区域";
 let economized = false;
 const dims = await imageDimsOf(imgData);
 if (!e.sourceImage) e.sourceImage = { width: dims.w, height: dims.h }; /* H2：源图像素真值回填（编辑器未带时宿主解码补齐；naturalWidth 级别真值） */
