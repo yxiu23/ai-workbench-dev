@@ -2900,15 +2900,15 @@ values: [ "RefineMask" ]
      :generateContent，端点形状与鉴权路径都不同，需扩 Worker 白名单 + 单独适配器（见交付说明）。 */
 }, {
 id: "apiyi:gpt-image-2.5-sunburst",
-name: "GPT-Image-2.5-sunburst（APIYI）",
+name: "GPT-Image-2.5-sunburst（易）",
 endpoint: "/v1/images/generations",
 price: "按Token·入$5/出$30每M",
 async: false,
 type: "image",
 channel: "apiyi",
 modelId: "gpt-image-2.5-sunburst",
-desc: "官转 · 编辑精度最高 · 按Token计费·随分辨率 · 与速创同款可对照",
-billing: { type: "perToken", inUsdPerM: 5, outUsdPerM: 30, refCny: 0.33, refNote: "实测 1K 单张 ≈$0.047 · 按 Token（入 $5/M · 出 $30/M，成本随用量浮动）" },
+desc: "官转 · 编辑精度最高 · 按Token计费·随分辨率 · 与创同款可对照",
+billing: { type: "perToken", inUsdPerM: 5, outUsdPerM: 30, refCny: 0.35, refNote: "实测 1K 单张 ≈$0.05（约¥0.33取整）· 按 Token（入 $5/M · 出 $30/M，成本随用量浮动）" },
 params: [ {
 key: "prompt",
 label: "提示词",
@@ -2953,7 +2953,7 @@ output: "single"
 } ]
 }, {
 id: "apiyi:gpt-image-2.5-flare",
-name: "GPT-Image-2.5-flare（APIYI）",
+name: "GPT-Image-2.5-flare（易）",
 endpoint: "/v1/images/generations",
 price: "按Token·入$5/出$30每M",
 async: false,
@@ -2961,7 +2961,7 @@ type: "image",
 channel: "apiyi",
 modelId: "gpt-image-2.5-flare",
 desc: "官转 · 速度型 · 按Token计费·随分辨率",
-billing: { type: "perToken", inUsdPerM: 5, outUsdPerM: 30, refCny: 0.33, refNote: "实测 1K 单张 ≈$0.047 · 按 Token（入 $5/M · 出 $30/M，成本随用量浮动）" },
+billing: { type: "perToken", inUsdPerM: 5, outUsdPerM: 30, refCny: 0.35, refNote: "实测 1K 单张 ≈$0.05（约¥0.33取整）· 按 Token（入 $5/M · 出 $30/M，成本随用量浮动）" },
 params: [ {
 key: "prompt",
 label: "提示词",
@@ -3006,7 +3006,7 @@ output: "single"
 } ]
 }, {
 id: "apiyi:gpt-image-2.5-all",
-name: "GPT-Image-2.5-All（APIYI）",
+name: "GPT-Image-2.5-All（易）",
 endpoint: "/v1/images/generations",
 price: "0.21元/张（$0.03）",
 async: false,
@@ -3059,7 +3059,7 @@ output: "single"
 } ]
 }, {
 id: "apiyi:gpt-image-2.5-vip",
-name: "GPT-Image-2.5-VIP（APIYI）",
+name: "GPT-Image-2.5-VIP（易）",
 endpoint: "/v1/images/generations",
 price: "0.21元/张（$0.03）",
 async: false,
@@ -3112,7 +3112,7 @@ output: "single"
 } ]
 }, {
 id: "apiyi:gpt-image-2",
-name: "GPT-Image-2（APIYI）",
+name: "GPT-Image-2（易）",
 endpoint: "/v1/images/generations",
 price: "按Token·入$5/出$30每M",
 async: false,
@@ -3120,7 +3120,7 @@ type: "image",
 channel: "apiyi",
 modelId: "gpt-image-2",
 desc: "上一代官转 · 参数与 2.5 同形 · 按Token计费·随分辨率",
-billing: { type: "perToken", inUsdPerM: 5, outUsdPerM: 30, refCny: 0.33, refNote: "实测 1K 单张 ≈$0.047 · 按 Token（入 $5/M · 出 $30/M，成本随用量浮动）" },
+billing: { type: "perToken", inUsdPerM: 5, outUsdPerM: 30, refCny: 0.35, refNote: "实测 1K 单张 ≈$0.05（约¥0.33取整）· 按 Token（入 $5/M · 出 $30/M，成本随用量浮动）" },
 params: [ {
 key: "prompt",
 label: "提示词",
@@ -3165,7 +3165,7 @@ output: "single"
 } ]
 }, {
 id: "apiyi:seedream-5-0-flash-260915",
-name: "SeeDream 5.0 Flash（APIYI）",
+name: "SeeDream 5.0 Flash（易）",
 endpoint: "/v1/images/generations",
 price: "0.13元/张（$0.018）",
 async: false,
@@ -3213,7 +3213,7 @@ output: "csv"
 } ]
 }, {
 id: "apiyi:seedream-5-0-260128",
-name: "SeeDream 5.0（APIYI）",
+name: "SeeDream 5.0（易）",
 endpoint: "/v1/images/generations",
 price: "0.25元/张（$0.035）",
 async: false,
@@ -3261,7 +3261,7 @@ output: "csv"
 } ]
 }, {
 id: "apiyi:flux-2-pro",
-name: "FLUX 2 Pro（APIYI）",
+name: "FLUX 2 Pro（易）",
 endpoint: "/v1/images/generations",
 price: "0.21元/张（$0.03）",
 async: false,
@@ -3309,7 +3309,7 @@ output: "csv"
 } ]
 }, {
 id: "apiyi:nano-banana",
-name: "Nano Banana 一代（APIYI）",
+name: "Nano Banana 一代（易）",
 endpoint: "/v1beta/models/gemini-2.5-flash-image:generateContent",
 endpointModel: "gemini-2.5-flash-image",
 gemini: true,
@@ -3350,17 +3350,17 @@ max: 14
 } ]
 }, {
 id: "apiyi:nano-banana-2-lite",
-name: "Nano Banana 2 Lite（APIYI）",
+name: "Nano Banana 2 Lite（易）",
 endpoint: "/v1beta/models/gemini-3.1-flash-lite-image:generateContent",
 endpointModel: "gemini-3.1-flash-lite-image",
 gemini: true,
-price: "0.13~0.18元/张（$0.018~0.025）",
+price: "0.18元/张（$0.025）",
 async: false,
 type: "image",
 channel: "apiyi",
 modelId: "nano-banana-2-lite",
 desc: "最快最省 · 约 4 秒 · 仅 1K · 14 种比例",
-billing: { type: "perImage", unit: 0.13 },
+billing: { type: "perImage", unit: 0.18 },
 params: [ {
 key: "prompt",
 label: "提示词",
@@ -3391,7 +3391,7 @@ max: 14
 } ]
 }, {
 id: "apiyi:nano-banana-2",
-name: "Nano Banana 2（APIYI）",
+name: "Nano Banana 2（易）",
 endpoint: "/v1beta/models/gemini-3.1-flash-image:generateContent",
 endpointModel: "gemini-3.1-flash-image",
 gemini: true,
@@ -3432,7 +3432,7 @@ max: 14
 } ]
 }, {
 id: "apiyi:nano-banana-pro",
-name: "Nano Banana Pro（APIYI）",
+name: "Nano Banana Pro（易）",
 endpoint: "/v1beta/models/gemini-3-pro-image:generateContent",
 endpointModel: "gemini-3-pro-image",
 gemini: true,
@@ -3478,15 +3478,15 @@ video: [ {
    ⇒ desc 明确标注「Phase 2 接入中，暂不可生成」—— 用户选了点生成会得到明确报错，不静默。
    定价真值 = api/pricing：veo-3.1 按次（$1.2/$0.3 每次换算 ¥×7）；Seedance 系按Token（ratio 35/23/18.5）。 */
 id: "apiyi:seedance-2-5-260628",
-name: "Seedance 2.5（APIYI）",
+name: "Seedance 2.5（易）",
 endpoint: "/v1/videos",
-price: "按Token·约¥2.45起/条",
+price: "按Token·$70/M（每条价官方未提供）",
 async: false,
 type: "video",
 channel: "apiyi",
 modelId: "doubao-seedance-2-5-260628",
 desc: "字节最新 · 30秒直出 · 最多30张参考图 · Phase 2 接入中，暂不可生成",
-billing: { type: "perToken", refCny: 2.45, refNote: "ratio 35 档估算，按实际用量计" },
+billing: { type: "perToken", inUsdPerM: 70, outUsdPerM: 70, source: "api", note: "视频按量计费（$70/M，CSV 真值）；视频 token 与时长的折算官方未提供 ⇒ 不估每条价" },
 params: [ {
 key: "prompt",
 label: "提示词",
@@ -3503,7 +3503,7 @@ max: 30
 } ]
 }, {
 id: "apiyi:veo-3.1-generate-preview",
-name: "VEO 3.1（APIYI）",
+name: "VEO 3.1（易）",
 endpoint: "/v1/videos",
 price: "¥8.40/次（$1.2）",
 async: false,
@@ -3522,15 +3522,15 @@ placeholder: "描述视频"
 } ]
 }, {
 id: "apiyi:wan3.0-video",
-name: "Wan3.0 视频（APIYI）",
+name: "Wan3.0 视频（易）",
 endpoint: "/v1/videos",
-price: "按Token·约¥0.02起/秒",
+price: "按Token·$0.48/M（每条价官方未提供）",
 async: false,
 type: "video",
 channel: "apiyi",
 modelId: "wan3.0-video",
 desc: "阿里通义万相 · Phase 2 接入中，暂不可生成",
-billing: { type: "perToken", refCny: 0.02, refNote: "ratio 0.24 档估算" },
+billing: { type: "perToken", inUsdPerM: 0.48, outUsdPerM: 0.48, source: "api", note: "视频按量计费（$0.48/M，CSV 真值）；折算方式官方未提供 ⇒ 不估每条价" },
 params: [ {
 key: "prompt",
 label: "提示词",
@@ -4843,9 +4843,9 @@ const SKILL_MODEL_PRESETS = [
      6 代旗舰档（gpt-6.1-sol，入 $2/M · 出 $10/M），比 5.6 Sol（$4/$20）便宜一半还新一代，
      GPT-6 系原生多模态（视觉）。费率真值 = pricing 端点 enable_groups 含 default ✓。
      ⚠ think:false 仍是诚实标注（Worker 的 apiyi 分支无 thinking 注入，开关是 no-op）。 */
-  { id: "apiyi:gpt-6.1-sol", label: "GPT-6.1 Sol（APIYI）", vision: true, think: false, desc: "最新 6 代旗舰 · 支持视觉 · $2/$10 每 M tokens", billing: { type: "perToken", inUsdPerM: 2, outUsdPerM: 10, source: "api", note: "APIYI 官转（入 $2/M · 出 $10/M，pricing 端点 ratio 1.0 × 2 / × 5）" } },
-  { id: "apiyi:claude-opus-5-5", label: "Claude Opus 5.5（APIYI）", vision: true, think: false, desc: "Anthropic 旗舰 · 长文与代码强", billing: { type: "perToken", inUsdPerM: 4, outUsdPerM: 20, source: "api", note: "APIYI 官转（入 $4/M · 出 $20/M）" } },
-  { id: "apiyi:gemini-3.1-pro-preview", label: "Gemini 3.1 Pro（APIYI）", vision: true, think: false, desc: "Google 多模态旗舰 · 看图理解强", billing: { type: "perToken", inUsdPerM: 1.8, outUsdPerM: 10.8, source: "api", note: "APIYI 官转（入 $1.8/M · 出 $10.8/M）" } }
+  { id: "apiyi:gpt-6.1-sol", label: "GPT-6.1 Sol（易）", vision: true, think: false, desc: "最新 6 代旗舰 · 支持视觉 · $2/$10 每 M tokens", billing: { type: "perToken", inUsdPerM: 2, outUsdPerM: 10, source: "api", note: "APIYI 官转（入 $2/M · 出 $10/M，pricing 端点 ratio 1.0 × 2 / × 5）" } },
+  { id: "apiyi:claude-opus-5-5", label: "Claude Opus 5.5（易）", vision: true, think: false, desc: "Anthropic 旗舰 · 长文与代码强", billing: { type: "perToken", inUsdPerM: 4, outUsdPerM: 20, source: "api", note: "APIYI 官转（入 $4/M · 出 $20/M）" } },
+  { id: "apiyi:gemini-3.1-pro-preview", label: "Gemini 3.1 Pro（易）", vision: true, think: false, desc: "Google 多模态旗舰 · 看图理解强", billing: { type: "perToken", inUsdPerM: 1.8, outUsdPerM: 10.8, source: "api", note: "APIYI 官转（入 $1.8/M · 出 $10.8/M）" } }
 ];
 
 /* IMPL-72 需求②：思考能力守卫——判断模型能否安全携带 thinking 标志。
@@ -10295,6 +10295,52 @@ const modelLogoOf = id => MODEL_BRANDS[MODEL_LOGO[id] || ""] || "";
 /* ★ R21-4（修 2026-10-01「价格太长、模型名都看不清」）：宿主列表价格列改**纯人民币短价**。
    与编辑器 priceCnyText 同一口径：perImage=¥x.xx（精确）、perToken=≈¥x.xx（实测参考价）；
    无结构化 billing ⇒ 原文案兜底。完整价签仍在 modelMeta 的 tag 里（hover/详情可见）。 */
+/* ★ R22-c（修 2026-10-01「宿主生成按钮上动态显示费用」）：
+   与编辑器 mint/priceEngine.js 同一套真值（gpt-image-2概览备份.md 官方 token 表 +
+   APIYI 2K/4K 外推系数 + 参考图 1024 tok/$8M + 速创/按次一口价）。 */
+/* ★ R22-d（修 2026-10-01「统计要根据真实扣费算」）：从上游响应里取出 usage。
+   ⚠ 病根：入账原写 `calcEstimate(model, body)`（传的是**请求体**）⇒ perToken 档拿不到
+     in/out tokens ⇒ amount 恒 null ⇒ **易官转三档（sunburst/flare/gpt-image-2）统计漏账为 0**。
+   修法 = 入账时把响应里的 usage 并进计费入参；创/按次档仍走配置单价（一口价，本来就是准的）。 */
+function usageOfResult(data) {
+  try {
+    var u = data && (data.usage || (data.data && data.data.usage));
+    if (!u) return null;
+    var it = u.inTokens != null ? u.inTokens : u.input_tokens;
+    var ot = u.outTokens != null ? u.outTokens : u.output_tokens;
+    if (it == null && ot == null) return null;
+    return { inTokens: Number(it) || 0, outTokens: Number(ot) || 0 };
+  } catch (e) { return null; }
+}
+function estCostCny(model, body) {
+  try {
+    var b = model && model.billing;
+    if (!b) return null;
+    var num = Math.max(1, parseInt(body && body.num, 10) || 1);
+    if (b.type === "perSecond") {
+      var s = parseFloat(body && body.duration);
+      if (!isFinite(s) || s <= 0) return null;
+      return { cny: b.unit * s, approx: false, detail: s + "秒" };
+    }
+    if (b.type === "perImage" && isFinite(Number(b.unit))) {
+      return { cny: b.unit * num, approx: false, detail: "一口价" + (num > 1 ? "×" + num + "张" : "") };
+    }
+    if (b.type === "perToken") {
+      var QT = { low: 196, medium: 439, high: 1756, xhigh: 3122, max: 7024 };
+      var SM = { "1K": 1, "2K": 4, "4K": 4.12 };
+      var q = QT[body.quality] != null ? body.quality : "medium";
+      var px = SM[body.size] != null ? SM[body.size] : 1;
+      var outUsd = QT[q] * px * 30 / 1e6;
+      var rc = String((body && body.urls) || "");
+      var inImgs = rc ? rc.split(",").filter(Boolean).length : 0;
+      var inUsd = inImgs * 1024 * 8 / 1e6;
+      var usd = (outUsd + inUsd) * num;
+      if (usd <= 0) return null;
+      return { cny: usd * 7, approx: px > 1, detail: q + "·" + (body.size || "1K") + (inImgs ? "·含" + inImgs + "图" : "") + (num > 1 ? "·×" + num : "") };
+    }
+  } catch (e) {}
+  return null;
+}
 function priceCnyOf(mm) {
   const b = mm && mm.billing;
   if (b && b.type === "perImage" && isFinite(Number(b.unit))) return "¥" + Number(b.unit).toFixed(2);
@@ -10713,6 +10759,14 @@ this._renderTaskList();
 });
 $("#bulkDeleteBtn").addEventListener("click", () => this._bulkDeleteByFilter());
 $("#restoreBtn").addEventListener("click", () => this._restoreHidden());
+/* ★ R22-c：参数变化 → 刷新按钮金额（input/select 委托 + 200ms 合帧） */
+if (!window.__r22CostHooked) {
+window.__r22CostHooked = true;
+var _r22t = 0;
+var _r22refresh = function() { clearTimeout(_r22t); _r22t = setTimeout(function() { try { if (window.UI && UI._refreshGenerateBtn) UI._refreshGenerateBtn(); } catch (_) {} }, 200); };
+document.addEventListener("input", function(e) { try { if (e.target && e.target.closest && e.target.closest("[data-key]")) _r22refresh(); } catch (_) {} });
+document.addEventListener("change", function(e) { try { if (e.target && e.target.closest && e.target.closest("[data-key]")) _r22refresh(); } catch (_) {} });
+}
 $("#generateBtn").addEventListener("click", () => this.handleGenerate());
 $("#copyWorkflowBtn").addEventListener("click", () => {
 const task = this._buildCurrentTask();
@@ -13287,7 +13341,7 @@ url: url,
 data: data
 };
 task.completedAt = Date.now();
-const cost = calcEstimate(this.state.model, v.body);
+const cost = calcEstimate(this.state.model, Object.assign({}, v.body, usageOfResult(data) || {})); /* ★ R22-d：并上真实 usage */
 task.cost = cost?.amount;
 Store.addHistory({
 id: task.id,
@@ -13482,7 +13536,14 @@ _refreshGenerateBtn() {
 const el = $("#generateBtnText");
 if (!el) return;
 const hasActive = (Store.getTasks() || []).some(t => t.status === "processing");
-el.textContent = hasActive ? "生成中..." : "生成";
+if (hasActive) { el.textContent = "生成中..."; return; }
+/* ★ R22-c（修 2026-10-01「生成按钮上动态显示费用 如 生成 ¥0.1」）：
+   当前模型 + 表单参数实时估算；算不出（无 billing/参数不足）就显示纯「生成」。 */
+var est = null;
+try { est = estCostCny(this.state.model, this._collectParamsSync()); } catch (e) {}
+var suffix = "";
+if (est && est.cny > 0) suffix = " ¥" + (est.cny < 1 ? est.cny.toFixed(2) : est.cny.toFixed(1));
+el.textContent = "生成" + suffix;
 },
 _buildCurrentTask() {
 try {
@@ -13637,7 +13698,7 @@ url: Api.extractUrl(result.data),
 data: result.data
 };
 task.completedAt = Date.now();
-const cost = calcEstimate(task.model, task.body);
+const cost = calcEstimate(task.model, Object.assign({}, task.body, usageOfResult(result.data) || {})); /* ★ R22-d：并上真实 usage */
 task.cost = cost?.amount;
 /* IMPL-158-d：同 id 旧历史条目替换式写入（停止→迟到成功升级路径防双条目；常规路径无旧条目时为无害 no-op） */
 const _histArr = Store.getHistory();
