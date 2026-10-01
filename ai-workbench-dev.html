@@ -472,8 +472,17 @@ to{transform:rotate(360deg)}}
 .form-actions-row .param-quick-btn{gap:3px;padding:0 6px}
 .form-actions-row .param-quick-btn svg{width:12px;height:12px}
 .form-actions-row .param-quick-btn .pq-summary{font-size:10px;letter-spacing:0}
+/* ★ R25：按钮「图标 + 名称/值」两态 + 图标/字体对齐编辑器（官方 lucide 图标 + RatioGlyph + 12px） */
+.form-actions-row .param-quick-btn .pq-btn-ico,.form-actions-row .count-chip .pq-btn-ico{width:14px;height:14px;flex-shrink:0}
+.form-actions-row .pq-caret{width:12px;height:12px;flex-shrink:0;color:var(--text-muted);opacity:.8}
+.form-actions-row .param-quick-btn .pq-label,.form-actions-row .param-quick-btn .pq-summary,.form-actions-row .count-chip .pq-label,.form-actions-row .count-chip .pq-summary{font-size:12px;line-height:1;letter-spacing:0}
+.form-actions-row .param-quick-btn .pq-summary,.form-actions-row .count-chip .pq-summary{font-weight:500}
+.form-actions-row .count-chip{gap:5px;padding:0 8px}
+.param-quick-btn .pq-ratio-glyph{box-sizing:border-box;border:1px solid currentColor;border-radius:2px;flex-shrink:0;transition:width .18s,height .18s}
+.param-quick-btn.has-val .pq-label,.count-chip.has-val .pq-label{display:none}
+.param-quick-btn:not(.has-val) .pq-summary,.count-chip:not(.has-val) .pq-summary{display:none}
 /* ★ R24-D：按钮图标 —— 统一 1.8 描边；第3按钮双形态用 class 切（hidden 属性会被别处 CSS 覆盖成 display:block ⇒ 两个图标同显，踩过） */
-.form-actions-row .param-quick-btn .pq-btn-ico{width:13px;height:13px;flex-shrink:0}
+.form-actions-row .param-quick-btn .pq-btn-ico{width:14px;height:14px;flex-shrink:0}
 .param-quick-btn .pq-ico-d{display:none}
 .param-quick-btn.is-video .pq-ico-d{display:block}
 .param-quick-btn.is-video .pq-ico-q{display:none}
@@ -1884,31 +1893,36 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
     </div>
     <div id="paramForm" style="display:flex !important;flex-direction:column;gap:14px;"></div>
     <div class="generate-section">
-            <div class="form-actions-row" id="formActionsRow">
+                  <div class="form-actions-row" id="formActionsRow">
         <button type="button" class="param-quick-btn" id="paramQuickBtnRatio" data-pq-mode="ratio" aria-expanded="false" aria-controls="paramQuickPanel" aria-label="比例参数">
-          <svg class="pq-btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.8" y="7.4" width="13.4" height="9.4" rx="2.2"/><rect x="7.8" y="3.2" width="13.4" height="9.4" rx="2.2" opacity=".45"/></svg>
+          <span class="pq-ratio-glyph" data-pq-glyph="ratio" aria-hidden="true"></span>
           <span class="pq-label">比例</span>
           <span class="pq-summary" id="pqSummaryRatio"></span>
+          <svg class="pq-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
         </button>
         <button type="button" class="param-quick-btn" id="paramQuickBtnResolution" data-pq-mode="resolution" aria-expanded="false" aria-controls="paramQuickPanel" aria-label="分辨率参数">
-          <svg class="pq-btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4.4" width="19" height="13.2" rx="2.5"/><path d="M8 20.9h8M12 17.6v3.3"/><path d="M12 4.4v13.2M2.5 11h19" opacity=".38"/></svg>
+          <svg class="pq-btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="m21 3-7 7"/><path d="m3 21 7-7"/><path d="M9 21H3v-6"/></svg>
           <span class="pq-label">分辨率</span>
           <span class="pq-summary" id="pqSummaryResolution"></span>
+          <svg class="pq-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
         </button>
         <button type="button" class="param-quick-btn" id="paramQuickBtnQuality" data-pq-mode="quality" aria-expanded="false" aria-controls="paramQuickPanel" aria-label="质量参数">
-          <svg class="pq-btn-ico pq-ico-q" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.3 3.6h9.4l3.7 5.3-8.4 11.5L3.6 8.9z"/><path d="M3.6 8.9h16.8M12 20.4 8.7 8.9l1.6-5.3M12 20.4l3.3-11.5-1.6-5.3" opacity=".42"/></svg>
-          <svg class="pq-btn-ico pq-ico-d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.4"/><path d="M12 7.3V12l3.2 1.9"/><path d="M12 3.6v1.7M20.4 12h-1.7M12 20.4v-1.7M3.6 12h1.7" opacity=".5"/></svg>
+          <svg class="pq-btn-ico pq-ico-q" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 3 8 9l4 13 4-13-2.5-6"/><path d="M17 3a2 2 0 0 1 1.6.8l3 4a2 2 0 0 1 .013 2.382l-7.99 10.986a2 2 0 0 1-3.247 0l-7.99-10.986A2 2 0 0 1 2.4 7.8l2.998-3.997A2 2 0 0 1 7 3z"/><path d="M2 9h20"/></svg>
+          <svg class="pq-btn-ico pq-ico-d" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6v6h4"/><circle cx="12" cy="12" r="10"/></svg>
           <span class="pq-label" id="pqLabelQuality">质量</span>
           <span class="pq-summary" id="pqSummaryQuality"></span>
+          <svg class="pq-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
         </button>
         <button type="button" class="param-quick-btn pq-switch-btn" id="paramQuickBtnSwitch" aria-expanded="false" hidden>
-          <svg class="pq-btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10.2v3.6M8 7v10M12 4.4v15.2M16 7v10M20 10.2v3.6"/></svg>
+          <svg class="pq-btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z"/><path d="M16 9a5 5 0 0 1 0 6"/><path d="M19.364 18.364a9 9 0 0 0 0-12.728"/></svg>
           <span class="pq-label" id="pqLabelSwitch">音频</span>
           <span class="pq-summary" id="pqSummarySwitch"></span>
         </button>
         <button type="button" class="count-chip" id="countChipBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="countPop" aria-label="生成张数">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8.4" y="8.4" width="12" height="12" rx="2.6"/><path d="M5.6 15.6A2.6 2.6 0 0 1 3.6 13V5.9a2.6 2.6 0 0 1 2.6-2.6h7.1a2.6 2.6 0 0 1 2.6 2" opacity=".85"/></svg>
-          <span id="countChipVal">×1</span>
+          <svg class="pq-btn-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 11-1.296-1.296a2.4 2.4 0 0 0-3.408 0L11 16"/><path d="M4 8a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2"/><circle cx="13" cy="7" r="1" fill="currentColor"/><rect x="8" y="2" width="14" height="14" rx="2"/></svg>
+          <span class="pq-label">张数</span>
+          <span class="pq-summary" id="countChipVal"></span>
+          <svg class="pq-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
         </button>
       </div>
       <div class="generate-row">
@@ -11680,6 +11694,8 @@ _updateQuickSummary() {
     const el = g.querySelector("select[data-key], input[data-key]");
     if (!el) return "";
     const p = (this.state.model && this.state.model.params || []).find(pp => pp.key === el.dataset.key);
+    /* ★ R25：等于默认值 ⇒ 算「没选」⇒ 返回空（按钮显示名称而不是值） */
+    if (p && p.default != null && String(el.value) === String(p.default)) return "";
     if (el.type === "range") return String(el.value) + String(p && p.unit || "");
     return labelOf(p, el.value);
   };
@@ -11688,8 +11704,27 @@ _updateQuickSummary() {
     const e = $(id);
     if (!e) return;
     e.textContent = txt;
-    e.closest(".param-quick-btn")?.classList.toggle("has-sum", !!txt);
+    const btn = e.closest(".param-quick-btn") || e.closest(".count-chip");
+    if (btn) btn.classList.toggle("has-val", !!txt);
   };
+    /* ★ R25：比例按钮的方框字形（编辑器 RatioGlyph 同款）—— 按当前比例画；auto/adaptive 画虚线 */
+    const glyph = document.querySelector('[data-pq-glyph="ratio"]');
+    if (glyph) {
+      const gal = sums.ratio[0] ? sums.ratio[0].querySelector("select[data-key]") : null;
+      const rv = gal ? String(gal.value) : "";
+      const gp = rv.split(":");
+      const okG = gp.length === 2 && Number(gp[0]) > 0 && Number(gp[1]) > 0;
+      const LONG = 15;
+      if (okG) {
+        const a = Number(gp[0]), b = Number(gp[1]);
+        glyph.style.width = (a >= b ? LONG : (a / b) * LONG) + "px";
+        glyph.style.height = (b >= a ? LONG : (b / a) * LONG) + "px";
+        glyph.style.borderStyle = "solid";
+      } else {
+        glyph.style.width = glyph.style.height = LONG + "px";
+        glyph.style.borderStyle = "dashed";
+      }
+    }
   set("#pqSummaryRatio", pick(sums.ratio));
   set("#pqSummaryResolution", pick(sums.resolution));
   set("#pqSummaryQuality", pick(sums.quality));
@@ -11865,7 +11900,11 @@ b.setAttribute("aria-pressed", String(on));
 },
 _syncCountChip() {
 const el = $("#countChipVal");
-if (el) el.textContent = "×" + this._getBatchCount();
+const btn = $("#countChipBtn");
+const n = this._getBatchCount();
+if (el) el.textContent = "×" + n;
+/* ★ R25：1（默认）⇒ 显示名称「张数」；>1 ⇒ 显示「×N」 */
+if (btn) btn.classList.toggle("has-val", Number(n) > 1);
 },
 _mountWorkflowBtns(scope) {
 const slot = scope?.querySelector ? scope.querySelector("#wfActionsSlot") : document.getElementById("wfActionsSlot");
