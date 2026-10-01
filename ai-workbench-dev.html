@@ -81,7 +81,7 @@ textarea{resize:vertical;min-height:80px}
 .mp-logo{width:18px;height:18px;flex:0 0 auto;display:inline-flex}
 .mp-logo svg{width:100%;height:100%;display:block}
 .pq-empty{padding:20px 0 16px;text-align:center;font-size:12px;color:var(--text-dim)}
-.param-quick-panel #paramQuickBody[data-mode="ratio"] .pq-empty-other,.param-quick-panel #paramQuickBody[data-mode="other"] .pq-empty-ratio{display:none}
+#paramQuickBody[data-mode] .pq-empty{display:none}#paramQuickBody[data-mode="ratio"] .pq-empty-ratio,#paramQuickBody[data-mode="resolution"] .pq-empty-resolution,#paramQuickBody[data-mode="quality"] .pq-empty-quality{display:block}
 .prompt-module{background:var(--surface-nested);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;display:flex;flex-direction:column;gap:10px}
 .prompt-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .prompt-title{font-size:13px;font-weight:600;color:var(--text)}
@@ -469,8 +469,11 @@ to{transform:rotate(360deg)}}
 .param-quick-btn:active{transform:scale(.97)}
 .param-quick-btn .pq-label{flex-shrink:0}
 .param-quick-btn .pq-summary{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-weight:600;letter-spacing:.02em;font-size:11.5px}
+.form-actions-row .param-quick-btn{gap:3px;padding:0 6px}
+.form-actions-row .param-quick-btn svg{width:12px;height:12px}
+.form-actions-row .param-quick-btn .pq-summary{font-size:10px;letter-spacing:0}
 @media (max-width: 420px){
-.param-quick-btn.has-sum .pq-label{display:none}
+.param-quick-btn.has-sum .pq-label{display:inline}
 .param-quick-btn .pq-summary{font-size:11px}}
 .count-chip{flex:1 1 0;min-width:0;height:40px;padding:0 10px;border-radius:999px;border:1px solid transparent;cursor:pointer;background:linear-gradient(var(--surface-nested),var(--surface-nested)) padding-box,var(--edge-border-grad) border-box;box-shadow:var(--lift-ctrl),0 0 0 1px var(--lg-rim);display:inline-flex;align-items:center;justify-content:center;gap:5px;color:var(--text-muted);font-size:13.5px;font-weight:700;font-family:var(--font-mono);transition:all var(--transition-fast);letter-spacing:.02em} /* IMPL-88：pill+浅底同 ② */
 .count-chip svg{width:15px;height:15px;flex-shrink:0}
@@ -490,7 +493,7 @@ to{transform:rotate(360deg)}}
 .param-quick-panel{display:none;position:fixed;z-index:65;overflow-y:auto;overscroll-behavior:contain;padding:14px 16px 16px;border-radius:var(--radius-lg);background:var(--lg-gloss),var(--surface-glass-pop);border:1px solid var(--lg-edge);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--lg-slab),0 18px 44px -18px rgba(9,14,30,.38);transform:translateY(12px) scale(.985);opacity:0;transform-origin:50% 100%;transition:transform 260ms cubic-bezier(.32,1.08,.44,1),opacity 200ms ease}
 .param-quick-panel.displayed{display:block}
 .param-quick-panel.show{transform:none;opacity:1}
-.param-quick-panel #paramQuickBody[data-mode="ratio"] .pq-grp-other,.param-quick-panel #paramQuickBody[data-mode="other"] .pq-grp-ratio{display:none}
+#paramQuickBody[data-mode] .param-group{display:none}#paramQuickBody[data-mode="ratio"] .pq-grp-ratio,#paramQuickBody[data-mode="resolution"] .pq-grp-resolution,#paramQuickBody[data-mode="quality"] .pq-grp-quality{display:block}
 .param-quick-panel #paramQuickBody{display:flex;flex-direction:column;gap:12px}
 .param-quick-panel .pq-head{margin-bottom:14px}
 .param-quick-panel:not(.show){pointer-events:none}
@@ -1872,10 +1875,16 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
           <span class="pq-label">比例</span>
           <span class="pq-summary" id="pqSummaryRatio"></span>
         </button>
-        <button type="button" class="param-quick-btn" id="paramQuickBtnOther" data-pq-mode="other" aria-expanded="false" aria-controls="paramQuickPanel" aria-label="其他生成参数">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 8h10M18 8h2M4 16h4M12 16h8M14 5.5v5M8 13.5v5"/></svg>
-          <span class="pq-label">参数</span>
-          <span class="pq-summary" id="pqSummaryOther"></span>
+        <button type="button" class="param-quick-btn" id="paramQuickBtnResolution" data-pq-mode="resolution" aria-expanded="false" aria-controls="paramQuickPanel" aria-label="分辨率参数">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="2.5" y="5" width="19" height="13" rx="2.5"/><path d="M8 21h8M12 18v3"/><path d="M14.5 9v4.5M12 9h2.5a2.25 2.25 0 0 1 0 4.5H12" opacity=".9"/></svg>
+          <span class="pq-label">分辨率</span>
+          <span class="pq-summary" id="pqSummaryResolution"></span>
+        </button>
+        <button type="button" class="param-quick-btn" id="paramQuickBtnQuality" data-pq-mode="quality" aria-expanded="false" aria-controls="paramQuickPanel" aria-label="质量参数">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ico-quality><path d="M5 19a9 9 0 1 1 14 0"/><path d="M12 13l3.5-3.5"/><circle cx="12" cy="13" r="1.6"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-ico-duration hidden><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+          <span class="pq-label" id="pqLabelQuality">质量</span>
+          <span class="pq-summary" id="pqSummaryQuality"></span>
         </button>
         <button type="button" class="count-chip" id="countChipBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="countPop" aria-label="生成张数">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8.5" y="8.5" width="12" height="12" rx="2.5"/><path d="M4 15.5V6a2 2 0 0 1 2-2h9.5"/></svg>
@@ -11392,50 +11401,79 @@ passive: false
 });
 },
 _mountQuickParams() {
-const body = $("#paramQuickBody");
-if (!body) return;
-const container = $("#paramForm");
-if (!container) return;
-body.innerHTML = "";
-const moved = [];
-const emptyRows = [];
-[ ...container.children ].forEach(el => {
-if (el.tagName !== "DIV") return;
-const st = el.getAttribute("style") || "";
-if (st.includes("1fr 1fr")) {
-let groups = [ ...el.children ].filter(g => g.classList?.contains("param-group"));
-if (this.state.model?.seg) groups = groups.filter(g => !g.querySelector(".cap-grid"));
-if (groups.length && groups.length === el.children.length) emptyRows.push(el);
-groups.forEach(g => moved.push(g));
-} else if (el.classList.contains("param-group")) {
-if (this.state.model?.seg && el.querySelector(".cap-grid")) return;
-moved.push(el);
-}
-});
-emptyRows.forEach(r => r.remove());
-const isRatioGrp = g => {
-const k = g.querySelector("[data-key]")?.dataset.key || "";
-const l = (g.querySelector(".field-label")?.childNodes[0]?.textContent || "").trim();
-return /\b(aspectratio|aspect_ratio|ratio|resolution|quality|size|width|height)\b|比例|尺寸|分辨率|清晰度|画质|宽高/i.test(`${k} ${l}`);
-};
-moved.forEach(g => {
-g.classList.add(isRatioGrp(g) ? "pq-grp-ratio" : "pq-grp-other");
-body.appendChild(g);
-});
-this._pqGroups = {
-ratio: [ ...body.querySelectorAll(".pq-grp-ratio") ],
-other: [ ...body.querySelectorAll(".pq-grp-other") ]
-};
-if (!this._pqGroups.ratio.length) body.insertAdjacentHTML("beforeend", '<div class="pq-empty pq-empty-ratio">当前模型暂无比例 / 分辨率参数</div>');
-if (!this._pqGroups.other.length) body.insertAdjacentHTML("beforeend", '<div class="pq-empty pq-empty-other">当前模型暂无其他参数</div>');
-this._pqMode = null;
-const btnR = $("#paramQuickBtnRatio"), btnO = $("#paramQuickBtnOther");
-if (btnR) btnR.style.display = "";
-if (btnO) btnO.style.display = "";
-this._enhanceQuickParams(body);
-const modelEl = $("#paramQuickModel");
-if (modelEl) modelEl.textContent = this.state.model?.name || "";
-this._updateQuickSummary();
+  const body = $("#paramQuickBody");
+  if (!body) return;
+  const container = $("#paramForm");
+  if (!container) return;
+  body.innerHTML = "";
+  /* ★ R23（修 2026-10-02「宿主左侧的面板改成四个按钮：比例 / 分辨率 / 质量 / 张数，视频同理但名称不同」）：
+     旧版两桶（比例·分辨率 / 其他）；现按语义分三桶 + **其余留主面板**。
+     · 桶1 比例（aspectRatio / ratio / 宽高）
+     · 桶2 分辨率（resolution / size / image_size / 清晰度 / 尺寸）
+     · 桶3 质量（quality）；**视频同一槽位只叫「时长」**（duration / seconds）
+     · 其余（音频、背景、种子、步数）**不搬走** —— 四按钮里没有它们的家，搬走等于藏没（旧版全塞「参数」按钮）。
+     · 张数 = 底部原生 countChipBtn（独立 countPop），不在此处处理。 */
+  const buckets = { ratio: [], resolution: [], quality: [] };
+  const rows = [];
+  [ ...container.children ].forEach(el => {
+    if (el.tagName !== "DIV") return;
+    const st = el.getAttribute("style") || "";
+    if (st.includes("1fr 1fr")) rows.push({ el, multi: true }); else if (el.classList.contains("param-group")) rows.push({ el, multi: false });
+  });
+  const keepForSeg = g => !!(this.state.model && this.state.model.seg && g.querySelector(".cap-grid"));
+  rows.forEach(({ el }) => {
+    [ ...el.children ].filter(g => g.classList && g.classList.contains("param-group")).forEach(g => {
+      if (keepForSeg(g)) return;
+      const cls = this._pqClassOf(g);
+      if (cls === "other") return;
+      buckets[cls].push(g);
+    });
+  });
+  [ "ratio", "resolution", "quality" ].forEach(cls => {
+    buckets[cls].forEach(g => {
+      g.classList.remove("pq-grp-ratio", "pq-grp-resolution", "pq-grp-quality");
+      g.classList.add("pq-grp-" + cls);
+      body.appendChild(g);
+    });
+  });
+  rows.forEach(({ el, multi }) => {
+    if (!multi) return;
+    const left = [ ...el.children ].filter(g => g.classList && g.classList.contains("param-group"));
+    if (!left.length) { el.remove(); return; }
+    if (left.length === 1) el.setAttribute("style", "display:grid;grid-template-columns:1fr;gap:10px;");
+  });
+  const isVideo = this.state.tab === "video";
+  const LABELS = { ratio: "比例", resolution: "分辨率", quality: isVideo ? "时长" : "质量" };
+  [ "ratio", "resolution", "quality" ].forEach(cls => {
+    if (!buckets[cls].length) body.insertAdjacentHTML("beforeend", '<div class="pq-empty pq-empty-' + cls + '">当前模型暂无' + LABELS[cls] + '参数</div>');
+  });
+  const qLabel = $("#pqLabelQuality");
+  if (qLabel) qLabel.textContent = isVideo ? "时长" : "质量";
+  const icoQ = $("#paramQuickBtnQuality [data-ico-quality]"), icoD = $("#paramQuickBtnQuality [data-ico-duration]");
+  if (icoQ && icoD) { icoQ.hidden = isVideo; icoD.hidden = !isVideo; }
+  this._pqGroups = buckets;
+  this._pqMode = null;
+  [ "#paramQuickBtnRatio", "#paramQuickBtnResolution", "#paramQuickBtnQuality" ].forEach(id => {
+    const b = $(id);
+    if (b) b.style.display = "";
+  });
+  this._enhanceQuickParams(body);
+  const modelEl = $("#paramQuickModel");
+  if (modelEl) modelEl.textContent = this.state.model?.name || "";
+  this._updateQuickSummary();
+},
+_pqClassOf(g) {
+  /* R23：参数组 → 三桶之一（other ⇒ 留主面板）。顺序：比例 → 分辨率 → 时长 → 质量。
+     veo3_fast 的 size 标签是「清晰度」⇒ 先按 key、再按标签兜底。 */
+  const el = g.querySelector("[data-key]");
+  const k = String(el && el.dataset.key || "").toLowerCase();
+  const fl = g.querySelector(".field-label");
+  const l = String(fl && fl.childNodes[0] && fl.childNodes[0].textContent || "").trim();
+  if ([ "aspectratio", "aspect_ratio", "ratio" ].includes(k) || l.indexOf("比例") >= 0 || l.indexOf("宽高") >= 0) return "ratio";
+  if ([ "resolution", "image_size", "size" ].includes(k) || l.indexOf("分辨率") >= 0 || l.indexOf("清晰度") >= 0 || l.indexOf("尺寸") >= 0) return "resolution";
+  if ([ "duration", "seconds" ].includes(k) || l.indexOf("时长") >= 0) return "quality";
+  if (k === "quality" || l.indexOf("质量") >= 0 || l.indexOf("画质") >= 0) return "quality";
+  return "other";
 },
 _enhanceQuickParams(body) {
 body.querySelectorAll(".param-group").forEach(g => {
@@ -11535,26 +11573,32 @@ if (s.dataset.pqReplaced) this._syncPqControl(s);
 });
 },
 _updateQuickSummary() {
-const sums = this._pqGroups || {
-ratio: [],
-other: []
-};
-const labelOf = (p, v) => {
-if (p && Array.isArray(p.options) && p.options.length && typeof p.options[0] === "object") {
-const hit = p.options.find(o => String(o.value) === String(v));
-if (hit) return hit.label;
-}
-return this._enumLabel(p?.key, v);
-};
-const pick = groups => groups.flatMap(g => {
-const sel = g.querySelector("select[data-key]");
-if (!sel) return [];
-const p = (this.state.model?.params || []).find(pp => pp.key === sel.dataset.key);
-return [ labelOf(p, sel.value) ];
-}).filter(Boolean).slice(0, 2).join(" · ");
-const rEl = $("#pqSummaryRatio"), oEl = $("#pqSummaryOther");
-if (rEl) { rEl.textContent = pick(sums.ratio); rEl.closest(".param-quick-btn")?.classList.toggle("has-sum", !!rEl.textContent); }
-if (oEl) { oEl.textContent = pick(sums.other); oEl.closest(".param-quick-btn")?.classList.toggle("has-sum", !!oEl.textContent); }
+  /* R23：三个按钮各取摘要（比例 / 分辨率 / 质量·时长）。select 取枚举 label；range 取「值 + 单位」。 */
+  const sums = this._pqGroups || { ratio: [], resolution: [], quality: [] };
+  const labelOf = (p, v) => {
+    if (p && Array.isArray(p.options) && p.options.length && typeof p.options[0] === "object") {
+      const hit = p.options.find(o => String(o.value) === String(v));
+      if (hit) return hit.label;
+    }
+    return this._enumLabel(p && p.key, v);
+  };
+  const valOf = g => {
+    const el = g.querySelector("select[data-key], input[data-key]");
+    if (!el) return "";
+    const p = (this.state.model && this.state.model.params || []).find(pp => pp.key === el.dataset.key);
+    if (el.type === "range") return String(el.value) + String(p && p.unit || "");
+    return labelOf(p, el.value);
+  };
+  const pick = groups => groups.map(valOf).filter(Boolean).slice(0, 2).join(" · ");
+  const set = (id, txt) => {
+    const e = $(id);
+    if (!e) return;
+    e.textContent = txt;
+    e.closest(".param-quick-btn")?.classList.toggle("has-sum", !!txt);
+  };
+  set("#pqSummaryRatio", pick(sums.ratio));
+  set("#pqSummaryResolution", pick(sums.resolution));
+  set("#pqSummaryQuality", pick(sums.quality));
 },
 _positionQuickPanel() {
 const panel = $("#paramQuickPanel");
@@ -11574,12 +11618,15 @@ const panel = $("#paramQuickPanel");
 if (!panel) return;
 const body = $("#paramQuickBody");
 if (body && !body.children.length) this._mountQuickParams();
-this._pqMode = mode === "ratio" ? "ratio" : "other";
-if (body) body.dataset.mode = this._pqMode;
+const m = mode === "resolution" || mode === "quality" ? mode : "ratio";
+this._pqMode = m;
+if (body) body.dataset.mode = m;
+const isV = this.state.tab === "video";
 const title = panel.querySelector(".pq-title");
-if (title) title.textContent = this._pqMode === "ratio" ? "比例 · 分辨率" : "其他参数";
-$("#paramQuickBtnRatio")?.setAttribute("aria-expanded", String(this._pqMode === "ratio"));
-$("#paramQuickBtnOther")?.setAttribute("aria-expanded", String(this._pqMode === "other"));
+if (title) title.textContent = m === "ratio" ? "比例" : m === "resolution" ? "分辨率" : isV ? "时长" : "质量";
+$("#paramQuickBtnRatio")?.setAttribute("aria-expanded", String(m === "ratio"));
+$("#paramQuickBtnResolution")?.setAttribute("aria-expanded", String(m === "resolution"));
+$("#paramQuickBtnQuality")?.setAttribute("aria-expanded", String(m === "quality"));
 this._closeCountPop();
 clearTimeout(this._pqCloseT);
 const anchor = $("#formActionsRow") || $(".generate-section");
@@ -11602,14 +11649,16 @@ panel.classList.remove("show");
 clearTimeout(this._pqCloseT);
 this._pqCloseT = setTimeout(() => panel.classList.remove("displayed"), 280);
 $("#paramQuickBtnRatio")?.setAttribute("aria-expanded", "false");
-$("#paramQuickBtnOther")?.setAttribute("aria-expanded", "false");
+$("#paramQuickBtnResolution")?.setAttribute("aria-expanded", "false");
+$("#paramQuickBtnQuality")?.setAttribute("aria-expanded", "false");
 },
 _bindQuickParams() {
 document.addEventListener("click", e => {
 const ratioHit = e.target.closest?.("#paramQuickBtnRatio");
-const otherHit = e.target.closest?.("#paramQuickBtnOther");
-if (ratioHit || otherHit) {
-const mode = ratioHit ? "ratio" : "other";
+const resHit = e.target.closest?.("#paramQuickBtnResolution");
+const qHit = e.target.closest?.("#paramQuickBtnQuality");
+if (ratioHit || resHit || qHit) {
+const mode = ratioHit ? "ratio" : resHit ? "resolution" : "quality";
 const panel = $("#paramQuickPanel");
 if (panel?.classList.contains("show")) {
 if (this._pqMode === mode) this._closeQuickPanel(); else this._openQuickPanel(mode);
