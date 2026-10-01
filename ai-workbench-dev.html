@@ -2422,6 +2422,17 @@ default: "1:1",
 options: [ "auto", "1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "5:4", "4:5", "21:9", "9:21", "1:3", "3:1", "2:1", "1:2" ],
 hint: "自动＝不指定比例，由服务端默认决定" /* IMPL-120：官方枚举无 auto（速创 doc/79），auto=缺省不下发 */
 }, {
+/* ★ R22-f（修：「宿主参数拆成 比例 / 分辨率 / 质量 / 张数 四个按钮」）：
+   官方参数表无独立 size（1K/2K/4K 由 aspectRatio 的 WxH 表达），但 `_composeGptAspect`
+   **已经认** body.size ⇒ 这里补一个 size 表单项，分辨率就成为独立按钮；
+   合成时按 _GPT_RATIO_SIZE 转成对应 WxH 并 delete（**不会下发越界字段**）。
+   基础档 gpt-image-2.5 官方仅支持 1K ⇒ 不加（加了是骗人）。 */
+key: "size",
+label: "分辨率",
+type: "select",
+default: "1K",
+options: [ "1K", "2K", "4K" ]
+}, {
 key: "quality",
 label: "生成质量",
 type: "select",
