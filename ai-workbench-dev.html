@@ -17472,7 +17472,10 @@ throw new Error("APIYI · " + apiDef.modelId + "：" + _raw + _hint);
 } /* APIYI 分流结束 */
 studioBusy((mm ? mm.label : actName(e.action)) + " 处理中… · " + (mm ? (mm.channel === "ali" ? "阿里抠图专用通道" : "模型 " + mm.model) : (canI2I && m ? "宿主选中模型" : "SF 编辑模型")));
 if (mm && mm.channel === "ali") { const r3 = await studioAliMatting(imgData); if (!r3) return false; r3.name = actName(e.action); try { Toast.success("抠出主体完成"); } catch (_) {} return r3; } /* IMPL-143：返回 { assetUrl, name } → 编辑器自动注册资产（IMPL-129③ 契约） */
-if (mm && mm.channel === "wy") { /* IMPL-150：channel 语义更名 sf→wy（速创通道），BITMAP_MODEL_MAP 已同步 */
+/* ★ R20：用户**显式选了速创档** ⇒ 仍走这条支路（备份服务的底线语义）。
+   判定用 wyModelPath 作闸门：它只认 gpt-image-2.5 系裸 id，带 apiyi: 前缀的档一律 "" ⇒ 不误入。 */
+const _wyPick = !!(op13 && op13.model && wyModelPath(op13.model));
+if (mm && (mm.channel === "wy" || _wyPick)) { /* IMPL-150：channel 语义更名 sf→wy（速创通道），BITMAP_MODEL_MAP 已同步；R20：+显式选速创档第二入口 */
 const sfOk = (typeof KeyVault !== "undefined" && KeyVault.keys && KeyVault.keys().API_KEY) || (typeof Store !== "undefined" && Store.getR2WorkerUrl && Store.getR2WorkerUrl());
 if (!sfOk) { try { Toast.warning(mm.label + "的服务通道未配置：缺少图像服务凭据（设置页可配置）"); } catch (_) {} return false; } /* 通道不通不静默 fallback */
 /* W5 路由决策（变更单第四节）：quality 策略 + mask 保真约束句 + 省流自动路由 + 每次实际路由进日志 */
@@ -17551,6 +17554,7 @@ else { try { Toast.error("位图动作失败: " + rawMsg + _r17Hint); } catch (_
 return false;
 } finally { studioBusy(""); } /* IMPL-143 P2：无论成败收反馈条 */
 }
+if (typeof window !== "undefined") { try { window.__studioBitmap = bitmapHandler; } catch (_) {} } /* R20-2：调试可达（同 __studioPromptReverse 先例） */
 function open(opts) {
 opts = opts || {};
 close();
