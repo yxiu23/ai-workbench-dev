@@ -365,8 +365,8 @@ to{opacity:1;transform:none}}
 .ref-mode-head-l{display:flex;align-items:baseline;gap:8px;min-width:0}
 .ref-mode-title{font-size:12px;font-weight:600;color:var(--text-muted);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .ref-mode-title svg{width:13px;height:13px;color:var(--brand);flex-shrink:0;align-self:center}
-.ref-mode-row{display:grid;gap:2px;margin-left:auto;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px}
-.ref-mode-btn{padding:5px 6px;min-height:28px;border:none;border-radius:999px;background:transparent;color:var(--text-muted);font-size:10.5px;font-weight:500;transition:all var(--transition);text-align:center;letter-spacing:0;display:inline-flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap}
+.ref-mode-row{display:grid;gap:2px;margin-left:0;width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px}
+.ref-mode-btn{padding:5px 6px;min-height:28px;min-width:0;border:none;border-radius:999px;background:transparent;color:var(--text-muted);font-size:10.5px;font-weight:500;transition:all var(--transition);text-align:center;letter-spacing:0;display:inline-flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap}
 .ref-mode-btn:hover{color:var(--brand)}
 .ref-mode-btn:active{transform:scale(.97)}
 .ref-mode-btn.active{background:var(--brand-soft);color:var(--brand);font-weight:600;box-shadow:inset 0 1px 0 var(--hl-inset),0 1px 3px rgba(2,4,12,.12)}
@@ -3726,11 +3726,11 @@ label: "参考图",
 value: "images",
 params: [ "images" ]
 }, {
-label: "参考视频",
+label: "视频",
 value: "videos",
 params: [ "videos" ]
 }, {
-label: "参考音频",
+label: "音频",
 value: "audios",
 params: [ "audios" ]
 } ]
@@ -3809,19 +3809,19 @@ refGroups: {
 title: "参考素材",
 hint: "只能选择一种",
 modes: [ {
-label: "首/尾帧",
+label: "首尾帧",
 value: "frame",
 params: [ "first_frame", "last_frame" ]
 }, {
-label: "参考图片",
+label: "参考图",
 value: "images",
 params: [ "images" ]
 }, {
-label: "参考视频",
+label: "视频",
 value: "videos",
 params: [ "videos" ]
 }, {
-label: "参考音频",
+label: "音频",
 value: "audios",
 params: [ "audios" ]
 } ]
@@ -3905,7 +3905,7 @@ label: "参考图",
 value: "image",
 params: [ "images" ]
 }, {
-label: "参考视频",
+label: "视频",
 value: "video",
 params: [ "video" ]
 } ]
@@ -4089,7 +4089,7 @@ label: "参考图",
 value: "image",
 params: [ "image_url" ]
 }, {
-label: "参考视频",
+label: "视频",
 value: "video",
 params: [ "video_url" ]
 } ]
@@ -4335,19 +4335,19 @@ label: "无参考",
 value: "none",
 params: [ ]
 }, {
-label: "首/尾帧",
+label: "首尾帧",
 value: "frame",
 params: [ "first_frame", "last_frame" ]
 }, {
-label: "参考图片",
+label: "参考图",
 value: "images",
 params: [ "images" ]
 }, {
-label: "参考视频",
+label: "视频",
 value: "videos",
 params: [ "videos" ]
 }, {
-label: "参考音频",
+label: "音频",
 value: "audios",
 params: [ "audios" ]
 } ]
@@ -12300,7 +12300,7 @@ const rg = model.refGroups;
 const modelKey = this.state.modelKey;
 if (!this.state.refMode) this.state.refMode = {};
 if (!this.state.refMode[modelKey]) this.state.refMode[modelKey] = rg.modes[0].value;
-const cols = rg.modes.length <= 4 ? `repeat(${rg.modes.length}, 1fr)` : "repeat(4, 1fr)";
+const cols = `repeat(${Math.min(rg.modes.length, 5)}, 1fr)`;
 let html = `<div class="ref-mode-header"><div class="ref-mode-head-l"><span class="ref-mode-title">${this._REF_ICONS.group}<span>${esc(rg.title)}</span></span></div>`;
 html += `<div class="ref-mode-row" style="grid-template-columns:${cols}">`;
 html += rg.modes.map(m => `<button class="ref-mode-btn ${m.value === this.state.refMode[modelKey] ? "active" : ""}" data-ref-mode="${esc(m.value)}">${esc(m.label)}<span class="ref-mode-badge" data-ref-badge="${esc(m.value)}"></span></button>`).join("");
