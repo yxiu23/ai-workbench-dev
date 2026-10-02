@@ -432,6 +432,26 @@ to{opacity:1;transform:none}}
 .field-row.is-inline{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
 .field-row.is-inline .field-label{flex:0 1 auto;min-width:0}
 .field-row.is-inline select{flex:0 0 auto;width:auto;min-width:78px}
+/* ★ R29-B/C（修 2026-10-02）：滑动开关统一形态 · 多开关一行 · 桌面控件字号 12px（移动端 16px 防缩放规则保留） */
+.field-row.is-switch{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+.field-row.is-switch .field-label{flex:1 1 auto;min-width:0}
+.switch{position:relative;flex:0 0 auto;width:36px;height:20px;padding:0;border-radius:999px;border:1px solid var(--border);background:var(--surface-2);cursor:pointer;transition:background var(--transition),border-color var(--transition)}
+.switch .sw-dot{position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(9,14,30,.35);transition:transform .16s ease}
+.switch.on{background:var(--brand);border-color:var(--brand)}
+.switch.on .sw-dot{transform:translateX(16px)}
+.switch:hover{border-color:var(--brand)}
+.switch:focus-visible{outline:2px solid var(--brand-soft);outline-offset:2px}
+.switch-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+/* ★ R29-2：other 双列布局会把整组压成半宽（193px）⇒ 抠图网格/开关行跨整行；开关行内联 hint 藏起（title 带走） */
+.param-group:has(.cap-grid){grid-column:1/-1;width:100%}
+.param-group.switch-row{grid-column:1/-1;width:100%}
+.switch-row .field-hint{display:none}
+.param-group.switch-row .param-group{flex:0 0 auto;background:none;border:0;padding:0;margin:0;min-width:0}
+.switch-row .field-row.is-switch{justify-content:flex-start;gap:8px}
+.switch-row .field-row.is-switch .field-label{flex:0 0 auto}
+@media (min-width: 769px){
+#paramForm select,#paramQuickBody select,#paramForm input[type="text"],#paramQuickBody input[type="text"],#paramForm input[type="number"],#paramQuickBody input[type="number"]{font-size:12px}
+}
 .field-row + .field-row{margin-top:12px}
 .field-label{font-size:12px;color:var(--text-muted);display:flex;align-items:center;justify-content:space-between}
 .field-label .field-hint{font-size:10px;color:var(--text-dim)}
@@ -497,7 +517,7 @@ to{transform:rotate(360deg)}}
 .param-quick-btn.pq-switch-btn[hidden]{display:none}
 .param-quick-btn.pq-switch-btn .pq-summary.on{color:var(--brand);font-weight:700}
 /* ★ R24-G：时长液态进度条（--fill 由 JS 同步；渐变液体 + 顶部高光 + 拖头发光） */
-.range-row input[type=range].is-liquid{-webkit-appearance:none;appearance:none;flex:1;height:12px;border-radius:999px;padding:0;cursor:pointer;background-image:linear-gradient(180deg,rgba(255,255,255,.38),rgba(255,255,255,0) 52%),linear-gradient(90deg,#3b82f6,#60a5fa 55%,#7cc7ff);background-size:var(--fill,50%) 100%,var(--fill,50%) 100%;background-repeat:no-repeat;background-color:rgba(9,14,30,.14);box-shadow:inset 0 1px 2px rgba(9,14,30,.28),0 0 0 1px rgba(9,14,30,.06);transition:box-shadow .15s}
+.range-row input[type=range].is-liquid{-webkit-appearance:none;appearance:none;flex:1;height:12px;border-radius:999px;padding:0;cursor:pointer;background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.20) 0 1px,transparent 1px 9px),linear-gradient(180deg,rgba(255,255,255,.38),rgba(255,255,255,0) 52%),linear-gradient(90deg,#3b82f6,#60a5fa 55%,#7cc7ff);background-size:100% 100%,var(--fill,50%) 100%,var(--fill,50%) 100%;background-repeat:no-repeat;background-color:rgba(9,14,30,.14);box-shadow:inset 0 1px 2px rgba(9,14,30,.28),0 0 0 1px rgba(9,14,30,.06);transition:box-shadow .15s}
 .range-row input[type=range].is-liquid:hover{box-shadow:inset 0 1px 2px rgba(9,14,30,.28),0 0 0 3px rgba(var(--brand-rgb),.18)}
 .range-row input[type=range].is-liquid::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;border:2px solid rgba(255,255,255,.92);background:radial-gradient(circle at 34% 28%,#ffffff,#a9d4ff 46%,#3b82f6);box-shadow:0 0 8px rgba(79,156,249,.75),0 1px 3px rgba(9,14,30,.35);cursor:grab;transition:transform .12s}
 .range-row input[type=range].is-liquid::-webkit-slider-thumb:active{transform:scale(1.18);cursor:grabbing}
@@ -1329,15 +1349,17 @@ to{opacity:1;transform:scale(1) translateY(0)}}
 .toggle-switch.on{background:var(--brand);box-shadow:0 0 0 3px var(--brand-soft),inset 0 1px 0 rgba(var(--glass-rgb),.15)}
 .toggle-switch::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform var(--transition);box-shadow:0 1px 3px rgba(9,14,30,.25)}
 .toggle-switch.on::after{transform:translateX(18px)}
-.cap-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(88px, 1fr));gap:6px}
-.cap-chip{display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 4px 7px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer;transition:border-color var(--transition),background var(--transition),box-shadow var(--transition),transform var(--transition);min-height:56px;justify-content:center}
+.cap-grid{display:grid;grid-template-columns:repeat(2, minmax(0, 1fr));gap:6px}
+.cap-grp{grid-column:1/-1;font-size:10px;color:var(--text-dim);letter-spacing:.05em;margin:7px 2px 0}
+.cap-grp:first-child{margin-top:1px}
+.cap-chip{display:flex;flex-direction:row;align-items:center;gap:6px;padding:0 9px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer;transition:border-color var(--transition),background var(--transition),box-shadow var(--transition),transform var(--transition);min-height:32px;justify-content:flex-start;text-align:left;overflow:hidden}
 .cap-chip:hover{border-color:var(--brand);transform:translateY(-1px)}
 .cap-chip.on{border-color:var(--brand);background:var(--brand-soft);box-shadow:0 0 0 2px var(--brand-soft)}
-.cap-chip .cap-emoji{width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:var(--text-dim);transition:color var(--transition),transform var(--transition)}
-.cap-chip .cap-emoji svg{width:19px;height:19px;display:block}
+.cap-chip .cap-emoji{width:16px;height:16px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:var(--text-dim);transition:color var(--transition),transform var(--transition)}
+.cap-chip .cap-emoji svg{width:14px;height:14px;display:block}
 .cap-chip:hover .cap-emoji{color:var(--brand);transform:translateY(-1px)}
 .cap-chip.on .cap-emoji{color:var(--brand)}
-.cap-chip .cap-name{font-size:11px;font-weight:500;color:var(--text);line-height:1.2;text-align:center}
+.cap-chip .cap-name{font-size:11px;font-weight:500;color:var(--text);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cap-desc{font-size:11px;color:var(--text-dim);padding:7px 2px 2px;line-height:1.4;min-height:18px}
 .preset-modal-content{max-width:360px}
 .preset-modal-content .preset-input{padding:10px;font-size:14px}
@@ -3616,7 +3638,14 @@ hint: "官方字段是 seconds 且必须传字符串（写 duration 会被静默
 }, {
 id: "apiyi:wan3.0-video",
 name: "Wan3.0 视频（易）",
-endpoint: "/v1/videos",
+/* ★ R29-F（修 2026-10-02「WAN3.0 不可能没参数」⇒ 复查资料后补齐）：APIYI **无 wan3.0 独立文档页**
+   （官方注册表 docs_url=null，Wan 文档区只覆盖 2.7），但官方明确 **Wan 系全部走 DashScope 透传**——
+   《Wan 视频生成指南》原文：「API易 通过 **DashScope 透传通道** 直连阿里云百炼，让你用一个 sk- 开头的
+   API易 Key 即可调用全部 Wan 视频能力」⇒ 参数取**同族 3.0 百炼官方 schema**（与宿主「Wan3.0-Video（连）」
+   的 params/refGroups **逐字同源**，非编造）。create 端点（官方原文，**不是 /v1/videos**）：
+   POST /wan/api/v1/services/aigc/video-generation/video-synthesis · 必带 X-DashScope-Async: enable ·
+   duration 必须整数 · resolution 大写 720P/1080P；查询 GET /v1/tasks/{task_id}。 */
+endpoint: "/wan/api/v1/services/aigc/video-generation/video-synthesis",
 price: "按Token·$0.48/M（每条价官方未提供）",
 async: false,
 type: "video",
@@ -3631,7 +3660,113 @@ type: "textarea",
 required: true,
 default: "",
 placeholder: "描述视频"
+}, {
+key: "resolution",
+label: "分辨率",
+type: "select",
+default: "1080P",
+options: [ "1080P", "720P", "480P" ]
+}, {
+key: "ratio",
+label: "宽高比",
+type: "select",
+default: "adaptive",
+options: [ "adaptive", "21:9", "16:9", "4:3", "1:1", "3:4", "9:16" ]
+}, {
+key: "duration",
+label: "时长",
+type: "range",
+default: 5,
+min: 2,
+max: 30,
+step: 1,
+unit: "s",
+hint: "2~30 秒（官方另支持 -1 智能时长，滑杆无法表达）"
+}, {
+key: "audio",
+label: "音频",
+type: "select",
+default: "true",
+options: [ "true", "false" ],
+hint: "是否输出有声视频"
+}, {
+key: "prompt_extend",
+label: "提示词改写",
+type: "select",
+default: "true",
+options: [ "true", "false" ]
+}, {
+key: "seed",
+label: "种子",
+type: "text",
+default: "",
+placeholder: "可选，留空随机"
+}, {
+key: "watermark",
+label: "水印",
+type: "select",
+default: "false",
+options: [ "false", "true" ],
+hint: "右下角「AI生成」水印标识"
+}, {
+key: "first_frame",
+label: "首帧",
+type: "ref-image",
+output: "single",
+hint: "可选，图生视频"
+}, {
+key: "last_frame",
+label: "尾帧",
+type: "ref-image",
+output: "single",
+hint: "需搭配首帧"
+}, {
+key: "images",
+label: "参考图",
+type: "ref-image",
+output: "csv",
+max: 10,
+hint: "内容参考 1-10 张，与首尾帧互斥"
+}, {
+key: "videos",
+label: "参考视频",
+type: "ref-video",
+output: "csv",
+max: 5,
+hint: "总时长 ≤15s，与首尾帧互斥"
+}, {
+key: "audios",
+label: "参考音频",
+type: "ref-audio",
+output: "csv",
+max: 5,
+hint: "总时长 ≤15s，与首尾帧互斥"
+} ],
+refGroups: { /* ★ R29-F：与百炼同族 schema（DashScope 透传）；五档互斥（none=纯文生视频，frame=首尾帧） */
+title: "参考素材",
+hint: "只能选择一种",
+modes: [ {
+label: "无参考",
+value: "none",
+params: [ ]
+}, {
+label: "首尾帧",
+value: "frame",
+params: [ "first_frame", "last_frame" ]
+}, {
+label: "参考图",
+value: "images",
+params: [ "images" ]
+}, {
+label: "视频",
+value: "videos",
+params: [ "videos" ]
+}, {
+label: "音频",
+value: "audios",
+params: [ "audios" ]
 } ]
+}
 }, {
 id: "wan3",
 name: "Wan3.0",
@@ -4575,7 +4710,7 @@ type: "text",
 required: true,
 default: "",
 placeholder: "声音复刻/设计音色 id",
-hint: "音色 id 需经百炼 voice-enrollment（复刻/设计）创建——速创「语音克隆」所得 id 不通用（IMPL-162 注）"
+hint: "需百炼音色 id · 速创克隆不通用"
 }, {
 key: "format",
 label: "格式",
@@ -4651,7 +4786,7 @@ label: "龙安灵心（女 · 知心温暖）"
 value: "longanlufeng",
 label: "龙安鲁风（男 · 明亮开朗）"
 } ],
-hint: "复刻/设计音色 id 需经百炼 voice-enrollment 创建，速创克隆 id 不通用（IMPL-162）"
+hint: "需百炼音色 id · 速创克隆不通用"
 }, {
 key: "format",
 label: "格式",
@@ -12243,13 +12378,22 @@ if (item.type === "ref") {
 container.appendChild(this._buildRefSection(item.param));
 }
 }
-for (let i = 0; i < simpleParams.length; i += 2) {
-const pair = simpleParams.slice(i, i + 2);
+/* ★ R29-B：简单字段先拆 bool（开关）与其余；其余仍两两一行；开关统一收进一行（多个并列省空间） */
+const _switches = simpleParams.filter(p => this._isBoolSel(p));
+const _plain = simpleParams.filter(p => !this._isBoolSel(p));
+for (let i = 0; i < _plain.length; i += 2) {
+const pair = _plain.slice(i, i + 2);
 const row = document.createElement("div");
 row.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:10px;";
 row.appendChild(this._buildFieldRow(pair[0]));
 if (pair[1]) row.appendChild(this._buildFieldRow(pair[1]));
 container.appendChild(row);
+}
+if (_switches.length) {
+const swRow = document.createElement("div");
+swRow.className = "param-group switch-row";
+for (const sp of _switches) swRow.appendChild(this._buildFieldRow(sp));
+container.appendChild(swRow);
 }
 for (const item of complexParams) {
 if (item.type !== "ref") {
@@ -12622,14 +12766,26 @@ this.state.activeRefKey = p.key;
 }, true);
 return wrap;
 },
+_isBoolSel(p) {
+/* ★ R29-B：bool 判定抽成方法——字段渲染与组装器（多开关一行）共用同一口径 */
+return p.type === "select" && (p.options || []).length === 2 && p.options.every(o => /^(true|false|1|0|on|off|yes|no|是|否|开|关)$/i.test(String(o)));
+},
 _buildFieldRow(p) {
 const wrap = document.createElement("div");
 wrap.className = "param-group";
 const defVal = this.state.formCache[this.state.modelKey]?.[p.key] ?? p.default ?? "";
-const _boolSel = p.type === "select" && (p.options || []).length === 2 && p.options.every(o => /^(true|false|1|0|on|off|yes|no|是|否|开|关)$/i.test(String(o))); /* R26-B4 */
-let inner = p.type === "cap-grid" ? '<div class="field-row">' : `<div class="field-row${_boolSel ? " is-inline" : ""}"><div class="field-label">${esc(p.label)}${p.required ? '<i class="req-star" aria-label="必填">*</i>' : ""}${p.hint ? `<span class="field-hint">${esc(p.hint)}</span>` : ""}<span class="field-val" data-val="${esc(p.key)}"></span></div>`;
+const _boolSel = this._isBoolSel(p); /* R29-B：判定抽成方法（组装器多开关一行也要用） */
+let inner = p.type === "cap-grid" ? '<div class="field-row">' : `<div class="field-row${_boolSel ? " is-switch" : ""}"><div class="field-label">${esc(p.label)}${p.required ? '<i class="req-star" aria-label="必填">*</i>' : ""}${p.hint ? `<span class="field-hint">${esc(p.hint)}</span>` : ""}${p.type === "range" ? `<span class="field-val" data-val="${esc(p.key)}"></span>` : ""}</div>`;
 if (p.type === "select") {
+if (_boolSel) {
+/* ★ R29-B：开/关类参数 → 滑动开关。隐藏 select 保留为**取值载体**（data-key 照旧） ⇒ 采集/可见性/
+   摘要/费用/预设导入全部复用原链路，零改动。 */
+const _onOpt = (p.options || []).find(o => /^(true|1|on|yes|是|开)$/i.test(String(o))) || (p.options || [])[p.options.length - 1];
+const _on = String(defVal) === String(_onOpt);
+inner += `<button type="button" class="switch${_on ? " on" : ""}" role="switch" aria-checked="${_on}" data-switch="${esc(p.key)}" aria-label="${esc(p.label)}" title="${esc(p.hint || p.label)}"><span class="sw-dot"></span></button><select class="pq-hidden-select" tabindex="-1" aria-hidden="true" data-key="${esc(p.key)}">${p.options.map(o => `<option value="${esc(o)}" ${o === defVal ? "selected" : ""}>${esc(String(o))}</option>`).join("")}</select>`;
+} else {
 inner += `<select data-key="${esc(p.key)}">${p.options.map(o => `<option value="${esc(o)}" ${o === defVal ? "selected" : ""}>${esc(this._enumLabel(p.key, o))}</option>`).join("")}</select>`;
+}
 } else if (p.type === "range") {
 /* ★ R24-G：时长等 range 走液态进度条（--fill 同步填充比例） */
 const _mn = Number(p.min || 0), _mx = Number(p.max || 100), _v0 = Number(defVal || 0);
@@ -12644,14 +12800,26 @@ const c = typeof SegStudio !== "undefined" && SegStudio.CAPS ? SegStudio.CAPS.fi
 return o && o.desc || c && c.desc || o && o.label || "";
 };
 inner += `<input type="hidden" data-key="${esc(p.key)}" value="${esc(defVal)}">`;
-inner += `<div class="cap-grid" role="radiogroup" aria-label="${esc(p.label)}">` + (p.options || []).map(o => {
+const CAP_GROUPS = [ [ "物品", [ "SegmentCommonImage", "SegmentHDCommonImage", "SegmentCommodity", "SegmentFood", "SegmentCloth" ] ], [ "人像", [ "SegmentBody", "SegmentHDBody", "SegmentHead", "SegmentHair", "SegmentSkin" ] ], [ "场景", [ "SegmentSky", "SegmentHDSky", "ChangeSky" ] ], [ "高级", [ "RefineMask" ] ] ];
+/* ★ R29-A（修 2026-10-02「抠图面板该改版」）：14 张能力卡按组排布 + 双列紧凑行式（图标+名），组头小字分隔；
+   未登记进组的新能力自动落尾。点击/选中/desc 联动沿用原委托（只认 .cap-chip），零行为改动。 */
+const _capRest = (p.options || []).slice();
+const _capChip = o => {
 const cap = typeof SegStudio !== "undefined" && SegStudio.CAPS ? SegStudio.CAPS.find(c => c.id === o.value) : null;
 const icon = o.icon || cap && cap.icon || CAP_ICONS.scissors;
 const desc = o.desc || cap && cap.desc || "";
 const on = String(o.value) === String(defVal);
 return `<button type="button" class="cap-chip${on ? " on" : ""}" data-cap="${esc(o.value)}" role="radio" aria-checked="${on}" title="${esc(desc || o.label)}"><span class="cap-emoji" aria-hidden="true">${icon}</span><span class="cap-name">${esc(o.label)}</span></button>`;
-}).join("") + `</div>`;
-inner += `<div class="cap-desc" data-cap-desc="${esc(p.key)}">${esc(capOf(defVal))}</div>`;
+};
+let _capHtml = "";
+for (const _g of CAP_GROUPS) {
+const _items = _g[1].map(v => (p.options || []).find(o => String(o.value) === v)).filter(Boolean);
+if (!_items.length) continue;
+_items.forEach(o => { const _ix = _capRest.indexOf(o); if (_ix >= 0) _capRest.splice(_ix, 1); });
+_capHtml += `<div class="cap-grp">${_g[0]}</div>` + _items.map(_capChip).join("");
+}
+_capHtml += _capRest.map(_capChip).join("");
+inner += `<div class="cap-grid" role="radiogroup" aria-label="${esc(p.label)}">` + _capHtml + `</div>`;inner += `<div class="cap-desc" data-cap-desc="${esc(p.key)}">${esc(capOf(defVal))}</div>`;
 } else if (p.type === "datalist") {
 /* IMPL-119：input+datalist 取代纯 select——hint 承诺可填复刻音色 id（qwen_audio_tts_plus），纯 select 阻断自由输入 */
 inner += `<input type="text" list="dl-${esc(p.key)}" data-key="${esc(p.key)}" value="${esc(defVal)}" placeholder="${esc(p.placeholder || "")}" aria-label="${esc(p.label)}"><datalist id="dl-${esc(p.key)}">${p.options.map(o => `<option value="${esc(o.value)}">${esc(o.label)}</option>`).join("")}</datalist>`;
@@ -12668,6 +12836,17 @@ const el = wrap.querySelector(`[data-key="${p.key}"]`);
 if (el) {
 el.addEventListener("input", () => this._onFieldChange(p.key, el));
 el.addEventListener("change", () => this._onFieldChange(p.key, el));
+}
+/* ★ R29-B：滑动开关点击 → 代理到隐藏 select（派发 change ⇒ 摘要/费用/可见性沿原链路自动联动） */
+const _swBtn = wrap.querySelector(`[data-switch="${p.key}"]`);
+if (_swBtn && el) {
+_swBtn.addEventListener("click", () => {
+const _onV = (p.options || []).find(o => /^(true|1|on|yes|是|开)$/i.test(String(o))) || (p.options || [])[p.options.length - 1];
+const _tgt = String(el.value) === String(_onV) ? (p.options || []).find(o => String(o) !== String(_onV)) : _onV;
+if (_tgt == null) return;
+el.value = _tgt;
+el.dispatchEvent(new Event("change", { bubbles: true }));
+});
 }
 const addUrlBtn = wrap.querySelector(`[data-add-url="${p.key}"]`);
 if (addUrlBtn) addUrlBtn.addEventListener("click", () => {
@@ -12715,6 +12894,17 @@ valEl.textContent = txt;
 }
 if (key === "__count") this._syncCountChip();
 if (el && el.tagName === "SELECT") this._syncPqControl(el);
+/* ★ R29-B：开关回显 —— 预设导入/撤销/程序化改值等所有路径都会经过本函数 */
+if (el && el.tagName === "SELECT") {
+const _swB = el.closest(".param-group")?.querySelector("[data-switch]");
+const _swP = (this.state.model?.params || []).find(pp => pp.key === key);
+if (_swB && _swP) {
+const _onV2 = (_swP.options || []).find(o => /^(true|1|on|yes|是|开)$/i.test(String(o))) || (_swP.options || [])[_swP.options.length - 1];
+const _on2 = String(el.value) === String(_onV2);
+_swB.classList.toggle("on", _on2);
+_swB.setAttribute("aria-checked", _on2 ? "true" : "false");
+}
+}
 if (el && el.type === "hidden") {
 const grid = el.parentElement && el.parentElement.querySelector(".cap-grid");
 if (grid) grid.querySelectorAll(".cap-chip").forEach(x => {
