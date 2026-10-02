@@ -63,7 +63,7 @@ textarea{resize:vertical;min-height:80px}
 .model-meta{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap}
 .model-meta .tag{padding:1px 6px;border-radius:4px;font-size:10px;background:var(--surface-2);color:var(--text-muted)}
 .model-meta .tag.price{color:var(--success);background:var(--success-soft)}
-.model-meta .tag.desc-tag{color:var(--text-muted);background:var(--surface-2);font-weight:400;max-width:100%;white-space:normal;line-height:1.4}
+.model-meta .tag.desc-tag{color:var(--text-muted);background:var(--surface-2);font-weight:400;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4}
 .model-desc{font-size:11px;color:var(--text-dim);margin-top:4px;line-height:1.4}
 .model-select{position:absolute !important;width:1px;height:1px;opacity:0;pointer-events:none}
 .model-pick-btn{width:100%;display:flex;align-items:center;gap:9px;padding:8px 30px 8px 10px;font-size:14px;font-weight:600;color:var(--text);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;position:relative;text-align:left;transition:border-color var(--transition)}
@@ -73,11 +73,14 @@ textarea{resize:vertical;min-height:80px}
 .model-pick-btn[aria-expanded="true"] .mp-caret{transform:translateY(-50%) rotate(180deg)}
 .model-pick-list{display:none;position:fixed;z-index:70;padding:6px;overflow-y:auto;max-height:46vh;border-radius:var(--radius-md);overscroll-behavior:contain;background:var(--lg-gloss),var(--surface-glass-pop);border:1px solid var(--lg-edge);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--lg-slab),0 18px 44px -18px rgba(9,14,30,.38)}
 .model-pick-list.show{display:block}
-.model-pick-opt{width:100%;display:flex;align-items:center;gap:9px;padding:9px 10px;border:none;background:none;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:600;color:var(--text);text-align:left;transition:background var(--transition-fast)}
+.model-pick-opt{width:100%;display:flex;align-items:center;gap:9px;min-height:40px;padding:8px 10px;border:none;background:none;border-radius:var(--radius-sm);cursor:pointer;font-size:12px;font-weight:500;color:var(--text);text-align:left;transition:background var(--transition-fast)}
 .model-pick-opt:hover{background:var(--surface-2)}
 .model-pick-opt.active{background:var(--brand-soft);color:var(--brand)}
 .model-pick-opt .mp-opt-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.model-pick-opt .mp-opt-price{font-size:10.5px;font-weight:500;color:var(--text-dim);white-space:nowrap}
+.model-pick-opt .mp-opt-price{font-size:11px;font-weight:500;color:var(--text-dim);white-space:nowrap;font-variant-numeric:tabular-nums}
+.model-pick-opt .mp-chan,.mp-name+.mp-chan,.mp-chan{flex:0 0 auto;font-size:9px;line-height:14px;padding:0 4px;border:1px solid var(--border);border-radius:4px;color:var(--text-muted);background:var(--surface-2);letter-spacing:.02em;white-space:nowrap;margin-left:6px}
+.mp-chan[data-mp-chan="apiyi"]{color:var(--brand);border-color:currentColor;background:var(--brand-soft)}
+.mp-chan[data-mp-chan="direct"]{color:var(--success);border-color:currentColor;background:var(--success-soft)}
 .mp-logo{width:18px;height:18px;flex:0 0 auto;display:inline-flex}
 .mp-logo svg{width:100%;height:100%;display:block}
 .pq-empty{padding:20px 0 16px;text-align:center;font-size:12px;color:var(--text-dim)}
@@ -363,7 +366,7 @@ to{opacity:1;transform:none}}
 .ref-mode-title{font-size:12px;font-weight:600;color:var(--text-muted);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
 .ref-mode-title svg{width:13px;height:13px;color:var(--brand);flex-shrink:0;align-self:center}
 .ref-mode-row{display:grid;gap:2px;margin-left:auto;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px}
-.ref-mode-btn{padding:5px 12px;min-height:28px;border:none;border-radius:999px;background:transparent;color:var(--text-muted);font-size:11px;font-weight:500;transition:all var(--transition);text-align:center;letter-spacing:.02em;display:inline-flex;align-items:center;justify-content:center;gap:4px;white-space:nowrap}
+.ref-mode-btn{padding:5px 6px;min-height:28px;border:none;border-radius:999px;background:transparent;color:var(--text-muted);font-size:10.5px;font-weight:500;transition:all var(--transition);text-align:center;letter-spacing:0;display:inline-flex;align-items:center;justify-content:center;gap:3px;white-space:nowrap}
 .ref-mode-btn:hover{color:var(--brand)}
 .ref-mode-btn:active{transform:scale(.97)}
 .ref-mode-btn.active{background:var(--brand-soft);color:var(--brand);font-weight:600;box-shadow:inset 0 1px 0 var(--hl-inset),0 1px 3px rgba(2,4,12,.12)}
@@ -426,6 +429,9 @@ to{opacity:1;transform:none}}
 .ref-video-warn.show{display:block}
 .param-group{background:var(--surface-nested);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px}
 .field-row{display:flex;flex-direction:column;gap:6px}
+.field-row.is-inline{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
+.field-row.is-inline .field-label{flex:0 1 auto;min-width:0}
+.field-row.is-inline select{flex:0 0 auto;width:auto;min-width:78px}
 .field-row + .field-row{margin-top:12px}
 .field-label{font-size:12px;color:var(--text-muted);display:flex;align-items:center;justify-content:space-between}
 .field-label .field-hint{font-size:10px;color:var(--text-dim)}
@@ -459,6 +465,8 @@ to{opacity:1;transform:none}}
 .generate-btn:disabled svg{animation:genIconSpin 1.5s linear infinite}
 @keyframes genIconSpin{
 to{transform:rotate(360deg)}}
+.generate-btn .gen-cost{display:none;align-items:center;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:700;font-family:var(--font-mono);letter-spacing:0;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);color:#fff}
+.generate-btn .gen-cost.show{display:inline-flex}
 @media (prefers-reduced-motion: reduce){
 .generate-btn svg,.generate-btn svg .gen-star,.generate-btn svg .gen-spark{animation:none !important}}
 .form-actions-row{display:flex;gap:6px}
@@ -1928,7 +1936,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
       <div class="generate-row">
         <button class="generate-btn" id="generateBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="gen-star" d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" fill="currentColor" fill-opacity=".18"/><path class="gen-spark gen-spark-a" d="M5 3v4"/><path class="gen-spark gen-spark-a2" d="M3 5h4"/><path class="gen-spark gen-spark-b" d="M19 17v4"/><path class="gen-spark gen-spark-b2" d="M17 19h4"/></svg>
-          <span id="generateBtnText">生成</span>
+          <span id="generateBtnText">生成</span><span class="gen-cost" id="genCostPill"></span>
         </button>
       </div>
     </div>
@@ -2374,7 +2382,7 @@ endpoint: "/api/async/image_gpt_2.5",
 price: "0.1元/张",
 async: true,
 type: "image",
-desc: "标准生成型，文字渲染强",
+desc: "OpenAI · 标准生成型",
 billing: {
 type: "perImage",
 unit: .1
@@ -2407,7 +2415,7 @@ endpoint: "/api/async/image_gpt",
 price: "0.1元/张",
 async: true,
 type: "image",
-desc: "GPT 驱动生成，文字渲染强",
+desc: "OpenAI · 上一代标准档",
 billing: {
 type: "perImage",
 unit: .1
@@ -2438,7 +2446,7 @@ endpoint: "/api/async/image_gpt_2.5_sunburst",
 price: "0.3元/张",
 async: true,
 type: "image",
-desc: "精修设计型，适合编辑图片",
+desc: "OpenAI · 编辑精度最高",
 billing: {
 type: "perImage",
 unit: .3
@@ -2494,7 +2502,7 @@ endpoint: "/api/async/image_gpt_2.5_flare",
 price: "0.3元/张",
 async: true,
 type: "image",
-desc: "快速生产型，出图快质量好",
+desc: "OpenAI · 速度快质量好",
 billing: {
 type: "perImage",
 unit: .3
@@ -2550,7 +2558,7 @@ endpoint: "/api/async/image_nanoBanana2",
 price: "0.1元/张",
 async: true,
 type: "image",
-desc: "高质量图片生成，支持参考图",
+desc: "Google · 支持参考图",
 billing: {
 type: "perImage",
 unit: .1
@@ -2587,7 +2595,7 @@ endpoint: "/api/async/image_nanoBanana_pro",
 price: "0.3元/张",
 async: true,
 type: "image",
-desc: "Pro 图片生成，更高画质",
+desc: "Google · 更高画质版",
 billing: {
 type: "perImage",
 unit: .3
@@ -2624,7 +2632,7 @@ endpoint: "/api/async/image_nanoBanana2Lite",
 price: "0.08元/张",
 async: true,
 type: "image",
-desc: "轻量版生成，性价比高",
+desc: "Google · 轻量省费版",
 billing: {
 type: "perImage",
 unit: .08
@@ -2663,7 +2671,7 @@ direct: "sf-image",
 price: "¥0.10/张",
 async: false,
 type: "image",
-desc: "硅基流动直连 · 通义 6B 轻量文生图（8 步蒸馏，1h 图链）",
+desc: "通义 6B · 硅基流动直连",
 billing: { type: "perImage", unit: .1 } /* IMPL-96②：官方定价页 ¥0.10/张 */,
 params: [ {
 key: "prompt",
@@ -2715,7 +2723,7 @@ direct: "ds-image",
 price: "¥0.25/张（2K ¥0.50）",
 async: false,
 type: "image",
-desc: "百炼直连 · 千问图像 3.0 旗舰（文生图/参考图编辑，24h 图链）",
+desc: "千问图像 3.0 · 百炼直连",
 billing: { type: "perImage", unit: .25, unitHi: .5, sizeKey: "size", sizeSplit: 1024, note: "1K 0.25/张 · 2K 0.5/张（参考图输入另 0.02/张，估算取输出主导价）" } /* IMPL-101：尺寸分层（F2a 解析 size） */,
 params: [ {
 key: "prompt",
@@ -2780,7 +2788,7 @@ direct: "sf-image",
 price: "免费",
 async: false,
 type: "image",
-desc: "硅基流动直连 · 快手 Kolors（支持图生图，1h 图链）",
+desc: "快手 Kolors · 图生图",
 billing: { type: "free" } /* IMPL-96②：官方定价页「Kwai-Kolors/Kolors 免费」 */,
 params: [ {
 key: "prompt",
@@ -2843,7 +2851,7 @@ seg: true,
 type: "image",
 async: true,
 price: "阿里云计费",
-desc: "通用抠图，出透明 PNG",
+desc: "阿里 · 抠图出透明 PNG",
 params: [ {
 key: "segAction",
 label: "分割能力",
@@ -2950,7 +2958,7 @@ async: false,
 type: "image",
 channel: "apiyi",
 modelId: "gpt-image-2.5-sunburst",
-desc: "官转 · 编辑精度最高 · 按Token计费·随分辨率 · 与创同款可对照",
+desc: "官转 · 编辑精度最高",
 billing: { type: "perToken", inUsdPerM: 5, outUsdPerM: 30, refCny: 0.35, refNote: "实测 1K 单张 ≈$0.05（约¥0.33取整）· 按 Token（入 $5/M · 出 $30/M，成本随用量浮动）" },
 params: [ {
 key: "prompt",
@@ -3003,7 +3011,7 @@ async: false,
 type: "image",
 channel: "apiyi",
 modelId: "gpt-image-2.5-flare",
-desc: "官转 · 速度型 · 按Token计费·随分辨率",
+desc: "官转 · 速度型",
 billing: { type: "perToken", inUsdPerM: 5, outUsdPerM: 30, refCny: 0.35, refNote: "实测 1K 单张 ≈$0.05（约¥0.33取整）· 按 Token（入 $5/M · 出 $30/M，成本随用量浮动）" },
 params: [ {
 key: "prompt",
@@ -3109,7 +3117,7 @@ async: false,
 type: "image",
 channel: "apiyi",
 modelId: "gpt-image-2.5-vip",
-desc: "官逆 · 与 sunburst-vip 同线",
+desc: "官逆 · 高配额线",
 billing: { type: "perImage", unit: 0.21 },
 params: [ {
 key: "prompt",
@@ -3162,7 +3170,7 @@ async: false,
 type: "image",
 channel: "apiyi",
 modelId: "gpt-image-2",
-desc: "上一代官转 · 参数与 2.5 同形 · 按Token计费·随分辨率",
+desc: "官转 · 上一代参数同形",
 billing: { type: "perToken", inUsdPerM: 5, outUsdPerM: 30, refCny: 0.35, refNote: "实测 1K 单张 ≈$0.05（约¥0.33取整）· 按 Token（入 $5/M · 出 $30/M，成本随用量浮动）" },
 params: [ {
 key: "prompt",
@@ -3215,7 +3223,7 @@ async: false,
 type: "image",
 channel: "apiyi",
 modelId: "seedream-5-0-flash-260915",
-desc: "字节系 · 全系最便宜 · 约 15~20 秒",
+desc: "字节 · 最便宜 15~20 秒",
 billing: { type: "perImage", unit: 0.13 },
 params: [ {
 key: "prompt",
@@ -3263,7 +3271,7 @@ async: false,
 type: "image",
 channel: "apiyi",
 modelId: "seedream-5-0-260128",
-desc: "字节系 · 官方当前推荐档",
+desc: "字节 Seedream · 推荐档",
 billing: { type: "perImage", unit: 0.25 },
 params: [ {
 key: "prompt",
@@ -3311,7 +3319,7 @@ async: false,
 type: "image",
 channel: "apiyi",
 modelId: "flux-2-pro",
-desc: "Black Forest Labs · 写实/设计向",
+desc: "FLUX · 写实设计向",
 billing: { type: "perImage", unit: 0.21 },
 params: [ {
 key: "prompt",
@@ -3361,7 +3369,7 @@ async: false,
 type: "image",
 channel: "apiyi",
 modelId: "nano-banana",
-desc: "第一代 · 仅 1K · 10 种比例 · 最便宜",
+desc: "谷歌一代 · 1K 最便宜",
 billing: { type: "perImage", unit: 0.14 },
 params: [ {
 key: "prompt",
@@ -3402,7 +3410,7 @@ async: false,
 type: "image",
 channel: "apiyi",
 modelId: "nano-banana-2-lite",
-desc: "最快最省 · 约 4 秒 · 仅 1K · 14 种比例",
+desc: "最快最省 · 4 秒 14 比例",
 billing: { type: "perImage", unit: 0.18 },
 params: [ {
 key: "prompt",
@@ -3443,7 +3451,7 @@ async: false,
 type: "image",
 channel: "apiyi",
 modelId: "nano-banana-2",
-desc: "Pro 级画质 + Flash 级速度 · 14 种比例",
+desc: "Pro 画质 + Flash 速度",
 billing: { type: "perImage", unit: 0.39 },
 params: [ {
 key: "prompt",
@@ -3484,7 +3492,7 @@ async: false,
 type: "image",
 channel: "apiyi",
 modelId: "nano-banana-pro",
-desc: "谷歌最强 · 4K · 文字渲染之王 · 10 种比例",
+desc: "谷歌最强 · 4K 文字王",
 billing: { type: "perImage", unit: 0.63 },
 params: [ {
 key: "prompt",
@@ -3528,7 +3536,7 @@ async: false,
 type: "video",
 channel: "apiyi",
 modelId: "doubao-seedance-2-5-260628",
-desc: "字节最新 · 30秒直出 · 最多30张参考图 · Phase 2 接入中，暂不可生成",
+desc: "字节 · 30 秒直出 30 张参考",
 billing: { type: "perToken", inUsdPerM: 12.6, outUsdPerM: 12.6, source: "api", note: "Seedance 2.5 官方实测两档 token 单价：输入不含视频（文生/图生/参考图）$12.60/M、含参考视频 $7.56/M；本通道不传 video_url ⇒ 走 12.6 档。校验：720p/5s = 108,900 tokens × 12.6/M = $1.3721 = ¥9.60，与官方价格表逐格吻合" },
 params: [ {
 key: "prompt",
@@ -3584,7 +3592,7 @@ async: false,
 type: "video",
 channel: "apiyi",
 modelId: "veo-3.1-generate-preview",
-desc: "谷歌官转 · 最高4K · 带音轨 · Phase 2 接入中，暂不可生成",
+desc: "谷歌 · 最高 4K 带音轨",
 billing: { type: "perImage", unit: 8.4 },
 params: [ {
 key: "prompt",
@@ -3624,7 +3632,7 @@ async: false,
 type: "video",
 channel: "apiyi",
 modelId: "wan3.0-video",
-desc: "阿里通义万相 · Phase 2 接入中，暂不可生成（官方未提供参数文档，分辨率/时长档位待补）",
+desc: "阿里万相 · 全模态（暂不可生成）",
 billing: { type: "perToken", inUsdPerM: 0.48, outUsdPerM: 0.48, source: "api", note: "视频按量计费（$0.48/M，CSV 真值）；折算方式官方未提供 ⇒ 不估每条价" },
 params: [ {
 key: "prompt",
@@ -3642,7 +3650,7 @@ endpoint: "/api/async/video_wan_3.0",
 price: "0.3元/秒",
 async: true,
 type: "video",
-desc: "万相视频，首尾帧与参考图",
+desc: "阿里万相 · 首尾帧/参考图",
 billing: {
 type: "perSecond",
 unit: .3,
@@ -3710,11 +3718,11 @@ refGroups: {
 title: "参考素材",
 hint: "只能选择一种",
 modes: [ {
-label: "首/尾帧",
+label: "首尾帧",
 value: "frame",
 params: [ "first_frame", "last_frame" ]
 }, {
-label: "参考图片",
+label: "参考图",
 value: "images",
 params: [ "images" ]
 }, {
@@ -3734,7 +3742,7 @@ endpoint: "/api/async/video_minimax_h3",
 price: "0.3元/秒",
 async: true,
 type: "video",
-desc: "MiniMax 视频生成",
+desc: "MiniMax · 视频生成",
 billing: {
 type: "perSecond",
 unit: .3,
@@ -3846,7 +3854,7 @@ endpoint: "/api/async/video_google_omni",
 price: "0.1元/秒",
 async: true,
 type: "video",
-desc: "Google 视频，图或视频二选一",
+desc: "谷歌 · 图/视频二选一",
 billing: {
 type: "perSecond",
 unit: .1,
@@ -3876,8 +3884,9 @@ unit: "s",
 hint: "固定 10 秒"
 }, {
 key: "images",
-label: "参考图URL",
-type: "url"
+label: "参考图",
+type: "ref-image",
+output: "single"
 }, {
 key: "video",
 label: "参考视频",
@@ -3908,7 +3917,7 @@ endpoint: "/api/async/video_vidu",
 price: "1.0元/秒",
 async: true,
 type: "video",
-desc: "Vidu 视频，主体与参考互斥",
+desc: "Vidu · 主体与参考互斥",
 billing: {
 type: "perSecond",
 unit: 1,
@@ -3943,12 +3952,15 @@ step: 1,
 unit: "s"
 }, {
 key: "subjects",
-label: "主体图URL",
-type: "text"
+label: "主体图",
+type: "ref-image",
+output: "single",
+hint: "上传一张主体图"
 }, {
 key: "image_url",
-label: "图像参考URL",
-type: "text"
+label: "参考图",
+type: "ref-image",
+output: "single"
 }, {
 key: "video_url",
 label: "视频参考",
@@ -3993,7 +4005,7 @@ endpoint: "/api/async/video_omni",
 price: "1.0元/秒",
 async: true,
 type: "video",
-desc: "可灵视频，首尾帧与参考图",
+desc: "可灵 · 首尾帧与参考图",
 billing: {
 type: "perSecond",
 unit: 1,
@@ -4051,8 +4063,9 @@ output: "single",
 hint: "需搭配首帧"
 }, {
 key: "image_url",
-label: "参考图URL",
-type: "text"
+label: "参考图",
+type: "ref-image",
+output: "single"
 }, {
 key: "video_url",
 label: "参考视频",
@@ -4118,7 +4131,7 @@ endpoint: "/api/async/video_package",
 price: "0.02元/秒",
 async: true,
 type: "video",
-desc: "视频模板套件，一键套用",
+desc: "视频模板套件",
 billing: {
 type: "perSecond",
 unit: .02,
@@ -4146,7 +4159,7 @@ endpoint: "/api/async/video_veo3.1_fast",
 price: "0.05元/秒",
 async: true,
 type: "video",
-desc: "Veo 快速版，支持首尾帧",
+desc: "谷歌 · 快速版支持首尾帧",
 billing: {
 type: "perSecond",
 unit: .05,
@@ -4223,7 +4236,7 @@ direct: "ds-video",
 price: "¥0.3-1.2/秒（按分辨率）",
 async: false,
 type: "video",
-desc: "百炼直连 · 万相 3.0 全模态视频（原生有声，24h 视频链；可填首/尾帧图生视频）",
+desc: "百炼直连 · 万相 3.0 全模态",
 billing: { type: "perSecond", unit: .3, durationKey: "duration", tierKey: "resolution", tiers: { "480P": .3, "720P": .6, "1080P": 1.2 }, note: "按时长×分辨率（480P 0.3 / 720P 0.6 / 1080P 1.2 元/秒）" } /* IMPL-96②：官方价按分辨率分层，计费秒数=输入+输出 */,
 params: [ {
 key: "prompt",
@@ -4556,7 +4569,7 @@ direct: "ds-tts",
 price: "¥1.5/万字符",
 async: false,
 type: "audio",
-desc: "百炼直连 · CosyVoice 3.5 旗舰（无系统音色，需声音复刻/设计音色 id）",
+desc: "百炼 · CosyVoice 3.5 旗舰",
 billing: { type: "perChar", unit: .00015, charKey: "text" } /* IMPL-96②：官方价 1.5 元/万字符 */,
 params: [ {
 key: "text",
@@ -4626,7 +4639,7 @@ direct: "ds-tts",
 price: "¥1.4/万字符",
 async: false,
 type: "audio",
-desc: "百炼直连 · Qwen 语音实验室（系统音色：灵心/鲁风，支持复刻音色 id）",
+desc: "百炼 · Qwen 语音实验室",
 billing: { type: "perChar", unit: .00014, charKey: "text" } /* IMPL-96②：官方价 1.4 元/万字符 */,
 params: [ {
 key: "text",
@@ -4702,7 +4715,7 @@ direct: "ds-asr",
 price: "¥0.00022/秒",
 async: false,
 type: "asr",
-desc: "百炼直连 · 语音识别（默认）——音频 ≤10MB 且 ≤5 分钟",
+desc: "百炼 · 语音识别默认档",
 billing: { type: "perSecond", unit: .00022, durationKey: "audioDurationSec", note: "约 0.00022 元/秒音频（按上传音频时长计）" } /* IMPL-102：durationKey 对接语音输入 usage 时长回填（_noteUsage 写入 body.audioDurationSec 后计费闭环） */,
 params: [ {
 key: "audio",
@@ -4735,7 +4748,7 @@ direct: "sf-asr",
 price: "免费",
 async: false,
 type: "asr",
-desc: "硅基流动直连 · 星辰超多方言识别（免费，≤50MB 且 ≤1 小时）",
+desc: "星辰 · 超多方言识别",
 billing: { type: "free" } /* IMPL-96②：官方免费 */,
 params: [ {
 key: "audio",
@@ -4754,7 +4767,7 @@ direct: "sf-asr",
 price: "免费",
 async: false,
 type: "asr",
-desc: "硅基流动直连 · 星辰 ASR V3.2 超清版（免费，TeleSpeech 同链路替补）",
+desc: "星辰 · ASR 超清版",
 billing: { type: "free" } /* IMPL-101：SF 免费 ASR 兜底（TeleSpeech 除名风险对冲） */,
 params: [ {
 key: "audio",
@@ -4773,7 +4786,7 @@ direct: "sf-asr",
 price: "免费",
 async: false,
 type: "asr",
-desc: "硅基流动直连 · Qwen3 ASR 1.7B（免费，中英多语，TeleSpeech 同链路替补）",
+desc: "Qwen3 ASR 1.7B · 免费",
 billing: { type: "free" } /* IMPL-101：SF 免费 ASR 兜底 */,
 params: [ {
 key: "audio",
@@ -10312,26 +10325,28 @@ const _badgeText = (bg, ch) => _brandBadge(bg, `<text x="12" y="12.5" text-ancho
 
 const _badgeGlyph = (bg, paths) => _brandBadge(bg, `<g fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${paths}</g>`);
 
+const _logoPath = (color, d) => '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="' + color + '" d="' + d + '"/></svg>';
+const _softGlyph = (paths, fg, bg) => '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="1.2" y="1.2" width="21.6" height="21.6" rx="6.5" fill="' + (bg || "#EEF2F7") + '"/><g fill="none" stroke="' + (fg || "#475569") + '" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + paths + '</g></svg>';
 const MODEL_BRANDS = {
 google: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47a5.57 5.57 0 0 1-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09A11.99 11.99 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.27 14.29A7.2 7.2 0 0 1 4.89 12c0-.8.14-1.57.38-2.29V6.62H1.29a12 12 0 0 0 0 10.76l3.98-3.09z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.69 1.29 6.62l3.98 3.09C6.22 6.86 8.87 4.75 12 4.75z"/></svg>',
 openai: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M22.28 9.82a5.98 5.98 0 0 0-.52-4.91 6.05 6.05 0 0 0-6.51-2.9A6.07 6.07 0 0 0 4.98 4.18a5.98 5.98 0 0 0-4 2.9 6.05 6.05 0 0 0 .74 7.1 5.98 5.98 0 0 0 .51 4.91 6.05 6.05 0 0 0 6.51 2.9A5.98 5.98 0 0 0 13.26 24a6.06 6.06 0 0 0 5.77-4.21 5.99 5.99 0 0 0 4-2.9 6.06 6.06 0 0 0-.75-7.07zm-9.02 12.61a4.48 4.48 0 0 1-2.88-1.04l.14-.08 4.78-2.76a.79.79 0 0 0 .39-.68v-6.74l2.02 1.17a.07.07 0 0 1 .04.05v5.58a4.5 4.5 0 0 1-4.49 4.5zm-9.66-4.13a4.47 4.47 0 0 1-.53-3.01l.14.08 4.78 2.76a.77.77 0 0 0 .78 0l5.84-3.37v2.33a.08.08 0 0 1-.03.06l-4.83 2.79a4.5 4.5 0 0 1-6.15-1.64zM2.34 7.9a4.49 4.49 0 0 1 2.37-1.97v5.68a.77.77 0 0 0 .39.67l5.81 3.36-2.02 1.17a.08.08 0 0 1-.07 0L4 14.01a4.5 4.5 0 0 1-1.66-6.14zm16.6 3.86l-5.83-3.39L15.12 7.2a.08.08 0 0 1 .07 0l4.83 2.79a4.49 4.49 0 0 1-.68 8.1v-5.68a.79.79 0 0 0-.4-.67zm2.01-3.02l-.14-.09-4.77-2.78a.78.78 0 0 0-.79 0L9.41 9.23V6.9a.07.07 0 0 1 .03-.06l4.83-2.79a4.5 4.5 0 0 1 6.68 4.66zM8.31 12.86l-2.02-1.16a.08.08 0 0 1-.04-.06V6.07a4.5 4.5 0 0 1 7.38-3.45l-.14.08-4.78 2.76a.79.79 0 0 0-.39.68zm1.1-2.37l2.6-1.5 2.61 1.5v3l-2.6 1.5-2.61-1.5z"/></svg>',
-aliyun: _badgeText("#FF6A00", "云"),
-wan: _badgeText("#615CED", "W"),
-minimax: _badgeText("#F23F5D", "M"),
-vidu: _badgeText("#00B8A9", "V"),
-kling: _badgeText("#FF5000", "K"),
-upscale: _badgeGlyph("#64748B", '<path d="M12 18V6M6.5 11.5 12 6l5.5 5.5"/>'),
-human: _badgeGlyph("#64748B", '<circle cx="12" cy="8.2" r="3.2"/><path d="M5.5 19a6.5 6.5 0 0 1 13 0"/>'),
-box: _badgeGlyph("#64748B", '<path d="M21 8.5 12 3.5 3 8.5v7l9 5 9-5z"/><path d="M3 8.5l9 5 9-5M12 13.5V21"/>'),
-voice: _badgeGlyph("#0D9488", '<path d="M4.5 10v4M8.5 7v10M12 4.5v15M15.5 7v10M19.5 10v4"/>'),
+aliyun: _logoPath("#FF6A00", "M3.996 4.517h5.291L8.01 6.324 4.153 7.506a1.668 1.668 0 0 0-1.165 1.601v5.786a1.668 1.668 0 0 0 1.165 1.6l3.857 1.183 1.277 1.807H3.996A3.996 3.996 0 0 1 0 15.487V8.513a3.996 3.996 0 0 1 3.996-3.996m16.008 0h-5.291l1.277 1.807 3.857 1.182c.715.227 1.17.889 1.165 1.601v5.786a1.668 1.668 0 0 1-1.165 1.6l-3.857 1.183-1.277 1.807h5.291A3.996 3.996 0 0 0 24 15.487V8.513a3.996 3.996 0 0 0-3.996-3.996m-4.007 8.345H8.002v-1.804h7.995Z"),
+wan: _logoPath("#FF6A00", "M3.996 4.517h5.291L8.01 6.324 4.153 7.506a1.668 1.668 0 0 0-1.165 1.601v5.786a1.668 1.668 0 0 0 1.165 1.6l3.857 1.183 1.277 1.807H3.996A3.996 3.996 0 0 1 0 15.487V8.513a3.996 3.996 0 0 1 3.996-3.996m16.008 0h-5.291l1.277 1.807 3.857 1.182c.715.227 1.17.889 1.165 1.601v5.786a1.668 1.668 0 0 1-1.165 1.6l-3.857 1.183-1.277 1.807h5.291A3.996 3.996 0 0 0 24 15.487V8.513a3.996 3.996 0 0 0-3.996-3.996m-4.007 8.345H8.002v-1.804h7.995Z"),
+minimax: _logoPath("#F23F5D", "M11.43 3.92a.86.86 0 1 0-1.718 0v14.236a1.999 1.999 0 0 1-3.997 0V9.022a.86.86 0 1 0-1.718 0v3.87a1.999 1.999 0 0 1-3.997 0V11.49a.57.57 0 0 1 1.139 0v1.404a.86.86 0 0 0 1.719 0V9.022a1.999 1.999 0 0 1 3.997 0v9.134a.86.86 0 0 0 1.719 0V3.92a1.998 1.998 0 1 1 3.996 0v11.788a.57.57 0 1 1-1.139 0zm10.572 3.105a2 2 0 0 0-1.999 1.997v7.63a.86.86 0 0 1-1.718 0V3.923a1.999 1.999 0 0 0-3.997 0v16.16a.86.86 0 0 1-1.719 0V18.08a.57.57 0 1 0-1.138 0v2a1.998 1.998 0 0 0 3.996 0V3.92a.86.86 0 0 1 1.719 0v12.73a1.999 1.999 0 0 0 3.996 0V9.023a.86.86 0 1 1 1.72 0v6.686a.57.57 0 0 0 1.138 0V9.022a2 2 0 0 0-1.998-1.997"),
+vidu: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="1.2" y="1.2" width="21.6" height="21.6" rx="6.5" fill="#00B8A9"/><path d="M7.5 7.5 12 16.2 16.5 7.5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+kling: _logoPath("#FF4906", "M18.315 12.264c2.33 0 4.218 1.88 4.218 4.2V19.8c0 2.32-1.888 4.2-4.218 4.2h-6.202a4.218 4.218 0 0 1-4.023-2.938l-3.676 1.833a2.04 2.04 0 0 1-2.731-.903 2.015 2.015 0 0 1-.216-.907v-5.94a2.03 2.03 0 0 1 2.035-2.024 2.044 2.044 0 0 1 .919.218l3.673 1.85a4.218 4.218 0 0 1 4.02-2.925zm-.062 2.162h-6.078c-1.153 0-2.09.921-2.108 2.065v3.247c0 1.148.925 2.081 2.073 2.1h6.113c1.153 0 2.09-.922 2.109-2.065v-3.247a2.104 2.104 0 0 0-2.074-2.1zM4.18 15.72a.554.554 0 0 0-.555.542v3.734a.556.556 0 0 0 .798.496l.01-.004 3.463-1.756V17.51l-3.467-1.73a.557.557 0 0 0-.249-.06zM9.28 0a5.667 5.667 0 0 1 4.98 2.965 4.921 4.921 0 0 1 3.36-1.317c2.714 0 4.913 2.177 4.913 4.863 0 2.686-2.2 4.863-4.912 4.863a4.921 4.921 0 0 1-3.996-2.034 5.651 5.651 0 0 1-4.345 2.034c-3.131 0-5.67-2.546-5.67-5.687C3.61 2.546 6.149 0 9.28 0Zm8.34 3.926c-1.441 0-2.61 1.157-2.61 2.585s1.169 2.585 2.61 2.585c1.443 0 2.612-1.157 2.612-2.585s-1.169-2.585-2.611-2.585zM9.28 2.287a3.395 3.395 0 0 0-3.39 3.4c0 1.877 1.518 3.4 3.39 3.4a3.395 3.395 0 0 0 3.39-3.4c0-1.878-1.518-3.4-3.39-3.4z"),
+upscale: _softGlyph('<path d="M12 18.5V6.5M6.2 12.3 12 6.5l5.8 5.8"/>'),
+human: _softGlyph('<circle cx="12" cy="8" r="3.4"/><path d="M5 19.5c1.3-3.4 3.9-5.1 7-5.1s5.7 1.7 7 5.1"/>'),
+box: _softGlyph('<path d="M21 8.2 12 3.5 3 8.2v7.6l9 4.7 9-4.7z"/><path d="M3 8.2l9 4.7 9-4.7M12 12.9v7.4"/>'),
+voice: _softGlyph('<path d="M4.5 10v4M8.5 7.5v9M12 5v14M15.5 7.5v9M19.5 10v4"/>', "#0D9488", "#E6FAF7"),
 /* IMPL-96①：直连 8 模型品牌徽标——通义（Z-Image 紫）/千问（阿里橙）/ASR 麦克风徽 */
-tongyi: _badgeText("#615CED", "通"),
-qwen: _badgeText("#FF6A00", "千"),
-mic: _badgeGlyph("#64748B", '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/>'),
+tongyi: _logoPath("#615CED", "M23.919 14.545 20.817 9.17l1.47-2.544a.56.56 0 0 0 0-.566l-1.633-2.83a.57.57 0 0 0-.49-.283h-6.207L12.487.402a.57.57 0 0 0-.49-.284H8.732a.56.56 0 0 0-.49.284L5.139 5.775h-2.94a.56.56 0 0 0-.49.284L.077 8.887a.56.56 0 0 0 0 .567L3.18 14.83l-1.47 2.545a.56.56 0 0 0 0 .566l1.634 2.83a.57.57 0 0 0 .49.283h6.205l1.47 2.545a.57.57 0 0 0 .49.284h3.266a.57.57 0 0 0 .49-.284l3.104-5.375h2.94a.57.57 0 0 0 .49-.283l1.634-2.828a.55.55 0 0 0-.004-.568M8.733.686l1.634 2.828-1.634 2.828H21.8L20.164 9.17H7.425L5.63 6.06Zm1.306 19.801-6.205-.002 1.634-2.83h3.265L2.201 6.344h3.267q3.182 5.517 6.367 11.032zm10.124-5.66L18.53 12l-6.532 11.315-1.634-2.83c2.129-3.673 4.25-7.351 6.373-11.028h3.592l3.102 5.374z"),
+qwen: _logoPath("#615CED", "M23.919 14.545 20.817 9.17l1.47-2.544a.56.56 0 0 0 0-.566l-1.633-2.83a.57.57 0 0 0-.49-.283h-6.207L12.487.402a.57.57 0 0 0-.49-.284H8.732a.56.56 0 0 0-.49.284L5.139 5.775h-2.94a.56.56 0 0 0-.49.284L.077 8.887a.56.56 0 0 0 0 .567L3.18 14.83l-1.47 2.545a.56.56 0 0 0 0 .566l1.634 2.83a.57.57 0 0 0 .49.283h6.205l1.47 2.545a.57.57 0 0 0 .49.284h3.266a.57.57 0 0 0 .49-.284l3.104-5.375h2.94a.57.57 0 0 0 .49-.283l1.634-2.828a.55.55 0 0 0-.004-.568M8.733.686l1.634 2.828-1.634 2.828H21.8L20.164 9.17H7.425L5.63 6.06Zm1.306 19.801-6.205-.002 1.634-2.83h3.265L2.201 6.344h3.267q3.182 5.517 6.367 11.032zm10.124-5.66L18.53 12l-6.532 11.315-1.634-2.83c2.129-3.673 4.25-7.351 6.373-11.028h3.592l3.102 5.374z"),
+mic: _softGlyph('<rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3.5"/>'),
 /* ★ R21-4：APIYI 新模型品牌 —— 字节 Seed 系（Seedream/Seedance）与 FLUX（Black Forest Labs）。
    不新造 SVG：用现成 _badgeText 色块字徽（与 云/W/M/V/K 同一套形制）。 */
-seed: _badgeText("#325AB4", "S"),
-flux: _badgeText("#8A2BE2", "F")
+seed: _logoPath("#325AB4", "M19.8772 1.4685L24 2.5326v18.9426l-4.1228 1.0563V1.4685zm-13.3481 9.428l4.115 1.0641v8.9786l-4.115 1.0642v-11.107zM0 2.572l4.115 1.0642v16.7354L0 21.428V2.572zm17.4553 5.6205v11.107l-4.1228-1.0642V9.2568l4.1228-1.0642z"),
+flux: _logoPath("#111111", "M11.402 23.747c.154.075.306.154.454.238.181.038.37.004.525-.097l.386-.251c-1.242-.831-2.622-1.251-3.998-1.602l2.633 1.712Zm-7.495-5.783a8.088 8.088 0 0 1-.222-.236.696.696 0 0 0 .112 1.075l2.304 1.498c1.019.422 2.085.686 3.134.944 1.636.403 3.2.79 4.554 1.728l.697-.453c-1.541-1.158-3.327-1.602-5.065-2.03-2.039-.503-3.965-.977-5.514-2.526Zm1.414-1.322-.665.432c.023.024.044.049.068.073 1.702 1.702 3.825 2.225 5.877 2.731 1.778.438 3.469.856 4.9 1.982l.682-.444c-1.612-1.357-3.532-1.834-5.395-2.293-2.019-.497-3.926-.969-5.467-2.481Zm7.502 2.084c1.596.412 3.096.904 4.367 2.036l.670-.436c-1.484-1.396-3.266-1.953-5.037-2.403v.803Zm.698-2.337a64.695 64.695 0 0 1-.698-.174v.802l.512.127c2.039.503 3.965.978 5.514 2.526l.007.009.663-.431c-.041-.042-.079-.086-.121-.128-1.702-1.701-3.824-2.225-5.877-2.731Zm-.698-1.928v.816c.624.19 1.255.347 1.879.501 2.039.502 3.965.977 5.513 2.526.077.077.153.157.226.239a.704.704 0 0 0-.238-.911l-3.064-1.992c-.744-.245-1.502-.433-2.251-.618a31.436 31.436 0 0 1-2.065-.561Zm-1.646 3.049c-1.526-.4-2.96-.888-4.185-1.955l-.674.439c1.439 1.326 3.151 1.88 4.859 2.319v-.803Zm0-1.772a8.543 8.543 0 0 1-2.492-1.283l-.686.446c.975.804 2.061 1.293 3.178 1.655v-.818Zm0-1.946a7.59 7.59 0 0 1-.776-.453l-.701.456c.462.337.957.627 1.477.865v-.868Zm3.533.269-1.887-1.226v.581c.614.257 1.244.473 1.887.645Zm5.493-8.863L12.381.112a.705.705 0 0 0-.762 0L3.797 5.198a.698.698 0 0 0 0 1.171l7.38 4.797V7.678a.414.414 0 0 0-.412-.412h-.543a.413.413 0 0 1-.356-.617l1.777-3.079a.412.412 0 0 1 .714 0l1.777 3.079a.413.413 0 0 1-.356.617h-.543a.414.414 0 0 0-.412.412v3.488l7.38-4.797a.7.7 0 0 0 0-1.171Z")
 };
 
 const MODEL_LOGO = {
@@ -10446,6 +10461,7 @@ function estCostCny(model, body) {
     }
     if (b.type === "perImage" && isFinite(Number(b.unit))) {
       return { cny: b.unit * num, approx: false, detail: "一口价" + (num > 1 ? "×" + num + "张" : "") };
+    }
     /* ★ R22-g：视频按量计费（官方公式，04-视频API（官转）.md 实测偏差 <0.1%）：
          tokens ≈ (输入视频时长 + 输出视频时长)(秒) × 输出宽 × 输出高 × 24 / 1024
        同分辨率档位下所有宽高比像素面积相同 ⇒ 费用只取决于**分辨率档 + 时长**（+ 是否含输入视频）。 */
@@ -10461,7 +10477,6 @@ function estCostCny(model, body) {
       var vusd = vtoks * rate / 1e6;
       if (vusd <= 0) return null;
       return { cny: vusd * 7 * num, approx: true, detail: (body.resolution || "720p") + "·" + sec + "秒" + (num > 1 ? "·×" + num : "") };
-    }
     }
     if (b.type === "perToken") {
       var QT = { low: 196, medium: 439, high: 1756, xhigh: 3122, max: 7024 };
@@ -10903,8 +10918,11 @@ window.__r22CostHooked = true;
 var _r22t = 0;
 var _r22refresh = function() { clearTimeout(_r22t); _r22t = setTimeout(function() { try { if (window.UI && UI._refreshGenerateBtn) UI._refreshGenerateBtn(); } catch (_) {} }, 200); };
 document.addEventListener("input", function(e) { try { if (e.target && e.target.closest && e.target.closest("[data-key]")) _r22refresh(); } catch (_) {} });
-document.addEventListener("change", function(e) { try { if (e.target && e.target.closest && e.target.closest("[data-key]")) _r22refresh(); } catch (_) {} });
+document.addEventListener("change", function(e) { try { if (e.target && e.target.closest && (e.target.closest("[data-key]") || e.target.closest("#modelSelect"))) _r22refresh(); } catch (_) {} });
 }
+/* ★ R26-G（2026-10-02）：window.UI 此前**从未赋值** ⇒ 'window.UI && UI._refreshGenerateBtn' 恒短路，
+   生成按钮金额从未刷新过（R22 上线即假绿）。此处补引用 + 切模型（#modelSelect）也触发刷新。 */
+window.UI = this;
 $("#generateBtn").addEventListener("click", () => this.handleGenerate());
 $("#copyWorkflowBtn").addEventListener("click", () => {
 const task = this._buildCurrentTask();
@@ -12070,8 +12088,10 @@ const m = this.state.model;
 /* ★ R24-B：列表排序 —— GPT 系置顶 → 名称（去通道后缀，中文/数字友好）→ 同名按性价比（便宜在前）。
    ★ R24-C：通道徽标统一在这里拼（非 apiyi ⇒ （创），apiyi ⇒ （易）），name 里不再手写后缀。
    ⚠ select 与 pickList 必须走同一份序，否则两处顺序不一致。 */
-const _mpBase = mm => String(mm.name || "").replace(/（[易创]）s*$/, "").trim();
-const _mpDisp = mm => _mpBase(mm) + (mm.channel === "apiyi" ? "（易）" : "（创）");
+const _mpChan = mm => mm.channel === "apiyi" ? "apiyi" : (mm.direct ? "direct" : "speed");
+const _mpChanLabel = mm => _mpChan(mm) === "apiyi" ? "易" : _mpChan(mm) === "direct" ? "连" : "创";
+const _mpBase = mm => String(mm.name || "").replace(/（[易创连]）[ 　]*$/, "").trim();
+const _mpDisp = mm => _mpBase(mm) + "（" + _mpChanLabel(mm) + "）";
 const _mpCost = mm => { try { const c = estCostCny(mm, billParamsOf()); return c && isFinite(c.cny) ? c.cny : Infinity; } catch (e) { return Infinity; } };
 const _mpSorted = arr => arr.slice().sort((a, b) => {
   const ga = /gpt/i.test(String(a.id) + " " + _mpBase(a)) ? 0 : 1;
@@ -12089,11 +12109,15 @@ sel.innerHTML = _mpSorted(MODELS[this.state.tab]).map(mm => '<option value="' + 
 }
 const pickLogo = $("#modelPickLogo"), pickName = $("#modelPickName"), pickList = $("#modelPickList");
 if (pickLogo) pickLogo.innerHTML = modelLogoOf(m.id);
-if (pickName) pickName.textContent = _mpDisp(m);
+if (pickName) pickName.textContent = _mpBase(m);
+let chanEl = $("#modelPickChan");
+if (!chanEl && pickName && pickName.parentElement) { chanEl = document.createElement("span"); chanEl.id = "modelPickChan"; chanEl.className = "mp-chan"; pickName.parentElement.insertBefore(chanEl, pickName.nextSibling); }
+if (chanEl) { chanEl.textContent = _mpChanLabel(m); chanEl.dataset.mpChan = _mpChan(m); }
 if (pickList) {
 pickList.innerHTML = _mpSorted(MODELS[this.state.tab]).map(mm => '<button type="button" role="option" aria-selected="' + (mm.id === m.id) + '" class="model-pick-opt' + (mm.id === m.id ? " active" : "") + '" data-mp-id="' + esc(mm.id) + '">'
   + '<span class="mp-logo" aria-hidden="true">' + modelLogoOf(mm.id) + '</span>'
-  + '<span class="mp-opt-name">' + esc(_mpDisp(mm)) + '</span>'
+  + '<span class="mp-opt-name">' + esc(_mpBase(mm)) + '</span>'
+  + '<span class="mp-chan" data-mp-chan="' + _mpChan(mm) + '">' + _mpChanLabel(mm) + '</span>'
   + '<span class="mp-opt-price" title="' + esc(billKindOf(mm)) + esc((estCostCny(mm, billParamsOf()) || {}).detail ? " · " + (estCostCny(mm, billParamsOf()) || {}).detail : "") + '">' + esc(billTextOf(mm) || priceCnyOf(mm)) + '</span>'
   + '</button>').join("");
 }
@@ -12221,30 +12245,26 @@ cntHolder.innerHTML = `<select data-key="__count" aria-label="生成张数">${[ 
 container.appendChild(cntHolder);
 const cntSel = cntHolder.querySelector("select");
 cntSel.addEventListener("change", () => this._onFieldChange("__count", cntSel));
-for (let i = 0; i < simpleParams.length; i += 2) {
-const pair = simpleParams.slice(i, i + 2);
-if (pair.length === 2) {
-const row = document.createElement("div");
-row.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:10px;";
-row.appendChild(this._buildFieldRow(pair[0]));
-row.appendChild(this._buildFieldRow(pair[1]));
-container.appendChild(row);
-} else {
-const row = document.createElement("div");
-row.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:10px;";
-row.appendChild(this._buildFieldRow(pair[0]));
-container.appendChild(row);
-}
+if (model.refGroups) {
+container.appendChild(this._buildRefModeSection(model));
 }
 for (const item of complexParams) {
 if (item.type === "ref") {
 container.appendChild(this._buildRefSection(item.param));
-} else {
+}
+}
+for (let i = 0; i < simpleParams.length; i += 2) {
+const pair = simpleParams.slice(i, i + 2);
+const row = document.createElement("div");
+row.style.cssText = "display:grid;grid-template-columns:1fr 1fr;gap:10px;";
+row.appendChild(this._buildFieldRow(pair[0]));
+if (pair[1]) row.appendChild(this._buildFieldRow(pair[1]));
+container.appendChild(row);
+}
+for (const item of complexParams) {
+if (item.type !== "ref") {
 container.appendChild(this._buildFieldRow(item.param));
 }
-}
-if (model.refGroups) {
-container.appendChild(this._buildRefModeSection(model));
 }
 this._renderAllRefGrids();
 this._mountQuickParams();
@@ -12616,7 +12636,8 @@ _buildFieldRow(p) {
 const wrap = document.createElement("div");
 wrap.className = "param-group";
 const defVal = this.state.formCache[this.state.modelKey]?.[p.key] ?? p.default ?? "";
-let inner = p.type === "cap-grid" ? '<div class="field-row">' : `<div class="field-row"><div class="field-label">${esc(p.label)}${p.required ? '<i class="req-star" aria-label="必填">*</i>' : ""}${p.hint ? `<span class="field-hint">${esc(p.hint)}</span>` : ""}<span class="field-val" data-val="${esc(p.key)}"></span></div>`;
+const _boolSel = p.type === "select" && (p.options || []).length === 2 && p.options.every(o => /^(true|false|1|0|on|off|yes|no|是|否|开|关)$/i.test(String(o))); /* R26-B4 */
+let inner = p.type === "cap-grid" ? '<div class="field-row">' : `<div class="field-row${_boolSel ? " is-inline" : ""}"><div class="field-label">${esc(p.label)}${p.required ? '<i class="req-star" aria-label="必填">*</i>' : ""}${p.hint ? `<span class="field-hint">${esc(p.hint)}</span>` : ""}<span class="field-val" data-val="${esc(p.key)}"></span></div>`;
 if (p.type === "select") {
 inner += `<select data-key="${esc(p.key)}">${p.options.map(o => `<option value="${esc(o)}" ${o === defVal ? "selected" : ""}>${esc(this._enumLabel(p.key, o))}</option>`).join("")}</select>`;
 } else if (p.type === "range") {
@@ -13828,16 +13849,21 @@ AmbientFX.setGenerating(Store.getTasks().some(t => t.status === "processing"));
 },
 _refreshGenerateBtn() {
 const el = $("#generateBtnText");
+const pill = $("#genCostPill");
 if (!el) return;
 const hasActive = (Store.getTasks() || []).some(t => t.status === "processing");
-if (hasActive) { el.textContent = "生成中..."; return; }
-/* ★ R22-c（修 2026-10-01「生成按钮上动态显示费用 如 生成 ¥0.1」）：
-   当前模型 + 表单参数实时估算；算不出（无 billing/参数不足）就显示纯「生成」。 */
+if (hasActive) { el.textContent = "生成中..."; if (pill) pill.classList.remove("show"); return; }
+/* ★ R26-C（修 2026-10-02）：金额改邻位费用胶囊；算不出 ⇒ 隐藏（不编数）。 */
+el.textContent = "生成";
 var est = null;
 try { est = estCostCny(this.state.model, this._collectParamsSync()); } catch (e) {}
-var suffix = "";
-if (est && est.cny > 0) suffix = " ¥" + (est.cny < 1 ? est.cny.toFixed(2) : est.cny.toFixed(1));
-el.textContent = "生成" + suffix;
+if (pill) {
+if (est && est.cny > 0) {
+pill.textContent = (est.approx ? "≈¥" : "¥") + (est.cny < 1 ? est.cny.toFixed(2) : est.cny.toFixed(1));
+pill.title = "预估费用" + (est.detail ? "（" + est.detail + "）" : "") + "，实际以用量为准";
+pill.classList.add("show");
+} else { pill.classList.remove("show"); }
+}
 },
 _buildCurrentTask() {
 try {
@@ -17142,7 +17168,7 @@ if (typeof MODELS !== "undefined" && Array.isArray(MODELS.image) && typeof model
     .concat(["gpt-image-2.5", "gpt-image-2.5-flare", "gpt-image-2.5-sunburst"]).forEach(function(id) {
 const m = MODELS.image.find(function(x) { return x.id === id; });
 if (!m) return;
-cat.models[id] = { name: m.name, price: m.price || "", desc: m.desc || "", icon: modelLogoOf(id) || "", channel: m.channel || "wy", modelId: m.modelId || id, billing: m.billing || null, params: (m.params || []).map(function(p) { return { key: p.key, label: p.label, type: p.type, required: !!p.required, default: p.default != null ? p.default : "", options: p.options || null, max: p.max != null ? p.max : null, output: p.output || "", placeholder: p.placeholder || "" }; }) }; /* 2026-10-01：+channel/modelId（编辑器据此在模型键上标通道）；R21-2：+billing（编辑器价格列按它算纯人民币）；旧嵌入包忽略未知键无副作用 */
+cat.models[id] = { name: String(m.name || "").replace(/（[易创连]）[ 　]*$/, "").trim(), price: m.price || "", desc: m.desc || "", icon: modelLogoOf(id) || "", channel: m.channel === "apiyi" ? "apiyi" : (m.direct ? "direct" : "wy"), modelId: m.modelId || id, billing: m.billing || null, params: (m.params || []).map(function(p) { return { key: p.key, label: p.label, type: p.type, required: !!p.required, default: p.default != null ? p.default : "", options: p.options || null, max: p.max != null ? p.max : null, output: p.output || "", placeholder: p.placeholder || "" }; }) }; /* 2026-10-01：+channel/modelId（编辑器据此在模型键上标通道）；R21-2：+billing（编辑器价格列按它算纯人民币）；旧嵌入包忽略未知键无副作用 */
 });
 }
 } catch (_) {}
