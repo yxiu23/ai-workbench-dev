@@ -17449,6 +17449,14 @@ cat.models[id] = { name: String(m.name || "").replace(/（[易创连]）[ 　]*$
 });
 }
 } catch (_) {}
+/* ★★ R37：视频档投影（APIYI 通道；与编辑器 videoModelsOf 的 type:"video" 判据配对） */
+try {
+if (typeof MODELS !== "undefined" && Array.isArray(MODELS.video)) {
+MODELS.video.filter(function(x) { return x && x.channel === "apiyi"; }).forEach(function(m) {
+cat.models[m.id] = { type: "video", name: String(m.name || "").replace(/（[易创连]）[ 　]*$/, "").trim(), price: m.price || "", desc: m.desc || "", icon: modelLogoOf(m.id) || "", channel: "apiyi", modelId: m.modelId || m.id, billing: m.billing || null, refGroups: m.refGroups || null, params: (m.params || []).map(function(p) { return { key: p.key, label: p.label, type: p.type, required: !!p.required, default: p.default != null ? p.default : "", options: p.options || null, max: p.max != null ? p.max : null, output: p.output || "", placeholder: p.placeholder || "", hint: p.hint || "" }; }) };
+});
+}
+} catch (_) {}
 return cat;
 }
 function loadStudio() {
