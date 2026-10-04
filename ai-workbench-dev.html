@@ -3538,7 +3538,7 @@ max: 14
 video: [ {
 /* ★ R21-5（修 2026-10-01「视频模型需要更新到宿主模型列表」）：APIYI 视频档进列表。
    ⚠ 诚实口径：**生成适配器未接**（Worker 白名单 /v1/videos 已备，适配器属 Phase 2）
-   ⇒ desc 明确标注「Phase 2 接入中，暂不可生成」—— 用户选了点生成会得到明确报错，不静默。
+   ⇒ ★ R32（2026-10-03）**标注已随 V1 适配器接入而撤掉**（原为「Phase 2 接入中」+ 暂不可生成字样）。
    定价真值 = api/pricing：veo-3.1 按次（$1.2/$0.3 每次换算 ¥×7）；Seedance 系按Token（ratio 35/23/18.5）。 */
 id: "apiyi:seedance-2-5-260628",
 name: "Seedance 2.5（易）",
@@ -3558,11 +3558,45 @@ required: true,
 default: "",
 placeholder: "描述视频"
 }, {
-key: "urls",
+/* ★★ R34（2026-10-04）：参考素材**五档互斥**（refGroups = 编辑器「生成视频」面板的唯一档位数据源）。
+   官方真值（docs.apiyi.com · 04-视频API（官转）.md）：Seedance 2.5 走 content[] + role，
+   **全套**支持 first_frame / last_frame / 参考图(≤30) / 参考视频(总≤15s) / 参考音频(总≤15s)。
+   ⚠ 替换掉原先那条 key: "urls", type: "ref-image", max: 30 —— 它只有"参考图"一个笼统语义，
+     既无首尾帧也无互斥，用户不知道该填哪张；留着会和下面的 images 档**重复两个同名槽**。
+   ⚠ 硬约束必须挂在 hint 上（否则用户一填就吃 400）：
+     首帧/编辑/延长 → ratio 必须 adaptive；编辑 → duration 必须 -1。 */
+key: "first_frame",
+label: "首帧",
+type: "ref-image",
+output: "single",
+hint: "首帧图（画布上选中的图层会自动带入）；带首帧时宽高比必须选 adaptive"
+}, {
+key: "last_frame",
+label: "尾帧",
+type: "ref-image",
+output: "single",
+hint: "可选，与首帧构成转场；编辑模式下时长需设为 -1（智能时长）"
+}, {
+key: "images",
 label: "参考图",
 type: "ref-image",
 output: "csv",
-max: 30},
+max: 30,
+hint: "内容参考 1-30 张（官方上限）；与首尾帧互斥"
+}, {
+key: "videos",
+label: "参考视频",
+type: "ref-video",
+output: "csv",
+max: 5,
+hint: "动作 / 风格参考，总时长 ≤15s；与首尾帧互斥"
+}, {
+key: "audios",
+label: "参考音频",
+type: "ref-audio",
+output: "csv",
+max: 5,
+hint: "口播 / 配乐参考，总时长 ≤15s；与首尾帧互斥"},
 {
 key: "resolution",
 label: "分辨率",
@@ -3594,7 +3628,32 @@ default: "true",
 options: [ "true", "false" ]
 
 }
-] 
+] ,
+refGroups: {
+title: "参考素材",
+hint: "只能选择一种",
+modes: [ {
+label: "无参考",
+value: "none",
+params: [ ]
+}, {
+label: "首尾帧",
+value: "frame",
+params: [ "first_frame", "last_frame" ]
+}, {
+label: "参考图",
+value: "images",
+params: [ "images" ]
+}, {
+label: "视频",
+value: "videos",
+params: [ "videos" ]
+}, {
+label: "音频",
+value: "audios",
+params: [ "audios" ]
+} ]
+}
 }, {
 id: "apiyi:veo-3.1-generate-preview",
 name: "VEO 3.1（易）",
@@ -3612,7 +3671,17 @@ label: "提示词",
 type: "textarea",
 required: true,
 default: "",
-placeholder: "描述视频"},
+placeholder: "描述视频"
+}, {
+/* ★ R34（2026-10-04）：VEO 3.1 官方**只接受 1 张 input_reference**（单数，字段名也不同于别家）。
+   ⇒ 只有「首帧」是真能用的档；尾帧 / 参考图(多) / 参考视频 官方**没有**。
+   ★ 拍板③「全部显示但置灰，不用说明原因」⇒ 这三档照样列出来、disabled: true 置灰，
+     不写 hint 解释为什么。直接删掉那几档 = 用户看不出这家只支持一张图，像是漏做（R17）。 */
+key: "first_frame",
+label: "首帧",
+type: "ref-image",
+output: "single",
+hint: "官方仅接受 1 张参考图（input_reference）"},
 {
 key: "resolution",
 label: "分辨率",
@@ -3634,7 +3703,35 @@ default: "8",
 options: [ "4", "6", "8" ],
 hint: "官方字段是 seconds 且必须传字符串（写 duration 会被静默忽略成 4 秒）；1080p 与 4k 只接受 8 秒一档，只有 720p 三档时长都能用"
 }
-] 
+] ,
+refGroups: {
+title: "参考素材",
+hint: "只能选择一种",
+modes: [ {
+label: "无参考",
+value: "none",
+params: [ ]
+}, {
+label: "首帧",
+value: "frame",
+params: [ "first_frame" ]
+}, {
+label: "尾帧",
+value: "last_frame",
+params: [ ],
+disabled: true
+}, {
+label: "参考图",
+value: "images",
+params: [ ],
+disabled: true
+}, {
+label: "视频",
+value: "videos",
+params: [ ],
+disabled: true
+} ]
+}
 }, {
 id: "apiyi:wan3.0-video",
 name: "Wan3.0 视频（易）",
@@ -3651,7 +3748,7 @@ async: false,
 type: "video",
 channel: "apiyi",
 modelId: "wan3.0-video",
-desc: "全模态旗舰（接入调试中）",
+desc: "阿里万相 · 全模态旗舰",
 billing: { type: "perToken", inUsdPerM: 0.48, outUsdPerM: 0.48, source: "api", note: "视频按量计费（$0.48/M，CSV 真值）；折算方式官方未提供 ⇒ 不估每条价" },
 params: [ {
 key: "prompt",
@@ -18121,9 +18218,12 @@ try {
    ⚠ gemini 分支若真收到 mask（正常路径不会 —— 编辑器在"需要 mask"时不列它），
      **不静默丢弃**：留痕后继续（源图已作为输入图传入，语义上仍是"改这张图"）。 */
 if (maskData && apiDef.gemini) console.info("[W5-route]", JSON.stringify({ phase: "apiyi-gemini-mask-ignored", model: apiDef.endpointModel, note: "Gemini 原生无 mask 字段，已改为整图指令编辑", ts: Date.now() }));
-const rA = apiDef.gemini
+const _isVideo = String(apiDef.type || "") === "video";   /* R32-V1：视频走独立适配器（异步任务链） */
+const rA = _isVideo
+  ? await apiyiVideo(finalPrompt, apiDef, exA, imgData, exA.refDataUrls)
+  : (apiDef.gemini
   ? await apiyiGemini(finalPrompt, apiDef, exA, imgData, exA.refDataUrls)
-  : (maskData ? await apiyiEdits(imgData, maskData, finalPrompt, apiDef, exA) : await apiyiImages(imgData, finalPrompt, apiDef, exA));
+  : (maskData ? await apiyiEdits(imgData, maskData, finalPrompt, apiDef, exA) : await apiyiImages(imgData, finalPrompt, apiDef, exA)));
 rA.name = actName(e.action);
 /* ★ R5：把上游回的用量交给**既有的** calcEstimate（不另写算钱的代码），结果只取一个「≈¥x.xx」。
    ⚠ calcEstimate 对"没有用量 / 费率未知"会返回 amount:null —— 那时**什么都不加**（不显示 0 元、不编数）。 */
@@ -18289,7 +18389,12 @@ promptReverse: function(png) { return promptReverseForStudio(png); }, /* 第十�
 llm: { chat: function(opts) { return studioSkillChat(opts); } },
 skills: studioSkills(),
 models: studioModels()
-} /* tools 结束 */
+},                                  /* tools 结束 */
+/* ★ V2（R33）：视频生成通道 —— 编辑器的「生成视频」动作靠它。
+   形状与 adapter.tools 同级：{generate({modelId,model,prompt,duration,ratio}) → {url,…}}。
+   ⚠ R32 的 apiyiVideo 签名是宿主内部口径，这里由 makeVideoHandler() 做纯形状转换，
+     **不重复实现请求逻辑**（轮询/错误分类沿用 R32，避免两套实现漂移）。 */
+videoHandlers: { generate: makeVideoHandler() }
 },
 on: { onError: function(err) { try { Toast.error(String((err && err.message) || err)); } catch (_) {} }, close: close, onThemeChange: function(t) { try { if (t === "light" || t === "dark") { localStorage.setItem("sc_studio_theme", t); const b = document.getElementById("studioInlinePrompt"); if (b) b.setAttribute("data-studio-theme", t); } } catch (_) {} } /* Z16（第七批）：+回写打开中输入条主题 */ } /* IMPL-129②：编辑器内点 ✕ → 调用宿主 close 关闭弹窗；旧版嵌入包忽略未知键无副作用。Z12（第七批）：+onThemeChange 编辑器内置主题开关回告写缓存（附录 A 契约，向后兼容；挂载初值不回告防回环——白名单校验仅收 light/dark） */
 ,
@@ -19809,5 +19914,357 @@ return { open: open, close: close };
   else if (typeof reduced.addListener === "function") reduced.addListener(applyMotion);
   applyMotion();
 })();
+
+/* ══════ R34 · APIYI 视频适配器 V2（三家分流· 由 _r34_video_adapter.js 拼入）══════ */
+/** ★★ R34 · APIYI 视频生成适配器 V2 —— 独立源文件，由生成器读入拼进产物。
+ *
+ *  ══════ 为什么 V2：R32 把三个模型全塞进 /v1/videos，官方文档明文禁止 ══════
+ *  证据（docs.apiyi.com 免鉴权文档中心，2026-10-04 核实）：
+ *   · wan/overview：「**绝对不要用 `/v1/videos`** —— 那条路会把 `media` 字段丢掉，
+ *     上游报 `[InvalidParameter] Field required: input.media`」
+ *   · seedance2/video-generation：「路径前缀是 `/seedance/api/v3`，**不要漏掉 `/api`**，
+ *     也不要用 `/v1/videos`」
+ *   · skill.md：「Video models do **not** use a single unified path. Each vendor family
+ *     has its own submit-and-poll paths.」
+ *  ⇒ 三家各自一套 submit/poll，本文件按家分流。
+ *
+ *  ── 分流表（官方 OpenAPI 确证）────────────────────────────────────────────
+ *   | 模型 | create路径 | 轮询路径 | 请求体 | 参考素材 |
+ *   |---|---|---|---|---|
+ *   | Seedance 2.5 | /seedance/api/v3/contents/generations/tasks | 同路径/{id} | JSON | content[] + role（✅首尾帧/参考图/参考视频/参考音频）|
+ *   | VEO 3.1 官转| /v1/videos | /v1/videos/{id} | FormData | 仅 1 张图 `input_reference`（✅首尾帧/参视频/参音频）|
+ *   | Wan 3.0| /wan/api/v1/.../video-synthesis | /v1/tasks/{id} | FormData | DashScope 透传，首尾帧✅（参考视频无文档）|
+ *
+ *  ── VEO 四个官方坑（我们 V1 全踩）───────────────────────────────────────
+ *   1. 时长字段是 **`seconds`** 且必须是**字符串** `"8"`；写 `duration` 会被**静默忽略**回落4s，
+ *      传数字报 `parse_request_failed: cannot unmarshal number into Go struct field`。
+ *   2. **绝不能传 `generateAudio`** —— 上游回 `INVALID_ARGUMENT`。音频意图写进 prompt。
+ *   3. 1080p / 4k 时 `seconds` 必须 `"8"`。
+ *   4. 无 `video_url`，只能 GET /v1/videos/{id}/content 拉流（**V2 不引入**，同R32 理由：
+ *      视频几十 MB，blob 与账本都吃不下；永久化留给 V3 的 R2 转存）。
+ *
+ *  ── 取片口径 = **URL**（照 DashScope _dsVideo 与图片通道一致做法）────────
+ *  失败语义：路径 / 任务 / 耗时全进 [W5-route]，**不静默回退**到图片通道（R17 铁规矩）。
+ */
+async function apiyiVideo(prompt, def, ex, refs) {
+  const t0 = Date.now();
+  const e = ex || {};
+  const mid = String(def.modelId || def.id || "");
+  const idl = String(def.id || "");
+  const opt = e.__opts || {};                 /* 参考素材统一入口（见 _r33 桥） */
+
+  const isSeedance = /seedance/i.test(mid) || /seedance/i.test(idl);
+  const isWan = /wan/i.test(mid) || /wan/i.test(idl);
+  const isVeo = /veo/i.test(mid) || /veo/i.test(idl);
+  const route = isSeedance ? "seedance" : isWan ? "wan" : isVeo ? "veo" : "generic";
+
+  /* ══════════ ① Seedance 2.5：JSON + content[] + role ══════════
+   * 官方示例（docs.apiyi.com seedance2）：
+   *   {"model":"doubao-seedance-2-5-260628",
+   *    "content":[{"type":"text","text":"..."},
+   *                {"type":"image_url","image_url":{"url":"..."},"role":"first_frame"}],
+   *    "resolution":"720p","ratio":"adaptive","duration":5,"generate_audio":true}
+   * ★ 注意是 **JSON**，不是 FormData；参考素材靠 role 区分首帧/尾帧/参考图/参考视频/参考音频。
+   * ★ ratio 默认 **adaptive**（官方强制值），不是 16:9。
+   * ★ 2.5 的 duration缺省是 **-1**（模型自选），我们显式传，避免"不传就自动变时长"。
+   *
+   * ★★ 这里是 R34 最重要的一个设计：官方明确 `image_url.url` **支持公网 URL / Base64**，
+   *   所以**不需要 dataUrlToFile 转文件**（它只吃 dataURL 的 base64，见产物函数体）。
+   *   编辑器给的 blob: URL 直接传是行不通的，但编辑器可以给 **dataURL**（我们已有
+   *   `urlToDataUrl` 通道），官方也收 ⇒ **图片侧通道打通，无需 R2 中转**。
+   *   视频/音频同理：官方 `video_url.url` / `audio_url.url` 也收 URL 或 Base64。
+   */
+  if (route === "seedance") {
+    const content = [{ type: "text", text: String(prompt || "") }];
+    let refOk = 0;
+    const push = function (type, url, role) {
+      const u = String(url || "").trim();
+      if (!u) return;
+      /* 官方 asset:// 素材库 ID 也走同一个字段；这里不校验（那是 icover.ai 的另一把 key）。*/
+      content.push({ type: type, role: role, [type]: { url: u } });
+      refOk++;
+    };
+    if (opt.firstFrameUrl) push("image_url", opt.firstFrameUrl, "first_frame");
+    if (opt.lastFrameUrl) push("image_url", opt.lastFrameUrl, "last_frame");
+    (Array.isArray(opt.imageUrls) ? opt.imageUrls : []).forEach(function (u) { push("image_url", u, "reference_image"); });
+    (Array.isArray(opt.videoUrls) ? opt.videoUrls : []).forEach(function (u) { push("video_url", u, "reference_video"); });
+    (Array.isArray(opt.audioUrls) ? opt.audioUrls : []).forEach(function (u) { push("audio_url", u, "reference_audio"); });
+
+    const body = {
+      model: mid,
+      content: content,
+      resolution: String(e.resolution || "720p"),
+      ratio: String(e.ratio || "adaptive"),
+      duration: Number(e.duration) > 0 ? Number(e.duration) : -1,
+      generate_audio: e.generate_audio === undefined ? true : !!e.generate_audio,
+    };
+    if (e.watermark !== undefined) body.watermark = String(e.watermark) === "true";
+    if (e.seed !== undefined && String(e.seed).trim() !== "") body.seed = Number(e.seed);
+    if (opt.taskType) body.omni_reference_task_type = String(opt.taskType); /* edit / extend（2.5 独有） */
+    /* ★ 2.5 硬约束（违反提交时 400 不扣费）：编辑/延长/首帧类任务 ratio 必须 adaptive。
+     *   我们统一强制 adaptive —— adaptive 本身是官方强制值，不会变差，但能避免 400。*/
+    if (opt.taskType === "edit" || opt.taskType === "extend") {
+      body.ratio = "adaptive";
+      if (opt.taskType === "edit") body.duration = -1;
+    }
+    const path = "/seedance/api/v3/contents/generations/tasks";
+    console.info("[W5-route]", JSON.stringify({ phase: "apiyi-video-submit", route: route, model: mid, path: path, duration: body.duration, resolution: body.resolution, ratio: body.ratio, refs: refOk, ts: Date.now() }));
+
+    const sub = await Api._directReq("POST", path, body, { apiyi: true, timeout: apiyiTimeoutOf(mid, def, e.resolution) });
+    if (!sub || sub.error) {
+      const em = (sub && sub.error && (sub.error.message || sub.error)) || "";
+      throw new Error("APIYI Seedance 提交失败" + (em ? "：" + String(em) : "") + " · " + JSON.stringify(sub || {}).slice(0, 200));
+    }
+    const taskId = sub.id || sub.task_id || (sub.data && (sub.data.id || sub.data.task_id)) || "";
+    if (!taskId) throw new Error("APIYI Seedance 提交未返回任务 id（响应结构不符）· " + JSON.stringify(sub).slice(0, 200));
+    /*官方：首轮等 20-30s，间隔 10-20s；成功态是 **succeeded**（不是 completed）。 */
+    const last = await pollVideoTask(path + "/" + encodeURIComponent(taskId), taskId, mid, t0, { firstWait: 20000, pollMs: 12000, deadlineMs: 9e5 });
+    const raw = ((last || {}).content || {}).video_url || ((last || {}).data || {}).content && ((last.data || {}).content.video_url) || "";
+    const vurl = Array.isArray(raw) ? (raw[0] || "") : String(raw || "");
+    if (!vurl) throw new Error("APIYI Seedance 完成但未返回 content.video_url（响应结构不符，任务 " + taskId + "）· " + JSON.stringify(last).slice(0, 220));
+    console.info("[W5-route]", JSON.stringify({ phase: "apiyi-video-done", route: route, model: mid, taskId: taskId, secs: Math.round((Date.now() - t0) / 1000), usage: !!last.usage, ts: Date.now() }));
+    return { assetUrl: vurl, candidates: [vurl], usage: (last && last.usage) || null };
+  }
+
+  /* ══════════ ② Wan 3.0：DashScope 透传，**同步**返回（无 task_id 轮询）══════════
+   * 必须带 `X-DashScope-Async: enable`，否则报
+   * 「current user api does not support synchronous calls」（官方原文）。*/
+  if (route === "wan") {
+    const fd = new FormData();
+    fd.append("model", mid);
+    fd.append("prompt", prompt || "");
+    if (e.duration) fd.append("duration", String(e.duration));
+    if (e.resolution) fd.append("resolution", String(e.resolution));
+    if (e.ratio || e.aspectRatio) fd.append("ratio", String(e.ratio || e.aspectRatio));
+    let refOk = 0;
+    if (opt.firstFrameUrl) { try { fd.append("image", dataUrlToFile(opt.firstFrameUrl, "first-frame.png"), "first-frame.png"); refOk++; } catch (err) {} }
+    if (opt.lastFrameUrl) { try { fd.append("image", dataUrlToFile(opt.lastFrameUrl, "last-frame.png"), "last-frame.png"); refOk++; } catch (err) {} }
+    (Array.isArray(opt.imageUrls) ? opt.imageUrls : []).forEach(function (d, i) {
+      try { fd.append("image", dataUrlToFile(d, "ref-" + (i + 1) + ".png"), "ref-" + (i + 1) + ".png"); refOk++; } catch (err) {}
+    });
+    const path = "/wan/api/v1/services/aigc/video-generation/video-synthesis";
+    console.info("[W5-route]", JSON.stringify({ phase: "apiyi-video-submit", route: route, model: mid, path: path, duration: e.duration || null, resolution: e.resolution || null, refs: refOk, ts: Date.now() }));
+
+    /*★ 自定义头走 `opts.headers`（真值：Api.request 里 `...opts.headers || {}`，与 _sfImage
+       传 `{sf:true, headers}` 同源）。我第一版写了个 `dashscopeAsync: true` 是臆造的，
+       grep 不到 —— 已改。官方要求 `X-DashScope-Async: enable`，否则报
+       「current user api does not support synchronous calls」。*/
+    const sub = await Api._directReq("POST", path, fd, {
+      apiyi: true,
+      timeout: apiyiTimeoutOf(mid, def, e.resolution),
+      headers: { "X-DashScope-Async": "enable" },
+    });
+    if (!sub || sub.error) {
+      const em = (sub && sub.error && (sub.error.message || sub.error)) || "";
+      throw new Error("APIYI Wan 提交失败" + (em ? "：" + String(em) : "") + " · " + JSON.stringify(sub || {}).slice(0, 200));
+    }
+    const o0 = sub.output || (sub.data && sub.data.output) || sub;
+    const raw = o0.video_url || o0.videoUrl || "";
+    const vurl = Array.isArray(raw) ? (raw[0] || "") : String(raw || "");
+    if (!vurl) throw new Error("APIYI Wan 未返回 video_url（透传响应结构不符）· " + JSON.stringify(sub).slice(0, 200));
+    console.info("[W5-route]", JSON.stringify({ phase: "apiyi-video-done", route: route, model: mid, secs: Math.round((Date.now() - t0) / 1000), sync: true, ts: Date.now() }));
+    return { assetUrl: vurl, candidates: [vurl], usage: (sub.usage || null) };
+  }
+
+  /* ══════════ ③ VEO 3.1 官转：/v1/videos（只有这家用这个端点）══════════
+   * 时长 = **seconds（字符串）**；分辨率/比例走 metadata；参考图字段名固定 `input_reference`（单数、只1 张）。
+   * ★ 绝不发 generateAudio（官方明说回 INVALID_ARGUMENT）；音频意图写进 prompt。
+   * ★ 1080p / 4k 强制 seconds="8"（我们自动收敛，不让用户选到非法组合）。*/
+  if (route === "veo") {
+    const fd = new FormData();
+    fd.append("model", mid);
+    fd.append("prompt", String(prompt || "") + (e.wantAudio ? "（含环境音与音效）" : ""));
+    const res = String(e.resolution || "720p");
+    /* 官方识别优先级：metadata.durationSeconds > seconds > 8 */
+    let secs = String(e.duration || 8);
+    if (res === "1080p" || res === "4k") secs = "8"; /* 官方硬约束 */
+    fd.append("seconds", secs);
+    fd.append("size", res === "4k" ? "3840x2160" : res === "1080p" ? "1920x1080" : "1280x720");
+    fd.append("resolution", res);
+    if (e.ratio || e.aspectRatio) fd.append("aspectRatio", String(e.ratio || e.aspectRatio));
+    let refOk = 0;
+    const oneRef = opt.firstFrameUrl || (Array.isArray(opt.imageUrls) && opt.imageUrls[0]) || "";
+    if (oneRef) { try { fd.append("input_reference", dataUrlToFile(oneRef, "ref.png"), "ref.png"); refOk++; } catch (err) {} }
+    console.info("[W5-route]", JSON.stringify({ phase: "apiyi-video-submit", route: route, model: mid, path: "/v1/videos", seconds: secs, resolution: res, refs: refOk, note: "VEO 官方仅支持 1 张参考图", ts: Date.now() }));
+
+    const sub = await Api._directReq("POST", "/v1/videos", fd, { apiyi: true, timeout: apiyiTimeoutOf(mid, def, res) });
+    if (!sub || sub.error) {
+      const em = (sub && sub.error && (sub.error.message || sub.error)) || "";
+      throw new Error("APIYI VEO 提交失败" + (em ? "：" + String(em) : "") + " · " + JSON.stringify(sub || {}).slice(0, 200));
+    }
+    const taskId = sub.id || sub.task_id || (sub.data && (sub.data.id || sub.data.task_id)) || "";
+    if (!taskId) throw new Error("APIYI VEO 提交未返回任务 id（响应结构不符）· " + JSON.stringify(sub).slice(0, 200));
+    const last = await pollVideoTask("/v1/videos/" + encodeURIComponent(taskId), taskId, mid, t0, { firstWait: 5000, pollMs: 8000, deadlineMs: 9e5 });
+    const out = (last && last.output) || last || {};
+    const raw = out.video_url || out.videoUrl || out.url || (Array.isArray(out.content) && out.content[0] && out.content[0].url) || "";
+    const vurl = Array.isArray(raw) ? (raw[0] || "") : String(raw || "");
+    /* VEO 官方：无 video_url，只能 GET /v1/videos/{id}/content 拉流。
+       V2 **如实报错，不假造URL**（R16「无数据不编数」）。取流/转存留给 V3。*/
+    if (!vurl) {
+      throw new Error("APIYI VEO 通道不返回视频地址（官方只有 /v1/videos/{id}/content 二进制流，"
+        + "本批未接流式下载与 R2 转存）· 任务 " + taskId + "已生成成功，请在 APIYI 后台查看");
+    }
+    console.info("[W5-route]", JSON.stringify({ phase: "apiyi-video-done", route: route, model: mid, taskId: taskId, secs: Math.round((Date.now() - t0) / 1000), ts: Date.now() }));
+    return { assetUrl: vurl, candidates: [vurl], usage: (last && last.usage) || null };
+  }
+
+  /* ══════════ 兜底：未知模型 —— 沿用 /v1/videos（= V1 行为，不新增风险）══════════ */
+  const fd = new FormData();
+  fd.append("model", mid);
+  fd.append("prompt", prompt || "");
+  if (e.duration) fd.append("duration", String(e.duration));
+  if (e.resolution) fd.append("resolution", String(e.resolution));
+  console.info("[W5-route]", JSON.stringify({ phase: "apiyi-video-submit", route: "generic", model: mid, path: "/v1/videos", ts: Date.now() }));
+  const sub = await Api._directReq("POST", "/v1/videos", fd, { apiyi: true, timeout: apiyiTimeoutOf(mid, def, e.resolution) });
+  if (!sub || sub.error) throw new Error("APIYI 视频提交失败 · " + JSON.stringify(sub || {}).slice(0, 200));
+  const taskId = sub.id || sub.task_id || "";
+  if (!taskId) throw new Error("APIYI 视频提交未返回任务 id · " + JSON.stringify(sub).slice(0, 200));
+  const last = await pollVideoTask("/v1/videos/" + encodeURIComponent(taskId), taskId, mid, t0, { firstWait: 5000, pollMs: 8000, deadlineMs: 9e5 });
+  const out = (last && last.output) || last || {};
+  const raw = out.video_url || out.url || "";
+  const vurl = Array.isArray(raw) ? (raw[0] || "") : String(raw || "");
+  if (!vurl) throw new Error("APIYI 视频完成但未返回 video_url · " + JSON.stringify(last).slice(0, 200));
+  return { assetUrl: vurl, candidates: [vurl], usage: (last && last.usage) || null };
+}
+
+/* ══════════轮询器（抽出来共用，三家只是路径与节奏不同）══════════
+ * 官方状态词：Seedance 成功态是 **succeeded**；VEO 是 **completed**；Wan 不用（同步）。
+ * 状态字段位置也不统一（有的在 output.status、有的在顶层 status）⇒ 一并兜住。*/
+async function pollVideoTask(pollPath, taskId, modelId, t0, opt) {
+  const o = opt || {};
+  const pollMs = o.pollMs || 6000;
+  const deadlineMs = o.deadlineMs || 9e5;
+  const OK_ST = ["completed", "succeeded", "success", "done", "finished"];
+  const BAD_ST = ["failed", "error", "cancelled", "canceled", "rejected", "expired"];
+  console.info("[W5-route]", JSON.stringify({ phase: "apiyi-video-task", model: modelId, taskId: taskId, pollPath: pollPath, pollMs: pollMs, deadlineMs: deadlineMs, ts: Date.now() }));
+
+  let last = null;
+  for (let i = 0; ; i++) {
+    await new Promise(function (res) { setTimeout(res, i === 0 ? (o.firstWait || 5000) : pollMs); });
+    if (Date.now() - t0 > deadlineMs) {
+      throw new Error("APIYI 视频轮询超时（>" + Math.round(deadlineMs / 1000) + "s，任务 " + taskId + "）· 任务可能仍在跑，可稍后重试查看");
+    }
+    last = await Api._directReq("GET", pollPath, null, { apiyi: true, timeout: 6e4 });
+    if (last && last.error) {
+      throw new Error("APIYI 视频轮询出错（任务 " + taskId + "）：" + String(last.error.message || last.error).slice(0, 180));
+    }
+    const out = (last && last.output) || (last && last.data) || {};
+    const st = String(out.status || out.task_status || (last && (last.status || last.state)) || "");
+    const low = st.toLowerCase();
+    if (!st) {
+      /* 有时状态在 progress 里（VEO 只有 queued/in_progress/completed/failed），空就继续等。*/
+      if (last && last.error === undefined && last && (last.progress === 100)) break;
+      continue;
+    }
+    if (OK_ST.indexOf(low) >= 0) break;
+    if (BAD_ST.indexOf(low) >= 0) {
+      throw new Error("APIYI 视频生成失败（任务 " + taskId + "，状态 " + st + "）："
+        + String(out.message || out.code || (last && last.message) || "").slice(0, 180));
+    }
+  }
+  return last;
+}
+/* ══════ R34 · 视频适配器 V2 end ══════ */
+
+/* ══════ R34 · 视频桥（V2 · 由 _r34_video_host_bridge.js 拼入）══════ */
+/** ★★ R34（2026-10-04）· 宿主侧：把视频链路暴露给编辑器 —— 独立源文件，
+ *  由 `_gen-host-apiyi.mjs` 读入拼进产物最后一个 `<script>` 内。
+ *
+ *  R34 变化（配合 _r34_video_adapter.js 的 V2 签名）：
+ *    ① `apiyiVideo(prompt, def, ex)` —— 参考素材从第4/5 参**收进 `ex.__opts`**，
+ *       五种模式（无参考/首尾帧/参考图/参考视频/参考音频）都走这一个入口。
+ *    ② Seedance 走 JSON `content[]` + `role`（官方），**图片/视频/音频 URL 直传**，
+ *       不经 `dataUrlToFile`（那个函数只吃 dataURL 的 base64）。
+ *    ③ 编辑器侧终于能交出像素了 —— 见下方"像素交接"段。
+ *
+ *  为什么需要这一层桥：
+ *    · `apiyiVideo` 签名是**宿主内部口径**（def = 模型定义、ex = 扩展参数）。
+ *    · 编辑器的契约是 `generate({modelId, model, prompt, duration, ratio, refMode, …})`
+ *      （与位图动作的 bitmapHandlers 同构：编辑器不碰网络、只透传参数）。
+ *    · 两者不同构 ⇒ 这里做一层**纯形状转换**，**不碰任何请求逻辑**
+ *      （请求/轮询/错误分类全部沿用 R34 适配器，避免两套实现漂移）。
+ *
+ *  ⚠ 铁规矩：不静默失败（R17）。宿主没接视频能力时抛**明确**错误，
+ *    让编辑器把原因显示在面板上，而不是弹个 toast 让人以为还在生成。
+ */
+function makeVideoHandler() {
+  /* 小工具放在闭包内 —— 放模块顶层会污染宿主全局（产物里可能有同名）。*/
+  const strOrEmpty = function (v) { return typeof v === "string" ? v.trim() : ""; };
+  const arrOfStr = function (v) { return Array.isArray(v) ? v.filter(function (x) { return typeof x === "string" && x.trim(); }) : []; };
+
+  return async function hostVideoGenerate(req) {
+    const q = req || {};
+    const model = q.model || {};
+    const modelId = String(q.modelId || model.id || "");
+    if (!modelId) throw new Error("没有指定视频模型");
+    if (typeof apiyiVideo !== "function") {
+      throw new Error("宿主未加载视频适配器（apiyiVideo 未定义）—— 请刷新页面重试");
+    }
+    /* 模型定义对象：apiyiVideo 要的是 {id, modelId, label} 这套形状。
+       编辑器传下来的 `model` 是 catalog 条目（name/price/channel/params…），
+       这里只取它真正用得到的字段，其余原样带过去（未来 apiyiVideo 若要读别的字段不用再改桥）。 */
+    const def = Object.assign({}, model, {
+      id: modelId,
+      modelId: String(model.modelId || modelId),
+      label: model.label || model.name || modelId,
+    });
+
+    /* ── 参考素材（五模式）→ `ex.__opts` ────────────────────────────────────
+     * 编辑器侧已按 host refGroups 口径组织好；这里只做**形状整理 + 语义校验**。
+     * ⚠ 编辑器交的是**编辑器侧 objectURL/dataURL**，不是公网链。
+     *   官方 `image_url.url` / `video_url.url` / `audio_url.url` 收**公网 URL 或 Base64**
+     *   ⇒ 图片侧交 dataURL 即可打通（无需 R2 中转）；视频/音频若交 objectURL
+     *   上游取不到 —— 这种情况下 R34 适配器照发，但会拿到上游 4xx，如实抛错不假装。
+     */
+    const refs = q.refs || {};
+    const opt = {
+      firstFrameUrl: strOrEmpty(refs.firstFrameDataUrl),
+      lastFrameUrl: strOrEmpty(refs.lastFrameDataUrl),
+      imageUrls: arrOfStr(refs.imageDataUrls),
+      videoUrls: arrOfStr(refs.videoUrls),
+      audioUrls: arrOfStr(refs.audioUrls),
+      taskType: refs.taskType || "",
+    };
+
+    /* 扩展参数：duration / ratio / resolution 直接映射（apiyiVideo 认 e.duration 等）。
+       ★ VEO 的 seconds 是**字符串**且 1080p/4k 强制 "8" —— 那是适配器里的事，这里传数字。*/
+    const ex = {
+      duration: q.duration != null && q.duration !== "" ? Number(q.duration) : undefined,
+      ratio: q.ratio || undefined,
+      resolution: q.resolution || undefined,
+      generate_audio: q.generate_audio,
+      watermark: q.watermark,
+      seed: q.seed,
+      wantAudio: !!q.wantAudio,
+      __opts: opt,
+    };
+
+    /* ── 像素交接（R33 遗留边界的收口）──────────────────────────────────────
+     * R33 时编辑器只传 sourceNodeId、图留在编辑器侧 ⇒ 只能文生视频。
+     * R34 起编辑器会传 refs.firstFrameDataUrl / imageDataUrls。
+     * ⚠ **兼容**：老调用方（只给 sourceNodeId）仍可用 —— 此时 opt 全空= 纯文生。*/
+    if (!opt.firstFrameUrl && !opt.lastFrameUrl && !opt.imageUrls.length && typeof q.srcDataUrl === "string") {
+      opt.firstFrameUrl = strOrEmpty(q.srcDataUrl);
+    }
+    if (!opt.imageUrls.length && Array.isArray(q.refDataUrls)) opt.imageUrls = arrOfStr(q.refDataUrls);
+
+    const r = await apiyiVideo(String(q.prompt || ""), def, ex);
+    const url = (r && (r.assetUrl || (r.candidates && r.candidates[0]))) || "";
+    if (!url) throw new Error("视频生成完成但没有可播放的地址");
+    /* 返回编辑器要的形状。**不编造** durationMs / 宽高 ——
+       编辑器拿不到就留 0，由播放器读到 loadedmetadata 后自行修正。 */
+    return {
+      url: String(url),
+      posterUrl: (r && r.posterUrl) || "",
+      durationMs: Number((r && r.durationMs) || 0) || 0,
+      width: 0,
+      height: 0,
+      naturalWidth: 0,
+      naturalHeight: 0,
+      name: def.label,
+    };
+  };
+}
+/* ══════ R34 · 视频桥 end ══════ */
 </script></body>
 </html>
