@@ -18390,14 +18390,19 @@ llm: { chat: function(opts) { return studioSkillChat(opts); } },
 skills: studioSkills(),
 models: studioModels()
 },                                  /* tools 结束 */
-/* ★ V2（R33）：视频生成通道 —— 编辑器的「生成视频」动作靠它。
-   形状与 adapter.tools 同级：{generate({modelId,model,prompt,duration,ratio}) → {url,…}}。
-   ⚠ R32 的 apiyiVideo 签名是宿主内部口径，这里由 makeVideoHandler() 做纯形状转换，
-     **不重复实现请求逻辑**（轮询/错误分类沿用 R32，避免两套实现漂移）。 */
-videoHandlers: { generate: makeVideoHandler() }
 },
 on: { onError: function(err) { try { Toast.error(String((err && err.message) || err)); } catch (_) {} }, close: close, onThemeChange: function(t) { try { if (t === "light" || t === "dark") { localStorage.setItem("sc_studio_theme", t); const b = document.getElementById("studioInlinePrompt"); if (b) b.setAttribute("data-studio-theme", t); } } catch (_) {} } /* Z16（第七批）：+回写打开中输入条主题 */ } /* IMPL-129②：编辑器内点 ✕ → 调用宿主 close 关闭弹窗；旧版嵌入包忽略未知键无副作用。Z12（第七批）：+onThemeChange 编辑器内置主题开关回告写缓存（附录 A 契约，向后兼容；挂载初值不回告防回环——白名单校验仅收 light/dark） */
 ,
+/* ★★ V2 视频通道（R33 建 · R35 修正位置）：**挂 mount 顶层** —— 编辑器 embed 读的是
+   options.videoHandlers（顶层优先）/ adapter.videoActions（兼容位）。
+   R33 误挂 adapter 内 ⇒ 编辑器读到空对象 ⇒ 「视频」按钮永远灰（10-04 真机实测）。
+   ⚠ 不要改回 adapter 内；adapter 里的兼容位名字是 videoActions（复数）。 */
+videoHandlers: { generate: function (req) {
+  if (typeof makeVideoHandler !== "function") {
+    return Promise.reject(new Error("宿主视频通道未就绪：makeVideoHandler 未定义（宿主与编辑器版本不匹配）"));
+  }
+  return makeVideoHandler()(req);
+} },
 modelCatalog: buildModelCatalog() /* 第十三批 H7：参数 schema 宿主下发（actions×7 + models×3 含 SVG 图标）；旧嵌入包忽略未知键无副作用 */
 });
 const imgList = (opts.images && opts.images.length ? opts.images.slice(0, 12) : (opts.url ? [opts.url] : [])); /* W5 反馈①：多选一起进编辑器——images 数组逐张拉取后一次性 loadFiles（编辑器 loadFiles 原生接受数组，红线⑦未改 js） */
