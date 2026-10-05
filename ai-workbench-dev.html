@@ -2016,6 +2016,31 @@ html[data-theme="light"]{
 .status-pill.processing{color:var(--brand)}
 .ref-reading::after{border-top-color:var(--brand)}
 
+/* ══════════════════════════════════════════════════════════════════════════
+   R45-5 · 编辑器外壳跟随主题 + 次级菜单收尾
+   ──────────────────────────────────────────────────────────────────────────
+   ① 编辑器外壳（.studioModal / .studioTopbar）原为**硬编码珊瑚暗色**
+      （R14 换皮时写死 #101112 / #141517 / #292b2f / #f5f5f5）——
+      暗色下完全正确，但**切到亮色不会跟着变**（修选了「宿主和编辑器外壳对齐」）。
+      ⇒ 变量化，让它随宿主明暗两态。
+   ② 编辑器**内核**主题另由 JS 联动（生成器 R45-5 sub：open() 的 theme 读宿主 data-theme）。
+   ③ 次级菜单体检结论：.pp-item / .model-pick-opt / .history-filters / .skill-bubbles /
+      .sb-chip / .sm-cat-grp **本来就全变量** ⇒ R45-1 已自动带飞，无需覆盖。
+      真正要收的只有张数选项 .cp-opt（pill + 700 字重）。
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 编辑器外壳 ── */
+.studioModal{background:var(--bg);box-shadow:var(--shadow-lg)}
+.studioTopbar{background:var(--bg-elev);border-bottom:1px solid var(--border);color:var(--text)}
+.studioTitle{color:var(--text)}
+.studioHint{color:var(--text-muted)}
+.studioClose{color:var(--text-muted)}
+.studioClose:hover{color:var(--text);background:var(--surface-2)}
+
+/* ── 张数选项：pill → 小圆角；字重 700 → 500（珊瑚只用 400/500）── */
+.count-pop .cp-opt{border-radius:var(--radius-ctrl);font-weight:500}
+
+
 
 
 </style><script>/* R45-2：主题初始化 —— 在任何绘制前定主题（防闪烁）；默认暗色，用户选择存 w5_theme */
@@ -18575,7 +18600,7 @@ if (ov !== myOv) return;
 const loadingEl = myOv.querySelector(".studioLoading");
 if (loadingEl) loadingEl.remove();
 api = ImageStudio.mount(host, {
-theme: (function() { try { return localStorage.getItem("sc_studio_theme") || "light"; } catch (_) { return "light"; } })(), /* Z12（第七批）：读缓存缺省浅色——首次打开=浅色；用户在编辑器内切换经 onThemeChange 写回缓存，下次打开沿用（getTheme 可作宿主查询兑底，本处缓存空时缺省与契约一致无需用） */
+theme: (function() { try { var _dt = document.documentElement.getAttribute("data-theme"); if (_dt === "dark" || _dt === "light") return _dt; } catch (_) {} try { return localStorage.getItem("sc_studio_theme") || "dark"; } catch (_) { return "dark"; } })(), /* R45-5：内核主题跟随宿主 data-theme（避免「暗外壳+亮内核」）；宿主未定主题才回退缓存，缺省由浅改暗 */ /* Z12（第七批）：读缓存缺省浅色——首次打开=浅色；用户在编辑器内切换经 onThemeChange 写回缓存，下次打开沿用（getTheme 可作宿主查询兑底，本处缓存空时缺省与契约一致无需用） */
 layout: "fill", /* ★ 嵌入形态：填满卡片内部，不盖整页 */
 adapter: {
 applyToNode: function(p) { return handleApply(p); },
