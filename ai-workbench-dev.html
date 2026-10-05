@@ -2084,6 +2084,46 @@ html[data-theme="light"]{--text-dim:#8a8a8a;--text-muted:#5e5e5e}
 }
 .prompt-module textarea,.param-group textarea{border:none;background:transparent;box-shadow:none}
 
+/* ══════════════════════════════════════════════════════════════════════════
+   R46-2 · 层级精简 + 去描边深化 + 图标笔触统一
+   ──────────────────────────────────────────────────────────────────────────
+   DOM 树实测（`.param-panel` 深 8 层，探针 dump）看到的「面板套面板」：
+     · prompt-module（卡片）里套 skill-bubbles（**又一块卡片**）+ prompt-tools + doc-chips
+     · ref-section（卡片）里套 ref-grid（再一层）
+     · model-select-wrap（带边框）里套 model-pick-list（浮层）
+   描边实测 TOP（动态渲染后 182 个）：
+     input×31 · span.mp-chan×24 · button.ratio-cell×15 · i×15 · button.sw.duo×8 ·
+     button.cp-opt×4 · div.settings-section×4 · h4×4 · div.modal-header×4 · div.modal-footer×3
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── R46-2a 内部小块不再自成卡片（只保留最外层一层卡片感）── */
+.skill-bubbles{background:transparent;border:none;padding:2px 0;animation:none}
+.doc-chips{background:transparent;border:none;padding:2px 0}
+.prompt-vars{background:transparent;border:none;padding:2px 0}
+.ref-grid{background:transparent;border:none}
+.model-meta{background:transparent;border:none}
+
+/* ── R46-2b 去描边深化：用**颜色**分界 ── */
+span.mp-chan{border:none;background:var(--surface-3)}
+button.ratio-cell{border:none;background:var(--surface-2)}
+.modal-header,.modal-footer,.settings-header,.history-header,.history-footer{
+  border-image:none;border-top:none;border-bottom:none;
+}
+.modal-header,.settings-header,.history-header{border-bottom:1px solid var(--border-soft)}
+.modal-footer,.history-footer{border-top:1px solid var(--border-soft)}
+div.settings-section{border:none}
+/* 输入框：去描边、改底色（聚焦时用底色的强调版反馈，而不是描边）*/
+input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=file]),
+textarea,select{border-color:transparent;background-color:var(--surface-2)}
+input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=file]):focus,
+textarea:focus,select:focus{background-color:var(--surface-3);outline:none}
+
+/* ── R46-8 图标统一：以编辑器 199 库的**渲染骨架**为准（viewBox 24 / fill none /
+   stroke currentColor / width 2 / round cap·join）。宿主 130 个内联 SVG 自有各的笔触，
+   用 CSS 压过 presentation attribute（CSS 优先级高于 SVG 属性）⇒ 一笔统一，零改 130 处 DOM。 */
+svg:not([data-keep-stroke]){stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+
 
 
 
@@ -2321,7 +2361,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
             <button class="fh" type="button">外观</button>
             <div class="fbody">
               <div class="fsub">主题预设</div>
-              <div class="fchips" id="sfx-theme"><button type="button" class="sw duo" data-ink="182,188,198" data-base="#ffffff" title="素白" aria-label="主题：素白"><i style="background:#ffffff"></i><i style="background:#b6bcc6"></i></button><button type="button" class="sw duo" data-ink="150,158,172" data-base="#f8f9fb" title="银灰" aria-label="主题：银灰"><i style="background:#f8f9fb"></i><i style="background:#969cac"></i></button><button type="button" class="sw duo" data-ink="176,166,148" data-base="#f7f3ea" title="米纸" aria-label="主题：米纸"><i style="background:#f7f3ea"></i><i style="background:#b0a694"></i></button><button type="button" class="sw duo" data-ink="148,178,172" data-base="#eef5f3" title="淡青" aria-label="主题：淡青"><i style="background:#eef5f3"></i><i style="background:#94b2ac"></i></button><button type="button" class="sw duo" data-ink="194,170,140" data-base="#f9f2e7" title="暖沙" aria-label="主题：暖沙"><i style="background:#f9f2e7"></i><i style="background:#c2aa8c"></i></button><button type="button" class="sw duo on" data-ink="122,130,144" data-base="#1b1e24" title="石墨" aria-label="主题：石墨"><i style="background:#1b1e24"></i><i style="background:#7a8290"></i></button><button type="button" class="sw duo" data-ink="186,206,238" data-base="#1d3557" title="蓝图" aria-label="主题：蓝图"><i style="background:#1d3557"></i><i style="background:#baceee"></i></button><button type="button" class="sw duo" data-ink="140,166,148" data-base="#18211b" title="苔径" aria-label="主题：苔径"><i style="background:#18211b"></i><i style="background:#8ca694"></i></button></div>
+              <div class="fchips" id="sfx-theme"><button type="button" class="sw duo" data-ink="242,138,115" data-base="#fafafa" title="珊瑚 · 编辑器亮" aria-label="主题：珊瑚亮"><i style="background:#fafafa"></i><i style="background:#f28a73"></i></button><button type="button" class="sw duo" data-ink="242,138,115" data-base="#101112" title="珊瑚 · 编辑器暗" aria-label="主题：珊瑚暗"><i style="background:#101112"></i><i style="background:#f28a73"></i></button><button type="button" class="sw duo" data-ink="176,166,148" data-base="#f7f3ea" title="米纸" aria-label="主题：米纸"><i style="background:#f7f3ea"></i><i style="background:#b0a694"></i></button><button type="button" class="sw duo" data-ink="148,178,172" data-base="#eef5f3" title="淡青" aria-label="主题：淡青"><i style="background:#eef5f3"></i><i style="background:#94b2ac"></i></button><button type="button" class="sw duo" data-ink="194,170,140" data-base="#f9f2e7" title="暖沙" aria-label="主题：暖沙"><i style="background:#f9f2e7"></i><i style="background:#c2aa8c"></i></button><button type="button" class="sw duo on" data-ink="122,130,144" data-base="#1b1e24" title="石墨" aria-label="主题：石墨"><i style="background:#1b1e24"></i><i style="background:#7a8290"></i></button><button type="button" class="sw duo" data-ink="186,206,238" data-base="#1d3557" title="蓝图" aria-label="主题：蓝图"><i style="background:#1d3557"></i><i style="background:#baceee"></i></button><button type="button" class="sw duo" data-ink="140,166,148" data-base="#18211b" title="苔径" aria-label="主题：苔径"><i style="background:#18211b"></i><i style="background:#8ca694"></i></button></div>
               <div class="fsub">主格间隔</div>
               <div class="fchips" id="sfx-major"><button type="button" data-major="0">关</button><button type="button" data-major="5" class="on">5</button><button type="button" data-major="10">10</button></div>
               <div class="fsub">坐标轴</div>
@@ -18836,7 +18876,10 @@ return { open: open, close: close };
   };
   var BASE_DARK = {
     "#f8f9fb": "#1f2229", "#ffffff": "#23262e", "#f2f3f5": "#1d2027",
-    "#e9ecef": "#252a33", "#1b1e24": "#1b1e24"
+    "#e9ecef": "#252a33", "#1b1e24": "#1b1e24",
+    "#fafafa": "#101112", "#101112": "#101112"
+    /* R46-4：编辑器 canvas 的明暗两值 —— 有了它，珊瑚亮主题切到暗色模式会**自动落到 canvas 暗**，
+       而不是留一块亮色地台（原表只有 5 个值，没有 #fafafa ⇒ 之前改完会「又黑又白」）。 */
   };
 
   function T() {
