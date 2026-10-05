@@ -2324,6 +2324,41 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 /* 三按钮搬离提示词行后，把「右推位」转挂到工具行分隔线上（保持「左工具 | 右文档」原布局） */
 .prompt-tools .tools-divider{margin-left:auto}
 
+/* ══════════════════════════════════════════════════════════════════════════
+   R53 · 技能区 + 参考图模块 精修（10-05 22:4x · 修「⑦参考图模块 ⑧技能模型部分 真丑」）
+   ──────────────────────────────────────────────────────────────────────────
+   客观问题（均可在产物里复核）：
+   ① 技能区四控件风格不齐：
+      · .skill-pick-btn 13px/500 vs 媒体模型框 .model-pick-btn 14px/600（并列显示却不同规格）
+      · 讨论栏 select 是原生外观（带 border），与两侧无边框钮不齐
+      · popover 内容还是「设置式大行」：min-height 50px + hover 位移/大阴影（弹窗内笨重又晃）
+   ② 参考图模块漏网：.ref-section/.ref-mode-section 仍带 1px border（R46-2 去描边没覆盖到）；
+      .ref-mode-row 还是 999px 胶囊（全站已收口小圆角 ⇒ 此处漏网）；.sm-search 带 border
+   精修原则：沿用既定语言 —— 扁平（底色区分）/ 小圆角 / 高度·字号·间距统一节奏。**不改结构**。
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── ① 技能区：统一到媒体模型框的规格 ── */
+.skill-pick-btn{padding:8px 28px 8px 11px;font-size:14px;font-weight:600}
+.skill-pick-btn #skillModelBadge{font-size:14px;font-weight:600}
+.skill-head-wrap .skill-col-2 .sm-vision-row{min-height:38px}
+.skill-head-wrap .skill-col-2 .sm-select{height:29px;padding:0 6px;border:none;background:var(--surface-3);border-radius:6px;font-size:13px;color:var(--text)}
+/* popover 内容：设置大行 → 弹窗紧凑行 */
+#setSecModel .skill-model-list{gap:6px;margin:0 0 8px}
+#setSecModel .skill-model-row{min-height:38px;padding:7px 10px;gap:2px 6px}
+#setSecModel .skill-model-row:hover{transform:none;box-shadow:none}
+#setSecModel .skill-model-row.sel::before{top:6px;bottom:6px}
+#setSecModel .sm-name{font-size:12px}
+#setSecModel .sm-desc{font-size:10px;padding-left:12px;margin-top:1px}
+#setSecModel .sm-chip{font-size:10px;padding:2px 6px}
+#setSecModel .sm-search{border:none;background:var(--surface-3);border-radius:8px}
+#setSecModel .sm-search:focus{box-shadow:inset 0 0 0 1px var(--brand)}
+
+/* ── ② 参考图模块：去描边 + 分段收口 ── */
+.ref-section,.ref-mode-section{border:none;background:var(--surface-2)}
+.ref-mode-row{border:none;border-radius:var(--radius-sm);background:var(--surface-3);padding:2px;gap:2px}
+.ref-mode-btn{border-radius:6px;min-height:26px;padding:5px 8px}
+.ref-mode-btn.active{background:var(--bg-elev);color:var(--brand);box-shadow:none}
+
 
 
 
