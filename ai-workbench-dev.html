@@ -2236,6 +2236,52 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
    缘由：参数行按整行宽度设计，强行两列 ⇒ 挤压/溢出/错位 = 修反馈「面板全乱套了」。
    重做第 8/10 条前先与修确认现象与期望。 */
 
+/* ══════════════════════════════════════════════════════════════════════════
+   R50 · 参数滑条（音量/语速/音调/时长…）真·对齐编辑器（10-05 21:5x）
+   ──────────────────────────────────────────────────────────────────────────
+   为什么 R48 的全局滑条没生效（修：「音量语速的滑条为啥还是旧样式」）：
+   参数区 range 的旧规则**特异性更高**，把全局规则压死 ——
+     · `.range-row input[type=range]`（0,2,1）：input 自身 4px 渐变色充轨道
+     · `.range-row input[type=range].is-liquid::-webkit-slider-thumb`（0,3,2）：
+       16px **蓝色玻璃球**（写死 radial-gradient #3b82f6 + 发光描边）
+     · moz 端还有 12px 液态蓝渐变进度
+   对比 R48 全局 `input[type=range]` 系列仅（0,1,1）⇒ **确定性失效**（这就是「为什么没改」）。
+   ⇒ 本条以同规格 `.range-row input[type=range].is-liquid`（0,3,2）+ 靠后顺序逐项覆盖，
+      统一为编辑器 `.is-action-range` 口径：**2px 细轨（border-strong）+ 12px 无边框圆滑块（text 色）**。
+   覆盖对象 = 全部 range 参数（语速/音量/音调/…），音频模式自然在内。
+   ══════════════════════════════════════════════════════════════════════════ */
+.range-row input[type=range],
+.range-row input[type=range].is-liquid{
+  flex:1;height:18px;padding:0;border-radius:0;background:transparent;box-shadow:none;
+}
+.range-row input[type=range]::-webkit-slider-runnable-track,
+.range-row input[type=range].is-liquid::-webkit-slider-runnable-track{
+  height:2px;border-radius:9999px;background:var(--border-strong);box-shadow:none;
+}
+.range-row input[type=range]::-webkit-slider-thumb,
+.range-row input[type=range].is-liquid::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:12px;height:12px;margin-top:-5px;
+  border-radius:50%;background:var(--text);border:none;box-shadow:none;cursor:pointer;
+}
+.range-row input[type=range]:hover::-webkit-slider-thumb,
+.range-row input[type=range].is-liquid:hover::-webkit-slider-thumb{
+  box-shadow:none;transform:none;
+}
+.range-row input[type=range].is-liquid:hover{box-shadow:none}
+.range-row input[type=range].is-liquid::-webkit-slider-thumb:active{transform:none;cursor:pointer}
+.range-row input[type=range]::-moz-range-track,
+.range-row input[type=range].is-liquid::-moz-range-track{
+  height:2px;border-radius:9999px;background:var(--border-strong);
+}
+.range-row input[type=range]::-moz-range-progress,
+.range-row input[type=range].is-liquid::-moz-range-progress{
+  height:2px;border-radius:9999px;background:var(--border-strong);
+}
+.range-row input[type=range]::-moz-range-thumb,
+.range-row input[type=range].is-liquid::-moz-range-thumb{
+  width:12px;height:12px;border:none;border-radius:50%;background:var(--text);box-shadow:none;
+}
+
 
 
 
