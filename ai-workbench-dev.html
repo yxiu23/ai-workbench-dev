@@ -2216,9 +2216,9 @@ body{background:transparent !important}
 .switch.on{background:var(--brand)}
 .switch.on .sw-dot{background:#fff;transform:translateX(14px)}
 input[type=range]{-webkit-appearance:none;appearance:none;background:transparent;height:18px}
-input[type=range]::-webkit-slider-runnable-track{height:2px;border-radius:999px;background:var(--border-strong)}
+input[type=range]::-webkit-slider-runnable-track{height:2px;border-radius:999px;background:var(--border)}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--brand);margin-top:-5px;border:none}
-input[type=range]::-moz-range-track{height:2px;border-radius:999px;background:var(--border-strong)}
+input[type=range]::-moz-range-track{height:2px;border-radius:999px;background:var(--border)}
 input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--brand);border:none}
 
 /* ── ④ 生成按钮常驻（提示词框不能把它挤出界面）── */
@@ -2258,7 +2258,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .range-row input[type=range]::-webkit-slider-runnable-track,
 .range-row input[type=range].is-liquid::-webkit-slider-runnable-track{
   height:4px;border-radius:999px;box-shadow:none;
-  background:linear-gradient(to right,var(--brand) 0 var(--fill,50%),var(--border-strong) var(--fill,50%) 100%);
+  background:linear-gradient(to right,var(--brand) 0 var(--fill,50%),var(--border) var(--fill,50%) 100%);
 }
 .range-row input[type=range]::-webkit-slider-thumb,
 .range-row input[type=range].is-liquid::-webkit-slider-thumb{
@@ -2273,7 +2273,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .range-row input[type=range].is-liquid::-webkit-slider-thumb:active{transform:none;cursor:pointer}
 .range-row input[type=range]::-moz-range-track,
 .range-row input[type=range].is-liquid::-moz-range-track{
-  height:4px;border-radius:999px;background:var(--border-strong);
+  height:4px;border-radius:999px;background:var(--border);
 }
 .range-row input[type=range]::-moz-range-progress,
 .range-row input[type=range].is-liquid::-moz-range-progress{
@@ -2359,6 +2359,76 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .ref-mode-btn{border-radius:6px;min-height:26px;padding:5px 8px}
 .ref-mode-btn.active{background:var(--bg-elev);color:var(--brand);box-shadow:none}
 
+/* ══════════════════════════════════════════════════════════════════════════
+   R54 · 修 6 条（10-05 22:4x）
+   ──────────────────────────────────────────────────────────────────────────
+   ② 滑条填充显示修复：★ 根因（像素取证）= webkit 把「双位置色标 + var()」组合整条丢弃
+      —— `linear-gradient(to right, A 0 var(--fill), B var(--fill) 100%)` 解析失败 ⇒ 轨道掉回
+      单色灰（截图逐行扫描：整条轨道同色灰、仅 12% 处一个珊瑚方钮）＝ 修看到的「没进度显示」。
+      修复：改用 .sv-fpanel 同款「单位置色标」写法 + background-color 兜底；轨 4→6px、方钮 10→12px
+      （修：「滑条就一点点」）。
+   ③ 三模式按钮：宽版铺满（grid 3×1fr + ::after 文字）——「宽度要自适应面板 不要居左」。
+   ④⑥ 五模块统一（高级扁平化）：技能区/媒体模型框/参数区补同款卡片（surface-2 + radius-md + padding），
+      与提示词/参考图同底同圆角 ⇒ 左侧全统一（修：「颜色要统一…居然有色差」）。
+   ⑤ 参考图上传框：品牌橙（brand-soft 底 + 品牌字/图标，hover 加深）——「改成激发时的橙色」。
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── ① 讨论模型按钮化：select 隐形化（保留 showPicker 可用性）── */
+.skill-col-2{position:relative}
+.skill-col-2 #skillModeModel{position:absolute;left:10px;top:100%;width:1px;height:1px;opacity:0;pointer-events:none;margin:0;padding:0;border:0}
+
+/* ── ② 滑条：★ 终极方案 = input 自身背景作「轨道+填充」（插桩实验证实可行）──
+   为什么放弃伪元素 track 背景：该环境下 `::-webkit-slider-runnable-track` 的 background
+   **完全不渲染**（像素取证：任何写法/无论 2px/6px，轨道区恒为背后卡片底色）；
+   而 input 自身的 background 渲染正常（插桩 #00ff00 实验：整条绿可见）。
+   ⇒ input 本体 = 6px 圆角轨道；填充 = 同一背景里的品牌色渐变（--fill 驱动）；
+     伪元素轨道仅保留高度并透明化（不遮挡）；thumb = 12px 方块。 */
+.range-row input[type=range],
+.range-row input[type=range].is-liquid{
+  flex:1;height:6px;padding:0;border-radius:999px;
+  -webkit-appearance:none;appearance:none;
+  background-color:var(--border);
+  background-image:linear-gradient(90deg,var(--brand) var(--fill,0%),var(--border) var(--fill,0%));
+  box-shadow:none;
+}
+.range-row input[type=range]::-webkit-slider-runnable-track,
+.range-row input[type=range].is-liquid::-webkit-slider-runnable-track{
+  height:6px;background:transparent;border:none;box-shadow:none;
+}
+.range-row input[type=range]::-webkit-slider-thumb,
+.range-row input[type=range].is-liquid::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;width:12px;height:12px;margin-top:-3px;
+  border:none;border-radius:3px;background:var(--brand);box-shadow:none;cursor:pointer;
+}
+.range-row input[type=range]::-moz-range-track,
+.range-row input[type=range].is-liquid::-moz-range-track{
+  height:6px;border-radius:999px;background:transparent;border:none;
+}
+.range-row input[type=range]::-moz-range-progress,
+.range-row input[type=range].is-liquid::-moz-range-progress{
+  height:6px;border-radius:999px;background:var(--brand);
+}
+.range-row input[type=range]::-moz-range-thumb,
+.range-row input[type=range].is-liquid::-moz-range-thumb{
+  width:12px;height:12px;border:none;border-radius:3px;background:var(--brand);box-shadow:none;
+}
+
+/* ── ③ 三模式按钮：宽版铺满 + 文字（不居左）── */
+.skill-mode-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:0}
+.skill-mode-row .mode-btn{width:100%;height:34px;justify-content:center;gap:6px;font-size:12px;font-weight:500}
+.skill-mode-row .mode-btn[data-mode-think]::after{content:"思考模式"}
+.skill-mode-row .mode-btn[data-mode-relay]::after{content:"接棒模式"}
+.skill-mode-row .mode-btn[data-mode-discuss]::after{content:"讨论模式"}
+
+/* ── ④⑥ 五模块统一（同底/同圆角；缺底的补卡）── */
+.skill-head-wrap{background:var(--surface-2);border-radius:var(--radius-md);padding:12px}
+.model-select-wrap{background:var(--surface-2);border-radius:var(--radius-md);padding:10px 12px}
+#paramForm{background:var(--surface-2);border-radius:var(--radius-md);padding:12px}
+
+/* ── ⑤ 参考图上传框：品牌橙 ── */
+.ref-add{background:var(--brand-soft);color:var(--brand)}
+.ref-add:hover{background:color-mix(in srgb,var(--brand) 16%,transparent);color:var(--brand)}
+
 
 
 
@@ -2434,10 +2504,12 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
           </button>
         </div>
         <div class="skill-col skill-col-2">
-          <div class="sm-vision-row">
-            <label for="skillModeModel">讨论模型<span id="skillModeTag" class="sm-mode-tag" hidden>讨论</span></label>
-            <select id="skillModeModel" class="sm-select" aria-label="讨论模型选择"></select>
-          </div>
+          <button type="button" class="skill-pick-btn" id="discussModelBtn" aria-haspopup="listbox" aria-expanded="false">
+            <span class="sp-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+            <span id="discussModelBadge">讨论模型</span>
+            <svg class="mp-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <select id="skillModeModel" class="sm-select" aria-label="讨论模型选择" tabindex="-1"></select>
         </div>
       </div>
       <div class="prompt-tools skill-mode-row">
@@ -11730,6 +11802,28 @@ try { this.renderSkillModels(); } catch (_) {}
     });
   });
 })(this);
+/* ── R54：讨论模型按钮（与技能模型同款样式；点击唤起原生下拉；badge 同步）── */
+(function () {
+  var btn = document.getElementById("discussModelBtn");
+  var sel = document.getElementById("skillModeModel");
+  var badge = document.getElementById("discussModelBadge");
+  function syncBadge() {
+    if (!sel || !badge) return;
+    var o = sel.options[sel.selectedIndex];
+    badge.textContent = o ? o.textContent : (sel.value || "讨论模型");
+  }
+  if (btn && sel) {
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      try { sel.showPicker(); } catch (_) { try { sel.focus(); } catch (__) {} }
+    });
+    sel.addEventListener("change", syncBadge);
+    if (window.MutationObserver) {
+      try { new MutationObserver(syncBadge).observe(sel, { childList: true }); } catch (_) {}
+    }
+    syncBadge();
+  }
+})();
 /* ── R51：技能模型区（弹出面板开合 + 讨论模式单/双栏联动）── */
 (function () {
   var btn = document.getElementById("skillModelPickBtn");
@@ -11761,9 +11855,11 @@ try { this.renderSkillModels(); } catch (_) {}
     wrap.setAttribute("data-discuss", on ? "1" : "0");
   }
   syncCols();
-  var discSw = document.getElementById("skillDiscussToggle");
+  /* R54 修正：R52 把三开关换成 mode-btn 后，旧 id #skillDiscussToggle 已不存在
+     ⇒ 观察对象改为技能区的讨论按钮（_syncModeUI 会更新它的 class / aria-pressed） */
+  var discSw = document.querySelector(".skill-mode-row [data-mode-discuss]") || document.getElementById("skillDiscussToggle");
   if (discSw && window.MutationObserver) {
-    try { new MutationObserver(syncCols).observe(discSw, { attributes: true, attributeFilter: ["class", "aria-checked"] }); } catch (_) {}
+    try { new MutationObserver(syncCols).observe(discSw, { attributes: true, attributeFilter: ["class", "aria-checked", "aria-pressed"] }); } catch (_) {}
   }
 })();
 {
