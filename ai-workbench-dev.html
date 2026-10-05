@@ -2554,6 +2554,64 @@ svg:not([data-keep-stroke]) *{stroke-width:2;stroke-linecap:round;stroke-linejoi
 .prompt-module textarea,.param-group textarea{border:1px solid var(--border);background:transparent;border-radius:var(--radius-sm);box-shadow:none}
 .prompt-module textarea:focus,.param-group textarea:focus{border-color:var(--brand);box-shadow:none;background:transparent}
 
+/* ══════════════════════════════════════════════════════════════════════════
+   R57 · 修第六轮（10-06）
+   ──────────────────────────────────────────────────────────────────────────
+   ① 音频生成隐藏「技能模型」模块（技能与音频无关）——
+      body:has(#tabs .tab[data-tab=audio].active) 零 JS 联动；
+      #skillPop 弹层在 #setSecModel 内（探针 popInside=True）⇒ 一并隐藏。
+   ② 音色等参数行 10px 小字提示全部去掉（修：把框架挤变形了）——
+      field-hint（音色「需百炼音色 id · 速创克隆不通用」/ 文本「非流式 ≤2000 字符」）·
+      ref-hint（参考区块标题右侧）· ref-field-hint（参考文本字段）。
+   ③ 设置抽屉去小字 + 去幽灵高度：toggle-sub（云同步说明）· clean-card i（副标签）·
+      set-status 空态（实测 #vaultStatus 空态占 25px）。
+   ④ 结果区上下两条悬浮菜单统一成同款 + 大圆角：
+      实色 var(--bg-elev) + 1px var(--border) + var(--shadow-lg) + radius 14px + 去模糊。
+      ⚠ 必须一并覆盖 [data-svfloor=dark] 变体（地台主色是深色时引擎写该属性，
+      原深玻璃渐变 (0,3,0) 特异性会压过普通规则）——基线实测：
+      floatbar = 深玻璃 .62 / r8px / 无模糊；caption = 深玻璃 .64 / r10px / blur16px
+      ⇒ 两者本来就不同，这就是「做相同的样式」的根因。
+      ▶ 深色地台属性在场时，按钮/分隔线/标题文字改回主题色
+      （否则亮色主题 + 深地台 = 浅色字浮在浅底上，不可读）。
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── ① 音频模式：隐藏技能模型模块 ── */
+body:has(#tabs .tab[data-tab="audio"].active) #setSecModel{display:none}
+
+/* ── ② 参数区小字提示全隐藏 ── */
+.field-hint,.ref-hint,.ref-field-hint{display:none}
+
+/* ── ③ 设置抽屉去小字 ── */
+.settings-drawer .toggle-sub{display:none}
+.settings-drawer .clean-txt i{display:none}
+/* set-status 状态小字全隐藏（锁态「○ 凭据已加密，解锁后可用」25px / 云同步长段落 /
+   解锁后「阿里云密钥未就位」）——错误反馈走 Toast 不受影响；锁态仍由「已锁定」徽标呈现 */
+.settings-drawer .set-status{display:none}
+
+/* ── ④ 结果区两条悬浮菜单统一（上 caption = 下 floatbar 同款 + 大圆角）── */
+.sv-docklayer .sv-floatbar,
+[data-svfloor] .sv-docklayer .sv-floatbar,
+.sv-caplayer .sv-caption,
+[data-svfloor] .sv-caplayer .sv-caption{
+  background:var(--bg-elev);
+  border:1px solid var(--border);
+  box-shadow:var(--shadow-lg);
+  border-radius:14px;
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+}
+/* floatbar 顶部高光细线（玻璃语言遗留）——实色底上不需要 */
+.sv-docklayer .sv-floatbar::before{display:none}
+/* 深色地台属性在场时，按钮/分隔线/标题文字改回主题色 */
+[data-svfloor] .sv-floatbar .sv-hb-btn{color:var(--text-muted)}
+[data-svfloor] .sv-floatbar .sv-hb-btn:hover{background:var(--brand-soft);color:var(--brand)}
+[data-svfloor] .sv-floatbar .sv-hb-btn.danger:hover{background:var(--danger-soft);color:var(--danger)}
+[data-svfloor] .sv-floatbar .sv-hb-btn.on{background:var(--brand-soft);color:var(--brand)}
+[data-svfloor] .sv-floatbar .sv-fb-sep{background:var(--border)}
+[data-svfloor] .sv-cap-model{color:var(--text)}
+[data-svfloor] .sv-cap-time{color:var(--text-dim)}
+[data-svfloor] .sv-cap-prompt{color:var(--text-muted)}
+
 
 
 
