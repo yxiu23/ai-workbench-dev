@@ -2237,17 +2237,18 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
    重做第 8/10 条前先与修确认现象与期望。 */
 
 /* ══════════════════════════════════════════════════════════════════════════
-   R50 · 参数滑条（音量/语速/音调/时长…）真·对齐编辑器（10-05 21:5x）
+   R50+R52 · 参数滑条（音量/语速/音调/时长…）对齐**最新编辑器**滑条（10-05 22:1x 最终口径）
    ──────────────────────────────────────────────────────────────────────────
-   为什么 R48 的全局滑条没生效（修：「音量语速的滑条为啥还是旧样式」）：
-   参数区 range 的旧规则**特异性更高**，把全局规则压死 ——
+   ★ 口径修正（修：「语速音量这种流体滑条你设计的什么东西 …你知道最新的编辑器在哪吗」）：
+     最新编辑器滑条的真身 = **.is-param-bar-input**（R43 视频面板那支）：**4px 轨 + 品牌色填充 + 10px 方形滑块**；
+     R48/R50 抄的 .is-action-range（2px 圆钮）是**旧口径** —— 抄错对象，此处改回最新口径。
+   为什么 R48 的全局滑条没生效（特异性被旧规则压死）：
      · `.range-row input[type=range]`（0,2,1）：input 自身 4px 渐变色充轨道
      · `.range-row input[type=range].is-liquid::-webkit-slider-thumb`（0,3,2）：
        16px **蓝色玻璃球**（写死 radial-gradient #3b82f6 + 发光描边）
-     · moz 端还有 12px 液态蓝渐变进度
-   对比 R48 全局 `input[type=range]` 系列仅（0,1,1）⇒ **确定性失效**（这就是「为什么没改」）。
-   ⇒ 本条以同规格 `.range-row input[type=range].is-liquid`（0,3,2）+ 靠后顺序逐项覆盖，
-      统一为编辑器 `.is-action-range` 口径：**2px 细轨（border-strong）+ 12px 无边框圆滑块（text 色）**。
+   ⇒ 本条以同规格 `.range-row input[type=range].is-liquid`（0,3,2）+ 靠后顺序逐项覆盖：
+      4px 轨 + `--fill` 驱动品牌色填充（宿主 JS 已 set --fill=百分比，与编辑器 --p 同构）+
+      10px 方形滑块（圆角 3px，brand 色）。
    覆盖对象 = 全部 range 参数（语速/音量/音调/…），音频模式自然在内。
    ══════════════════════════════════════════════════════════════════════════ */
 .range-row input[type=range],
@@ -2256,12 +2257,13 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 }
 .range-row input[type=range]::-webkit-slider-runnable-track,
 .range-row input[type=range].is-liquid::-webkit-slider-runnable-track{
-  height:2px;border-radius:9999px;background:var(--border-strong);box-shadow:none;
+  height:4px;border-radius:999px;box-shadow:none;
+  background:linear-gradient(to right,var(--brand) 0 var(--fill,50%),var(--border-strong) var(--fill,50%) 100%);
 }
 .range-row input[type=range]::-webkit-slider-thumb,
 .range-row input[type=range].is-liquid::-webkit-slider-thumb{
-  -webkit-appearance:none;appearance:none;width:12px;height:12px;margin-top:-5px;
-  border-radius:50%;background:var(--text);border:none;box-shadow:none;cursor:pointer;
+  -webkit-appearance:none;appearance:none;width:10px;height:10px;margin-top:-3px;
+  border:none;border-radius:3px;background:var(--brand);box-shadow:none;cursor:pointer;
 }
 .range-row input[type=range]:hover::-webkit-slider-thumb,
 .range-row input[type=range].is-liquid:hover::-webkit-slider-thumb{
@@ -2271,15 +2273,15 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .range-row input[type=range].is-liquid::-webkit-slider-thumb:active{transform:none;cursor:pointer}
 .range-row input[type=range]::-moz-range-track,
 .range-row input[type=range].is-liquid::-moz-range-track{
-  height:2px;border-radius:9999px;background:var(--border-strong);
+  height:4px;border-radius:999px;background:var(--border-strong);
 }
 .range-row input[type=range]::-moz-range-progress,
 .range-row input[type=range].is-liquid::-moz-range-progress{
-  height:2px;border-radius:9999px;background:var(--border-strong);
+  height:4px;border-radius:999px;background:var(--brand);
 }
 .range-row input[type=range]::-moz-range-thumb,
 .range-row input[type=range].is-liquid::-moz-range-thumb{
-  width:12px;height:12px;border:none;border-radius:50%;background:var(--text);box-shadow:none;
+  width:10px;height:10px;border:none;border-radius:3px;background:var(--brand);box-shadow:none;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -2311,6 +2313,16 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .skill-toggles-row .toggle-label{font-size:12px;color:var(--text-muted)}
 .skill-pop{position:absolute;left:0;right:0;top:calc(100% - 2px);z-index:46;background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);padding:12px 12px 6px;max-height:min(430px,62vh);overflow:auto}
 .skill-pop[hidden]{display:none}
+
+/* ── R52：技能区三模式按钮（提示词工具行的原按钮**原样**搬入）──
+   容器带 .prompt-tools 类 ⇒ `.prompt-tools .mode-btn` 全系样式自动命中（30×30 双底灰边、
+   hover/on 品牌语言……），零复制样式。此处只收两处：
+   ① think 的 margin-left:auto（那是提示词行的右推位，技能区不需要）
+   ② 行间距/上边距微调（贴合技能区） */
+.skill-mode-row{gap:6px;padding:2px 0 0}
+.skill-mode-row .mode-btn[data-mode-think]{margin-left:0}
+/* 三按钮搬离提示词行后，把「右推位」转挂到工具行分隔线上（保持「左工具 | 右文档」原布局） */
+.prompt-tools .tools-divider{margin-left:auto}
 
 
 
@@ -2393,19 +2405,11 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
           </div>
         </div>
       </div>
-      <div class="skill-toggles-row">
-        <div class="settings-toggle sm-think-row">
-          <div><div class="toggle-label">思考模式</div></div>
-          <div class="toggle-switch" id="skillThinkToggle" role="switch" aria-checked="true" tabindex="0" aria-label="思考模式"></div>
-        </div>
-        <div class="settings-toggle sm-think-row">
-          <div><div class="toggle-label">接棒模式</div></div>
-          <div class="toggle-switch on" id="skillRelayToggle" role="switch" aria-checked="true" tabindex="0" aria-label="接棒模式"></div>
-        </div>
-        <div class="settings-toggle sm-think-row">
-          <div><div class="toggle-label">讨论模式</div></div>
-          <div class="toggle-switch" id="skillDiscussToggle" role="switch" aria-checked="false" tabindex="0" aria-label="讨论模式"></div>
-        </div>
+      <div class="prompt-tools skill-mode-row">
+        <button type="button" class="mode-btn" data-mode-think title="思考模式（深度思考链）" aria-pressed="false" aria-label="思考模式"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></button>
+        <button type="button" class="mode-btn" data-mode-relay title="接棒模式（识图→思考接力，与讨论互斥）" aria-pressed="false" aria-label="接棒模式"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></button>
+        <button type="button" class="mode-btn" data-mode-discuss title="讨论模式（双模型会诊+终结者，与接棒互斥）" aria-pressed="false" aria-label="讨论模式"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z"/><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/></svg></button>
+
       </div>
       <div class="skill-pop" id="skillPop" hidden>
         <div id="skillModelList" class="skill-model-list" role="radiogroup" aria-label="技能模型选择"></div>
@@ -2418,6 +2422,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
       </div>
     </div>
     <div id="paramForm" style="display:flex !important;flex-direction:column;gap:14px;"></div>
+    <div class="generate-section">
     <div class="model-select-wrap">
       <select id="modelSelect" class="model-select" aria-label="模型选择"></select>
       <button type="button" class="model-pick-btn" id="modelPickBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="modelPickList" aria-label="选择模型">
@@ -2429,7 +2434,6 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
       <div class="model-meta" id="modelMeta"></div>
       <div class="model-desc" id="modelDesc"></div>
     </div>
-    <div class="generate-section">
                   <div class="form-actions-row" id="formActionsRow">
         <button type="button" class="param-quick-btn" id="paramQuickBtnRatio" data-pq-mode="ratio" aria-expanded="false" aria-controls="paramQuickPanel" aria-label="比例参数">
           <span class="pq-ratio-glyph" data-pq-glyph="ratio" aria-hidden="true"></span>
@@ -11679,6 +11683,18 @@ $("#skillModelRefreshBtn").addEventListener("click", () => this.refreshSkillMode
 /* R51-4b：技能区现常显于主面板（此前 renderSkillModels 只在「打开设置」时被调 —— @openSettings）
    ⇒ 补一次初始渲染，否则列表/徽标到首次打开设置前都是空的 */
 try { this.renderSkillModels(); } catch (_) {}
+/* ── R52：三模式按钮的事件绑定（原提示词工具行的按钮 → 技能区；原 wrap 内绑定随搬离失效）── */
+(function (app) {
+  var box = document.querySelector(".skill-mode-row");
+  if (!box) return;
+  [["think", "_flipThink"], ["relay", "_flipRelay"], ["discuss", "_flipDiscuss"]].forEach(function (pair) {
+    var b = box.querySelector("[data-mode-" + pair[0] + "]");
+    if (b) b.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (app[pair[1]]) app[pair[1]]();
+    });
+  });
+})(this);
 /* ── R51：技能模型区（弹出面板开合 + 讨论模式单/双栏联动）── */
 (function () {
   var btn = document.getElementById("skillModelPickBtn");
@@ -13188,7 +13204,7 @@ wrap.style.position = "relative";
 const promptParam = model.params.find(p => p.type === "textarea");
 const key = promptParam.key;
 const defVal = this.state.formCache[this.state.modelKey]?.[key] ?? promptParam.default ?? "";
-wrap.innerHTML = `\n      <div class="prompt-head">\n        <span class="prompt-title">提示词</span>\n        <div class="prompt-actions">\n          <span id="wfActionsSlot" style="display:contents"></span>\n          <button class="preset-trigger" id="presetTrigger" title="技能 · 预设 · 模板">\n            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>\n            <span>技能</span>\n          </button>\n          <button class="prompt-save-btn" id="savePresetBtn" title="保存为预设" aria-label="保存为预设"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" width="14" height="14"><path d="M5 12h14"/><path d="M12 5v14"/></svg></button>\n        </div>\n      </div>\n      <div class="skill-bubbles" data-skill-bubbles hidden></div>\n      <textarea data-key="${esc(key)}" placeholder="${esc(promptParam.placeholder || "描述你想要生成的内容...")}" >${esc(defVal)}</textarea>\n      <div class="prompt-tools">\n        <button class="tool-btn icon-only" data-action="recent" title="最近使用的提示词" aria-label="最近使用的提示词"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 1.5"/></svg></button>\n        <button class="tool-btn icon-only" data-action="clear" title="清空提示词" aria-label="清空提示词"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>\n        <button type="button" class="mode-btn" data-mode-think title="思考模式（深度思考链）" aria-pressed="false" aria-label="思考模式"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></button>\n        <button type="button" class="mode-btn" data-mode-relay title="接棒模式（识图→思考接力，与讨论互斥）" aria-pressed="false" aria-label="接棒模式"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></button>\n        <button type="button" class="mode-btn" data-mode-discuss title="讨论模式（双模型会诊+终结者，与接棒互斥）" aria-pressed="false" aria-label="讨论模式"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z"/><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/></svg></button>\n        <span class="tools-divider" role="separator" aria-orientation="vertical"></span>\n        <button type="button" class="doc-btn" data-doc-btn aria-haspopup="dialog" aria-label="上传文档" title="上传文档给模型分析（文本类文件，随下一条消息发送）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></button><button type="button" class="wand-btn" data-wand aria-haspopup="dialog" aria-label="AI优化" title="选择技能，优化提示词"><svg class="ico-wand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg><svg class="ico-stop" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button><button type="button" class="mic-btn" data-mic aria-label="语音输入" title="语音输入：录音→语音识别→整理填入提示词"><svg class="ico-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg><svg class="ico-stop" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button>\n      </div>\n      <input type="file" data-doc-input multiple accept=".txt,.md,.markdown,.json,.csv,.tsv,.log,.xml,.html,.htm,.srt,.vtt,.yaml,.yml,.ini,.conf,.cfg,.js,.ts,.jsx,.tsx,.css,.py,.java,.c,.cpp,.h,.sh,.sql,.rs,.go,.rb,.php,.kt,.swift" hidden>\n      <div class="doc-chips" data-doc-chips hidden></div>\n      <div class="prompt-vars" data-vars hidden></div>\n      <div class="prompt-history-list" id="phList"></div>\n      <div class="skill-panel" data-skill-panel hidden></div>\n    `;
+wrap.innerHTML = `\n      <div class="prompt-head">\n        <span class="prompt-title">提示词</span>\n        <div class="prompt-actions">\n          <span id="wfActionsSlot" style="display:contents"></span>\n          <button class="preset-trigger" id="presetTrigger" title="技能 · 预设 · 模板">\n            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>\n            <span>技能</span>\n          </button>\n          <button class="prompt-save-btn" id="savePresetBtn" title="保存为预设" aria-label="保存为预设"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" width="14" height="14"><path d="M5 12h14"/><path d="M12 5v14"/></svg></button>\n        </div>\n      </div>\n      <div class="skill-bubbles" data-skill-bubbles hidden></div>\n      <textarea data-key="${esc(key)}" placeholder="${esc(promptParam.placeholder || "描述你想要生成的内容...")}" >${esc(defVal)}</textarea>\n      <div class="prompt-tools">\n        <button class="tool-btn icon-only" data-action="recent" title="最近使用的提示词" aria-label="最近使用的提示词"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 1.5"/></svg></button>\n        <button class="tool-btn icon-only" data-action="clear" title="清空提示词" aria-label="清空提示词"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>\n                <span class="tools-divider" role="separator" aria-orientation="vertical"></span>\n        <button type="button" class="doc-btn" data-doc-btn aria-haspopup="dialog" aria-label="上传文档" title="上传文档给模型分析（文本类文件，随下一条消息发送）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></button><button type="button" class="wand-btn" data-wand aria-haspopup="dialog" aria-label="AI优化" title="选择技能，优化提示词"><svg class="ico-wand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg><svg class="ico-stop" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button><button type="button" class="mic-btn" data-mic aria-label="语音输入" title="语音输入：录音→语音识别→整理填入提示词"><svg class="ico-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg><svg class="ico-stop" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button>\n      </div>\n      <input type="file" data-doc-input multiple accept=".txt,.md,.markdown,.json,.csv,.tsv,.log,.xml,.html,.htm,.srt,.vtt,.yaml,.yml,.ini,.conf,.cfg,.js,.ts,.jsx,.tsx,.css,.py,.java,.c,.cpp,.h,.sh,.sql,.rs,.go,.rb,.php,.kt,.swift" hidden>\n      <div class="doc-chips" data-doc-chips hidden></div>\n      <div class="prompt-vars" data-vars hidden></div>\n      <div class="prompt-history-list" id="phList"></div>\n      <div class="skill-panel" data-skill-panel hidden></div>\n    `;
 const ta = wrap.querySelector("textarea");
 ta.addEventListener("input", () => this._onPromptInput(ta));
 ta.addEventListener("focus", () => {
