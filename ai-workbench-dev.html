@@ -18415,6 +18415,24 @@ videoHandlers: { generate: function (req) {
     return Promise.reject(new Error("宿主视频通道未就绪：makeVideoHandler 未定义（宿主与编辑器版本不匹配）"));
   }
   return makeVideoHandler()(req);
+}, 
+/* ★★ R44（2026-10-05）：**提交前核验通道**（修：「符合规范的方能提交 不符合的就弹出提醒」）。
+   纯本地、**同步、不出网、不烧积分** —— 编辑器点发送前先问它，不通过就不提交并弹提醒。
+   规则来源（单一真值源，不抄第二份）：
+     · 通用层：必填缺 / 素材数超上限 / 无任何输入（编辑器数据驱动）
+     · 速创层：**直接调用宿主既有** normalizeAndValidateApiBody（互斥/尾帧配对/上限/本地地址）
+     · APIYI 层：只放官方明文约束（VEO input_reference 单数、仅 1 张）
+   见 _r34_video_host_bridge.js 的 validateVideoRequest()（同一份折叠逻辑，保证
+   "校验的输入 == 发出的输入"）。 */
+validate: function (req) {
+  if (typeof validateVideoRequest !== "function") {
+    return { ok: false, errors: [{ level: "error", message: "宿主核验通道未就绪（validateVideoRequest 未定义，宿主与编辑器版本不匹配）—— 请刷新页面" }] };
+  }
+  try {
+    return validateVideoRequest(req);
+  } catch (e) {
+    return { ok: false, errors: [{ level: "error", message: "核验出错：" + String((e && e.message) || e) }] };
+  }
 } },
 modelCatalog: buildModelCatalog() /* 第十三批 H7：参数 schema 宿主下发（actions×7 + models×3 含 SVG 图标）；旧嵌入包忽略未知键无副作用 */
 });
@@ -18466,6 +18484,15 @@ if (retry) retry.addEventListener("click", function() { open(opts); });
 try { Toast.error("编辑器加载失败，请检查网络后重试"); } catch (_) {}
 });
 }
+/* ★★★ R44：把视频链路需要的宿主助手**显式暴露到全局**。
+   它们都活在本 IIFE 内部，而视频适配器/桥在另一块 <script> ⇒ 裸调 = ReferenceError
+   （2026-10-05 实测：APIYI 三档请求一条都发不出去）。取值见 _r44_host_caps.js。 */
+window.__w5Host = Object.assign(window.__w5Host || {}, {
+  apiyiTimeoutOf: apiyiTimeoutOf,       /* APIYI 请求超时（图片 300/600s，视频同族） */
+  wyUploadDataUrl: wyUploadDataUrl,     /* dataURL → R2 公网 URL（速创/Wan 的参考素材必经） */
+  wyCompressDataUrl: wyCompressDataUrl, /* 上传前长边压缩（wyUploadDataUrl 内部依赖） */
+  dataUrlToFile: dataUrlToFile,         /* dataURL → File（VEO 的 input_reference 必用） */
+});
 return { open: open, close: close };
 })();
 </script>
@@ -19933,6 +19960,71 @@ return { open: open, close: close };
   applyMotion();
 })();
 
+/* ══════ R44 · 宿主能力表（由 _r44_host_caps.js 拼入；视频链路的跨 script 契约）══════ */
+/** ★★★ R44（2026-10-05）· 宿主能力表 —— 独立源文件，由 `_gen-host-apiyi.mjs`
+ *  读入拼进产物**最后一个 `<script>`** 的开头（在视频适配器/桥之前）。
+ *
+ *  ══════ 为什么需要它（一次真机事故换来的）══════
+ *  标题：**跨 `<script>` 边界裸调宿主内部函数 = 定时炸弹**。
+ *
+ *  宿主有大量助手定义在 `window.StudioEditor = (function(){ … })()` **这个 IIFE 内部**
+ *  （产物 script 块 17404–18471）：`apiyiTimeoutOf` · `wyUploadDataUrl` ·
+ *  `wyCompressDataUrl` · `dataUrlToFile`；
+ *  而我们的视频适配器/桥被拼进**另一个** `<script>`（18472+）——
+ *  在那里裸写 `apiyiTimeoutOf(...)` 得到的是 **ReferenceError**，不是"稍后就有"。
+ *
+ *  真机后果（`验收/_probe_r44_models.py` 实测）：
+ *   · APIYI 三档（Seedance/VEO/Wan）**请求一条都发不出去** ——
+ *     报 `apiyiTimeoutOf is not defined`；而 R40 的探针只读了 `[W5-route]` **日志行**，
+ *     那条 `console.info` 恰好打在 `Api._directReq(..., {timeout: apiyiTimeoutOf(...)})`
+ *     **之前** ⇒ **日志显示"参数全部送达"，请求从未发出**（铁规矩 28 由此而立）。
+ *   · 速创 6 档：纯文生可用，**一挂参考素材就挂**（`wyUploadDataUrl` 不可见）；
+ *   · VEO 参考图：被 `try{}catch{}` **静默吞掉**（日志 `refs:0`），而官方
+ *     `input_reference` 是**必填** ⇒ 连文生都会被上游拒。
+ *
+ *  ══════ 约定 ══════
+ *  `_gen-host-apiyi.mjs` 的 R44 sub 在 StudioEditor IIFE 的收尾处（所有助手都已定义）
+ *  插入一行把它们挂到 `window.__w5Host`；本文件只做**取用 + 守卫**。
+ *  · `w5Host()`  —— 取能力表（可能为空对象，永不抛）
+ *  · `w5Need(name, hint)` —— 取一个**必须存在**的函数；缺失时抛**明确**原因（R17：不静默失败）
+ *
+ *  ⚠ 为什么不用 `typeof x !== "function"` 就地判断 + 兜底实现：兜底 = 第二份实现
+ *    （宿主改了这边不知道，铁规矩 23 的"抄成两份必然漂移"）。宁可**明确报错**，
+ *    也不静默用另一份可能过时的逻辑 —— 尤其 `apiyiTimeoutOf` 关系到"客户端超时**不会**
+ *    取消上游、照常计费"，猜一个偏短的超时 = 花了钱拿不到东西。
+ */
+function w5Host() {
+  return (typeof window !== "undefined" && window.__w5Host) ? window.__w5Host : {};
+}
+
+/** 取一个必须存在的宿主能力函数；缺失就抛明确错误（带上"怎么办"的指引）。 */
+function w5Need(name, hint) {
+  const h = w5Host();
+  const f = h[name];
+  if (typeof f !== "function") {
+    throw new Error(
+      "宿主能力缺失：" + name + "（宿主与编辑器版本不匹配——请刷新页面；若仍报此错，说明宿主件未更新）"
+      + (hint ? " · " + hint : "")
+    );
+  }
+  return f;
+}
+
+/** APIYI 请求超时：宿主给足（图片 300/600s，视频同族）。缺失时**明确报错**，不猜数。 */
+function w5TimeoutOf(modelId, def, size) {
+  return w5Need("apiyiTimeoutOf", "该函数决定客户端等待时长；猜短了会「断开不取消上游、照常计费」")(
+    modelId, def, size
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   R44 自检（静态判据读这些字面量：check_r44_video_wiring.py）
+     · 能力表取值口：w5Host / w5Need / w5TimeoutOf
+     · 明确报错文案：宿主能力缺失
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ══════ R44 · 宿主能力表 end ══════ */
+
 /* ══════ R34 · APIYI 视频适配器 V2（三家分流· 由 _r34_video_adapter.js 拼入）══════ */
 /** ★★ R34 · APIYI 视频生成适配器 V2 —— 独立源文件，由生成器读入拼进产物。
  *
@@ -20034,7 +20126,7 @@ async function apiyiVideo(prompt, def, ex, refs) {
     const path = "/seedance/api/v3/contents/generations/tasks";
     console.info("[W5-route]", JSON.stringify({ phase: "apiyi-video-submit", route: route, model: mid, path: path, duration: body.duration, resolution: body.resolution, ratio: body.ratio, refs: refOk, ts: Date.now() }));
 
-    const sub = await Api._directReq("POST", path, body, { apiyi: true, timeout: apiyiTimeoutOf(mid, def, e.resolution) });
+    const sub = await Api._directReq("POST", path, body, { apiyi: true, timeout: w5TimeoutOf(mid, def, e.resolution) });
     if (!sub || sub.error) {
       const em = (sub && sub.error && (sub.error.message || sub.error)) || "";
       throw new Error("APIYI Seedance 提交失败" + (em ? "：" + String(em) : "") + " · " + JSON.stringify(sub || {}).slice(0, 200));
@@ -20098,7 +20190,7 @@ async function apiyiVideo(prompt, def, ex, refs) {
        `...opts.headers || {}`）。 */
     const sub = await Api._directReq("POST", path, payload, {
       apiyi: true,
-      timeout: apiyiTimeoutOf(mid, def, e.resolution),
+      timeout: w5TimeoutOf(mid, def, e.resolution),
       headers: { "X-DashScope-Async": "enable" },
     });
     if (!sub || sub.error) {
@@ -20136,10 +20228,19 @@ async function apiyiVideo(prompt, def, ex, refs) {
     if (e.ratio || e.aspectRatio) fd.append("aspectRatio", String(e.ratio || e.aspectRatio));
     let refOk = 0;
     const oneRef = opt.firstFrameUrl || (Array.isArray(opt.imageUrls) && opt.imageUrls[0]) || "";
-    if (oneRef) { try { fd.append("input_reference", dataUrlToFile(oneRef, "ref.png"), "ref.png"); refOk++; } catch (err) {} }
+    if (oneRef) {
+      /* ★★ R44（2026-10-05）：`input_reference` 是官方 **必填**（OpenAPI required 三件之一）
+         ⇒ 转换失败必须**抛出来**。R34 这里写的是 `try{…}catch(err){}` —— 实测后果：
+         `dataUrlToFile` 跨 script 不可见（ReferenceError）被静默吞掉 ⇒ 日志 `refs:0`、
+         带着参考图却一张都没发，而官方缺必填直接拒 ⇒ **用户什么都看不到**。
+         `dataUrlToFile` 现在经宿主能力表取（缺失时抛明确原因，见 _r44_host_caps.js）。 */
+      const toFile = w5Need("dataUrlToFile", "VEO 的 input_reference 必须文件形态（官方不收远程 URL）");
+      fd.append("input_reference", toFile(oneRef, "ref.png"), "ref.png");
+      refOk++;
+    }
     console.info("[W5-route]", JSON.stringify({ phase: "apiyi-video-submit", route: route, model: mid, path: "/v1/videos", seconds: secs, resolution: res, refs: refOk, note: "VEO 官方仅支持 1 张参考图", ts: Date.now() }));
 
-    const sub = await Api._directReq("POST", "/v1/videos", fd, { apiyi: true, timeout: apiyiTimeoutOf(mid, def, res) });
+    const sub = await Api._directReq("POST", "/v1/videos", fd, { apiyi: true, timeout: w5TimeoutOf(mid, def, res) });
     if (!sub || sub.error) {
       const em = (sub && sub.error && (sub.error.message || sub.error)) || "";
       throw new Error("APIYI VEO 提交失败" + (em ? "：" + String(em) : "") + " · " + JSON.stringify(sub || {}).slice(0, 200));
@@ -20149,14 +20250,19 @@ async function apiyiVideo(prompt, def, ex, refs) {
     const last = await pollVideoTask("/v1/videos/" + encodeURIComponent(taskId), taskId, mid, t0, { firstWait: 5000, pollMs: 8000, deadlineMs: 9e5 });
     const out = (last && last.output) || last || {};
     const raw = out.video_url || out.videoUrl || out.url || (Array.isArray(out.content) && out.content[0] && out.content[0].url) || "";
-    const vurl = Array.isArray(raw) ? (raw[0] || "") : String(raw || "");
-    /* VEO 官方：无 video_url，只能 GET /v1/videos/{id}/content 拉流。
-       V2 **如实报错，不假造URL**（R16「无数据不编数」）。取流/转存留给 V3。*/
+    let vurl = Array.isArray(raw) ? (raw[0] || "") : String(raw || "");
+    /* ★★ R44（2026-10-05）：VEO **必须自己拉流** —— 官方文档「响应字段陷阱」逐字：
+         「**没有直接的 `video_url` 字段**，视频从 `GET /v1/videos/{task_id}/content` 下载」
+       旧实现到这里就抛「本批未接流式下载」⇒ **片子生成了、用户拿不到**（还照扣费）。
+       现在：查不到 URL ⇒ 走 /content 拉二进制 → Blob → objectURL。 */
+    let via = "url";
     if (!vurl) {
-      throw new Error("APIYI VEO 通道不返回视频地址（官方只有 /v1/videos/{id}/content 二进制流，"
-        + "本批未接流式下载与 R2 转存）· 任务 " + taskId + "已生成成功，请在 APIYI 后台查看");
+      const bin = await fetchVeoContent(taskId);
+      vurl = bin.blobUrl;
+      via = "content";
+      console.info("[W5-route]", JSON.stringify({ phase: "apiyi-video-content", route: route, model: mid, taskId: taskId, bytes: bin.bytes, type: bin.type, ts: Date.now() }));
     }
-    console.info("[W5-route]", JSON.stringify({ phase: "apiyi-video-done", route: route, model: mid, taskId: taskId, secs: Math.round((Date.now() - t0) / 1000), ts: Date.now() }));
+    console.info("[W5-route]", JSON.stringify({ phase: "apiyi-video-done", route: route, model: mid, taskId: taskId, via: via, secs: Math.round((Date.now() - t0) / 1000), ts: Date.now() }));
     return { assetUrl: vurl, candidates: [vurl], usage: (last && last.usage) || null };
   }
 
@@ -20167,7 +20273,7 @@ async function apiyiVideo(prompt, def, ex, refs) {
   if (e.duration) fd.append("duration", String(e.duration));
   if (e.resolution) fd.append("resolution", String(e.resolution));
   console.info("[W5-route]", JSON.stringify({ phase: "apiyi-video-submit", route: "generic", model: mid, path: "/v1/videos", ts: Date.now() }));
-  const sub = await Api._directReq("POST", "/v1/videos", fd, { apiyi: true, timeout: apiyiTimeoutOf(mid, def, e.resolution) });
+  const sub = await Api._directReq("POST", "/v1/videos", fd, { apiyi: true, timeout: w5TimeoutOf(mid, def, e.resolution) });
   if (!sub || sub.error) throw new Error("APIYI 视频提交失败 · " + JSON.stringify(sub || {}).slice(0, 200));
   const taskId = sub.id || sub.task_id || "";
   if (!taskId) throw new Error("APIYI 视频提交未返回任务 id · " + JSON.stringify(sub).slice(0, 200));
@@ -20177,6 +20283,49 @@ async function apiyiVideo(prompt, def, ex, refs) {
   const vurl = Array.isArray(raw) ? (raw[0] || "") : String(raw || "");
   if (!vurl) throw new Error("APIYI 视频完成但未返回 video_url · " + JSON.stringify(last).slice(0, 200));
   return { assetUrl: vurl, candidates: [vurl], usage: (last && last.usage) || null };
+}
+
+/* ══════════ VEO 取流（R44 新增）══════════
+ * 官方原文（docs.apiyi.com · veo-3-1-official/image-to-video ·「响应字段陷阱」）：
+ *   「**没有直接的 `video_url` 字段**，视频从 `GET /v1/videos/{task_id}/content` 下载」
+ *   「`/content` 端点必须带 `Authorization` 请求头——直接在浏览器地址栏打开会返回 401」
+ *   「`/content` 端点在 `status` 刚翻 `completed` 后偶发 400，等 4 秒重试即可（CDN 同步延迟）」
+ * ⇒ 走**同一条 Worker 代理**（Authorization 由 Worker 注入），拿到 Blob 造 objectURL。
+ *
+ * ★ 口径与 APIYI **图片通道**一致（修 2026-10-01 拍板：「平时走 blob URL，导出时才转」）——
+ *   视频同源处理，**不预上传 R2**（省一次往返）。代价如实记：blob: 只在**本页面会话**内有效。
+ *   视频 URL 永久化（R2 转存）仍是待办，不在本批。
+ */
+async function fetchVeoContent(taskId) {
+  const w = ((typeof Store !== "undefined" && Store.getR2WorkerUrl && Store.getR2WorkerUrl()) || "").trim().replace(/\/$/, "");
+  if (!w) throw new Error("no_worker_url: 未配置 R2 Worker 地址（VEO 取片走同一条代理通道）");
+  const token = (typeof Store !== "undefined" && Store.getR2AuthToken && Store.getR2AuthToken()) || "";
+  const url = w + "/media/apiyi/v1/videos/" + encodeURIComponent(taskId) + "/content?token=" + encodeURIComponent(token);
+  let lastErr = "";
+  for (let i = 0; i < 4; i++) {
+    if (i) await new Promise(function (r) { setTimeout(r, 4000); });   /* 官方：等 4 秒重试 */
+    let res = null;
+    try {
+      res = await fetch(url);
+    } catch (e) {
+      /* 网络层直接抛（离线 / 被拦 / CORS）—— 记原因后按"可重试"处理，别把裸 TypeError 抛给用户 */
+      lastErr = String((e && e.message) || e);
+      continue;
+    }
+    if (res.ok) {
+      const blob = await res.blob();
+      if (blob && blob.size) {
+        return { blobUrl: URL.createObjectURL(blob), bytes: blob.size, type: blob.type || "" };
+      }
+      lastErr = "空响应";
+      continue;
+    }
+    lastErr = "HTTP " + res.status;
+    /* 只对"刚完成"的抖动重试（官方说 400；404 一并兜）；其余（401/403/500）立刻报，别耗 16 秒 */
+    if (res.status !== 400 && res.status !== 404) break;
+  }
+  throw new Error("APIYI VEO 取片失败（" + lastErr + "）· 任务 " + taskId
+    + " 已生成成功，可稍后在 APIYI 后台查看（不重试以免重复计费）");
 }
 
 /* ══════════轮询器（抽出来共用，三家只是路径与节奏不同）══════════
@@ -20240,79 +20389,113 @@ async function pollVideoTask(pollPath, taskId, modelId, t0, opt) {
  *  本文件把 ①②③④ 原样接起来，**只补一件宿主页面不需要做的事**：
  *    素材在编辑器里是**本地数据**（dataURL），得先经 `wyUploadDataUrl` 转公网 URL —— 见下。
  *
+ *  ══════ ★ R44（2026-10-05）：组 body 抽成 `wyBuildBody()`，核验与提交**共用同一份** ══════
+ *  修：「增加一个核验的功能 就是提交的请求是否符合规范 符合规范的方能提交 不符合的就弹出提醒」。
+ *  核验要在**点发送时**跑（素材还都是本地 dataURL、也没上传），所以 `wyBuildBody` 加一个
+ *  `publicize:false` 模式：素材换成**占位公网 URL**（`https://pending-upload.invalid/…`），
+ *  这样宿主校验器的「不能使用本地文件地址」那条不会误报，而**结构类规则**
+ *  （必填 / 各档互斥 / 尾帧配首帧 / 数量上限）照样生效。
+ *  ⇒ **绝不抄第二份 body 组装逻辑**（抄两份必漂移，铁规矩 23）。
+ *
  *  ══════ ★ 素材上传（顺手解决 Wan 的老问题）══════
  *  `wyUploadDataUrl(dataUrl, name, dir)` 是宿主既有的「dataURL → R2 公网 URL」通道
  *  （IMPL-151 Z18 定稿；位图通道早就在用）。速创**只吃公网 URL**，而宿主校验
  *  `normalizeAndValidateApiBody` 还会**直接拒** `blob:` / `data:` / `file:`
  *  （「不能使用本地文件地址，请先上传」）⇒ 不传就是必挂。
- *  同一个要求也卡着 APIYI 的 Wan（官方 `media[].url` 要公网 https）—— 见桥里的分流。
+ *  ★ R44 订正：该函数在 `window.StudioEditor` 的 IIFE 内、与本文件**不同 script**
+ *    ⇒ 经 `w5Need("wyUploadDataUrl")` 取（实测裸调 = ReferenceError）。
  *
  *  ⚠ 三条铁规矩：
  *    · **不静默失败**（R17）：上传不了、提交失败、轮询失败、取不到片，全部抛**带原因**的错误。
  *    · **不编数**（R16）：不猜时长/宽高，交回 URL 让播放器自己读。
  *    · **不重复实现请求逻辑**：提交/轮询/取片全走宿主的 `Api`，本文件只做形状转换。
  */
-async function wyVideo(prompt, def, ex) {
-  const t0 = Date.now();
+
+/* ── 素材公网化（dataURL / blob → R2 公网 URL；已是 http(s) 原样放行）──────────
+ *   ⚠ 上传不了就**抛清楚原因**（R17）—— 绝不把 dataURL 当公网 URL 蒙过去：
+ *     上游要么取不到、要么被宿主校验拒掉（「不能使用本地文件地址，请先上传」）。*/
+async function _wyToPublic(u, name) {
+  const s = String(u == null ? "" : u).trim();
+  if (!s) return "";
+  if (/^https?:\/\//i.test(s)) return s;
+  const up = w5Need("wyUploadDataUrl", "速创只收公网 URL，本地素材必须先转存");
+  if (/^data:/i.test(s)) return await up(s, name, "tmp");
+  /* blob: / 其它 ⇒ 先读成 dataURL 再上传（编辑器正常会直接交 dataURL，这里是兜底） */
+  const resp = await fetch(s);
+  const blob = await resp.blob();
+  const dataUrl = await new Promise(function (ok, no) {
+    const fr = new FileReader();
+    fr.onload = function () { ok(String(fr.result || "")); };
+    fr.onerror = function () { no(new Error("参考素材读取失败：" + name)); };
+    fr.readAsDataURL(blob);
+  });
+  return await up(dataUrl, name, "tmp");
+}
+
+/** 组 body —— **唯一一份**（核验与提交共用）。
+ *  body 组装口径：**逐键照 model.params**（与宿主 `_collectParamsAsync` 同一口径）
+ *    参考类：值来自 byKey[key]（编辑器按宿主 param key 原样交上来的 dataURL 数组）
+ *            形态照 p.output：csv → 逗号串 / array → 数组 / 其它（含缺省）→ 单值
+ *            ★ 缺省是 single —— 与 `_collectRefImageAsync` 的收尾 `return urls[0] || ""` 一致。
+ *    文本类：prompt / textarea ⇒ 用提示词正文（面板上方那个框）
+ *    其余  ：e[key]（面板当前值）优先，其次 p.default；空值不下发（与 _pruneEmptyRefs 同向）
+ *  @param opts.publicize 缺省 true（真上传）；false ⇒ 素材用占位公网 URL，**不出网**（核验用）
+ *  @returns { body, refCount, localCount }
+ */
+async function wyBuildBody(prompt, def, ex, opts) {
+  const o = opts || {};
+  const publicize = o.publicize !== false;
   const e = ex || {};
   const opt = e.__opts || {};
   const params = Array.isArray(def && def.params) ? def.params : [];
   const byKey = (opt && opt.byKey) || {};
 
-  /* ── 素材公网化：data:/blob:/相对地址 → R2 公网 URL；已是 http(s) 的原样放行 ── */
-  const toPublic = async function (u, name) {
-    const s = String(u == null ? "" : u).trim();
-    if (!s) return "";
-    if (/^https?:\/\//i.test(s)) return s;
-    if (typeof wyUploadDataUrl !== "function") {
-      throw new Error("宿主未加载素材上传通道（wyUploadDataUrl 未定义）—— 请刷新页面重试");
-    }
-    if (/^data:/i.test(s)) return await wyUploadDataUrl(s, name, "tmp");
-    /* blob: / 其它 ⇒ 先读成 dataURL 再上传（编辑器正常会直接交 dataURL，这里是兜底） */
-    const resp = await fetch(s);
-    const blob = await resp.blob();
-    const dataUrl = await new Promise(function (ok, no) {
-      const fr = new FileReader();
-      fr.onload = function () { ok(String(fr.result || "")); };
-      fr.onerror = function () { no(new Error("参考素材读取失败：" + name)); };
-      fr.readAsDataURL(blob);
-    });
-    return await wyUploadDataUrl(dataUrl, name, "tmp");
-  };
-
-  /* ── body 组装：**逐键照 model.params**（与宿主 _collectParamsAsync 同一口径）──
-     参考类：值来自 byKey[key]（编辑器按宿主 param key 原样交上来的 dataURL 数组）
-             形态照 p.output：csv → 逗号串 / array → 数组 / 其它（含缺省）→ 单值
-             ★ 缺省是 single —— 与 `_collectRefImageAsync` 的收尾 `return urls[0] || ""` 一致。
-     文本类：prompt / textarea ⇒ 用提示词正文（面板上方那个框）
-     其余  ：e[key]（面板当前值）优先，其次 p.default；空值不下发（与 _pruneEmptyRefs 同向） */
   const body = {};
-  let refCount = 0;
+  let refCount = 0;      /* 真进了 body 的素材数 */
+  let localCount = 0;    /* 其中"本地数据、还需上传"的个数（核验时用来说明） */
+
   for (let i = 0; i < params.length; i++) {
     const p = params[i] || {};
     const key = String(p.key || "");
     if (!key) continue;
     const t = String(p.type || "");
+
     if (t === "ref-image" || t === "ref-video" || t === "ref-audio") {
       const arr = Array.isArray(byKey[key]) ? byKey[key].filter(Boolean) : [];
       if (!arr.length) continue;
       const urls = [];
       for (let k = 0; k < arr.length; k++) {
-        urls.push(await toPublic(arr[k], key + "-" + (k + 1) + (t === "ref-video" ? ".mp4" : ".png")));
+        const nm = key + "-" + (k + 1) + (t === "ref-video" ? ".mp4" : ".png");
+        const raw = arr[k];
+        const isRemote = /^https?:\/\//i.test(String(raw || ""));
+        if (!isRemote) localCount++;
+        urls.push(publicize ? await _wyToPublic(raw, nm) : (isRemote ? String(raw) : "https://pending-upload.invalid/" + nm));
       }
       const out = String(p.output || "");
       body[key] = out === "csv" ? urls.join(",") : (out === "array" ? urls : (urls[0] || ""));
       refCount += urls.length;
       continue;
     }
+
     if (t === "textarea" || t === "prompt" || key === "prompt") {
       body[key] = String(prompt || "");
       continue;
     }
+
     const raw = (e[key] !== undefined && e[key] !== null && e[key] !== "") ? e[key] : p.default;
     if (raw === undefined || raw === null || raw === "") continue;
     body[key] = raw;
   }
+  return { body: body, refCount: refCount, localCount: localCount };
+}
+
+async function wyVideo(prompt, def, ex) {
+  const t0 = Date.now();
+  const opt = (ex && ex.__opts) || {};
+
+  const built = await wyBuildBody(prompt, def, ex);
+  const body = built.body;
+  const refCount = built.refCount;
 
   if (!String(body.prompt || "").trim() && !refCount) {
     throw new Error("请先写一句描述（或挂一张参考素材）再生成视频");
@@ -20383,76 +20566,267 @@ async function pollWyTask(taskId, def, t0) {
 /** ★★ R34（2026-10-04）· 宿主侧：把视频链路暴露给编辑器 —— 独立源文件，
  *  由 `_gen-host-apiyi.mjs` 读入拼进产物最后一个 `<script>` 内。
  *
- *  ★★ R42（2026-10-05）三处变化：
- *   ① **通道分流**：不只 APIYI 了 —— 速创档（`endpoint` 以 `/api/async/` 开头）走
- *      `wyVideo`（见 _r42_video_wy_adapter.js），其余走 `apiyiVideo`。
- *   ② **参考素材按宿主 param key 归一**：编辑器新增 `refs.byKey`（`{[paramKey]: [dataURL]}`）。
- *      为什么必须原样收：速创各档参考键名互不相同 ——
- *        首尾帧 `first_frame`/`last_frame`（wan3、minimax_h3）vs `firstFrameUrl`/`lastFrameUrl`（veo3_fast、video_omni）
- *        参考图 `images` / `urls` / `image_url`；参考视频 `videos` / `video` / `video_url`
- *      ⇒ 归一成 first/images/videos 会把键名信息抹掉，宿主就没法照 `model.params` 组 body。
- *      这里按 `def.params[].type` 把 byKey **再分一份语义桶**（首帧/尾帧/图/视频/音频）给 APIYI 适配器用，
- *      同时把 byKey 原样透传给速创适配器。分类用**键名模式**（first/start、last/end）不用字面量 ——
- *      各家命名不同，写死就是下一个坑。
- *   ③ **素材公网化**（`wyUploadDataUrl`）：谁需要公网 URL 就传谁 ——
- *        · 速创全档：上游只收 URL，且宿主校验直接拒 `blob:/data:` ⇒ 必须传
- *        · APIYI Wan：官方 `media[].url` 要求「公网可直接 GET 的 https」⇒ 必须传
- *        · APIYI Seedance：**图片保持 dataURL**（官方明确收 Base64，省一次往返）；
- *          **视频/音频传**（官方未明确支持内联，且原文警告大素材内联会拖慢/超时）
- *        · APIYI VEO：**一律不传**（官方只收文件/Base64、**不收远程 URL**）
+ *  ★★ R44（2026-10-05）三件事：
+ *   ① **作用域闸**：`wyUploadDataUrl` 改经 `w5Need()` 取（它定义在 StudioEditor 的 IIFE 内，
+ *      与本文不同一块 `<script>`；R42 裸调 = ReferenceError ⇒ 速创一挂参考素材就挂）。
+ *   ② **折叠抽成 `_w5vShape()`**：核验与提交共用同一份形状转换（铁规矩 23：不抄两份）。
+ *   ③ **新增 `validateVideoRequest(req)`**（修：「符合规范的方能提交 不符合的就弹出提醒」）：
+ *      纯本地、**不出网**、不烧积分；编辑器点发送前先问它，不通过就不提交并列出原因。
  *
- *  为什么需要这一层桥：
- *    · `apiyiVideo` / `wyVideo` 的签名是**宿主内部口径**（def = 模型定义、ex = 扩展参数）。
- *    · 编辑器的契约是 `generate({modelId, model, prompt, duration, ratio, refMode, extra, refs…})`
- *      （与位图动作的 bitmapHandlers 同构：编辑器不碰网络、只透传参数）。
- *    · 两者不同构 ⇒ 这里做一层**纯形状转换**，**不碰任何请求逻辑**。
+ *  ══════ 核验的两道闸（各管一段，不重复）══════
+ *   第 1 道｜**提交前预检**（本文的 `validateVideoRequest`，编辑器可见、拦住提交）
+ *      · 通用层（编辑器数据驱动）：必填缺 / 素材数超 `p.max` / 无任何输入
+ *      · 速创层：**直接调宿主既有** `normalizeAndValidateApiBody`（IMPL-119/IMPL-152 那套
+ *        互斥网 · 尾帧配首帧 · 本地地址拒收）——**素材换占位公网 URL**，因为此刻还没上传
+ *      · APIYI 层：只放官方明文约束（VEO `input_reference` 单数 ⇒ 最多 1 张）
+ *   第 2 道｜**桥的最后闸**（已转换后，防旁路）
+ *      速创的 `Api.submit` 内部本就会再跑一次宿主校验器（拿到的是**已公网化**的 body）✓
+ *
+ *  ══════ 为什么核验不自己写一套规则 ══════
+ *   宿主的 `normalizeAndValidateApiBody` 是**已经在运行的**真值（宿主自己的生成页就在用），
+ *   而且**全局可见**（实测 `typeof === "function"`）。再写一份必然漂移 —— 尤其速创各档的
+ *   互斥规则（可灵"用参考视频时声音必须 off"、Vidu 主体/图像/视频三者互斥、Google"图 vs 视频"）
+ *   细节很多，抄不全就是下一个坑。
+ *
+ *  ══════ 形状（编辑器 → 适配器）══════
+ *   · `apiyiVideo` / `wyVideo` 的签名是**宿主内部口径**（def = 模型定义、ex = 扩展参数）。
+ *   · 编辑器契约是 `generate({modelId, model, prompt, refMode, extra, refs…})`
+ *     （与位图动作的 bitmapHandlers 同构：编辑器不碰网络、只透传参数）。
+ *   · 两者不同构 ⇒ 这里做一层**纯形状转换**，**不碰任何请求逻辑**。
  *
  *  ⚠ 铁规矩：不静默失败（R17）。宿主没接视频能力时抛**明确**错误，
  *    让编辑器把原因显示在面板上，而不是弹个 toast 让人以为还在生成。
  */
-function makeVideoHandler() {
-  /* 小工具放在闭包内 —— 放模块顶层会污染宿主全局（产物里可能有同名）。*/
-  const strOrEmpty = function (v) { return typeof v === "string" ? v.trim() : ""; };
-  const arrOfStr = function (v) { return Array.isArray(v) ? v.filter(function (x) { return typeof x === "string" && x.trim(); }) : []; };
 
-  /* 素材公网化（dataURL / blob → R2 公网 URL；已是 http(s) 原样放行）。
-     ⚠ 上传不了就**抛清楚原因**（R17）—— 绝不把 dataURL 当公网 URL 蒙过去：
-       上游要么取不到、要么被宿主校验拒掉（「不能使用本地文件地址，请先上传」）。*/
-  const toPublic = async function (u, name) {
-    const s = strOrEmpty(u);
-    if (!s) return "";
-    if (/^https?:\/\//i.test(s)) return s;
-    if (typeof wyUploadDataUrl !== "function") {
-      throw new Error("宿主未加载素材上传通道（wyUploadDataUrl 未定义）—— 请刷新页面重试");
-    }
-    if (/^data:/i.test(s)) return await wyUploadDataUrl(s, name, "tmp");
-    const resp = await fetch(s);
-    const blob = await resp.blob();
-    const dataUrl = await new Promise(function (ok, no) {
-      const fr = new FileReader();
-      fr.onload = function () { ok(String(fr.result || "")); };
-      fr.onerror = function () { no(new Error("参考素材读取失败：" + name)); };
-      fr.readAsDataURL(blob);
+/* 小工具：**带 _w5v 前缀**防污染宿主全局（产物里可能有同名）。 */
+const _w5vStr = function (v) { return typeof v === "string" ? v.trim() : ""; };
+const _w5vArr = function (v) { return Array.isArray(v) ? v.filter(function (x) { return typeof x === "string" && x.trim(); }) : []; };
+
+/* 素材公网化（dataURL / blob → R2 公网 URL；已是 http(s) 原样放行）。
+   ⚠ 上传不了就**抛清楚原因**（R17）—— 绝不把 dataURL 当公网 URL 蒙过去。 */
+const _w5vToPublic = async function (u, name) {
+  const s = _w5vStr(u);
+  if (!s) return "";
+  if (/^https?:\/\//i.test(s)) return s;
+  const up = w5Need("wyUploadDataUrl", "速创 / APIYI Wan 的参考素材要求公网 URL，本地素材必须先转存");
+  if (/^data:/i.test(s)) return await up(s, name, "tmp");
+  const resp = await fetch(s);
+  const blob = await resp.blob();
+  const dataUrl = await new Promise(function (ok, no) {
+    const fr = new FileReader();
+    fr.onload = function () { ok(String(fr.result || "")); };
+    fr.onerror = function () { no(new Error("参考素材读取失败：" + name)); };
+    fr.readAsDataURL(blob);
+  });
+  return await up(dataUrl, name, "tmp");
+};
+const _w5vMapPublic = async function (arr, prefix) {
+  const out = [];
+  const list = Array.isArray(arr) ? arr : [];
+  for (let i = 0; i < list.length; i++) out.push(await _w5vToPublic(list[i], prefix + "-" + (i + 1) + ".png"));
+  return out.filter(Boolean);
+};
+
+/** ★ 形状转换（**唯一一份**）：把编辑器请求折成适配器要的 def / ex / prompt
+ *  + 语义桶 + byKey（**本地形态，未上传**）+ 校验用的现场信息。
+ *  纯同步、不碰网络 —— 上传在 generate 里做（见 hostVideoGenerate），核验则完全不传。 */
+function _w5vShape(req) {
+  const q = req || {};
+  const model = q.model || {};
+  const modelId = String(q.modelId || model.id || "");
+  const endpoint = String(model.endpoint || "");
+  /* 通道判定：**endpoint 前缀是唯一真值**（不是名字、不是 channel 字段有没有写对） */
+  const isWy = String(model.channel || "") === "wy" || endpoint.indexOf("/api/async/") === 0;
+  /* 模型定义对象：适配器要的是 {id, modelId, label, params, endpoint} 这套形状。
+     编辑器传下来的 `model` 是 catalog 条目（name/price/channel/params/endpoint…），
+     这里只补 id/modelId/label，其余原样带过去（适配器要读 params / endpoint / billing）。 */
+  const def = Object.assign({}, model, {
+    id: modelId,
+    modelId: String(model.modelId || modelId),
+    label: model.label || model.name || modelId,
+    endpoint: endpoint,
+  });
+  const paramsOf = Array.isArray(def.params) ? def.params : [];
+  const typeOf = {};
+  for (let i = 0; i < paramsOf.length; i++) typeOf[String(paramsOf[i].key)] = String(paramsOf[i].type || "");
+
+  /* ── 参考素材：byKey（宿主 param key 原样）→ 语义桶 ──────────────────────
+   * 语义桶供 APIYI 三家适配器用（它们的签名是 firstFrameUrl/imageUrls/… 这套）；
+   * byKey 原样透传给速创适配器（它照 model.params 逐键组 body）。 */
+  const refs = q.refs || {};
+  const byKeyIn = (refs.byKey && typeof refs.byKey === "object" && !Array.isArray(refs.byKey)) ? refs.byKey : null;
+
+  let firstFrameUrl = _w5vStr(refs.firstFrameDataUrl);
+  let lastFrameUrl = _w5vStr(refs.lastFrameDataUrl);
+  let imageUrls = _w5vArr(refs.imageDataUrls);
+  let videoUrls = _w5vArr(refs.videoUrls);
+  let audioUrls = _w5vArr(refs.audioUrls);
+  const byKeyLocal = {};
+
+  if (byKeyIn) {
+    const cls = { first: [], last: [], image: [], video: [], audio: [] };
+    Object.keys(byKeyIn).forEach(function (k) {
+      const list = _w5vArr(byKeyIn[k]);
+      if (!list.length) return;
+      byKeyLocal[k] = list;
+      const t = typeOf[k] || "";
+      if (t === "ref-video") cls.video = cls.video.concat(list);
+      else if (t === "ref-audio") cls.audio = cls.audio.concat(list);
+      else if (/^(first|start)/i.test(k)) cls.first = cls.first.concat(list);
+      else if (/^(last|end)/i.test(k)) cls.last = cls.last.concat(list);
+      else cls.image = cls.image.concat(list);
     });
-    return await wyUploadDataUrl(dataUrl, name, "tmp");
+    if (cls.first.length) firstFrameUrl = cls.first[0];
+    if (cls.last.length) lastFrameUrl = cls.last[0];
+    imageUrls = cls.image;
+    videoUrls = cls.video;
+    audioUrls = cls.audio;
+  }
+
+  /* 兼容老调用方：只给 sourceNodeId / srcDataUrl（R33 形态） */
+  if (!firstFrameUrl && !lastFrameUrl && !imageUrls.length && typeof q.srcDataUrl === "string") {
+    firstFrameUrl = _w5vStr(q.srcDataUrl);
+  }
+  if (!imageUrls.length && Array.isArray(q.refDataUrls)) imageUrls = _w5vArr(q.refDataUrls);
+
+  /* ── 扩展参数：取值序 = **顶层**（旧调用兼容）→ **extra**（编辑器面板参数，R40 补上）。
+     ★★ R40（修「你能确定模型和功能都能的对的上吗」）——编辑器 submit 把面板参数装在
+       `extra` 里，而 R34 起本桥只读顶层 q.duration/q.ratio/… ⇒ **参数整包丢失**（真机取证：
+       面板选 1080p，适配器实收 720p；Seedance duration 恒 -1）。
+     ★ R42：速创档的参数名与 APIYI 完全不同（`sound` / `bgm` / `watermark` / `size` /
+       `prompt_extend` …）⇒ 顶层/extra **逐个键都取出来**，不再只挑固定的几个。*/
+  const exq = (q.extra && typeof q.extra === "object" && !Array.isArray(q.extra)) ? q.extra : {};
+  const pick = function () {
+    for (let i = 0; i < arguments.length; i++) {
+      const v = arguments[i];
+      if (v !== undefined && v !== null && v !== "") return v;
+    }
+    return undefined;
   };
-  const mapPublic = async function (arr, prefix) {
-    const out = [];
-    const list = Array.isArray(arr) ? arr : [];
-    for (let i = 0; i < list.length; i++) out.push(await toPublic(list[i], prefix + "-" + (i + 1) + ".png"));
-    return out.filter(Boolean);
+  const ex = {};
+  Object.keys(exq).forEach(function (k) { ex[k] = exq[k]; });
+  /* 顶层字段覆盖（旧调用方）+ VEO 的 seconds → duration 并轨（官方字段名不同） */
+  const durRaw = pick(q.duration, ex.duration, ex.seconds);
+  const durNum = Number(durRaw);
+  if (durRaw !== undefined && isFinite(durNum)) ex.duration = durNum;
+  if (ex.seconds === undefined && durRaw !== undefined && isFinite(durNum)) ex.seconds = durRaw;
+  ["ratio", "resolution", "generate_audio", "audio", "prompt_extend", "watermark", "seed"].forEach(function (k) {
+    const v = pick(q[k], ex[k]);
+    if (v !== undefined) ex[k] = v;
+  });
+  ex.wantAudio = !!pick(q.wantAudio, ex.wantAudio);
+
+  const prompt = String(q.prompt || "");
+  const materialCount = (firstFrameUrl ? 1 : 0) + (lastFrameUrl ? 1 : 0)
+    + imageUrls.length + videoUrls.length + audioUrls.length;
+
+  return {
+    q: q, refs: refs, def: def, modelId: modelId, endpoint: endpoint, isWy: isWy,
+    paramsOf: paramsOf, typeOf: typeOf, prompt: prompt, ex: ex, exq: exq,
+    buckets: { firstFrameUrl: firstFrameUrl, lastFrameUrl: lastFrameUrl, imageUrls: imageUrls, videoUrls: videoUrls, audioUrls: audioUrls },
+    byKeyLocal: byKeyLocal, materialCount: materialCount,
+  };
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   ★★ R44 · 提交前核验（纯本地 / 不出网 / 不烧积分）
+   ──────────────────────────────────────────────────────────────────────────────
+   规则来源（**都不自造**）：
+     · 通用层：编辑器 catalog 里的 `params[].required` / `params[].max` / `output`
+     · 速创层：宿主既有 `normalizeAndValidateApiBody`（互斥 · 尾帧配首帧 · 上限 · 本地地址）
+     · APIYI 层：官方文档明文（VEO `input_reference` 单数且仅 1 张）
+   返回：{ ok, errors: [{ level: "error"|"warn"|"auto", message, key, label }] }
+     · error → 拦住提交并弹提醒；warn → 只提醒；auto → 已被我们自动收敛（提示用）
+   ══════════════════════════════════════════════════════════════════════════════ */
+async function validateVideoRequest(req) {
+  const errors = [];
+  const add = function (level, message, key, label) {
+    errors.push({ level: level, message: String(message), key: String(key || ""), label: String(label || "") });
   };
 
+  let F;
+  try {
+    F = _w5vShape(req);
+  } catch (e) {
+    return { ok: false, errors: [{ level: "error", message: "请求形状不合法：" + String((e && e.message) || e), key: "", label: "" }] };
+  }
+
+  if (!F.modelId) add("error", "没有指定视频模型", "", "");
+
+  /* ① 通用：一个输入都没有（提示词空 + 素材空） */
+  if (!F.prompt.trim() && !F.materialCount) {
+    add("error", "先写一句描述（或挂一张参考素材）再生成", "", "");
+  }
+
+  /* ② 通用：必填参数（宿主 catalog 的 required 标记，不是我们猜的） */
+  for (let i = 0; i < F.paramsOf.length; i++) {
+    const p = F.paramsOf[i] || {};
+    if (!p.required) continue;
+    const key = String(p.key || "");
+    const t = String(p.type || "");
+    const isRef = (t === "ref-image" || t === "ref-video" || t === "ref-audio");
+    let has = false;
+    if (isRef) has = Array.isArray(F.byKeyLocal[key]) && F.byKeyLocal[key].length > 0;
+    else if (t === "textarea" || t === "prompt" || key === "prompt") has = !!F.prompt.trim();
+    else has = (F.ex[key] !== undefined && F.ex[key] !== null && F.ex[key] !== "");
+    if (!has) add("error", "缺少必填：" + (p.label || key), key, p.label || key);
+  }
+
+  /* ③ 通用：参考素材数量上限（`p.max`；`output:"single"` 缺省按 1 张算） */
+  for (let i = 0; i < F.paramsOf.length; i++) {
+    const p = F.paramsOf[i] || {};
+    const t = String(p.type || "");
+    if (!(t === "ref-image" || t === "ref-video" || t === "ref-audio")) continue;
+    const key = String(p.key || "");
+    const arr = Array.isArray(F.byKeyLocal[key]) ? F.byKeyLocal[key] : [];
+    const cap = Number(p.max) > 0 ? Number(p.max) : (String(p.output || "") === "single" ? 1 : 0);
+    if (cap > 0 && arr.length > cap) {
+      add("error", (p.label || key) + "最多 " + cap + " 个（当前 " + arr.length + " 个）", key, p.label || key);
+    }
+  }
+
+  /* ④ 速创档：交给宿主既有校验器 —— 它的规则最全（互斥网 / 尾帧配对 / 上限 / 本地地址）。
+     ⚠ 素材此刻还是本地数据 ⇒ `publicize:false` 让 wyBuildBody 用**占位公网 URL**，
+       这样"本地地址拒收"那条不会误报，而结构类规则照样生效。**不上传、不出网**。 */
+  if (F.isWy) {
+    try {
+      /* ⚠★ 必须把 byKey 经 `__opts` 交给 wyBuildBody —— 它按 `e.__opts.byKey` 取素材
+         （`_w5vShape` 只把它放在自己的字段里，没塞进 ex）。首版漏了这步 ⇒ 组出来的 body
+         是空的 ⇒ 宿主校验器"看不到任何素材" ⇒ **互斥规则全部形同虚设**
+         （实测：wan3 首帧+参考图同给、尾帧缺首帧、vidu 三者互斥…全部 ok=true 放行）。
+         这正是"核验功能必须真机跑"的价值 —— 静态看一眼是看不出来的。 */
+      const exForCheck = Object.assign({}, F.ex, {
+        __opts: { byKey: F.byKeyLocal, taskType: F.refs.taskType || "" },
+      });
+      const built = await wyBuildBody(F.prompt, F.def, exForCheck, { publicize: false });
+      const nv = normalizeAndValidateApiBody(F.def, built.body);
+      if (!nv || !nv.ok) add("error", String((nv && nv.error) || "不符合该模型的提交规范"), "", "");
+    } catch (e) {
+      add("error", "速创规范校验失败：" + String((e && e.message) || e), "", "");
+    }
+  }
+
+  /* ⑤ APIYI：只放**官方文档明文**的约束（没依据的不自造，避免误拦） */
+  const isVeo = !F.isWy && /veo/i.test(F.modelId);
+  if (isVeo) {
+    if (F.materialCount > 1) {
+      add("error", "VEO 官方 `input_reference` 是**单数**、只能 1 张参考图（当前 " + F.materialCount + " 张）", "first_frame", "参考图");
+    }
+    if (F.materialCount === 0) {
+      add("warn", "VEO 官方图生视频文档把 `input_reference` 列为**必填** —— 没给参考图可能被上游拒", "", "");
+    }
+  }
+
+  const hasError = errors.some(function (e) { return e.level === "error"; });
+  return { ok: !hasError, errors: errors };
+}
+
+/** 生成器（编辑器 `videoHandlers.generate` 用它）。 */
+function makeVideoHandler() {
   return async function hostVideoGenerate(req) {
-    const q = req || {};
-    const model = q.model || {};
-    const modelId = String(q.modelId || model.id || "");
-    if (!modelId) throw new Error("没有指定视频模型");
-
-    /* 通道判定：**endpoint 前缀是唯一真值**（不是名字、不是 channel 字段有没有写对） */
-    const endpoint = String(model.endpoint || "");
-    const isWy = String(model.channel || "") === "wy" || endpoint.indexOf("/api/async/") === 0;
-    if (isWy) {
+    const F = _w5vShape(req);
+    if (!F.modelId) throw new Error("没有指定视频模型");
+    if (F.isWy) {
       if (typeof wyVideo !== "function") {
         throw new Error("宿主未加载速创视频适配器（wyVideo 未定义）—— 请刷新页面重试");
       }
@@ -20460,80 +20834,35 @@ function makeVideoHandler() {
       throw new Error("宿主未加载视频适配器（apiyiVideo 未定义）—— 请刷新页面重试");
     }
 
-    /* 模型定义对象：适配器要的是 {id, modelId, label, params, endpoint} 这套形状。
-       编辑器传下来的 `model` 是 catalog 条目（name/price/channel/params/endpoint…），
-       这里只补 id/modelId/label，其余原样带过去（适配器要读 params / endpoint / billing）。 */
-    const def = Object.assign({}, model, {
-      id: modelId,
-      modelId: String(model.modelId || modelId),
-      label: model.label || model.name || modelId,
-      endpoint: endpoint,
-    });
+    let firstFrameUrl = F.buckets.firstFrameUrl;
+    let lastFrameUrl = F.buckets.lastFrameUrl;
+    let imageUrls = F.buckets.imageUrls;
+    let videoUrls = F.buckets.videoUrls;
+    let audioUrls = F.buckets.audioUrls;
+    let byKey = F.byKeyLocal;
 
-    /* ── 参考素材：byKey（宿主 param key 原样）→ 语义桶 ──────────────────────
-     * 语义桶供 APIYI 三家适配器用（它们的签名是 firstFrameUrl/imageUrls/… 这套）；
-     * byKey 原样透传给速创适配器（它照 model.params 逐键组 body）。 */
-    const refs = q.refs || {};
-    const byKeyIn = (refs.byKey && typeof refs.byKey === "object" && !Array.isArray(refs.byKey)) ? refs.byKey : null;
-    const paramsOf = Array.isArray(def.params) ? def.params : [];
-    const typeOf = {};
-    for (let i = 0; i < paramsOf.length; i++) typeOf[String(paramsOf[i].key)] = String(paramsOf[i].type || "");
-
-    let firstFrameUrl = strOrEmpty(refs.firstFrameDataUrl);
-    let lastFrameUrl = strOrEmpty(refs.lastFrameDataUrl);
-    let imageUrls = arrOfStr(refs.imageDataUrls);
-    let videoUrls = arrOfStr(refs.videoUrls);
-    let audioUrls = arrOfStr(refs.audioUrls);
-    let byKey = {};
-
-    if (byKeyIn) {
-      const cls = { first: [], last: [], image: [], video: [], audio: [] };
-      Object.keys(byKeyIn).forEach(function (k) {
-        const list = arrOfStr(byKeyIn[k]);
-        if (!list.length) return;
-        byKey[k] = list;
-        const t = typeOf[k] || "";
-        if (t === "ref-video") cls.video = cls.video.concat(list);
-        else if (t === "ref-audio") cls.audio = cls.audio.concat(list);
-        else if (/^(first|start)/i.test(k)) cls.first = cls.first.concat(list);
-        else if (/^(last|end)/i.test(k)) cls.last = cls.last.concat(list);
-        else cls.image = cls.image.concat(list);
-      });
-      if (cls.first.length) firstFrameUrl = cls.first[0];
-      if (cls.last.length) lastFrameUrl = cls.last[0];
-      imageUrls = cls.image;
-      videoUrls = cls.video;
-      audioUrls = cls.audio;
-    }
-
-    /* 兼容老调用方：只给 sourceNodeId / srcDataUrl（R33 形态） */
-    if (!firstFrameUrl && !lastFrameUrl && !imageUrls.length && typeof q.srcDataUrl === "string") {
-      firstFrameUrl = strOrEmpty(q.srcDataUrl);
-    }
-    if (!imageUrls.length && Array.isArray(q.refDataUrls)) imageUrls = arrOfStr(q.refDataUrls);
-
-    /* ── 素材公网化（见文件头 ③ 的四档策略）───────────────────────────── */
-    const isApiyiWan = !isWy && /wan/i.test(modelId);
-    const isVeo = !isWy && /veo/i.test(modelId);
+    /* ── 素材公网化（四档策略）─────────────────────────────────────────────
+     *  · 速创全档：上游只收 URL，且宿主校验直接拒 `blob:/data:` ⇒ 适配器自己传（按 param key，语义最准）
+     *  · APIYI Wan：官方 `media[].url` 要求「公网可直接 GET 的 https」⇒ 全量传
+     *  · APIYI Seedance：**图片保持 dataURL**（官方明确收 Base64，省一次往返）；
+     *    视频/音频传（官方未明确支持内联，且原文警告大素材内联会拖慢/超时）
+     *  · APIYI VEO：**一律不传**（官方只收文件/Base64、**不收远程 URL**，走 dataUrlToFile） */
+    const isApiyiWan = !F.isWy && /wan/i.test(F.modelId);
+    const isVeo = !F.isWy && /veo/i.test(F.modelId);
     try {
-      if (isWy) {
-        /* 速创：**适配器自己传**（它按 model.params 逐键传，语义最准）⇒ 桥不重复上传。
-           byKey 原样带下去（见下面 opt.byKey）。 */
+      if (F.isWy) {
+        /* 速创：适配器自己传 ⇒ 桥不重复上传（byKey 原样带下去）。 */
       } else if (isApiyiWan) {
-        /* 全量公网化（官方 `media[].url` 要求「公网可直接 GET 的 https」）*/
-        firstFrameUrl = firstFrameUrl ? await toPublic(firstFrameUrl, "first-frame") : "";
-        lastFrameUrl = lastFrameUrl ? await toPublic(lastFrameUrl, "last-frame") : "";
-        imageUrls = await mapPublic(imageUrls, "ref-image");
-        videoUrls = await mapPublic(videoUrls, "ref-video");
-        audioUrls = await mapPublic(audioUrls, "ref-audio");
+        firstFrameUrl = firstFrameUrl ? await _w5vToPublic(firstFrameUrl, "first-frame") : "";
+        lastFrameUrl = lastFrameUrl ? await _w5vToPublic(lastFrameUrl, "last-frame") : "";
+        imageUrls = await _w5vMapPublic(imageUrls, "ref-image");
+        videoUrls = await _w5vMapPublic(videoUrls, "ref-video");
+        audioUrls = await _w5vMapPublic(audioUrls, "ref-audio");
         byKey = {};   /* Wan 分支不读 byKey ⇒ 避免带着未上传的本地数据往下走（防误用） */
       } else if (!isVeo) {
-        /* Seedance：图片保持 dataURL（官方收 Base64，省一次往返）；
-           视频/音频传公网（官方未明确支持内联，且原文警告大素材内联会拖慢/超时）。*/
-        videoUrls = await mapPublic(videoUrls, "ref-video");
-        audioUrls = await mapPublic(audioUrls, "ref-audio");
+        videoUrls = await _w5vMapPublic(videoUrls, "ref-video");
+        audioUrls = await _w5vMapPublic(audioUrls, "ref-audio");
       }
-      /* VEO：一律不传 —— 官方只收文件/Base64、**不收远程 URL**（走 dataUrlToFile） */
     } catch (err) {
       throw new Error("参考素材上传失败：" + String((err && err.message) || err));
     }
@@ -20544,43 +20873,15 @@ function makeVideoHandler() {
       imageUrls: imageUrls,
       videoUrls: videoUrls,
       audioUrls: audioUrls,
-      taskType: refs.taskType || "",
+      taskType: F.refs.taskType || "",
       byKey: byKey,                       /* ★ R42：速创适配器按宿主 param key 组 body */
     };
+    const ex = Object.assign({}, F.ex);
+    ex.__opts = opt;
 
-    /* 扩展参数：取值序 = **顶层**（旧调用兼容）→ **extra**（编辑器面板参数，R40 补上）。
-       ★★ R40（修 2026-10-04 实测「你能确定模型和功能都能对的上吗」）——
-         编辑器 submit 把面板参数装在 `extra` 里（VideoGeneratePanel 的 onConfirm），
-         本桥 R34 起只读顶层 q.duration/q.ratio/… ⇒ **参数整包丢失**。
-         真机取证（_probe_r40_params_online.py，拦网零出网）：面板选 1080p，适配器实收 720p；
-         Seedance 的 duration 恒 -1（模型自选时长，费用不可控）。本批把 extra 接进来。
-       ★ R42：速创档的参数名与 APIYI 完全不同（`sound` / `bgm` / `watermark` / `size` /
-         `prompt_extend` …）⇒ 顶层/extra **逐个键都取出来**，不再只挑固定的几个
-         （挑固定键 = 新档一来就丢参数，同一个坑不踩第三次）。 */
-    const exq = (q.extra && typeof q.extra === "object" && !Array.isArray(q.extra)) ? q.extra : {};
-    const pick = function () {
-      for (var i = 0; i < arguments.length; i++) {
-        var v = arguments[i];
-        if (v !== undefined && v !== null && v !== "") return v;
-      }
-      return undefined;
-    };
-    const ex = { __opts: opt };
-    Object.keys(exq).forEach(function (k) { ex[k] = exq[k]; });
-    /* 顶层字段覆盖（旧调用方）+ VEO 的 seconds → duration 并轨（官方字段名不同） */
-    const durRaw = pick(q.duration, ex.duration, ex.seconds);
-    const durNum = Number(durRaw);
-    if (durRaw !== undefined && isFinite(durNum)) ex.duration = durNum;
-    if (ex.seconds === undefined && durRaw !== undefined && isFinite(durNum)) ex.seconds = durRaw;
-    ["ratio", "resolution", "generate_audio", "audio", "prompt_extend", "watermark", "seed"].forEach(function (k) {
-      const v = pick(q[k], ex[k]);
-      if (v !== undefined) ex[k] = v;
-    });
-    ex.wantAudio = !!pick(q.wantAudio, ex.wantAudio);
-
-    const r = isWy
-      ? await wyVideo(String(q.prompt || ""), def, ex)
-      : await apiyiVideo(String(q.prompt || ""), def, ex);
+    const r = F.isWy
+      ? await wyVideo(F.prompt, F.def, ex)
+      : await apiyiVideo(F.prompt, F.def, ex);
     const url = (r && (r.assetUrl || (r.candidates && r.candidates[0]))) || "";
     if (!url) throw new Error("视频生成完成但没有可播放的地址");
     /* 返回编辑器要的形状。**不编造** durationMs / 宽高 ——
@@ -20593,7 +20894,7 @@ function makeVideoHandler() {
       height: 0,
       naturalWidth: 0,
       naturalHeight: 0,
-      name: def.label,
+      name: F.def.label,
     };
   };
 }
