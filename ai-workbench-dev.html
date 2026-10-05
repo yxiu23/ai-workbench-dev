@@ -2232,33 +2232,9 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .sv-docklayer .sv-floatbar{padding:4px 6px;gap:2px}
 .sv-floatbar .sv-hb-btn{padding:5px 7px}
 
-/* ══════════════════════════════════════════════════════════════════════════
-   R49 · 修第 8 / 10 条（10-05 21:3x）
-   ──────────────────────────────────────────────────────────────────────────
-   ⑧ 「提示重复」定位到了**同一个容器**：`.pq-head` 这一行里装着三样东西 ——
-        · `.pq-title` 面板标题（"比例"/"分辨率"/"质量"）—— 与触发它的按钮文案**逐字重复**
-        · `.pq-model` 11px 小字显示**模型名** —— 与上方模型选择按钮重复
-        · `.pq-close` 28px **关闭叉号** —— 再点一次按钮/点外部即可关，属多余
-      ⇒ 三个都在 `.pq-head` 里，**整行隐藏**即可（CSS 一行，零改 HTML/JS 结构）。
-   ⑩ 「参数区布局不一致」根因：`#paramForm` **本身没有任何 CSS**（裸 block，参数行逐个垂直堆叠），
-      而参数里的 `.cap-grid` 偏偏是 `repeat(2,minmax(0,1fr))` 两列 ⇒ **同一区间两种排布**。
-      ⇒ 给 `#paramForm` 定一个统一的两列网格；宽/长型参数（开关行、内联行、含 textarea、
-      含 cap-grid、参数组、参考区）跨两列占满。
-   ══════════════════════════════════════════════════════════════════════════ */
-
-/* ── ⑧ 快捷面板头部整行多余（标题 + 模型名 + 叉号）── */
-.pq-head{display:none}
-
-/* ── ⑩ 参数区统一两列网格 ── */
-#paramForm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:start}
-#paramForm > .field-row{grid-column:span 1}
-#paramForm > .field-row.is-switch,
-#paramForm > .field-row.is-inline,
-#paramForm > .field-row:has(textarea),
-#paramForm > .field-row:has(.cap-grid),
-#paramForm > .param-group,
-#paramForm > .ref-section,
-#paramForm > .ref-mode-section{grid-column:1/-1}
+/* R49 撤回（10-05 21:5x）：.pq-head 隐藏 + #paramForm 两列网格 全部回滚至 R48。
+   缘由：参数行按整行宽度设计，强行两列 ⇒ 挤压/溢出/错位 = 修反馈「面板全乱套了」。
+   重做第 8/10 条前先与修确认现象与期望。 */
 
 
 
