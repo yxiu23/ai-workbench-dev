@@ -2712,6 +2712,110 @@ html[data-theme="dark"] .model-select-wrap .model-meta .tag.desc-tag{color:var(-
 #paramForm > div:has(input[type="range"]),
 #paramQuickBody > div:has(input[type="range"]){grid-template-columns:minmax(0,1fr) !important;row-gap:12px}
 
+/* ══════════════════════════════════════════════════════════════════════════
+   R60 · 修第十一轮（10-06）
+   ──────────────────────────────────────────────────────────────────────────
+   ① 媒体模型「框套框」（修：「媒体模型又开始框套框了」）——
+      上一版是「橙色卡（底+边框）里再放一个实心品牌按钮（底+边框）」= 两层框。
+      改**单框胶囊**：卡 = 一层的胶囊（品牌软化底 + 细品牌边 + radius 999），
+      内层按钮透明无边框；logo/文字/箭头全部走主题色（不再整体反白）。
+   ② 金额上移（修：「媒体模型上面最好动态显示金额」）——
+      `#genCostPill` 从按钮内移到媒体模型**上方独立一行**（右对齐小胶囊），
+      JS 的 add/remove("show") 与 textContent 逻辑零改动。
+   ③ 设计感（修：「生成发送按钮和媒体模型有点设计感」）——
+      胶囊 + 圆形发送键（品牌渐变 + 光晕投影 + hover 微放大 / 按下回弹）。
+   ④ 技能模型收纳（修：「技能模型模块做个收纳 点击才展开 默认不展开…」）——
+      `.skill-collapse-bar` 标题行（图标 + 「技能模型」+ 当前技能模型 + 已开模式 + 箭头）；
+      默认 `is-collapsed`（收起 .skill-cols 与 .skill-mode-row）；点击展开/收起；
+      选中技能（提示词区出现 .sb-chip）时自动展开一次。
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── ①+③ 媒体模型：单框胶囊 ── */
+.generate-section > .model-select-wrap{order:3;border-radius:999px;padding:4px 6px;gap:8px;
+  background:color-mix(in srgb,var(--brand) 13%,var(--surface-2));
+  border:1px solid color-mix(in srgb,var(--brand) 34%,transparent)}
+.generate-section > .generate-row{order:4}
+.generate-section .model-select-wrap .model-pick-btn{
+  background:transparent;border:none;box-shadow:none;color:var(--text);
+  padding:6px 26px 6px 8px;border-radius:999px}
+.generate-section .model-select-wrap .model-pick-btn:hover,
+.generate-section .model-select-wrap .model-pick-btn[aria-expanded="true"]{
+  background:color-mix(in srgb,var(--brand) 12%,transparent);border:none}
+.generate-section .model-select-wrap .model-pick-btn .mp-caret{color:var(--text-muted);right:8px}
+.generate-section .model-select-wrap .model-pick-btn .mp-logo{color:var(--brand);filter:none}
+.generate-section .model-select-wrap .model-pick-btn .mp-logo svg [stroke]{stroke:currentColor}
+.generate-section .model-select-wrap .model-pick-btn .mp-logo svg path[fill]{fill:currentColor}
+
+/* ── ② 金额：媒体模型胶囊**内部**居右（修补刀：「金额怎么跑上面去了 我要你显示在模型框里面居右」）──
+   纯文字不套底框（修对「框套框」零容忍）；按钮 flex:1 会自然把它顶到右端。 */
+.generate-section .model-select-wrap .gen-cost{display:none;flex:0 0 auto;align-items:center;
+  margin:0 8px 0 4px;font-size:11px;font-weight:600;font-family:var(--font-mono);letter-spacing:0;
+  color:var(--text-muted);white-space:nowrap}
+.generate-section .model-select-wrap .gen-cost.show{display:inline-flex}
+/* 「（易）/（创）」渠道徽标：R58 为深色实心按钮写成白字 ⇒ 按钮透明后白字浮橙底看不见。
+   还原为品牌色（修：「框型框里面的易字搞个白色也太不明显了吧」）。 */
+.generate-section .model-select-wrap .model-pick-btn .mp-chan{
+  background:color-mix(in srgb,var(--brand) 20%,transparent);
+  border:1px solid color-mix(in srgb,var(--brand) 42%,transparent);
+  color:var(--brand)}
+
+/* ── ③ 圆形发送键：品牌渐变 + 光晕 ── */
+.generate-section .generate-btn{
+  background:linear-gradient(145deg,color-mix(in srgb,var(--brand) 84%,#fff),var(--brand));
+  box-shadow:0 8px 20px -10px color-mix(in srgb,var(--brand) 78%,transparent);
+  transition:transform var(--transition),box-shadow var(--transition),background var(--transition)}
+.generate-section .generate-btn:hover:not(:disabled){transform:scale(1.05);
+  box-shadow:0 10px 24px -10px color-mix(in srgb,var(--brand) 88%,transparent)}
+.generate-section .generate-btn:active:not(:disabled){transform:scale(.97)}
+
+/* ── ④ 技能模块：**选了技能才出现**（R62 修正 · 修：「样式按原来的不变 但选了技能才出现
+   这个模块 不选就好像没有一样」）—— 不做任何收纳条/改造，整块按原样显示或整块消失。 ── */
+.skill-head-wrap.is-skill-off{display:none}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   R62 · 修第十二轮（10-06 01:3x）
+   ──────────────────────────────────────────────────────────────────────────
+   ① 媒体模型框 + 发送键：**都是实心橘 + 10px 小圆角矩形**（修：「都10像素的圆角矩形样式
+      都是橘色 不要透明的（做好内容的颜色适配）不要大圆了」）——
+      胶囊 (999px) → --r-box(10px)；半透明橘混底 → **实心 var(--brand)**；
+      内容色适配：文字/logo/箭头/渠道徽标/金额全部转白（白 logo 走 brightness(0) invert(1)）。
+   ② 圆角统一：新增 `--r-box:10px` 令牌，**所有圆角矩形的控件**统一到它
+      （tab 条 / 参数快捷钮 / 张数 / 媒体框 / 发送键 / 参考图档位条 / 提示词框 / 分段控件…），
+      只保留：滚动条与滑轨（细条 pill）、结果区两条悬浮栏（R58 指定 14px 大圆角）、圆形小圆点。
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── ① 媒体模型框：实心橘 + 10px ── */
+.generate-section > .model-select-wrap{border-radius:var(--r-box);padding:4px 6px;
+  background:var(--brand);border:1px solid transparent}
+.generate-section .model-select-wrap .model-pick-btn{background:transparent;border:none;
+  box-shadow:none;color:#fff;border-radius:var(--r-box);padding:6px 26px 6px 8px}
+.generate-section .model-select-wrap .model-pick-btn:hover,
+.generate-section .model-select-wrap .model-pick-btn[aria-expanded="true"]{
+  background:rgba(255,255,255,.15);border:none;color:#fff}
+.generate-section .model-select-wrap .model-pick-btn .mp-caret{color:rgba(255,255,255,.9)}
+.generate-section .model-select-wrap .model-pick-btn .mp-logo{filter:brightness(0) invert(1)}
+.generate-section .model-select-wrap .model-pick-btn .mp-logo svg [stroke]{stroke:#fff}
+.generate-section .model-select-wrap .model-pick-btn .mp-logo svg path[fill]{fill:#fff}
+.generate-section .model-select-wrap .model-pick-btn .mp-chan{
+  background:rgba(255,255,255,.22);border:1px solid transparent;color:#fff}
+.generate-section .model-select-wrap .gen-cost{color:rgba(255,255,255,.9)}
+
+/* ── ① 发送键：实心橘 + 10px（不再大圆）── */
+.generate-section .generate-btn{width:48px;height:48px;border-radius:var(--r-box);
+  background:var(--brand);background-image:none;
+  box-shadow:0 6px 16px -10px color-mix(in srgb,var(--brand) 70%,transparent)}
+.generate-section .generate-btn:hover:not(:disabled){background:var(--brand-hover);transform:none}
+.generate-section .generate-btn:active:not(:disabled){transform:scale(.97)}
+.generate-section .generate-btn:disabled{opacity:1;
+  background:color-mix(in srgb,var(--brand) 45%,var(--surface-3));color:#fff}
+
+/* ── ② 圆角统一到 --r-box ── */
+html{--r-box:10px}
+.tabs,.tab,.param-quick-btn,.count-chip,.model-select-wrap,.model-pick-btn,.generate-btn,
+.ref-mode-row,.ref-mode-btn,.skill-pick-btn,.mode-btn,.pq-seg,.pq-seg-btn,.cp-opt,
+.prompt-module textarea,.param-group textarea,.prompt-module input,.field-row input,
+.field-row select,#paramForm select,#paramQuickBody select{border-radius:var(--r-box)}
+
 
 
 
@@ -2823,6 +2927,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
         <span class="mp-name" id="modelPickName"></span>
         <svg class="mp-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
       </button>
+      <span class="gen-cost" id="genCostPill"></span>
       <div class="model-pick-list" id="modelPickList" role="listbox" aria-label="模型列表"></div>
     </div>
                   <div class="form-actions-row" id="formActionsRow">
@@ -2860,7 +2965,7 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
       <div class="generate-row">
         <button class="generate-btn" id="generateBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>
-          <span id="generateBtnText">生成</span><span class="gen-cost" id="genCostPill"></span>
+          <span id="generateBtnText">生成</span>
         </button>
       </div>
     </div>
@@ -12107,6 +12212,19 @@ try { this.renderSkillModels(); } catch (_) {}
     syncBadge();
   }
 })();
+/* ── R62：技能模型模块「选了技能才出现」（样式不动；不选就等于没有）── */
+(function () {
+  var wrap = document.getElementById("setSecModel");
+  if (!wrap) return;
+  function sync() {
+    var on = !!document.querySelector(".skill-bubbles .sb-chip");
+    wrap.classList.toggle("is-skill-off", !on);
+  }
+  if (window.MutationObserver) { try { new MutationObserver(sync).observe(document.body, { childList: true, subtree: true }); } catch (e) {} }
+  sync();
+})();
+/* R60：加载即刷新一次金额胶囊（原先要换一次模型才显示） */
+setTimeout(function () { try { if (window.UI && window.UI._refreshGenerateBtn) window.UI._refreshGenerateBtn(); } catch (e) {} }, 400);
 /* ── R51：技能模型区（弹出面板开合 + 讨论模式单/双栏联动）── */
 (function () {
   var btn = document.getElementById("skillModelPickBtn");
@@ -15121,9 +15239,11 @@ if (hasActive) { el.textContent = "生成中..."; if (pill) pill.classList.remov
 el.textContent = "生成";
 var est = null;
 try { est = estCostCny(this.state.model, this._collectParamsSync()); } catch (e) {}
+/* R60：perChar（语音合成）estCostCny 不覆盖 ⇒ 按 字符数×单价 就地补算（仅本胶囊） */
+if (!est) { try { var _rb = this.state.model && this.state.model.billing; if (_rb && _rb.type === "perChar") { var _rt = String((this._collectParamsSync() || {})[_rb.charKey || "text"] || ""); if (_rt.length) est = { cny: _rt.length * _rb.unit, approx: false, detail: _rt.length + "字" }; } } catch (e) {} }
 if (pill) {
 if (est && est.cny > 0) {
-pill.textContent = (est.approx ? "≈¥" : "¥") + (est.cny < 1 ? est.cny.toFixed(2) : est.cny.toFixed(1));
+pill.textContent = (est.approx ? "≈¥" : "¥") + (est.cny < 0.01 ? est.cny.toFixed(3) : est.cny < 1 ? est.cny.toFixed(2) : est.cny.toFixed(1));
 pill.title = "预估费用" + (est.detail ? "（" + est.detail + "）" : "") + "，实际以用量为准";
 pill.classList.add("show");
 } else { pill.classList.remove("show"); }
