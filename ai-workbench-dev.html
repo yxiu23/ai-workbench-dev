@@ -2565,14 +2565,11 @@ svg:not([data-keep-stroke]) *{stroke-width:2;stroke-linecap:round;stroke-linejoi
       ref-hint（参考区块标题右侧）· ref-field-hint（参考文本字段）。
    ③ 设置抽屉去小字 + 去幽灵高度：toggle-sub（云同步说明）· clean-card i（副标签）·
       set-status 空态（实测 #vaultStatus 空态占 25px）。
-   ④ 结果区上下两条悬浮菜单统一成同款 + 大圆角：
-      实色 var(--bg-elev) + 1px var(--border) + var(--shadow-lg) + radius 14px + 去模糊。
-      ⚠ 必须一并覆盖 [data-svfloor=dark] 变体（地台主色是深色时引擎写该属性，
-      原深玻璃渐变 (0,3,0) 特异性会压过普通规则）——基线实测：
-      floatbar = 深玻璃 .62 / r8px / 无模糊；caption = 深玻璃 .64 / r10px / blur16px
-      ⇒ 两者本来就不同，这就是「做相同的样式」的根因。
-      ▶ 深色地台属性在场时，按钮/分隔线/标题文字改回主题色
-      （否则亮色主题 + 深地台 = 浅色字浮在浅底上，不可读）。
+   ④（R58 修正）结果区两条悬浮菜单：**上面的信息条保持原样式**（玻璃语言）；
+      **下面悬浮栏改成上面同款** —— 修原话「我让你把图片下面的悬浮栏改成图片上面的
+      悬浮栏样式，你改反了吧」。R57 曾把两条都改成实色（方向反了），此处改回：
+      floatbar := caption 原材质（玻璃渐变 + blur16 + 内高光），大圆角 14px 两条一致。
+      ⚠ [data-svfloor=dark] 变体同步覆盖（深地台时用 .64 深玻璃）。
    ══════════════════════════════════════════════════════════════════════════ */
 
 /* ── ① 音频模式：隐藏技能模型模块 ── */
@@ -2588,29 +2585,82 @@ body:has(#tabs .tab[data-tab="audio"].active) #setSecModel{display:none}
    解锁后「阿里云密钥未就位」）——错误反馈走 Toast 不受影响；锁态仍由「已锁定」徽标呈现 */
 .settings-drawer .set-status{display:none}
 
-/* ── ④ 结果区两条悬浮菜单统一（上 caption = 下 floatbar 同款 + 大圆角）── */
-.sv-docklayer .sv-floatbar,
-[data-svfloor] .sv-docklayer .sv-floatbar,
-.sv-caplayer .sv-caption,
-[data-svfloor] .sv-caplayer .sv-caption{
-  background:var(--bg-elev);
-  border:1px solid var(--border);
-  box-shadow:var(--shadow-lg);
+/* ── ④ 结果区两条悬浮菜单：下面悬浮栏 := 上面信息条同款（R58 方向修正）── */
+.sv-docklayer .sv-floatbar{
+  background:linear-gradient(135deg,rgba(255,255,255,.42),rgba(255,255,255,.24));
+  border:1px solid var(--lg-edge);
+  -webkit-backdrop-filter:blur(16px) saturate(170%);
+  backdrop-filter:blur(16px) saturate(170%);
+  box-shadow:0 8px 22px -16px rgba(9,14,30,.16),inset 0 1px 0 rgba(255,255,255,.45);
   border-radius:14px;
-  -webkit-backdrop-filter:none;
-  backdrop-filter:none;
 }
-/* floatbar 顶部高光细线（玻璃语言遗留）——实色底上不需要 */
+[data-svfloor] .sv-docklayer .sv-floatbar{
+  background:linear-gradient(135deg,rgba(46,50,60,.64),rgba(24,27,34,.58));
+  border-color:rgba(255,255,255,.14);
+  box-shadow:0 8px 22px -16px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.10);
+}
 .sv-docklayer .sv-floatbar::before{display:none}
-/* 深色地台属性在场时，按钮/分隔线/标题文字改回主题色 */
-[data-svfloor] .sv-floatbar .sv-hb-btn{color:var(--text-muted)}
-[data-svfloor] .sv-floatbar .sv-hb-btn:hover{background:var(--brand-soft);color:var(--brand)}
-[data-svfloor] .sv-floatbar .sv-hb-btn.danger:hover{background:var(--danger-soft);color:var(--danger)}
-[data-svfloor] .sv-floatbar .sv-hb-btn.on{background:var(--brand-soft);color:var(--brand)}
-[data-svfloor] .sv-floatbar .sv-fb-sep{background:var(--border)}
-[data-svfloor] .sv-cap-model{color:var(--text)}
-[data-svfloor] .sv-cap-time{color:var(--text-dim)}
-[data-svfloor] .sv-cap-prompt{color:var(--text-muted)}
+/* 上面的信息条仅同步大圆角（其余保持原样） */
+.sv-caplayer .sv-caption{border-radius:14px}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   R58 · 修第八轮（10-06 00:33）
+   ──────────────────────────────────────────────────────────────────────────
+   ① 媒体模型区橙底 → 参考图同色（--brand-soft）+ 细橙框线。
+   ② 彻底去「框套框」——参数区三层嵌套（卡 > 组卡 > 控件盒）收成一层：
+      · .param-group 在 #paramForm / 快捷弹窗内去底去影（只留间距与控件本身）
+      · 弹窗里的 ratio-cell 去底去影（选中态只留品牌色软底）
+      · 弹窗关闭钮去框
+      ⇒ 弹窗 = 一个框（面板本身）；音频面板 = paramForm 一张卡 + 扁平行。
+      明暗两主题共用同一「一个框」形态（底/影全部走变量）。
+   ③ 模型 logo 白框：部分品牌用 _softGlyph 软砖（底 #EEF2F7 近白）+ 按钮上
+      `filter:brightness(0) invert(1)` 把「砖+字」整体漂白 ⇒ 白方块。修法：
+      （生成器侧）软砖默认底 → 半透明中性灰、字色 → currentColor；voice 品牌
+      底 → 茶绿半透明；flux 纯黑 glyph → 中灰（暗色下可见）。
+      （CSS 侧）按钮 logo 不再整体反白：藏砖、描边/填充转白。
+   ④ 媒体模型 desc（选框上方注释）：橙字 + 居中 + 前带橙点；
+      暗色模式白字 + 橙点。
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── ① 媒体模型区：参考图同色 + 细橙框 ── */
+.model-select-wrap{
+  background:var(--brand-soft);
+  border:1px solid color-mix(in srgb,var(--brand) 30%,transparent);
+  box-shadow:none;
+}
+
+/* ── ④ 媒体模型 desc：橙字 · 居中 · 前带亮点（暗色白字橙点）── */
+.model-select-wrap .model-meta{justify-content:center}
+.model-select-wrap .model-meta .tag.desc-tag{color:var(--brand)}
+.model-select-wrap .model-meta .tag.desc-tag::before{
+  content:"";display:inline-block;width:6px;height:6px;border-radius:50%;
+  background:var(--brand);margin-right:6px;vertical-align:1px;
+}
+html[data-theme="dark"] .model-select-wrap .model-meta .tag.desc-tag{color:var(--text)}
+
+/* ── ② 彻底去框套框：参数组/弹窗内元素扁平化 ── */
+#paramForm .param-group{background:none;border:none;box-shadow:none;padding:0}
+.param-quick-panel .param-group{background:none;border:none;box-shadow:none;padding:0}
+.param-quick-panel .ratio-cell{border:none;background:none;box-shadow:none}
+.param-quick-panel .ratio-cell:hover{background:var(--surface-3)}
+.param-quick-panel .ratio-cell.active{background:var(--brand-soft);color:var(--brand);box-shadow:none}
+.param-quick-panel .pq-close{border:none;background:transparent}
+.param-quick-panel .pq-close:hover{background:var(--surface-3)}
+/* 张数弹窗：选中态与全站扁平语言一致（软底品牌色，不再实心 pill） */
+.count-pop .cp-opt.active{background:var(--brand-soft);color:var(--brand);box-shadow:none}
+.count-pop .cp-opt.active small{color:var(--brand)}
+/* 弹窗内分段控件（分辨率 1K/2K/4K 等）也去容器框——只剩选项高亮 */
+.param-quick-panel .pq-seg{border:none;background:none;padding:3px 0;box-shadow:none}
+.param-quick-panel .pq-seg-btn{border-radius:var(--radius-sm);box-shadow:none}
+.param-quick-panel .pq-seg-btn.active{background:var(--brand-soft);color:var(--brand);box-shadow:none}
+
+/* ── ③ 模型 logo：按钮不再整体反白（藏软砖底；描边/实心路径转白）── */
+.model-select-wrap .model-pick-btn .mp-logo{filter:none;color:#fff}
+.model-select-wrap .model-pick-btn .mp-logo svg rect{display:none}
+.model-select-wrap .model-pick-btn .mp-logo svg [stroke]{stroke:#fff}
+.model-select-wrap .model-pick-btn .mp-logo svg path[fill]{fill:#fff}
+/* 列表里的软砖字形：颜色跟随主题（currentColor 描边） */
+.model-pick-opt .mp-logo{color:var(--text-muted)}
 
 
 
@@ -5585,11 +5635,10 @@ hint: "非流式 ≤2000 字符"
 }, {
 key: "voice",
 label: "音色",
-type: "text",
+type: "datalist",
 required: true,
-default: "",
-placeholder: "声音复刻/设计音色 id",
-hint: "需百炼音色 id · 速创克隆不通用"
+default: "longanlingxin",
+options: [ { value: "longanlingxin", label: "龙安灵心（女 · 知心温暖）" }, { value: "longanlufeng", label: "龙安鲁风（男 · 明亮开朗）" } ] /* R58-7：音频音色补全（原 text 且默认空） */
 }, {
 key: "format",
 label: "格式",
@@ -11330,7 +11379,7 @@ const _badgeText = (bg, ch) => _brandBadge(bg, `<text x="12" y="12.5" text-ancho
 const _badgeGlyph = (bg, paths) => _brandBadge(bg, `<g fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${paths}</g>`);
 
 const _logoPath = (color, d) => '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="' + color + '" d="' + d + '"/></svg>';
-const _softGlyph = (paths, fg, bg) => '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="1.2" y="1.2" width="21.6" height="21.6" rx="6.5" fill="' + (bg || "#EEF2F7") + '"/><g fill="none" stroke="' + (fg || "#475569") + '" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + paths + '</g></svg>';
+const _softGlyph = (paths, fg, bg) => '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="1.2" y="1.2" width="21.6" height="21.6" rx="6.5" fill="' + (bg || "rgba(127,138,160,.20)") + '"/><g fill="none" stroke="' + (fg || "currentColor") + '" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + paths + '</g></svg>';
 const MODEL_BRANDS = {
 google: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47a5.57 5.57 0 0 1-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09A11.99 11.99 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.27 14.29A7.2 7.2 0 0 1 4.89 12c0-.8.14-1.57.38-2.29V6.62H1.29a12 12 0 0 0 0 10.76l3.98-3.09z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.69 1.29 6.62l3.98 3.09C6.22 6.86 8.87 4.75 12 4.75z"/></svg>',
 openai: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M22.28 9.82a5.98 5.98 0 0 0-.52-4.91 6.05 6.05 0 0 0-6.51-2.9A6.07 6.07 0 0 0 4.98 4.18a5.98 5.98 0 0 0-4 2.9 6.05 6.05 0 0 0 .74 7.1 5.98 5.98 0 0 0 .51 4.91 6.05 6.05 0 0 0 6.51 2.9A5.98 5.98 0 0 0 13.26 24a6.06 6.06 0 0 0 5.77-4.21 5.99 5.99 0 0 0 4-2.9 6.06 6.06 0 0 0-.75-7.07zm-9.02 12.61a4.48 4.48 0 0 1-2.88-1.04l.14-.08 4.78-2.76a.79.79 0 0 0 .39-.68v-6.74l2.02 1.17a.07.07 0 0 1 .04.05v5.58a4.5 4.5 0 0 1-4.49 4.5zm-9.66-4.13a4.47 4.47 0 0 1-.53-3.01l.14.08 4.78 2.76a.77.77 0 0 0 .78 0l5.84-3.37v2.33a.08.08 0 0 1-.03.06l-4.83 2.79a4.5 4.5 0 0 1-6.15-1.64zM2.34 7.9a4.49 4.49 0 0 1 2.37-1.97v5.68a.77.77 0 0 0 .39.67l5.81 3.36-2.02 1.17a.08.08 0 0 1-.07 0L4 14.01a4.5 4.5 0 0 1-1.66-6.14zm16.6 3.86l-5.83-3.39L15.12 7.2a.08.08 0 0 1 .07 0l4.83 2.79a4.49 4.49 0 0 1-.68 8.1v-5.68a.79.79 0 0 0-.4-.67zm2.01-3.02l-.14-.09-4.77-2.78a.78.78 0 0 0-.79 0L9.41 9.23V6.9a.07.07 0 0 1 .03-.06l4.83-2.79a4.5 4.5 0 0 1 6.68 4.66zM8.31 12.86l-2.02-1.16a.08.08 0 0 1-.04-.06V6.07a4.5 4.5 0 0 1 7.38-3.45l-.14.08-4.78 2.76a.79.79 0 0 0-.39.68zm1.1-2.37l2.6-1.5 2.61 1.5v3l-2.6 1.5-2.61-1.5z"/></svg>',
@@ -11342,7 +11391,7 @@ kling: _logoPath("#FF4906", "M18.315 12.264c2.33 0 4.218 1.88 4.218 4.2V19.8c0 2
 upscale: _softGlyph('<path d="M12 18.5V6.5M6.2 12.3 12 6.5l5.8 5.8"/>'),
 human: _softGlyph('<circle cx="12" cy="8" r="3.4"/><path d="M5 19.5c1.3-3.4 3.9-5.1 7-5.1s5.7 1.7 7 5.1"/>'),
 box: _softGlyph('<path d="M21 8.2 12 3.5 3 8.2v7.6l9 4.7 9-4.7z"/><path d="M3 8.2l9 4.7 9-4.7M12 12.9v7.4"/>'),
-voice: _softGlyph('<path d="M4.5 10v4M8.5 7.5v9M12 5v14M15.5 7.5v9M19.5 10v4"/>', "#0D9488", "#E6FAF7"),
+voice: _softGlyph('<path d="M4.5 10v4M8.5 7.5v9M12 5v14M15.5 7.5v9M19.5 10v4"/>', "#0D9488", "rgba(13,148,136,.16)"),
 /* IMPL-96①：直连 8 模型品牌徽标——通义（Z-Image 紫）/千问（阿里橙）/ASR 麦克风徽 */
 tongyi: _logoPath("#615CED", "M23.919 14.545 20.817 9.17l1.47-2.544a.56.56 0 0 0 0-.566l-1.633-2.83a.57.57 0 0 0-.49-.283h-6.207L12.487.402a.57.57 0 0 0-.49-.284H8.732a.56.56 0 0 0-.49.284L5.139 5.775h-2.94a.56.56 0 0 0-.49.284L.077 8.887a.56.56 0 0 0 0 .567L3.18 14.83l-1.47 2.545a.56.56 0 0 0 0 .566l1.634 2.83a.57.57 0 0 0 .49.283h6.205l1.47 2.545a.57.57 0 0 0 .49.284h3.266a.57.57 0 0 0 .49-.284l3.104-5.375h2.94a.57.57 0 0 0 .49-.283l1.634-2.828a.55.55 0 0 0-.004-.568M8.733.686l1.634 2.828-1.634 2.828H21.8L20.164 9.17H7.425L5.63 6.06Zm1.306 19.801-6.205-.002 1.634-2.83h3.265L2.201 6.344h3.267q3.182 5.517 6.367 11.032zm10.124-5.66L18.53 12l-6.532 11.315-1.634-2.83c2.129-3.673 4.25-7.351 6.373-11.028h3.592l3.102 5.374z"),
 qwen: _logoPath("#615CED", "M23.919 14.545 20.817 9.17l1.47-2.544a.56.56 0 0 0 0-.566l-1.633-2.83a.57.57 0 0 0-.49-.283h-6.207L12.487.402a.57.57 0 0 0-.49-.284H8.732a.56.56 0 0 0-.49.284L5.139 5.775h-2.94a.56.56 0 0 0-.49.284L.077 8.887a.56.56 0 0 0 0 .567L3.18 14.83l-1.47 2.545a.56.56 0 0 0 0 .566l1.634 2.83a.57.57 0 0 0 .49.283h6.205l1.47 2.545a.57.57 0 0 0 .49.284h3.266a.57.57 0 0 0 .49-.284l3.104-5.375h2.94a.57.57 0 0 0 .49-.283l1.634-2.828a.55.55 0 0 0-.004-.568M8.733.686l1.634 2.828-1.634 2.828H21.8L20.164 9.17H7.425L5.63 6.06Zm1.306 19.801-6.205-.002 1.634-2.83h3.265L2.201 6.344h3.267q3.182 5.517 6.367 11.032zm10.124-5.66L18.53 12l-6.532 11.315-1.634-2.83c2.129-3.673 4.25-7.351 6.373-11.028h3.592l3.102 5.374z"),
@@ -11350,7 +11399,7 @@ mic: _softGlyph('<rect x="9" y="2.5" width="6" height="11" rx="3"/><path d="M5.5
 /* ★ R21-4：APIYI 新模型品牌 —— 字节 Seed 系（Seedream/Seedance）与 FLUX（Black Forest Labs）。
    不新造 SVG：用现成 _badgeText 色块字徽（与 云/W/M/V/K 同一套形制）。 */
 seed: _logoPath("#325AB4", "M19.8772 1.4685L24 2.5326v18.9426l-4.1228 1.0563V1.4685zm-13.3481 9.428l4.115 1.0641v8.9786l-4.115 1.0642v-11.107zM0 2.572l4.115 1.0642v16.7354L0 21.428V2.572zm17.4553 5.6205v11.107l-4.1228-1.0642V9.2568l4.1228-1.0642z"),
-flux: _logoPath("#111111", "M11.402 23.747c.154.075.306.154.454.238.181.038.37.004.525-.097l.386-.251c-1.242-.831-2.622-1.251-3.998-1.602l2.633 1.712Zm-7.495-5.783a8.088 8.088 0 0 1-.222-.236.696.696 0 0 0 .112 1.075l2.304 1.498c1.019.422 2.085.686 3.134.944 1.636.403 3.2.79 4.554 1.728l.697-.453c-1.541-1.158-3.327-1.602-5.065-2.03-2.039-.503-3.965-.977-5.514-2.526Zm1.414-1.322-.665.432c.023.024.044.049.068.073 1.702 1.702 3.825 2.225 5.877 2.731 1.778.438 3.469.856 4.9 1.982l.682-.444c-1.612-1.357-3.532-1.834-5.395-2.293-2.019-.497-3.926-.969-5.467-2.481Zm7.502 2.084c1.596.412 3.096.904 4.367 2.036l.670-.436c-1.484-1.396-3.266-1.953-5.037-2.403v.803Zm.698-2.337a64.695 64.695 0 0 1-.698-.174v.802l.512.127c2.039.503 3.965.978 5.514 2.526l.007.009.663-.431c-.041-.042-.079-.086-.121-.128-1.702-1.701-3.824-2.225-5.877-2.731Zm-.698-1.928v.816c.624.19 1.255.347 1.879.501 2.039.502 3.965.977 5.513 2.526.077.077.153.157.226.239a.704.704 0 0 0-.238-.911l-3.064-1.992c-.744-.245-1.502-.433-2.251-.618a31.436 31.436 0 0 1-2.065-.561Zm-1.646 3.049c-1.526-.4-2.96-.888-4.185-1.955l-.674.439c1.439 1.326 3.151 1.88 4.859 2.319v-.803Zm0-1.772a8.543 8.543 0 0 1-2.492-1.283l-.686.446c.975.804 2.061 1.293 3.178 1.655v-.818Zm0-1.946a7.59 7.59 0 0 1-.776-.453l-.701.456c.462.337.957.627 1.477.865v-.868Zm3.533.269-1.887-1.226v.581c.614.257 1.244.473 1.887.645Zm5.493-8.863L12.381.112a.705.705 0 0 0-.762 0L3.797 5.198a.698.698 0 0 0 0 1.171l7.38 4.797V7.678a.414.414 0 0 0-.412-.412h-.543a.413.413 0 0 1-.356-.617l1.777-3.079a.412.412 0 0 1 .714 0l1.777 3.079a.413.413 0 0 1-.356.617h-.543a.414.414 0 0 0-.412.412v3.488l7.38-4.797a.7.7 0 0 0 0-1.171Z")
+flux: _logoPath("#8f98a5", "M11.402 23.747c.154.075.306.154.454.238.181.038.37.004.525-.097l.386-.251c-1.242-.831-2.622-1.251-3.998-1.602l2.633 1.712Zm-7.495-5.783a8.088 8.088 0 0 1-.222-.236.696.696 0 0 0 .112 1.075l2.304 1.498c1.019.422 2.085.686 3.134.944 1.636.403 3.2.79 4.554 1.728l.697-.453c-1.541-1.158-3.327-1.602-5.065-2.03-2.039-.503-3.965-.977-5.514-2.526Zm1.414-1.322-.665.432c.023.024.044.049.068.073 1.702 1.702 3.825 2.225 5.877 2.731 1.778.438 3.469.856 4.9 1.982l.682-.444c-1.612-1.357-3.532-1.834-5.395-2.293-2.019-.497-3.926-.969-5.467-2.481Zm7.502 2.084c1.596.412 3.096.904 4.367 2.036l.670-.436c-1.484-1.396-3.266-1.953-5.037-2.403v.803Zm.698-2.337a64.695 64.695 0 0 1-.698-.174v.802l.512.127c2.039.503 3.965.978 5.514 2.526l.007.009.663-.431c-.041-.042-.079-.086-.121-.128-1.702-1.701-3.824-2.225-5.877-2.731Zm-.698-1.928v.816c.624.19 1.255.347 1.879.501 2.039.502 3.965.977 5.513 2.526.077.077.153.157.226.239a.704.704 0 0 0-.238-.911l-3.064-1.992c-.744-.245-1.502-.433-2.251-.618a31.436 31.436 0 0 1-2.065-.561Zm-1.646 3.049c-1.526-.4-2.96-.888-4.185-1.955l-.674.439c1.439 1.326 3.151 1.88 4.859 2.319v-.803Zm0-1.772a8.543 8.543 0 0 1-2.492-1.283l-.686.446c.975.804 2.061 1.293 3.178 1.655v-.818Zm0-1.946a7.59 7.59 0 0 1-.776-.453l-.701.456c.462.337.957.627 1.477.865v-.868Zm3.533.269-1.887-1.226v.581c.614.257 1.244.473 1.887.645Zm5.493-8.863L12.381.112a.705.705 0 0 0-.762 0L3.797 5.198a.698.698 0 0 0 0 1.171l7.38 4.797V7.678a.414.414 0 0 0-.412-.412h-.543a.413.413 0 0 1-.356-.617l1.777-3.079a.412.412 0 0 1 .714 0l1.777 3.079a.413.413 0 0 1-.356.617h-.543a.414.414 0 0 0-.412.412v3.488l7.38-4.797a.7.7 0 0 0 0-1.171Z")
 };
 
 const MODEL_LOGO = {
@@ -12679,6 +12728,7 @@ _pqClassOf(g) {
   const l = String(fl && fl.childNodes[0] && fl.childNodes[0].textContent || "").trim();
   if ([ "aspectratio", "aspect_ratio", "ratio" ].includes(k) || l.indexOf("比例") >= 0 || l.indexOf("宽高") >= 0) return "ratio";
   if ([ "resolution", "image_size", "size" ].includes(k) || l.indexOf("分辨率") >= 0 || l.indexOf("清晰度") >= 0 || l.indexOf("尺寸") >= 0) return "resolution";
+  if (k === "background" || l.indexOf("背景") >= 0) return "resolution"; /* R58-6：透明背景等多余选项并入分辨率弹窗 */
   if ([ "duration", "seconds" ].includes(k) || l.indexOf("时长") >= 0) return "quality";
   if (k === "quality" || l.indexOf("质量") >= 0 || l.indexOf("画质") >= 0) return "quality";
   return "other";
