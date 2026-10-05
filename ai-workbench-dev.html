@@ -2282,6 +2282,36 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
   width:12px;height:12px;border:none;border-radius:50%;background:var(--text);box-shadow:none;
 }
 
+/* ══════════════════════════════════════════════════════════════════════════
+   R51 · 技能模型区（顶部）+ 媒体模型框下移（10-05 深夜 · 修第 11 条）
+   ──────────────────────────────────────────────────────────────────────────
+   · 媒体模型框 → 下移到 generate-section（参数按钮行）之前；
+   · 顶部原位 → 技能模型区：技能模型按钮（形态对标 .model-pick-btn）+
+     讨论模型第二栏（**开讨论模式才显示 ⇒ 单栏/双栏**）+ 三开关行 + 弹出面板。
+   · ★ #setSecModel 这个 id **随迁**到新容器 —— 现有 `#setSecModel .sm-*`
+     几十条样式原样命中（搬家不脱皮）。
+   ══════════════════════════════════════════════════════════════════════════ */
+.skill-head-wrap{position:relative;display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.skill-head-wrap .skill-cols{display:flex;gap:8px;align-items:stretch}
+.skill-head-wrap .skill-col{flex:1 1 0;min-width:0}
+.skill-head-wrap .skill-col-2{display:none}
+.skill-head-wrap[data-discuss="1"] .skill-col-2{display:block}
+.skill-pick-btn{width:100%;height:100%;display:flex;align-items:center;gap:8px;padding:9px 28px 9px 11px;font-size:13px;font-weight:500;color:var(--text);background:var(--surface-2);border:none;border-radius:var(--radius-sm);cursor:pointer;position:relative;text-align:left;transition:background .15s}
+.skill-pick-btn:hover,.skill-pick-btn[aria-expanded="true"]{background:color-mix(in srgb,var(--brand) 8%,var(--surface-2))}
+.skill-pick-btn .sp-ico{flex:0 0 auto;display:inline-flex;width:15px;height:15px;color:var(--brand)}
+.skill-pick-btn .sp-ico svg{width:15px;height:15px;display:block}
+.skill-pick-btn #skillModelBadge{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.skill-pick-btn .mp-caret{position:absolute;right:10px;top:50%;width:12px;height:12px;transform:translateY(-50%);transition:transform .18s;color:var(--text-muted)}
+.skill-pick-btn[aria-expanded="true"] .mp-caret{transform:translateY(-50%) rotate(180deg)}
+.skill-head-wrap .skill-col-2 .sm-vision-row{height:100%;display:flex;align-items:center;gap:8px;padding:0 10px;background:var(--surface-2);border-radius:var(--radius-sm)}
+.skill-head-wrap .skill-col-2 .sm-vision-row label{flex:0 0 auto;font-size:12px;font-weight:500;color:var(--text-muted)}
+.skill-head-wrap .skill-col-2 .sm-select{flex:1 1 auto;min-width:0}
+.skill-toggles-row{display:flex;align-items:center;gap:18px;padding:1px 2px}
+.skill-toggles-row .settings-toggle{display:flex;align-items:center;gap:8px;padding:0;border:none;background:none}
+.skill-toggles-row .toggle-label{font-size:12px;color:var(--text-muted)}
+.skill-pop{position:absolute;left:0;right:0;top:calc(100% - 2px);z-index:46;background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);padding:12px 12px 6px;max-height:min(430px,62vh);overflow:auto}
+.skill-pop[hidden]{display:none}
+
 
 
 
@@ -2347,6 +2377,47 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1v-7h3v5zM3 19a2 2 0 0 0 2 2h1v-7H3v5z"/></svg>音频生成
       </button>
     </div>
+    <div class="skill-head-wrap" id="setSecModel" data-discuss="0">
+      <div class="skill-cols">
+        <div class="skill-col skill-col-1">
+          <button type="button" class="skill-pick-btn" id="skillModelPickBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="skillPop">
+            <span class="sp-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg></span>
+            <span id="skillModelBadge">技能模型</span>
+            <svg class="mp-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+        </div>
+        <div class="skill-col skill-col-2">
+          <div class="sm-vision-row">
+            <label for="skillModeModel">讨论模型<span id="skillModeTag" class="sm-mode-tag" hidden>讨论</span></label>
+            <select id="skillModeModel" class="sm-select" aria-label="讨论模型选择"></select>
+          </div>
+        </div>
+      </div>
+      <div class="skill-toggles-row">
+        <div class="settings-toggle sm-think-row">
+          <div><div class="toggle-label">思考模式</div></div>
+          <div class="toggle-switch" id="skillThinkToggle" role="switch" aria-checked="true" tabindex="0" aria-label="思考模式"></div>
+        </div>
+        <div class="settings-toggle sm-think-row">
+          <div><div class="toggle-label">接棒模式</div></div>
+          <div class="toggle-switch on" id="skillRelayToggle" role="switch" aria-checked="true" tabindex="0" aria-label="接棒模式"></div>
+        </div>
+        <div class="settings-toggle sm-think-row">
+          <div><div class="toggle-label">讨论模式</div></div>
+          <div class="toggle-switch" id="skillDiscussToggle" role="switch" aria-checked="false" tabindex="0" aria-label="讨论模式"></div>
+        </div>
+      </div>
+      <div class="skill-pop" id="skillPop" hidden>
+        <div id="skillModelList" class="skill-model-list" role="radiogroup" aria-label="技能模型选择"></div>
+        <div class="sm-search-row">
+          <input type="text" id="skillModelSearch" class="sm-search" placeholder="搜索模型…" style="display:none" aria-label="搜索模型清单">
+          <button type="button" class="sm-refresh" id="skillModelRefreshBtn" title="刷新模型清单" aria-label="刷新模型清单"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
+        </div>
+        <div id="skillModelCatalog" class="skill-model-catalog" style="display:none"></div>
+        <div id="skillModelStatus" class="set-status"></div>
+      </div>
+    </div>
+    <div id="paramForm" style="display:flex !important;flex-direction:column;gap:14px;"></div>
     <div class="model-select-wrap">
       <select id="modelSelect" class="model-select" aria-label="模型选择"></select>
       <button type="button" class="model-pick-btn" id="modelPickBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="modelPickList" aria-label="选择模型">
@@ -2358,7 +2429,6 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
       <div class="model-meta" id="modelMeta"></div>
       <div class="model-desc" id="modelDesc"></div>
     </div>
-    <div id="paramForm" style="display:flex !important;flex-direction:column;gap:14px;"></div>
     <div class="generate-section">
                   <div class="form-actions-row" id="formActionsRow">
         <button type="button" class="param-quick-btn" id="paramQuickBtnRatio" data-pq-mode="ratio" aria-expanded="false" aria-controls="paramQuickPanel" aria-label="比例参数">
@@ -2570,32 +2640,6 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
         <div class="toggle-switch on" id="cloudSyncToggle"></div>
       </div>
       <div id="cloudSyncStatus" class="set-status" style="display:none" data-tone=""></div><!-- IMPL-122：云同步状态可见化（未连接任务中心的中性指引/已连接+上次拉取时间——用户自查“最近结果为什么没同步”不再无解） -->
-    </div>
-    <div class="settings-section" id="setSecModel">
-      <h4><span class="set-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/></svg></span>技能模型 <span id="skillModelBadge" style="font-size:11px;font-weight:600;color:var(--brand);margin-left:6px"></span></h4>
-      <div id="skillModelList" class="skill-model-list" role="radiogroup" aria-label="技能模型选择"></div>
-      <div class="sm-search-row">
-        <input type="text" id="skillModelSearch" class="sm-search" placeholder="搜索模型…" style="display:none" aria-label="搜索模型清单">
-        <button type="button" class="sm-refresh" id="skillModelRefreshBtn" title="刷新模型清单" aria-label="刷新模型清单"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
-      </div>
-      <div id="skillModelCatalog" class="skill-model-catalog" style="display:none"></div>
-      <div class="settings-toggle sm-think-row">
-        <div><div class="toggle-label">思考模式</div></div>
-        <div class="toggle-switch" id="skillThinkToggle" role="switch" aria-checked="true" tabindex="0" aria-label="思考模式"></div>
-      </div>
-      <div class="settings-toggle sm-think-row">
-        <div><div class="toggle-label">接棒模式</div></div>
-        <div class="toggle-switch on" id="skillRelayToggle" role="switch" aria-checked="true" tabindex="0" aria-label="接棒模式"></div>
-      </div>
-      <div class="settings-toggle sm-think-row">
-        <div><div class="toggle-label">讨论模式</div></div>
-        <div class="toggle-switch" id="skillDiscussToggle" role="switch" aria-checked="false" tabindex="0" aria-label="讨论模式"></div>
-      </div>
-      <div class="sm-vision-row">
-        <label for="skillModeModel">识与论切<span id="skillModeTag" class="sm-mode-tag">识图</span></label>
-        <select id="skillModeModel" class="sm-select" aria-label="识与论切（识图/讨论模型）"></select>
-      </div>
-      <div id="skillModelStatus" class="set-status"></div>
     </div>
     <div class="settings-section" id="setSecClean">
       <h4><span class="set-sec-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3a2.4 2.4 0 0 1 0-3.4l9.6-9.6a2.4 2.4 0 0 1 3.4 0l5.6 5.6a2.4 2.4 0 0 1 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg></span>清理</h4>
@@ -11632,6 +11676,45 @@ $("#openStudioBtn").addEventListener("click", () => {
   window.StudioEditor.open({ onSave: this._studioOnSave(model) });
 });
 $("#skillModelRefreshBtn").addEventListener("click", () => this.refreshSkillModels());
+/* R51-4b：技能区现常显于主面板（此前 renderSkillModels 只在「打开设置」时被调 —— @openSettings）
+   ⇒ 补一次初始渲染，否则列表/徽标到首次打开设置前都是空的 */
+try { this.renderSkillModels(); } catch (_) {}
+/* ── R51：技能模型区（弹出面板开合 + 讨论模式单/双栏联动）── */
+(function () {
+  var btn = document.getElementById("skillModelPickBtn");
+  var pop = document.getElementById("skillPop");
+  var wrap = document.getElementById("setSecModel");
+  function setOpen(on) {
+    if (!pop) return;
+    if (on) { pop.removeAttribute("hidden"); } else { pop.setAttribute("hidden", ""); }
+    if (btn) btn.setAttribute("aria-expanded", on ? "true" : "false");
+  }
+  if (btn && pop) {
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      setOpen(pop.hasAttribute("hidden"));
+    });
+    document.addEventListener("click", function (e) {
+      if (pop.hasAttribute("hidden")) return;
+      if (pop.contains(e.target) || btn.contains(e.target)) return;
+      setOpen(false);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") setOpen(false);
+    });
+  }
+  function syncCols() {
+    if (!wrap) return;
+    var on = false;
+    try { if (typeof Store !== "undefined" && Store.getSkillDiscuss) on = !!Store.getSkillDiscuss(); } catch (_) {}
+    wrap.setAttribute("data-discuss", on ? "1" : "0");
+  }
+  syncCols();
+  var discSw = document.getElementById("skillDiscussToggle");
+  if (discSw && window.MutationObserver) {
+    try { new MutationObserver(syncCols).observe(discSw, { attributes: true, attributeFilter: ["class", "aria-checked"] }); } catch (_) {}
+  }
+})();
 {
 /* IMPL-73：三开关状态机放宽——讨论×思考兼容（讨论选的即顶尖思考模型，深度思考是增益；成本/耗时由用户自主选择，Toast 提示不强制）。
    唯一结构互斥：接棒⊗讨论（编排管线二选一）。联动=开接棒→关讨论；开讨论→关接棒；思考自由开关不联动。
