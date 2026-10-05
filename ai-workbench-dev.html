@@ -2430,6 +2430,70 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .ref-add:hover{background:color-mix(in srgb,var(--brand) 16%,transparent);color:var(--brand)}
 
 
+/* ══════════════════════════════════════════════════════════════════════════
+   R55 · 修第四轮 11 条（10-05 深夜）
+   ──────────────────────────────────────────────────────────────────────────
+   ① 模型名 13px 规范 + 防撑高；⑤ 介绍移按钮上方（生成器 R55-7）
+   ② 参考图区铺平（mode-row 去壳）；③ 去透明网格背景；④ 标题统一 12px/muted
+   ⑥ 语种等 select 按钮化；⑦ 媒体模型区橘底；⑧ 快捷面板去重复头部
+   ⑨ 生图区白块 → 主题色；⑩ 结果区去圆角；⑪ 编辑器背景模糊 10px
+   ★ 模块解嵌套（生成器 R55-1~6）：prompt/ref 搬出 #paramForm ⇒ 五模块同级卡片
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── 解嵌套槽：提示词 + 参考图 的新挂载点 ── */
+.pre-param-slot{display:flex;flex-direction:column;gap:14px}
+.pre-param-slot:empty{display:none}
+
+/* ── ① 模型名 13px（原 14px 偏大）；省略号已由 .mp-name 保证 ── */
+.model-pick-btn{font-size:13px;font-weight:600}
+.skill-pick-btn{padding:8px 28px 8px 11px;font-size:13px;font-weight:600}
+.skill-pick-btn #skillModelBadge,.skill-pick-btn #discussModelBadge{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:600}
+
+/* ── ④ 标题统一：提示词 = 参考图（12px / 600 / muted / 12px 图标）── */
+.prompt-title{font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:.02em;display:flex;align-items:center;gap:5px}
+.prompt-title svg{width:12px;height:12px;color:var(--text-dim);flex-shrink:0}
+
+/* ── ③ 参考图缩略图：去透明网格背景 ── */
+.ref-item img{background-color:transparent;background-image:none}
+
+/* ── ② 参考图区铺平：mode-row 去壳 → 按钮独立底色；缩略图去描边 ── */
+.ref-mode-row{background:transparent;border:none;padding:0;gap:4px}
+.ref-mode-btn{background:var(--surface-3);border-radius:var(--radius-sm)}
+.ref-mode-btn.active{background:var(--brand-soft);color:var(--brand);box-shadow:none}
+.ref-item{border:none}
+
+/* ── ⑥ 语种等参数 select 统一按钮化（34px / 无原生外观 / 统一 chevron）── */
+#paramForm select,#paramQuickBody select,.field-row select{
+  height:34px;min-height:34px;border:none;border-radius:var(--radius-sm);
+  background-color:var(--surface-3);
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a8a8a8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+  background-repeat:no-repeat;background-position:right 9px center;
+  padding:0 28px 0 10px;font-size:12px;font-weight:500;color:var(--text);
+  -webkit-appearance:none;appearance:none;cursor:pointer;box-shadow:none;
+}
+#paramForm select:hover,#paramQuickBody select:hover,.field-row select:hover{background-color:var(--surface-2)}
+#paramForm select:focus,#paramQuickBody select:focus{border:none;box-shadow:none;background-color:var(--surface-2)}
+#paramForm select.pq-hidden-select,#paramQuickBody select.pq-hidden-select{min-height:0}
+
+/* ── ⑦ 媒体模型区橘色底（与技能模型区区分）── */
+.model-select-wrap{background:color-mix(in srgb,var(--brand) 15%,var(--surface-2))}
+
+/* ── ⑧ 快捷参数面板去重复头部（分类标题 / 模型名小字 / 关闭叉号 全多余）── */
+.pq-head{display:none}
+
+/* ── ⑨ 生图区白块（透明图承载底）→ 主题色 ── */
+.sv-media.is-plain.has-alpha{background:var(--bg-elev)}
+
+/* ── ⑩ 结果区最外层去圆角（网格布局）── */
+.result-list.single-view{border-radius:0}
+
+/* ── ⑪ 编辑器打开时：网页背景模糊 10px ── */
+.studioOverlay{-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+
+/* ── ⑧b 图标骨架统一：延伸到子元素（宿主 svg 的 path 各自带不一致笔触）── */
+svg:not([data-keep-stroke]) *{stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+
 
 
 
@@ -2528,18 +2592,19 @@ sessionStorage.setItem("wb_filemode_hint_dismissed", "1");
         <div id="skillModelStatus" class="set-status"></div>
       </div>
     </div>
+    <div id="preParamSlot" class="pre-param-slot"></div>
     <div id="paramForm" style="display:flex !important;flex-direction:column;gap:14px;"></div>
     <div class="generate-section">
     <div class="model-select-wrap">
       <select id="modelSelect" class="model-select" aria-label="模型选择"></select>
+      <div class="model-meta" id="modelMeta"></div>
+      <div class="model-desc" id="modelDesc"></div>
       <button type="button" class="model-pick-btn" id="modelPickBtn" aria-haspopup="listbox" aria-expanded="false" aria-controls="modelPickList" aria-label="选择模型">
         <span class="mp-logo" id="modelPickLogo" aria-hidden="true"></span>
         <span class="mp-name" id="modelPickName"></span>
         <svg class="mp-caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
       </button>
       <div class="model-pick-list" id="modelPickList" role="listbox" aria-label="模型列表"></div>
-      <div class="model-meta" id="modelMeta"></div>
-      <div class="model-desc" id="modelDesc"></div>
     </div>
                   <div class="form-actions-row" id="formActionsRow">
         <button type="button" class="param-quick-btn" id="paramQuickBtnRatio" data-pq-mode="ratio" aria-expanded="false" aria-controls="paramQuickPanel" aria-label="比例参数">
@@ -12482,6 +12547,9 @@ _mountQuickParams() {
   const modelEl = $("#paramQuickModel");
   if (modelEl) modelEl.textContent = this.state.model?.name || "";
   this._updateQuickSummary();
+  /* R55：参数卡可见性同步 —— 参数可能全部搬进快捷面板 ⇒ #paramForm 空卡收起 */
+  const _visLeft = [ ...container.children ].some(el => !el.hidden && el.style.display !== "none");
+  container.style.display = _visLeft ? "flex" : "none";
 },
 _pqClassOf(g) {
   /* R23：参数组 → 三桶之一（other ⇒ 留主面板）。顺序：比例 → 分辨率 → 时长 → 质量。
@@ -12860,7 +12928,7 @@ _bindPromptGrowOnResize() {
 if (this._promptGrowBound) return;
 this._promptGrowBound = true;
 window.addEventListener("resize", () => {
-const ta = document.querySelector("#paramForm textarea[data-key]");
+const ta = document.querySelector("#preParamSlot textarea[data-key], #paramForm textarea[data-key]");
 if (ta) this._autoGrowPrompt(ta);
 }, {
 passive: true
@@ -13129,10 +13197,13 @@ this.state.model = model;
 this.state.modelKey = `${this.state.tab}/${model.id}`;
 this._updateModelBar();
 const container = $("#paramForm");
+const preSlot = $("#preParamSlot");
 this._parkWorkflowBtns();
 container.innerHTML = "";
+container.style.display = "flex";
+if (preSlot) preSlot.innerHTML = "";
 const hasPrompt = model.params.find(p => p.type === "textarea");
-if (hasPrompt) container.appendChild(this._buildPromptModule(model));
+if (hasPrompt) (preSlot || container).appendChild(this._buildPromptModule(model));
 const refGroupParamKeys = new Set;
 if (model.refGroups) {
 model.refGroups.modes.forEach(m => m.params.forEach(k => refGroupParamKeys.add(k)));
@@ -13165,11 +13236,11 @@ container.appendChild(cntHolder);
 const cntSel = cntHolder.querySelector("select");
 cntSel.addEventListener("change", () => this._onFieldChange("__count", cntSel));
 if (model.refGroups) {
-container.appendChild(this._buildRefModeSection(model));
+(preSlot || container).appendChild(this._buildRefModeSection(model));
 }
 for (const item of complexParams) {
 if (item.type === "ref") {
-container.appendChild(this._buildRefSection(item.param));
+(preSlot || container).appendChild(this._buildRefSection(item.param));
 }
 }
 /* ★ R29-B：简单字段先拆 bool（开关）与其余；其余仍两两一行；开关统一收进一行（多个并列省空间） */
@@ -13335,7 +13406,7 @@ wrap.style.position = "relative";
 const promptParam = model.params.find(p => p.type === "textarea");
 const key = promptParam.key;
 const defVal = this.state.formCache[this.state.modelKey]?.[key] ?? promptParam.default ?? "";
-wrap.innerHTML = `\n      <div class="prompt-head">\n        <span class="prompt-title">提示词</span>\n        <div class="prompt-actions">\n          <span id="wfActionsSlot" style="display:contents"></span>\n          <button class="preset-trigger" id="presetTrigger" title="技能 · 预设 · 模板">\n            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>\n            <span>技能</span>\n          </button>\n          <button class="prompt-save-btn" id="savePresetBtn" title="保存为预设" aria-label="保存为预设"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" width="14" height="14"><path d="M5 12h14"/><path d="M12 5v14"/></svg></button>\n        </div>\n      </div>\n      <div class="skill-bubbles" data-skill-bubbles hidden></div>\n      <textarea data-key="${esc(key)}" placeholder="${esc(promptParam.placeholder || "描述你想要生成的内容...")}" >${esc(defVal)}</textarea>\n      <div class="prompt-tools">\n        <button class="tool-btn icon-only" data-action="recent" title="最近使用的提示词" aria-label="最近使用的提示词"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 1.5"/></svg></button>\n        <button class="tool-btn icon-only" data-action="clear" title="清空提示词" aria-label="清空提示词"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>\n                <span class="tools-divider" role="separator" aria-orientation="vertical"></span>\n        <button type="button" class="doc-btn" data-doc-btn aria-haspopup="dialog" aria-label="上传文档" title="上传文档给模型分析（文本类文件，随下一条消息发送）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></button><button type="button" class="wand-btn" data-wand aria-haspopup="dialog" aria-label="AI优化" title="选择技能，优化提示词"><svg class="ico-wand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg><svg class="ico-stop" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button><button type="button" class="mic-btn" data-mic aria-label="语音输入" title="语音输入：录音→语音识别→整理填入提示词"><svg class="ico-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg><svg class="ico-stop" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button>\n      </div>\n      <input type="file" data-doc-input multiple accept=".txt,.md,.markdown,.json,.csv,.tsv,.log,.xml,.html,.htm,.srt,.vtt,.yaml,.yml,.ini,.conf,.cfg,.js,.ts,.jsx,.tsx,.css,.py,.java,.c,.cpp,.h,.sh,.sql,.rs,.go,.rb,.php,.kt,.swift" hidden>\n      <div class="doc-chips" data-doc-chips hidden></div>\n      <div class="prompt-vars" data-vars hidden></div>\n      <div class="prompt-history-list" id="phList"></div>\n      <div class="skill-panel" data-skill-panel hidden></div>\n    `;
+wrap.innerHTML = `\n      <div class="prompt-head">\n        <span class="prompt-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>提示词</span>\n        <div class="prompt-actions">\n          <span id="wfActionsSlot" style="display:contents"></span>\n          <button class="preset-trigger" id="presetTrigger" title="技能 · 预设 · 模板">\n            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/></svg>\n            <span>技能</span>\n          </button>\n          <button class="prompt-save-btn" id="savePresetBtn" title="保存为预设" aria-label="保存为预设"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" width="14" height="14"><path d="M5 12h14"/><path d="M12 5v14"/></svg></button>\n        </div>\n      </div>\n      <div class="skill-bubbles" data-skill-bubbles hidden></div>\n      <textarea data-key="${esc(key)}" placeholder="${esc(promptParam.placeholder || "描述你想要生成的内容...")}" >${esc(defVal)}</textarea>\n      <div class="prompt-tools">\n        <button class="tool-btn icon-only" data-action="recent" title="最近使用的提示词" aria-label="最近使用的提示词"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 1.5"/></svg></button>\n        <button class="tool-btn icon-only" data-action="clear" title="清空提示词" aria-label="清空提示词"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>\n                <span class="tools-divider" role="separator" aria-orientation="vertical"></span>\n        <button type="button" class="doc-btn" data-doc-btn aria-haspopup="dialog" aria-label="上传文档" title="上传文档给模型分析（文本类文件，随下一条消息发送）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></button><button type="button" class="wand-btn" data-wand aria-haspopup="dialog" aria-label="AI优化" title="选择技能，优化提示词"><svg class="ico-wand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg><svg class="ico-stop" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button><button type="button" class="mic-btn" data-mic aria-label="语音输入" title="语音输入：录音→语音识别→整理填入提示词"><svg class="ico-mic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg><svg class="ico-stop" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button>\n      </div>\n      <input type="file" data-doc-input multiple accept=".txt,.md,.markdown,.json,.csv,.tsv,.log,.xml,.html,.htm,.srt,.vtt,.yaml,.yml,.ini,.conf,.cfg,.js,.ts,.jsx,.tsx,.css,.py,.java,.c,.cpp,.h,.sh,.sql,.rs,.go,.rb,.php,.kt,.swift" hidden>\n      <div class="doc-chips" data-doc-chips hidden></div>\n      <div class="prompt-vars" data-vars hidden></div>\n      <div class="prompt-history-list" id="phList"></div>\n      <div class="skill-panel" data-skill-panel hidden></div>\n    `;
 const ta = wrap.querySelector("textarea");
 ta.addEventListener("input", () => this._onPromptInput(ta));
 ta.addEventListener("focus", () => {
