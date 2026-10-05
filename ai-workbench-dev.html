@@ -2123,6 +2123,62 @@ textarea:focus,select:focus{background-color:var(--surface-3);outline:none}
    用 CSS 压过 presentation attribute（CSS 优先级高于 SVG 属性）⇒ 一笔统一，零改 130 处 DOM。 */
 svg:not([data-keep-stroke]){stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
+/* ══════════════════════════════════════════════════════════════════════════
+   R47 · 结果区镂空 + 毛玻璃适配 + 参数面板对齐编辑器 + 主区放大
+   （修 2026-10-05 17:5x：「结果区还是要镂空的 露出后面的网格空间背景；
+     所有的毛玻璃悬浮按钮 主题也要适配好颜色；宿主参数面板也要优化一下 显示逻辑不对
+     按钮效果不对 和编辑器对齐点；提示词框和智能体对话框是主要区域可以大点」）
+   ──────────────────────────────────────────────────────────────────────────
+   实测根因（全部在 CSS 里，非目测）：
+   ① **结果区没镂空**：`#svFloorBg{position:fixed;inset:0;z-index:-1}` 确实在最底层，
+      但负 z-index 只画在**根背景之上** ⇒ **body / .app-body 的背景把它整片盖住**。
+   ② **毛玻璃发白**：`.sv-docklayer .sv-floatbar` 写死
+      `linear-gradient(135deg,rgba(255,255,255,.42),rgba(255,255,255,.22))` + `saturate(175%)`
+      —— 纯白半透明，暗色模式下必然发灰白（"主题没适配好"）。
+   ③ **按钮"效果不对"**：`.param-quick-btn` 一个按钮叠了 **3 层边** ——
+      `background:linear-gradient(...) padding-box, var(--edge-border-grad) border-box`
+      （渐变描边技巧）+ `box-shadow:var(--lift-ctrl), 0 0 0 1px var(--lg-rim)`（再一圈描边）。
+      编辑器同位置用 `.is-seg`：**无边框、无阴影、纯靠底色** ⇒ 对齐它。
+   ④ **框套框**：`.ref-add{border:1px dashed}` 的虚线上传框套在 `.ref-section` 卡片里。
+   ⚠ 修说的是「**结果区**镂空」——所以 `.param-panel` 必须**保留实底**（否则文字浮在网格上），
+     只有 result 一侧透明。R46 我把 param-panel 也改透明了，这里改回。
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── R47-1 结果区镂空（露出网格空间背景）；参数区保留实底 ── */
+body{background:transparent !important}
+.app-body,body[data-mview="param"] .app-body{background:transparent}
+.param-panel{background:var(--bg)}
+.result-panel,.result-body,.result-scroll,#resultList{background:transparent}
+
+/* ── R47-2 毛玻璃悬浮条：变量化（暗色走表面色，不再是一片白）── */
+.sv-docklayer .sv-floatbar{
+  background:var(--surface-glass-card);
+  -webkit-backdrop-filter:var(--glass-blur);
+  backdrop-filter:var(--glass-blur);
+  border:1px solid var(--lg-edge);
+  box-shadow:var(--lg-slab);
+}
+
+/* ── R47-3 参数按钮对齐编辑器（去渐变描边 + 去双层阴影，改用底色区分）── */
+.param-quick-btn,.count-chip,.model-pick-btn{
+  background:var(--surface-2);border:none;box-shadow:none;
+}
+.param-quick-btn:hover,.count-chip:hover,.model-pick-btn:hover{background:var(--surface-3)}
+.param-quick-btn[aria-expanded="true"],.count-chip[aria-expanded="true"]{
+  background:var(--brand-soft);color:var(--brand);
+}
+.model-select-wrap{border:none;background:transparent;box-shadow:none}
+
+/* ── R47-4 去「卡片里再套框」：虚线上传框改浅底 ── */
+.ref-add{border:none;background:var(--surface-3);color:var(--text-muted)}
+.ref-add:hover{background:var(--brand-soft);color:var(--brand)}
+
+/* ── R47-5 主区放大：提示词框/技能气泡（智能体区）是主区域，给足高度 ── */
+.prompt-module{padding:12px 12px 10px;gap:9px}
+.prompt-module textarea{min-height:210px}
+.skill-bubbles{padding:5px 2px}
+
+
 
 
 
