@@ -12225,7 +12225,7 @@ pBase = r2Url;
 }
 const hist = Store.getHistory();
 const isCloud = u => u.startsWith(pBase) || /\.r2\.dev\//.test(u);
-const pending = hist.filter(h => h.status === "succeeded" && h.result?.url && /^https?:/.test(h.result.url) && !isCloud(h.result.url) && !h.result.originalUrl);
+const pending = hist.filter(h => h.status === "succeeded" && h.result?.url && !isCloud(h.result.url) && !h.result.originalUrl && (/^https?:/.test(h.result.url) || String(h.result.url).indexOf("blob:") === 0)); /* ★ R74-4：blob: 也补转存 */
 pending.slice(0, 3).forEach(h => {
 this._archiveResult(h).catch(() => {});
 });
@@ -15559,7 +15559,7 @@ token = (Store.getR2AuthToken() || "").trim();
 }
 if (!workerUrl || !token) return;
 if (url.startsWith(workerUrl) || /\.r2\.dev\//.test(url)) return;
-if (/^(data:|blob:)/.test(url)) return;
+if (/^data:/.test(url)) return; /* ★ R74：blob: 必须转存 —— 否则云同步拿到的是「别的设备打不开的本页地址」*/
 const modelName = (task.model?.name || "unknown").replace(/[^a-zA-Z0-9_-]/g, "_");
 const time = new Date(task.completedAt || task.createdAt || Date.now()).toISOString().slice(0, 19).replace(/[:T]/g, "-");
 const ratio = task.body?.aspectRatio || task.body?.ratio || "auto";
@@ -15613,8 +15613,15 @@ const res = await fetch(url);
 if (!res.ok) throw new Error("HTTP " + res.status); /* IMPL-104：404 错误页不得被上传 R2 并覆盖历史 url */
 const blob = await res.blob();
 if (blob && /^text\/html/i.test(blob.type || "")) throw new Error("HTML 错误页而非媒体文件"); /* IMPL-104 */
+/* ★ R74-2：blob: 的 URL 里没有扩展名 ⇒ 上面按 URL 推断一律得 png；MIME 以 blob.type 为准纠正回来 */
+let _upName = fileName;
+try {
+const _mt = { "image/jpeg": "jpg", "image/jpg": "jpg", "image/webp": "webp", "image/gif": "gif", "image/png": "png", "video/mp4": "mp4", "video/webm": "mp4", "audio/mpeg": "mp3", "audio/wav": "wav", "audio/x-wav": "wav" };
+const _me = _mt[String((blob && blob.type) || "").toLowerCase()];
+if (_me) _upName = String(fileName).replace(/\.[a-z0-9]+$/i, "." + _me);
+} catch (_) {}
 const formData = new FormData;
-formData.append("file", blob, fileName);
+formData.append("file", blob, _upName);
 const uploadUrl = workerUrl + "/upload?token=" + encodeURIComponent(token) + "&dir=results";
 const uploadRes = await fetch(uploadUrl, {
 method: "POST",
@@ -15631,6 +15638,8 @@ console.warn("[archive] 前端上传返回无 url:", data.error || "unknown");
 } catch (e) {
 console.warn("[archive] 前端转存失败，回退 Worker /archive:", e.message);
 }
+/* ★ R74-3：blob:/data: 无可回退 —— Worker 在远端，拿不到本页的 blob/data（这一跳必然失败） */
+if (/^(blob:|data:)/.test(url)) return;
 try {
 const res = await fetch(workerUrl + "/archive?url=" + encodeURIComponent(url) + "&ext=" + finalExt + "&token=" + encodeURIComponent(token), {
 method: "POST"
@@ -16632,7 +16641,7 @@ await new Promise(r => setTimeout(r, 350));
 Promise.all(Array.from({ length: Math.min(3, items.length) }, worker)).then(() => Toast[bad ? "warning" : "success"](`批量下载完成：成功 ${ok}${bad ? ` · 失败 ${bad}` : ""}`, 4200));
 },
 _weservProxy(u) { /* IMPL-160：_editSelected/_openEditor 双份 weserv 代理 lambda 收敛（IMPL-99：crossOrigin=anonymous 可导出，data: 直用） */
-return u.startsWith("data:") ? u : u.startsWith("https://images.weserv.nl/") ? u + (u.includes("?") ? "&" : "?") + "_=" + Date.now() : "https://images.weserv.nl/?url=" + encodeURIComponent(u.replace(/^https?:\/\//, "")) + "&_=" + Date.now();
+return (u.startsWith("data:") || u.startsWith("blob:")) ? u : u.startsWith("https://images.weserv.nl/") ? u + (u.includes("?") ? "&" : "?") + "_=" + Date.now() : "https://images.weserv.nl/?url=" + encodeURIComponent(u.replace(/^https?:\/\//, "")) + "&_=" + Date.now();
 },
 _studioGuard() { /* IMPL-160：编辑器打开前置守卫双份收敛（预载/R2 凭据/内核判空/回 image 页签），通过返回当前 model、被拒返回 null */
 if (typeof window.StudioEditorPreload === "function") { try { window.StudioEditorPreload(); } catch (_) {} }
@@ -19809,7 +19818,7 @@ const directOf = function(u) { /* Z15（第七批）：weserv 代理 URL 反解�
 try {
 if (u.indexOf("https://images.weserv.nl/") === 0) {
 const m = /[?&]url=([^&]+)/.exec(u);
-if (m) return "https://" + decodeURIComponent(m[1]);
+if (m) { const _dv = decodeURIComponent(m[1]); return /^[a-z][a-z0-9+.-]*:/i.test(_dv) ? _dv : "https://" + _dv; }
 }
 } catch (_) {}
 return u;
