@@ -8161,7 +8161,7 @@ info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="
 };
 const el = document.createElement("div");
 el.className = `toast ${type}`;
-el.innerHTML = `${icons[type] || icons.info}<span>${esc(msg)}</span>`;
+el.innerHTML = `${icons[type] || icons.info}<span>${esc(typeof msg === "string" ? msg : _errText(msg))}</span>`;
 if (action && typeof action.fn === "function") {
 const btn = document.createElement("button");
 btn.className = "toast-action";
@@ -8990,6 +8990,44 @@ function normalizeChatMsgs(messages) {
   return out;
 }
 
+/* ★★★ R69（2026-10-06 P0 热修）：把「上游错误」归一成**可读字符串**。
+   ─────────────────────────────────────────────────────────────────────────────
+   症状：真机点生成，Toast 显示字面量 `[object Object]`。
+   根因：上游 OpenAI/APIYI 形态的错误体是 {"error":{"message":"..."}}，
+         ⇒ `data.error` 是**对象**；而对象是 truthy
+         ⇒ `data.error || data.message || data.msg || ...` **必然**短路取到对象
+         ⇒ `new Error("" + obj)` 的 message 变成 `[object Object]`
+         ⇒ `Toast.error(e.message)` 把这个字面量显示给用户（全链路信息丢失）。
+   ⚠ 为何"R68 修好后才出现"：R67/R68 之前请求根本发不出去（拼错域名 / 跨块 ReferenceError），
+     上游**没有机会**回话；R68 之后请求真的到达 APIYI，对象形态的错误体首次显形 ⇒ 老 bug 暴露。
+
+   本函数纯**新增**，不改变任何既有分支语义；调用点仅把「取消息」改为经它。
+   ⚠ 命名 `_errText` 在产物中零占用（已核）。作为 function 声明会提升 ⇒ 同块内任意位置可用
+     （Toast 在其之前定义也能用）。 */
+function _errText(err) {
+  if (err === undefined || err === null) return "";
+  if (typeof err === "string") return err;
+  if (typeof err === "number" || typeof err === "boolean") return String(err);
+  if (err instanceof Error) return String(err.message || err);
+  if (typeof err === "object") {
+    /* ① 常见字段直取（顺序 = 覆盖面从窄到宽；error 放后面，因为它自身常是对象） */
+    var m = err.message || err.msg || err.detail || err.error_message || err.description || err.reason;
+    if (m !== undefined && m !== null && typeof m !== "object") return String(m);
+    /* ② 再剥一层：{ error: { message } } / { detail: { msg } } */
+    var n = err.error || err.detail || err.data || err.body;
+    if (n && typeof n === "object") {
+      var m2 = n.message || n.msg || n.detail || n.error_message;
+      if (m2 !== undefined && m2 !== null && typeof m2 !== "object") return String(m2);
+    }
+    /* ③ 兜底：JSON 化（截断，避免把整包响应塞进 Toast） */
+    try {
+      var j = JSON.stringify(err);
+      if (j && j !== "{}" && j !== "[]") return j.length > 300 ? j.slice(0, 300) + "…" : j;
+    } catch (_) {}
+    return "[上游返回了无法解析的错误对象]";
+  }
+  return String(err);
+}
 const Api = {
 _uploadCache: new Map,
 async request(method, path, body, opts = {}) {
@@ -9028,7 +9066,7 @@ raw: text
 };
 }
 if (!res.ok) {
-const errMsg = data.error || data.message || data.msg || `HTTP ${res.status}`;
+const errMsg = _errText(data.error) || _errText(data.message) || _errText(data.msg) || `HTTP ${res.status}`;
 if (res.status === 429) {
 const retryAfter = parseInt(res.headers.get("Retry-After") || "0");
 throw Object.assign(new Error(`429: ${errMsg}`), {
@@ -9052,7 +9090,7 @@ throw e;
 normalizeResponse(res) {
 if (!res) return null;
 if (res.code && res.code !== 200) {
-throw new Error(res.msg || res.message || `API错误: code ${res.code}`);
+throw new Error(_errText(res.msg) || _errText(res.message) || `API错误: code ${res.code}`);
 }
 if (typeof res.data === "string") {
 const trimmed = res.data.trim();
@@ -10092,7 +10130,7 @@ data = {
 raw: text
 };
 }
-if (!res.ok) throw new Error(data.error || data.message || `HTTP ${res.status}`);
+if (!res.ok) throw new Error(_errText(data.error) || _errText(data.message) || `HTTP ${res.status}`);
 /* IMPL-119：Worker POST /task 返回 {task:{id:"tc…"}}——原只读顶层 id/taskId 必 throw → 已入队派发的上游任务叠加 Api.submit 直连二次提交=双倍计费，故补 task 解包 */
 const id = data.id || data.taskId || data.task && (data.task.id || data.task.taskId);
 if (!id) throw new Error("任务中心未返回任务 ID");
@@ -11567,7 +11605,7 @@ JobId: String(jobId)
 });
 if (!data.ok) {
 this._stopPoll();
-reject(Object.assign(new Error(data.message || "轮询失败"), {
+reject(Object.assign(new Error(_errText(data.message) || "轮询失败"), {
 code: data.code
 }));
 return;
@@ -15364,7 +15402,7 @@ code: "StageInvalid"
 });
 }
 const res = await SegStudio._call(action, params);
-if (!res.ok) throw Object.assign(new Error(res.message || "调用失败"), {
+if (!res.ok) throw Object.assign(new Error(_errText(res.message) || "调用失败"), {
 code: res.code
 });
 let resultData;
@@ -18817,7 +18855,7 @@ if (keep) close();
 return true; /* 已接管 → 编辑器不再走浏览器下载 */
 } catch (e) {
 console.error("[StudioEditor] 应用到节点失败:", e);
-try { Toast.error("导出失败: " + (e.message || e)); } catch (_) {}
+try { Toast.error("导出失败: " + _errText(e)); } catch (_) {}
 return false;
 }
 }
