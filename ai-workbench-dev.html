@@ -10006,6 +10006,30 @@ if (typeof onUpdate === "function") onUpdate(record);
 }
 };
 
+/* ★★ R77（2026-10-07）任务卡「轮询 N 次」的正确语义
+   ─────────────────────────────────────────────────────────────────────────
+   真因（修反馈原话：「我为啥轮询总是0次 结果出不来」）：
+   那个数字来自**本地轮询器** `poller.getPollCount(task.id)`，而它只统计
+   `poller.start(task)` 启动过的任务。以下两种任务**从不**启动本地轮询器：
+
+     ① APIYI 档（`async:false`）—— 走 R76-E 的同步卡片，压根没有轮询器；
+     ② 速创档走任务中心时 —— `handleGenerate` 里 `useTaskCenter===true` 分支
+        刻意不调 `poller.start`（IMPL-157：tc_ 任务由任务中心 5s 监视通道跟踪）。
+
+   ⇒ 这两种情况下计数器**恒为 0**，而 UI 无条件渲染「轮询 0 次」
+     —— 看起来像进度卡死了。实际任务可能正在正常跑。
+
+   修法：按任务**实际走的路**给文案 —— 有本地轮询器才显示次数，否则说清现状。 */
+function _r77PollLabel(task) {
+  try {
+    if (!task) return "生成中";
+    if (poller.getStartTime(task.id)) return "轮询 " + (poller.getPollCount(task.id) || 0) + " 次";
+    if (task._r76Api) return "生成中";
+    if (task.dispatchedVia === "taskcenter" || /^tc_/.test(String(task.apiId || ""))) return "任务中心监视中";
+    return "生成中";
+  } catch (_e) { return "生成中"; }
+}
+
 class PollManager {
 constructor() {
 this.timers = {};
@@ -15299,7 +15323,7 @@ if (_at >= 0) tasks[_at] = task; else tasks.unshift(task);
 Store.saveTasks(tasks);
 this._renderTask(task);
 this._renderActiveTasks();
-if (!useTaskCenter || task.dispatchedVia === "direct") poller.start(task);
+if (!useTaskCenter || task.dispatchedVia === "direct") poller.start(task); else { /* ★ R77-C：任务中心已启用但监视循环没在跑 ⇒ 结果永远回不来（enabled 与 pollTimer 可能被瞬时故障拆散） */ try { if (!TaskCenter.pollTimer) TaskCenter.startPolling(); } catch (_e) {} }
 } else {
 task.status = "failed";
 task.error = (_err && _err.message) || "提交失败";
@@ -15458,6 +15482,30 @@ this._celebrate(task);
 }
 }
 } catch (e) {
+/* ★ R77-A：把在途的 APIYI 任务落成 failed 并写清原因。
+   此前 catch 只 Toast、不写任务状态，紧接着 R76-E3 的 finally 又把 processing 卡摘掉
+   ⇒ 生成失败 = 「什么都没发生」。现在失败会**留在结果区**，原因就在卡片上。
+   注：此处不引用循环内声明的 task（作用域外），直接按 Store 里在途的 _r76Api 任务处理。 */
+try {
+const _r77ft = Store.getTasks();
+const _r77failed = [];
+_r77ft.forEach(function (t) {
+if (t && t._r76Api && t.status === "processing") {
+t.status = "failed";
+t.error = _errText(e);
+t.completedAt = Date.now();
+_r77failed.push(t);
+}
+});
+if (_r77failed.length) {
+Store.saveTasks(_r77ft);
+/* ★ 注意容器分工（实测踩过）：全卡（含 .sv-error 失败块）由 _renderTask → _renderSingleView
+   渲染进 #resultList；_renderResultStrip 只画底部**缩略条**。只调后者 ⇒ 失败看不见。 */
+this._renderTask(_r77failed[_r77failed.length - 1]);
+this._renderActiveTasks();
+this._renderResultStrip();
+}
+} catch (_e77) {}
 if (e && e.code === "StageFailed" && location.protocol === "file:") {
 const hint = document.getElementById("fileModeHint");
 if (hint) {
@@ -15957,7 +16005,7 @@ const elapsedEl = card.querySelector(".tm-elapsed");
 const pollsEl = card.querySelector(".tm-polls");
 const phaseEl = card.querySelector(".tm-phase");
 if (elapsedEl) elapsedEl.textContent = "已用 " + elapsed;
-if (pollsEl) pollsEl.textContent = "轮询 " + polls + " 次";
+if (pollsEl) pollsEl.textContent = _r77PollLabel(task);
 if (phaseEl) phaseEl.textContent = phase;
 });
 }, 1e3);
@@ -16232,7 +16280,7 @@ if (status === "processing") {
 const elapsed = task.createdAt ? fmtDur(Date.now() - task.createdAt) : "0:00";
 const polls = poller.getPollCount(task.id) || 0;
 const phase = poller.getPhaseName(Date.now() - (poller.getStartTime(task.id) || task.createdAt || Date.now()));
-progressRowHtml = `<div class="sv-progress-row"><span class="task-spinner"></span><span class="tm-elapsed">已用 ${esc(elapsed)}</span><span class="tm-polls">轮询 ${polls} 次</span><span class="tm-phase">${esc(phase)}</span></div>`;
+progressRowHtml = `<div class="sv-progress-row"><span class="task-spinner"></span><span class="tm-elapsed">已用 ${esc(elapsed)}</span><span class="tm-polls">${esc(_r77PollLabel(task))}</span><span class="tm-phase">${esc(phase)}</span></div>`;
 }
 const headMeta = [];
 if (type) headMeta.push(`<span class="sv-tag">${typeName(type)}</span>`);
