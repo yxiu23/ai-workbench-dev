@@ -8797,7 +8797,7 @@ if (this.useIDB) IDB.saveHistory(a).catch(() => {});
 },
 addHistory(item) {
 const arr = this.getHistory();
-arr.unshift(item);
+arr.unshift(_r76SlimHistory(item)); /* ★ R76-G：model 占单条 67%（真机实测）⇒ 只留被读的字段 */
 if (arr.length > 500) arr.length = 500;
 this._hwrite(arr);
 },
@@ -9666,6 +9666,110 @@ type: mime
 });
 },
 };
+
+/* ═══════════ R76 宿主辅助函数（注入到主块 `const ThumbService = {` 之前）═══════════
+   为什么独立成文件：生成器模板串里**禁写反引号**（铁规矩 32，已踩 7 次）—— 大段代码走 readFileSync。 */
+
+/* ★★★ R76-A：从 **blob** 生成缩略图
+   与既有 ThumbService._makeImageThumb 的关键区别：**不经过 URL**。
+   ThumbService 用 `img.crossOrigin = "anonymous"` 读 **r2.dev URL** —— 而 R2 公开域**不返回 ACAO**
+   （实测：`probe_r2_readable.py`），⇒ img.onerror ⇒ makeThumb 恒 null ⇒ 缩略图**从未生效**，
+   列表/历史一直加载**原图**（1~4 MB/张）。
+   改用 blob（`URL.createObjectURL`）后**同源**，既不需要 CORS，canvas 也不会被污染，toBlob 可用。 */
+function _r76ThumbFromBlob(srcBlob, maxEdge, quality) {
+  return new Promise(function (resolve) {
+    try {
+      if (!srcBlob || !/^image\//i.test(srcBlob.type || "")) return resolve(null);
+      const _u = URL.createObjectURL(srcBlob);
+      let _done = false;
+      const finish = function (v) {
+        if (_done) return;
+        _done = true;
+        try { URL.revokeObjectURL(_u); } catch (_e) {}
+        resolve(v);
+      };
+      const img = new Image();
+      img.onload = function () {
+        try {
+          const w0 = img.naturalWidth || 0;
+          const h0 = img.naturalHeight || 0;
+          const mx = Math.max(w0, h0);
+          if (!mx) return finish(null);
+          const k = Math.min(1, (maxEdge || 640) / mx);
+          const c = document.createElement("canvas");
+          c.width = Math.max(1, Math.round(w0 * k));
+          c.height = Math.max(1, Math.round(h0 * k));
+          c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+          c.toBlob(function (b) { finish(b || null); }, "image/webp", quality || 0.8);
+        } catch (_e) { finish(null); }
+      };
+      img.onerror = function () { finish(null); };
+      img.src = _u;
+      setTimeout(function () { finish(null); }, 8000);
+    } catch (_e) { resolve(null); }
+  });
+}
+
+/* ★★ R76-G：历史条目瘦身 —— 实测 `model` 占单条 JSON 的 **67%**（云端历史真机实测 2049 B/条，model 1.3 KB）。
+   只保留**确实被读取**的字段（全站 grep 实证：type / name / id / seg / endpoint 五个，
+   外加 channel 与 billing 供价签显示）⇒ 500 条从 ~823 KB 降到 ~300 KB。 */
+function _r76SlimHistory(item) {
+  try {
+    if (!item || !item.model || typeof item.model !== "object") return item;
+    const m = item.model;
+    if (m.ratios || m.sizes || m.desc) {
+      const slim = { id: m.id, name: m.name, type: m.type };
+      if (m.channel) slim.channel = m.channel;
+      if (m.seg) slim.seg = m.seg;
+      if (m.endpoint) slim.endpoint = m.endpoint;
+      if (m.billing) slim.billing = m.billing;
+      return Object.assign({}, item, { model: slim });
+    }
+    return item;
+  } catch (_e) { return item; }
+}
+
+/* ★★ R76-J：跨会话失效记录清扫
+   `blob:` 是**本页内存句柄**（铁规矩 67）：刷新后必然失效。
+   R74 之前产生的历史里存的就是 blob: ⇒ 刷新后 `<img>` 加载失败、点编辑 `fetch(blob:)` 抛
+   「Failed to fetch」，而用户无从判断"为什么坏"。
+   这里在启动时把**必然失效**的（blob: 且完成时间早于本次加载）标记出来并清空 url，
+   让渲染走"无图"分支 —— 不再尝试加载、也不再弹错。 */
+function _r76HistorySweep() {
+  try {
+    const bootAt = window.__r76BootAt || Date.now();
+    const hist = Store.getHistory();
+    let n = 0;
+    hist.forEach(function (h) {
+      const r = h && h.result;
+      if (!r || typeof r.url !== "string") return;
+      if (r.url.indexOf("blob:") !== 0) return;
+      if ((h.completedAt || h.createdAt || 0) >= bootAt) return;
+      r.expiredUrl = r.url;
+      r.expired = true;
+      r.url = "";
+      n++;
+    });
+    if (n) {
+      Store.saveHistory(hist);
+      console.info("[R76] 已标记 " + n + " 条跨会话失效的 blob 结果（图片本体已随会话销毁，无法恢复）");
+    }
+    const tasks = Store.getTasks();
+    let m = 0;
+    tasks.forEach(function (t) {
+      const r = t && t.result;
+      if (!r || typeof r.url !== "string" || r.url.indexOf("blob:") !== 0) return;
+      if ((t.completedAt || t.createdAt || 0) >= bootAt) return;
+      r.expiredUrl = r.url;
+      r.expired = true;
+      r.url = "";
+      m++;
+    });
+    if (m) Store.saveTasks(tasks);
+  } catch (_e) {}
+}
+
+try { window.__r76BootAt = Date.now(); } catch (_e) {}
 
 const ThumbService = {
 THUMB_SIZE: 640,
@@ -15234,6 +15338,28 @@ if (_apiDef67) {
     Toast.warning((this.state.model.name || "APIYI") + "：通道未配置 —— 请在 设置 → 编辑密钥 填入 R2 Worker 地址与 Token");
     return;
   }
+  /* ★ R76-E1（2026-10-07）：与速创同款「点击即有卡」。
+     此前 APIYI 档全是 async:false ⇒ 不进 async 的占位卡分支，只把按钮文字改成「生成中...」，
+     结果区零反馈（修原话：APIYI 居然没有生成中卡片等动画）。
+     这里复用同一套卡片（.sv-progress-row + .task-spinner）：先插 processing 卡，再起 1s tick
+     单独刷新「已用 X」（只改文本节点，不重渲染 DOM ⇒ 不闪）。
+     ⚠ 插在**两道前置检查之后** —— 桥缺失/未配 Worker 时直接 return，不产生残留卡。 */
+  task._r76Api = true;
+  {
+    const _t0 = Store.getTasks();
+    _t0.unshift(task);
+    Store.saveTasks(_t0);
+    this._renderTask(task);
+    this._renderActiveTasks();
+  }
+  this._r76Ticks = this._r76Ticks || {};
+  if (this._r76Ticks[task.id]) clearInterval(this._r76Ticks[task.id]);
+  this._r76Ticks[task.id] = setInterval(() => {
+    try {
+      const _el = document.querySelector('[data-tid="' + task.id + '"] .tm-elapsed');
+      if (_el) _el.textContent = "已用 " + fmtDur(Date.now() - task.createdAt);
+    } catch (_e) {}
+  }, 1000);
   /* ── 参数装配：与 bitmapHandler 的 exA 同形（apiyiImages/apiyiEdits/apiyiGemini 的 ex 契约） ── */
   const _ex67 = {};
   if (v.body.quality) _ex67.quality = String(v.body.quality);
@@ -15289,6 +15415,13 @@ if (_apiDef67) {
   if (data && !data.data && (data.assetUrl || (data.candidates && data.candidates.length))) {
     data = { data: [{ url: data.assetUrl || data.candidates[0] }], usage: data.usage || null, _apiyiDirect: true };
   }
+  /* ★ R76-E2：APIYI 请求已返回 ⇒ 停 tick、把占位卡从活动列表摘掉（紧接着的结果会并入 history） */
+  try {
+    if (this._r76Ticks && this._r76Ticks[task.id]) { clearInterval(this._r76Ticks[task.id]); delete this._r76Ticks[task.id]; }
+    const _ts2 = Store.getTasks().filter(t => t.id !== task.id);
+    Store.saveTasks(_ts2);
+    this._renderActiveTasks();
+  } catch (_e) {}
 } else {
   data = this.state.model.direct ? await Api.directRun(this.state.model, v.body) : await Api.syncCall(this.state.model, v.body);
 }
@@ -15345,6 +15478,14 @@ Toast.error(e.message);
 }
 console.error(e);
 } finally {
+/* ★ R76-E3：兜底清理 —— 无论正常、抛错还是提前 return，都不留 1s tick、也不留转圈的占位卡 */
+try {
+const _tk = this._r76Ticks || {};
+Object.keys(_tk).forEach(k => { try { clearInterval(_tk[k]); } catch (_e) {} delete _tk[k]; });
+const _all = Store.getTasks();
+const _keep = _all.filter(t => !(t._r76Api && t.status === "processing"));
+if (_keep.length !== _all.length) { Store.saveTasks(_keep); this._renderActiveTasks(); }
+} catch (_e) {}
 btn.disabled = false;
 this._generating = false;
 this._refreshGenerateBtn();
@@ -15631,6 +15772,35 @@ const data = await uploadRes.json();
 if (data.url) {
 applyArchived(data.url);
 console.log("[archive] 前端转存成功:", url, "→", data.url, "(", fileName, ")");
+/* ★ R76-A2：顺手出缩略图 —— blob 已在手上（同源），_r76ThumbFromBlob 不经过 URL ⇒ 不受 CORS 约束。
+   生成后把 thumbUrl 写回 tasks/history，列表/历史自此加载缩略图（~40 KB）而非原图（1~4 MB）。
+   失败**不影响主流程**（缩略图是纯优化）。 */
+try {
+if (!task.result.thumbUrl) {
+const _tb = await _r76ThumbFromBlob(blob, 640, .8);
+if (_tb) {
+const _tu = await ThumbService._uploadThumb(new File([ _tb ], "thumb.webp", { type: "image/webp" }));
+if (_tu) {
+task.result.thumbUrl = _tu;
+const _ts = Store.getTasks();
+const _t2 = _ts.find(x => x.id === task.id);
+if (_t2) {
+_t2.result = Object.assign({}, _t2.result, { thumbUrl: _tu });
+Store.saveTasks(_ts);
+}
+const _hs = Store.getHistory();
+const _h2 = _hs.find(x => x.id === task.id);
+if (_h2) {
+_h2.result = Object.assign({}, _h2.result, { thumbUrl: _tu });
+Store.saveHistory(_hs);
+}
+console.log("[thumb] R76 缩略图已生成:", _tu);
+}
+}
+}
+} catch (_e) {
+console.warn("[thumb] R76 缩略图生成失败（不影响结果）:", _e && _e.message);
+}
 return;
 } else {
 console.warn("[archive] 前端上传返回无 url:", data.error || "unknown");
@@ -18775,7 +18945,7 @@ window.addEventListener("storage", e => {
     if (!e || e.key === null || e.key === CONFIG.STORAGE_KEYS.HISTORY) Store._histCache = null;
   } catch (err) {}
 });
-document.addEventListener("DOMContentLoaded", () => UI.init());
+document.addEventListener("DOMContentLoaded", () => { UI.init(); /* ★ R76-J：启动清扫跨会话必然失效的 blob: 记录（清 url ⇒ 渲染走无图分支，不再尝试 fetch） */ setTimeout(function () { try { _r76HistorySweep(); } catch (_e) {} }, 1200); });
 
 </script>
 <script>
@@ -19818,7 +19988,7 @@ const directOf = function(u) { /* Z15（第七批）：weserv 代理 URL 反解�
 try {
 if (u.indexOf("https://images.weserv.nl/") === 0) {
 const m = /[?&]url=([^&]+)/.exec(u);
-if (m) { const _dv = decodeURIComponent(m[1]); return /^[a-z][a-z0-9+.-]*:/i.test(_dv) ? _dv : "https://" + _dv; }
+if (m) { const _dv = decodeURIComponent(m[1]); /* ★ R76-B：**无 CORS 的域**（*.r2.dev）解包后直连必失败（img 能显示但 fetch 抛 Failed to fetch）⇒ 保持 weserv 代理 */ if (/(^|\.)r2\.dev$/i.test(String(_dv).replace(/^[a-z][a-z0-9+.-]*:\/\//i, "").split("/")[0])) return u; return /^[a-z][a-z0-9+.-]*:/i.test(_dv) ? _dv : "https://" + _dv; }
 }
 } catch (_) {}
 return u;
