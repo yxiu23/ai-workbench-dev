@@ -15129,7 +15129,84 @@ throw (_err || new Error("提交失败"));
 }
 } else {
 $("#generateBtnText").textContent = count > 1 ? `生成中 ${i + 1}/${count}...` : "生成中...";
-const data = this.state.model.direct ? await Api.directRun(this.state.model, v.body) : await Api.syncCall(this.state.model, v.body);
+/* ★ R67（2026-10-06 P0）：宿主生成按钮的 APIYI 早分流。
+   ⚠ 必须在同步分叉**之前**拦下 —— 否则 APIYI 档（endpoint 为 OpenAI 形态的 /v1/images/generations、
+   channel:"apiyi"、无 direct 字段）会走 Api.syncCall ⇒ CONFIG.API_BASE（速创域名）拼接 ⇒
+   nginx 对 OPTIONS 返 404 且无 CORS 头 ⇒ 浏览器预抛 Failed to fetch ⇒ 「网络请求失败，可能是跨域」。
+   判据 = MODELS.image 的 channel 字段（唯一真值），与编辑器 bitmapHandler 的 H5 段同口径。 */
+const _apiDef67 = (this.state.model && this.state.model.channel === "apiyi")
+  ? apiModelById(this.state.model.id) : null;
+let data;
+if (_apiDef67) {
+  /* 兜底与速创口径对齐：保险箱优先 → localStorage/BUILTIN（快照实测 keys.R2_WORKER_URL 常不为空） */
+  const _wA67 = (typeof KeyVault !== "undefined" && KeyVault.keys && KeyVault.keys().R2_WORKER_URL)
+    || (Store.getR2WorkerUrl && Store.getR2WorkerUrl()) || "";
+  if (!_wA67) {
+    Toast.warning((this.state.model.name || "APIYI") + "：通道未配置 —— 请在 设置 → 编辑密钥 填入 R2 Worker 地址与 Token");
+    return;
+  }
+  /* ── 参数装配：与 bitmapHandler 的 exA 同形（apiyiImages/apiyiEdits/apiyiGemini 的 ex 契约） ── */
+  const _ex67 = {};
+  if (v.body.quality) _ex67.quality = String(v.body.quality);
+  if (v.body.aspectRatio) _ex67.aspectRatio = String(v.body.aspectRatio);
+  if (v.body.resolution) _ex67.resolution = String(v.body.resolution);
+  if (v.body.background) _ex67.background = String(v.body.background);
+  /* 参考图：body.urls 是 "url1,url2"（output:"csv"）—— 下载成 dataURL 交上游（官转 edits 只吃 binary） */
+  const _uAll67 = String(v.body.urls || "").split(",").map(function (x) { return x.trim(); }).filter(function (x) { return /^https?:\/\//.test(x); });
+  if (_uAll67.length) {
+    const _ds = [];
+    for (const _u of _uAll67.slice(0, 3)) { try { _ds.push(await blobUrlToDataURL(_u)); } catch (e) { console.info("[W5-route]", JSON.stringify({ phase: "apiyi-ref-fail", url: String(_u).slice(0, 80), ts: Date.now() })); } }
+    if (_ds.length) { _ex67.refDataUrls = _ds; if (_uAll67.length > 3) console.info("[W5-route]", JSON.stringify({ phase: "ref-cap", got: _uAll67.length, send: 3, ts: Date.now() })); }
+  }
+  /* 源图 / 遮罩：body.urls 首张即源图（csv 序 = 用户添加序），body.mask 为单图 URL（output:"single"） */
+  const _maskUrl67 = String(v.body.mask || "").trim();
+  let _img67 = null, _mask67 = null;
+  try { if (_uAll67[0]) _img67 = await blobUrlToDataURL(_uAll67[0]); } catch (e) {}
+  try { if (_maskUrl67 && /^https?:\/\//.test(_maskUrl67)) _mask67 = await blobUrlToDataURL(_maskUrl67); } catch (e) {}
+  const _prompt67 = String(v.body.prompt || v.body.text || "");
+  const _isVideo67 = String(_apiDef67.type || "") === "video";
+  console.info("[W5-route]", JSON.stringify({ phase: "apiyi-host", model: _apiDef67.modelId, type: _apiDef67.type || "image", hasImg: !!_img67, hasMask: !!_mask67, refs: (_ex67.refDataUrls || []).length, ts: Date.now() }));
+  /* 三路分流：与 bitmapHandler 的 apiDef 段**同口径**（video / gemini 原生 / edits(mask) / generations） */
+  if (_isVideo67) {
+    /* ★ 视频走 _r33 桥（_w5vShape）—— 与编辑器视频适配器同一入口，参考素材按 refGroups 键装配。
+       Seedance/Wan/VEO 三家的 body 形状、端点、轮询全在 apiyiVideo 内（本处零重复定义）。
+       ⚠ 参考素材传 body 的 refGroups 键（first_frame/last_frame/images/videos/audios）——
+         与 _w5vShape 的 refs.byKey 契约一致；素材走公网 URL（宿主上传后的 remote）。 */
+    const _rg67 = { byKey: {} };
+    const _byKey67 = _rg67.byKey;
+    ["first_frame", "last_frame", "images", "videos", "audios"].forEach(function (k) {
+      const raw = v.body[k];
+      if (raw == null || raw === "") return;
+      _byKey67[k] = String(raw).split(",").map(function (x) { return x.trim(); }).filter(function (x) { return /^https?:\/\//.test(x); });
+    });
+    const _F67 = _w5vShape({ model: _apiDef67, modelId: _apiDef67.id, prompt: _prompt67, refs: _rg67, extra: v.body });
+    /* 素材公网化策略照 _r33 桥的四档（Wan 全量 / Seedance 图保 dataURL 其余传 / VEO 一律传文件）：
+       这里素材已在宿主侧上传为 https URL（_collectRefImageAsync 的 remote）⇒ 直接可用。 */
+    _F67.ex.__opts = {
+      firstFrameUrl: _F67.buckets.firstFrameUrl,
+      lastFrameUrl: _F67.buckets.lastFrameUrl,
+      imageUrls: _F67.buckets.imageUrls,
+      videoUrls: _F67.buckets.videoUrls,
+      audioUrls: _F67.buckets.audioUrls,
+      taskType: "",
+      byKey: _F67.byKeyLocal,
+    };
+    data = await apiyiVideo(_prompt67, _apiDef67, _F67.ex, _img67, _ex67.refDataUrls || []);
+  } else if (_apiDef67.gemini) {
+    data = await apiyiGemini(_prompt67, _apiDef67, _ex67, _img67, _ex67.refDataUrls || []);
+  } else if (_img67) {
+    data = await apiyiEdits(_img67, _mask67, _prompt67, _apiDef67, _ex67);
+  } else {
+    data = await apiyiImages(null, _prompt67, _apiDef67, _ex67);
+  }
+  /* apiyi* 返回 {assetUrl, candidates, usage}（视频在 apiyiVideo 内部已轮询到终稿）
+     ⇒ 归一到下游能吃的形态（下游读 Api.extractUrl(data) + usageOfResult(data)）。 */
+  if (data && !data.data && (data.assetUrl || (data.candidates && data.candidates.length))) {
+    data = { data: [{ url: data.assetUrl || data.candidates[0] }], usage: data.usage || null, _apiyiDirect: true };
+  }
+} else {
+  data = this.state.model.direct ? await Api.directRun(this.state.model, v.body) : await Api.syncCall(this.state.model, v.body);
+}
 const url = Api.extractUrl(data);
 task.status = "succeeded";
 task.result = {
