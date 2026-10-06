@@ -2909,6 +2909,48 @@ html{--r-box:10px}
   box-shadow:none;
 }
 
+/* ══════════════════════════════════════════════════════════════════════════════
+   R71 · 修（2026-10-06）：「结果区的圆圈等待动画 和 最近结果区的等待动画，
+                          点击后会出现光标」
+   ──────────────────────────────────────────────────────────────────────────────
+   根因（产物静态核对，全部 ✓ 实测无声明）：
+     · .sv-wrap（结果卡片）        —— 无 cursor / user-select
+     · .sv-progress-row（含圆圈）  —— 无 cursor / user-select
+     · .task-spinner（圆圈本体）   —— 无 cursor / user-select
+     · .sv-prompt（提示词文本）    —— 无 cursor / user-select
+     · .tm-elapsed / .tm-phase     —— 无 cursor / user-select
+   卡片上的文字因此**默认可选中** ⇒ 浏览器在可选中文本上显示 **I 形文本光标**，
+   看起来像个输入框 —— 这就是修看到的「点击后出现的光标」。
+
+   修法（精准，不误伤）：
+     ① 卡片整体 user-select:none（消除"可选中"这一前提）+ cursor:default
+     ② **等待态**（.status-processing）的非交互区改 cursor:progress（"处理中"）
+        —— 明确告诉用户"正在跑，别重复点"（对上位是钱：重复点 = 双倍扣费）
+     ③ 交互元素（按钮/链接）保持 pointer；禁用按钮 default
+   ⚠ .sv-wrap 只在**宿主**使用（编辑器 image-studio.js 里 0 次 + shadow DOM 隔离）
+     ⇒ 不会影响编辑器内核。
+   ══════════════════════════════════════════════════════════════════════════════ */
+.sv-wrap,
+.sv-wrap * { -webkit-user-select: none; user-select: none; }
+
+.sv-wrap { cursor: default; }
+
+/* ② 等待态：非交互区一律「处理中」光标 */
+.sv-wrap.status-processing .sv-media,
+.sv-wrap.status-processing .sv-waiting,
+.sv-wrap.status-processing .sv-progress-row,
+.sv-wrap.status-processing .task-spinner,
+.sv-wrap.status-processing .sv-prompt,
+.sv-wrap.status-processing .sv-foot,
+.sv-wrap.status-processing .sv-head { cursor: progress; }
+
+/* ③ 交互元素仍是手型（写在后面以覆盖上面的通配 user-select 之外的 cursor 语义） */
+.sv-wrap button,
+.sv-wrap a,
+.sv-wrap [role="button"] { cursor: pointer; }
+.sv-wrap button:disabled { cursor: default; }
+
+
 
 
 
