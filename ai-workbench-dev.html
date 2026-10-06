@@ -2816,6 +2816,99 @@ html{--r-box:10px}
 .prompt-module textarea,.param-group textarea,.prompt-module input,.field-row input,
 .field-row select,#paramForm select,#paramQuickBody select{border-radius:var(--r-box)}
 
+/* ══════════════════════════════════════════════════════════════════════════
+   R63 · 修第十三轮（10-06）
+   ──────────────────────────────────────────────────────────────────────────
+   ① 三个模式按钮（图片/视频/音频）**去框套框**。原样式是「外层胶囊容器(.tabs：底色
+      --surface-2 + 1px 描边 + inset 阴影 + 3px 内边距) **里面**再放一条选中药丸(.tab)」
+      —— 量出来就是两层框（探针：.tabs bg rgb(29,31,34)/border 1px/shadow 两层）。
+      修：「也别框套框了 解放出来吧」⇒ 外层容器彻底透明化（无底/无边/无影/无内边距），
+      三个按钮各自变成**独立控件**：浅底 + 悬停提亮；选中=实心橘 + 白字。
+      配色口径与同面板的 `.param-quick-btn` / `.count-chip`（R47-3）完全一致：
+      idle `--surface-2` → hover `--surface-3`，**不用描边**（珊瑚是扁平无边框语言）。
+   ══════════════════════════════════════════════════════════════════════════ */
+.tabs{background:transparent;border:none;box-shadow:none;padding:0;gap:6px;border-radius:0}
+.tab{background:var(--surface-2);border:none;color:var(--text-muted);font-weight:500;
+  padding:9px 12px;box-shadow:none}
+.tab:hover{background:var(--surface-3);border:none;color:var(--text)}
+.tab:active{transform:none}
+.tab.active{background:var(--brand);border:none;color:#fff;box-shadow:none}
+.tab.active:hover{background:var(--brand-hover);border:none;color:#fff}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   R64 · 修（10-06）「深色模式下的网格空间的设置面板」= 结果区齿轮弹出的
+   **透视空间面板**（#svFloorPanel / .sv-fpanel）
+   ──────────────────────────────────────────────────────────────────────────
+   修的原话：「深色模式下的网格空间的设置面板还需要优化界面颜色主题
+   **不要上下白色色块**，不协调，我说了好几遍了都没改」。
+
+   ★ 为什么改了好几轮还没好：R45-4 / R48 只把**面板外壳**变量化了
+     （.sv-fpanel 的底/边/影/字色），**面板内部的十几个部件全是硬编码浅色**——
+     它们挂在 `.sv-fpanel .xxx` 下（特异性 0,2,0），外壳那条 (0,1,0) 管不到。
+     探针实测（_r64_shot_fpanel.py，暗色）取到的原值：
+       · .sv-fhead  背景 = linear-gradient(178deg,#fdfcfa.98,#faf8f4.94)  ⇒ **上白块**
+       · .facts     背景 = linear-gradient(transparent,#faf8f4.97 30%)    ⇒ **下白块**（sticky）
+       · .fh/.frow>span/.fchips button 字色 = rgba(58,66,80,.62~.84)       ⇒ 暗底上读不出
+       · .sv-fclose 底 rgba(9,14,30,.06) + 字 rgba(58,66,80,.78)           ⇒ 暗底上读不出
+       · 滑轨未填充段 rgba(9,14,30,.10)                                    ⇒ 暗底上读不出
+   修法 = 这十几处**逐条换成主题令牌**（暗=默认档、亮=html[data-theme=light] 自动跟随），
+     牌子色（琥珀读数 #a4712a）改用宿主既有 `--gold`（暗 #ffc96f / 亮 #a97e22）
+     —— 既保住「仪器读数」的暖色识别，又两态都可读。
+   ⚠ 这一节是**纯 CSS**，不受「注释禁反引号」纪律约束。
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── ① 上白块：粘性头部（原米白渐变）→ 与面板同底 + 一条细分割线 ── */
+.sv-fpanel .sv-fhead{background:var(--bg-elev);box-shadow:0 1px 0 var(--border)}
+
+/* ── ② 下白块：粘性 facts 底衬（原米白渐变）→ 同底渐变 + 主格色按钮 ── */
+.sv-fpanel .facts{
+  background:linear-gradient(transparent,var(--bg-elev) 30%);
+  border-radius:0 0 var(--radius-lg) var(--radius-lg);
+}
+.sv-fpanel .facts button{
+  background:var(--surface-2);color:var(--text-muted);border:1px solid var(--border);
+  font-weight:500;
+}
+.sv-fpanel .facts button:hover{background:var(--surface-3);color:var(--text);border-color:var(--border)}
+.sv-fpanel .facts button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+
+/* ── ③ 分组标题 / 次级标题 / 行标签：硬编码深灰 → 令牌 ── */
+.sv-fpanel .fgrp{border-top:1px solid var(--border-soft)}
+.sv-fpanel .fgrp>.fh{color:var(--text-muted)}
+.sv-fpanel .fgrp>.fh:hover{color:var(--text)}
+.sv-fpanel .fgrp.open>.fh{color:var(--text)}
+.sv-fpanel .fsub{color:var(--text-dim)}
+.sv-fpanel .frow>span{color:var(--text-muted)}
+
+/* ── ④ 读数（琥珀）/ 规格徽标：走 --gold（暗亮两档都是暖色且可读）── */
+.sv-fpanel .frow>b{color:var(--gold)}
+.sv-fpanel .sv-fspec{
+  color:var(--gold);
+  border-color:color-mix(in srgb,var(--gold) 42%,transparent);
+}
+
+/* ── ⑤ 关闭键：原深蓝浅底 + 深灰字（暗底上消失） ── */
+.sv-fpanel .sv-fclose{background:var(--surface-2);color:var(--text-muted)}
+.sv-fpanel .sv-fclose:hover{background:var(--surface-3);color:var(--text)}
+
+/* ── ⑥ chips（主题预设 / 主格间隔 / 坐标轴）：ghost 钮 + 选中态 ── */
+.sv-fpanel .fchips button{background:var(--surface-2);color:var(--text-muted);border:1px solid var(--border)}
+.sv-fpanel .fchips button:hover{background:var(--surface-3);color:var(--text);border-color:var(--border)}
+.sv-fpanel .fchips button.sw{border-color:var(--border)}
+.sv-fpanel .fchips button.sw.on{box-shadow:0 0 0 1.5px var(--brand),0 0 0 4px rgba(var(--brand-rgb),.20)}
+
+/* ── ⑦ 滑轨：未填充段原为「深墨 10%」（暗底上看不见）→ 主格色 ── */
+.sv-fpanel input[type=range]::-webkit-slider-runnable-track{
+  background:linear-gradient(90deg,var(--brand) var(--fill,50%),var(--surface-3) var(--fill,50%));
+  box-shadow:none;
+}
+.sv-fpanel input[type=range]:hover::-webkit-slider-runnable-track{box-shadow:0 0 0 3px rgba(var(--brand-rgb),.18)}
+.sv-fpanel input[type=range]:active::-webkit-slider-runnable-track{box-shadow:0 0 0 4px rgba(var(--brand-rgb),.24)}
+.sv-fpanel input[type=range]::-moz-range-track{
+  background:linear-gradient(90deg,var(--brand) var(--fill,50%),var(--surface-3) var(--fill,50%));
+  box-shadow:none;
+}
+
 
 
 
@@ -11661,11 +11754,15 @@ function estCostCny(model, body) {
   try {
     var b = model && model.billing;
     if (!b) return null;
-    var num = Math.max(1, parseInt(body && body.num, 10) || 1);
+    /* ★ R63-①：张数计入计费 —— 宿主无 num 参数；逐级回退到 DOM 真值（count chip） */
+    var _numSrc = (body && body.num != null && body.num !== "") ? body.num
+      : (body && body.n != null && body.n !== "") ? body.n : null;
+    if (_numSrc == null) { try { _numSrc = (window.UI && window.UI._getBatchCount) ? window.UI._getBatchCount() : 1; } catch (e) {} }
+    var num = Math.max(1, parseInt(_numSrc, 10) || 1);
     if (b.type === "perSecond") {
       var s = parseFloat(body && body.duration);
       if (!isFinite(s) || s <= 0) return null;
-      return { cny: b.unit * s, approx: false, detail: s + "秒" };
+      return { cny: b.unit * s * num, approx: false, detail: s + "秒" + (num > 1 ? "·×" + num : "") };
     }
     if (b.type === "perImage" && isFinite(Number(b.unit))) {
       return { cny: b.unit * num, approx: false, detail: "一口价" + (num > 1 ? "×" + num + "张" : "") };
@@ -13468,6 +13565,8 @@ list.style.bottom = "auto";
 _openModelPick() {
 const list = $("#modelPickList");
 if (!list) return;
+/* ★ R63-③：价签与「同名比价」排序都按当前参数现算（含张数）⇒ 打开前重建一次 */
+try { this._updateModelBar(); } catch (e) {}
 list.classList.add("show");
 $("#modelPickBtn")?.setAttribute("aria-expanded", "true");
 this._positionModelPick();
