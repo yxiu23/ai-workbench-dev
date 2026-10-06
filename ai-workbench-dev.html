@@ -9596,7 +9596,7 @@ return JSON.parse(data);
 return data;
 }
 })() : data;
-const isUrl = s => typeof s === "string" && /^https?:\/\/\S+/i.test(s) && s.length < 4e3;
+const isUrl = s => typeof s === "string" && ((/^https?:\/\/\S+/i.test(s) && s.length < 4e3) || /^blob:/i.test(s) || (/^data:image\//i.test(s) && s.length < 3e6));
 const keys = [ "url", "video_url", "image_url", "audio_url", "result", "result_url", "demo_audio", "file_url", "download_url", "output_url", "video", "image", "audio", "media_url", "output" ];
 for (const k of keys) {
 if (isUrl(obj?.[k])) return this.fixUrl(obj[k]);
@@ -9637,7 +9637,7 @@ return this.fixUrl(this._deepFindUrl(obj));
 },
 _deepFindUrl(obj, depth = 0) {
 if (!obj || depth > 8) return null;
-const isUrl = s => typeof s === "string" && /^https?:\/\/\S+/i.test(s) && s.length < 4e3;
+const isUrl = s => typeof s === "string" && ((/^https?:\/\/\S+/i.test(s) && s.length < 4e3) || /^blob:/i.test(s) || (/^data:image\//i.test(s) && s.length < 3e6));
 if (typeof obj === "string") return isUrl(obj) ? obj : null;
 if (Array.isArray(obj)) {
 for (const it of obj) {
