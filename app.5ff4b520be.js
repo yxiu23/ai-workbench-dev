@@ -16344,7 +16344,7 @@ document.addEventListener("DOMContentLoaded", () => { UI.init(); /* ★ R76-J：
    ============================================================ */
 window.StudioEditor = (function() {
 let api = null, ov = null, onSaveCb = null, escHandler = null, scriptP = null;
-const STUDIO_SRC = "image-studio.8b060c9ab0.js";
+const STUDIO_SRC = "image-studio.cb824798f9.js";
 /* IMPL-144 W5（2026-09-26 修拍板）：位图动作全换 GPT-Image-2.5 系——覆盖 IMPL-143 版映射（变更单第一节）
    sunburst=最强档（精细编辑/参考保真，Arena 文生图 1420.7/编辑 1520.4 双第一）→扩图/局部重绘；flare=快车道（比 GPT-Image-2 快 50%）→擦除/图像拆解/编辑文字；抠出主体维持阿里抠图专用通道
    裸名审计落账：GPT-Image-2.5 裸名非 OpenAI 正式 model id（正式 id 仅 gpt-image-2.5-flare / gpt-image-2.5-sunburst，快照 -2026-09-08）；
@@ -16807,10 +16807,21 @@ async function apiyiEdits(imgData, maskData, prompt, def, ex) {
   fd.append("model", def.modelId || def.id);
   fd.append("prompt", prompt || "");
   fd.append("n", "1");
-  const sz = apiyiSize(e.aspectRatio, e.resolution);
+  let sz = apiyiSize(e.aspectRatio, e.resolution);
+  /* ★★ R93 B —— 有 mask 但没尺寸时的「同几何」兜底：
+     UI 在「有选区」时把比例/清晰度锁死且不下发 ⇒ sz 为空 ⇒ 输出几何全交给上游 auto，
+     比例一变 mask 就对不上原图了（R16 想防的正是这个，只是「不下发」把方向做反了）。
+     编辑器现按源图真实像素算好一个合法且同几何的尺寸、以 maskSize 透出，这里校验后采用。
+     ⚠ 只认严格 WxH 形态；格式不对宁可不发（交回上游 auto，与改前一致，无回退风险）。 */
+  if (!sz && maskData && typeof e.maskSize === "string" && /^d+xd+$/.test(e.maskSize)) sz = e.maskSize;
   if (sz) fd.append("size", sz);
   if (e.quality) fd.append("quality", e.quality);
+  /* ★★ R93 C —— 有 mask 时背景必须显式 opaque：
+     官方 background 默认是 auto（成图**可以带 alpha 通道**），而局部重绘的结果是要「贴回原图」的，
+     透明底落进画布就成了「选区外透明 + 羽化边」（修实测报的正是这个）。
+     用户显式选了 background 就尊重用户（面板透传）；否则由我们指定 opaque。 */
   if (e.background) fd.append("background", e.background);
+  else if (maskData) fd.append("background", "opaque");
   fd.append("image[]", dataUrlToFile(imgData, "image.png"), "image.png");
   /* 参考图追加在**源图之后**（顺序即 prompt 里「图1/图2/图3」的指代依据，官方明写）。
      单张失败不阻断（源图才是关键），但必须留痕。 */
@@ -16821,7 +16832,7 @@ async function apiyiEdits(imgData, maskData, prompt, def, ex) {
     catch (err) { console.info("[W5-route]", JSON.stringify({ phase: "apiyi-ref-fail", idx: i, msg: String((err && err.message) || err).slice(0, 120), ts: Date.now() })); }
   }
   if (maskData) fd.append("mask", dataUrlToFile(maskData, "mask.png"), "mask.png");
-  console.info("[W5-route]", JSON.stringify({ phase: "apiyi-edit", model: fd.get("model"), size: sz || null, quality: e.quality || null, mask: !!maskData, refs: refOk, ts: Date.now() }));
+  console.info("[W5-route]", JSON.stringify({ phase: "apiyi-edit", model: fd.get("model"), size: sz || null, quality: e.quality || null, mask: !!maskData, bg: fd.get("background") || null, refs: refOk, ts: Date.now() }));  /* ★ R93：日志带 bg —— 真机上能直接看出「透明」是不是输出侧来的 */
   const res = await apiyiPost("/v1/images/edits", fd, def, e.resolution);
   const urls = res.urls;
   console.info("[W5-route]", JSON.stringify({ phase: "apiyi-done", secs: Math.round((Date.now() - t0) / 1000), n: urls.length, ts: Date.now() }));
@@ -17151,6 +17162,8 @@ const wA = (typeof Store !== "undefined" && Store.getR2WorkerUrl && Store.getR2W
 if (!wA) { try { Toast.warning(mm ? mm.label : actName(e.action)) + "：APIYI 通道未配置（设置页填 R2 Worker 地址与 Token）"; } catch (_) {} return false; }
 const exA = {};
 if (op13 && op13.quality) exA.quality = String(op13.quality);
+/* ★★ R93：编辑器算好的「与源图同几何的合法输出尺寸」（apiyiEdits 在 size 为空且有 mask 时采用） */
+if (e.maskSize) exA.maskSize = String(e.maskSize);
 if (oo13 && oo13.aspectRatio) exA.aspectRatio = String(oo13.aspectRatio);
 if (oo13 && oo13.resolution) exA.resolution = String(oo13.resolution);
 if (op13 && op13.background) exA.background = String(op13.background);
