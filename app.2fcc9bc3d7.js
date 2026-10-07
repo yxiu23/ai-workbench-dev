@@ -16451,7 +16451,15 @@ function dataUrlToFile(dataUrl, name) {
  *     而且放大要用 ceil、缩小要用 floor，否则会在下限处卡成不动点永远收不进去。 */
 function apiyiSize(ratio, tier) {
   const t = String(tier || "").toUpperCase();
-  const L = t === "4K" ? 3840 : t === "2K" ? 2048 : t === "1K" ? 1024 : 0;
+  let L = t === "4K" ? 3840 : t === "2K" ? 2048 : t === "1K" ? 1024 : 0;
+  /* ★ R90：清晰度=auto 时 L=0 ⇒ 原实现直接 return "" ⇒ size 整条不下发 ⇒ **比例静默失效**
+     （修实测：选 21:9 出图 1312x1199 近正方形、选 1:1 出图 1536x1024；历史里 resolution 全是 auto）。
+     UI 上「比例」「清晰度」是两个独立控件，用户只改比例不动清晰度 = 比例白选。
+     兜底：**仅在用户明确选了比例（非 auto/adaptive）**时按 1K 算；比例也是 auto 则照旧不下发。 */
+  if (!L) {
+    const _r90 = String(ratio || "").trim();
+    if (_r90 && !/^(auto|adaptive)$/i.test(_r90)) L = 1024;
+  }
   if (!L) return "";
   const m = /^(\d+)\s*[:\/]\s*(\d+)$/.exec(String(ratio || "").trim());
   if (!m) return "";
