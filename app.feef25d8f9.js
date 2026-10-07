@@ -4698,8 +4698,8 @@ window.__r86Archive = (function () {
         写入失败会提示一次。
    ══════════════════════════════════════════════════════════════════════════════ */
 (function () {
-  var DB = 'w5local', STORE = 'kv', KEY = 'dir';
-  var S = { handle: null, map: {}, ready: false, needGesture: false, error: '', count: 0 };
+  var DB = 'w5local', STORE = 'kv', KEY = 'dir', ALIAS_KEY = 'alias';
+  var S = { handle: null, map: {}, alias: {}, ready: false, needGesture: false, error: '', count: 0 };
   var warned = {};
 
   function idb() {
@@ -4784,6 +4784,17 @@ window.__r86Archive = (function () {
     return S.count;
   }
 
+  /* ★ R92-C：别名索引 —— 本地文件名现在写成**可读**的（时间_模型_比例_清晰度_短id），
+     不再是 R2 那种 `1791385704-r2_xxx.png`。但 hydrate() 只能从 URL 尾段反推名字，
+     两边就对不上了 ⇒ 存一张 `URL尾段 → 本地文件名` 的映射表，hydrate 先查它。
+     兼容旧文件：查不到别名就按原名找（= R91 写下的那些）。 */
+  async function loadAlias() {
+    var a = await kvGet(ALIAS_KEY);
+    S.alias = (a && typeof a === 'object' && !Array.isArray(a)) ? a : {};
+    return S.alias;
+  }
+  function saveAlias() { kvSet(ALIAS_KEY, S.alias); }
+
   function warnOnce(key, msg) {
     if (warned[key]) return;
     warned[key] = 1;
@@ -4800,6 +4811,7 @@ window.__r86Archive = (function () {
         if (p0 === 'granted') {
           S.needGesture = false;
           var n0 = await buildMap();
+          await loadAlias();
           return { ok: true, msg: '已恢复本地目录「' + S.handle.name + '」· ' + n0 + ' 个文件' };
         }
       } catch (e) {}
@@ -4811,6 +4823,7 @@ window.__r86Archive = (function () {
       S.handle = h; S.needGesture = false;
       await kvSet(KEY, h);
       var n = await buildMap();
+      await loadAlias();
       return { ok: true, msg: '已绑定「' + h.name + '」· 目录内已有 ' + n + ' 个文件' };
     } catch (e) {
       if (String(e && e.name) === 'AbortError') return { ok: false, msg: '已取消' };
@@ -4829,13 +4842,16 @@ window.__r86Archive = (function () {
       if (p !== 'granted') { S.needGesture = true; S.ready = false; return false; }
       S.needGesture = false;
       await buildMap();
+      await loadAlias();
       return true;
     } catch (e) { return false; }
   }
 
   /* ★ 写入：blob 已在手（转存 R2 成功那一刻），这里零额外网络。
-     name 必须是 nameOf(url) 的返回值 —— 读写同一套命名，否则 hydrate 永远匹配不上（R91-B②）。 */
-  async function save(name, blob) {
+     name  = **可读文件名**（时间_模型_比例_清晰度_短id），同名 ⇒ 覆盖 ⇒ **同一结果只会有一个文件**。
+     alias = URL 尾段（R2 对象名），写给 hydrate() 查表用 —— 这是「可读名」与「能命中」能同时成立的关键。
+     ⚠ 旧签名的第三个参数不存在时退化为 R91 行为（name 即 URL 尾段），向后兼容。 */
+  async function save(name, blob, alias) {
     if (!S.handle || !name || !blob) return false;
     if (S.needGesture) {
       warnOnce('perm', '本地目录权限已过期 —— 点顶栏的文件夹图标即可恢复（不用重新选目录）');
@@ -4849,6 +4865,7 @@ window.__r86Archive = (function () {
       await w.close();
       S.map[safe] = fh;
       S.count = Object.keys(S.map).length;
+      if (alias) { S.alias[alias] = safe; saveAlias(); }
       S.error = '';
       return true;
     } catch (e) {
@@ -4879,9 +4896,12 @@ window.__r86Archive = (function () {
         var el = els[i];
         if (el.dataset && el.dataset.w5local === '1') continue;
         var n = nameOf(el.getAttribute('src') || '');
-        if (!n || !S.map[n]) continue;
+        if (!n) continue;
+        /* ★ R92-C：先查别名表（可读文件名 ↔ URL 尾段），查不到就按原名找（兼容 R91 写的旧文件） */
+        var ln = (S.alias && S.alias[n]) || n;
+        if (!S.map[ln]) continue;
         try {
-          var f = await S.map[n].getFile();
+          var f = await S.map[ln].getFile();
           el.src = URL.createObjectURL(f);
           if (el.dataset) el.dataset.w5local = '1';
           hit++;
@@ -7631,6 +7651,8 @@ const reject = msg => ({
 ok: false,
 error: msg
 });
+/* ★ R92-A：_regen/_resubmit → Api.submit 走到这里；model 来自 task，可能没有 params */
+model = (window.UI && window.UI._fullModel) ? window.UI._fullModel(model) : model;
 const mid = model.id;
 for (const p of model.params) {
 if (p.required) {
@@ -7708,7 +7730,8 @@ body: body
 
 const Workflow = {
 build(task) {
-const model = task.model;
+/* ★ R92-A：历史记录里的 model 可能没有 params ⇒ 原样迭代会抛"not iterable" */
+const model = (window.UI && window.UI._fullModel) ? window.UI._fullModel(task.model) : task.model;
 const tab = model.type;
 const prompt = task.prompt || task.body?.prompt || task.body?.text || "";
 const refs = {
@@ -7927,7 +7950,16 @@ Toast.success("工作流已导入");
 return true;
 },
 async copy(task) {
-const text = this.build(task);
+/* ★ R92-B：build 抛错时**不再静默** —— 此前调用方（悬浮栏 / 历史详情 / 顶部按钮）都没有
+   try/catch，异常直接冒泡 ⇒ 用户看到的就是「点了没反应」。现在至少会说出原因。 */
+let text = "";
+try {
+text = this.build(task);
+} catch (e) {
+try { Toast.error("复制工作流失败：" + ((e && e.message) || e)); } catch (_e) {}
+return false;
+}
+if (!text) { try { Toast.warning("这条记录没有可导出的工作流内容"); } catch (_e) {} return false; }
 const ok = await copy(text);
 /* ★ R88-c：失败时不再只弹一句「复制失败」就没下文 —— 打开手动复制面板，让用户一定拿得到内容 */
 if (ok) { Toast.success("工作流已复制到剪贴板"); } else {
@@ -12313,7 +12345,7 @@ out.aspectRatio = "auto";
 return out;
 },
 _pruneEmptyRefs(model, body) {
-if (!model || !body) return;
+if (!model || !body || !Array.isArray(model.params)) return;
 for (const p of model.params) {
 /* IMPL-119：空收集器返回 null——原只删 ""，空参考以 urls:null 下发上游 */
 if ((p.type === "ref-image" || p.type === "ref-video" || p.type === "ref-audio") && (body[p.key] == null || body[p.key] === "")) delete body[p.key];
@@ -12864,6 +12896,49 @@ return null;
    ⇒ 用户看到「结果消失 → 再一点点刷出来」。blob 转存时本就在手 ⇒ 零额外网络。
    ⚠ 写成这个对象的一个**方法**（而不是在对象字面量里声明 function —— 那样是语法错误）。
    共享表挂 window.__r91Sess：渲染路径有好几条，别去猜哪个函数是不是方法。 */
+/* ★ R92-A：拿到「带 params 的完整模型」。
+   为什么需要：任务/历史记录里的 `model` 可能只是个瘦描述符（只有 id/name/type），
+   而 `Workflow.build` 与 `normalizeAndValidateApiBody` 都直接 `for (const p of model.params)`
+   ⇒ 抛 `model.params is not iterable` ⇒ 「复制工作流点了没反应」「重新生成报错」。
+   顺序：本就有 params → 用它；否则按 id 回 MODELS（image/video/audio）与 SKILL_MODEL_PRESETS 找；
+   再找不到 ⇒ 补 params: []（**宁可少导出一段设置，也不能抛异常把整个动作打断**）。 */
+_fullModel(m) {
+try {
+if (!m || typeof m !== "object") return m;
+if (Array.isArray(m.params)) return m;
+const id = m.id;
+if (id) {
+const pools = [];
+try { if (typeof MODELS !== "undefined" && MODELS) pools.push(MODELS.image || [], MODELS.video || [], MODELS.audio || []); } catch (_e) {}
+try { if (typeof SKILL_MODEL_PRESETS !== "undefined" && Array.isArray(SKILL_MODEL_PRESETS)) pools.push(SKILL_MODEL_PRESETS); } catch (_e) {}
+for (const pool of pools) {
+const hit = (pool || []).find(x => x && x.id === id);
+if (hit && Array.isArray(hit.params)) return Object.assign({}, hit, { name: m.name || hit.name, type: m.type || hit.type });
+}
+}
+return Object.assign({}, m, { params: [] });
+} catch (e) { return m; }
+},
+/* ★ R92-C：可读的本地文件名 —— 时间_模型_比例_清晰度_任务短id（Windows 合法，模块侧还会再消毒一次）。
+   同一个任务重复写 ⇒ 同名 ⇒ 覆盖 ⇒ **不会再出现"一张图两份文件"**。 */
+_r92LocalName(task, ext) {
+try {
+const d = new Date(task.completedAt || task.createdAt || Date.now());
+const p2 = n => String(n).padStart(2, "0");
+const ts = String(d.getFullYear()) + p2(d.getMonth() + 1) + p2(d.getDate()) + "-" + p2(d.getHours()) + p2(d.getMinutes());
+const raw = String((task.model && (task.model.shortName || task.model.name || task.model.id)) || "model");
+const name = (raw.replace(/[^0-9a-zA-Z\u4e00-\u9fa5._-]+/g, "").replace(/^\.+/, "").slice(0, 40)) || "model";
+const body = task.body || {};
+const ratio = String(body.aspectRatio || body.ratio || "").replace(/[:/]/g, "x").replace(/[^0-9a-zA-Z]/g, "");
+const res = String(body.size || body.resolution || "").replace(/[^0-9a-zA-Z]/g, "");
+const short = String(task.id || "").replace(/[^a-zA-Z0-9]/g, "").slice(-6);
+const parts = [ ts, name ];
+if (ratio && ratio.toLowerCase() !== "auto") parts.push(ratio);
+if (res && res.toLowerCase() !== "auto") parts.push(res);
+if (short) parts.push(short);
+return parts.join("_") + "." + (ext || "png");
+} catch (e) { return ""; }
+},
 _r91SessionUrl(id, blob) {
 try {
 if (!id || !blob) return "";
@@ -12924,6 +12999,16 @@ token = (Store.getR2AuthToken() || "").trim();
 if (!workerUrl || !token) return;
 if (url.startsWith(workerUrl) || /\.r2\.dev\//.test(url)) return;
 if (/^data:/.test(url)) return; /* ★ R74：blob: 必须转存 —— 否则云同步拿到的是「别的设备打不开的本页地址」*/
+/* ★ R92-D：在途去重 —— `_preloadResult` 与 `_archivePendingHistory` 可能对同一条各跑一次，
+   两次都会 fetch + 上传（Worker 每次生成不同的对象名）⇒ **白传一遍 + 本地落两份文件**。
+   30s TTL 是兜底释放（失败后仍可由下次 unlock/刷新重试）。 */
+const _r92key = task.id || String(url);
+try {
+if (!window.__r92Arch) window.__r92Arch = {};
+if (window.__r92Arch[_r92key]) return;
+window.__r92Arch[_r92key] = 1;
+setTimeout(function () { try { delete window.__r92Arch[_r92key]; } catch (e) {} }, 30000);
+} catch (e) {}
 const modelName = (task.model?.name || "unknown").replace(/[^a-zA-Z0-9_-]/g, "_");
 const time = new Date(task.completedAt || task.createdAt || Date.now()).toISOString().slice(0, 19).replace(/[:T]/g, "-");
 const ratio = task.body?.aspectRatio || task.body?.ratio || "auto";
@@ -13022,8 +13107,12 @@ applyArchived(data.url);
    blob 已在手 ⇒ 零额外网络；失败不影响转存（本地只是热点缓存，R2 才是权威副本）。 */
 try {
 if (window.__r84Local) {
-const _r91ln = window.__r84Local.nameOf(data.url);
-if (_r91ln) window.__r84Local.save(_r91ln, blob);
+/* ★ R92-C：文件名 = 可读名（时间_模型_比例_清晰度_短id），别名 = URL 尾段（供 hydrate 查表）。
+   可读名对同一任务稳定 ⇒ 重复写入是**覆盖**而不是新增第二份文件。 */
+const _r92alias = window.__r84Local.nameOf(data.url);
+const _r92ext = (String(data.url).match(/\.([a-z0-9]+)(?:\?|$)/i) || [ , "png" ])[1].toLowerCase();
+const _r92ln = (this._r92LocalName && this._r92LocalName(task, _r92ext)) || _r92alias;
+if (_r92ln) window.__r84Local.save(_r92ln, blob, _r92alias);
 }
 } catch (_e91b2) {}
 console.log("[archive] 前端转存成功:", url, "→", data.url, "(", fileName, ")");
