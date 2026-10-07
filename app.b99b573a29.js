@@ -4670,18 +4670,37 @@ window.__r86Archive = (function () {
 
    设计（本地 = 热点缓存 · R2 = 权威副本）：
      · 授权：用户选一次目录 → 句柄存 **原生 IndexedDB**（不用 Dexie —— 它走 CDN，国内慢时会拖垮这个功能）
-     · 写入：结果**转存 R2 时顺手写本地** —— 那时 blob 已在手，**零额外网络**
+     · 写入：结果**转存 R2 成功之后**用「R2 返回地址的文件名」写本地（见 R91-B）
      · 读取：`hydrate()` 把 DOM 里的 http 图片/视频换成本地 blob: ⇒ 本会话内秒开
-     · 降级：非 Chromium / 未授权 / 目录被移动 ⇒ **全部静默回落**现有链路，不报错
+     · 降级：非 Chromium / 未授权 / 目录被移动 ⇒ **回落**现有链路，不报错
 
    ⚠ 三条边界（浏览器限制，非偷懒）：
      ① 仅 Chromium 系桌面版有 `showDirectoryPicker`（手机 / Firefox / Safari 没有）
-     ② 授权需要用户手势；刷新后句柄还在，但**权限可能需要重新点一次**（`queryPermission` 会返回 prompt）
+     ② 授权需要用户手势；刷新后句柄还在，但**权限会退回 prompt** ⇒ 需再点一次（见 R91-C）
      ③ 不能静默写 —— 所以第一次必须由用户点按钮
+
+   ══════════════════════════════════════════════════════════════════════════════
+   R91-B/C · 修「选了目录但结果没出现在文件夹里」（两条独立缺陷，都能静态证明）
+
+     ① 文件名非法：旧代码用 `${modelName}_${time}_${ratio}.png` 作本地文件名，
+        而 `ratio` 长这样 —— **"21:9"**。冒号是 Windows 保留字符（`\ / : * ? " < > |`），
+        `getFileHandle()` 直接抛错 ⇒ 整个写入静默失败（调用方没 await、catch 只记 S.error）。
+        ⚠ 打桩测试为什么没抓到：假句柄不校验文件名合法性 —— **替身比真货宽容**（铁规矩 87 的变体）。
+
+     ② 读写用了两套命名，永不匹配：写入用 `fileName`（本地命名规则），
+        读取 `hydrate()` 却用 `nameOf(url)` = **URL 尾段**（R2 命名规则）。
+        而 R2 的对象名是 Worker 自己生成的 `1791385704-r2_eb4483d7ce732b1c.png`
+        ⇒ 即使写成功，hydrate 也永远命中不了。
+        ⇒ 现在写入点移到拿到 R2 地址之后，**文件名 = nameOf(url) 的返回值**，读写同一套规则。
+
+     ③ 权限：刷新后 `queryPermission` 回到 prompt，写入抛 NotAllowedError 且**无任何提示**
+        ⇒ 表现为"功能静默失效"。现在：点顶栏文件夹图标即可**一键重新授权**（不重选目录）；
+        写入失败会提示一次。
    ══════════════════════════════════════════════════════════════════════════════ */
 (function () {
   var DB = 'w5local', STORE = 'kv', KEY = 'dir';
   var S = { handle: null, map: {}, ready: false, needGesture: false, error: '', count: 0 };
+  var warned = {};
 
   function idb() {
     return new Promise(function (res, rej) {
@@ -4712,13 +4731,42 @@ window.__r86Archive = (function () {
 
   function supported() { return typeof window.showDirectoryPicker === 'function'; }
 
-  /* 从 URL 取文件名（R2 key 最后一段）；取不到或不像媒体名 ⇒ 返回空串 */
+  /* ★ R91-B①：文件名消毒 —— Windows 保留字符 / 控制字符 / 结尾点与空格全部换掉。
+     （冒号是实测踩到的那个：比例 "21:9"） */
+  function sanitize(name) {
+    var n = String(name || '');
+    n = n.replace(/[\\/:*?"<>|\u0000-\u001f]/g, '-');   /* 非法字符 → - */
+    n = n.replace(/\s+/g, ' ').trim();
+    n = n.replace(/^\.+/, '').replace(/[. ]+$/, '');    /* 首尾不能是点/空格 */
+    var dot = n.lastIndexOf('.');
+    var base = dot > 0 ? n.slice(0, dot) : n;
+    var ext = dot > 0 ? n.slice(dot) : '';
+    if (!base) base = 'file';
+    /* Windows 设备名（CON/PRN/…）即使带扩展名也不合法 */
+    if (/^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i.test(base)) base = '_' + base;
+    if (base.length > 150) base = base.slice(0, 150);
+    return base + ext;
+  }
+
+  /* 从 URL 取文件名（R2 key 最后一段）；取不到或不像媒体名 ⇒ 返回空串
+     ⚠ 也认「代理式地址」（`…?url=<编码后的原链>`，如 weserv）—— 用查询参数承载原链的形态
+       如果只按 '/' 切尾段会得到空串，hydrate 就永远匹配不上（这类"新形态静默穿透字符串判据"
+       的坑本项目踩过多次）。反解出内层链再取尾段，两种形态同一套命名。 */
   function nameOf(u) {
     try {
-      var s = String(u || '').split('?')[0].split('#')[0];
-      var seg = s.split('/').pop() || '';
-      seg = decodeURIComponent(seg);
-      return /\.(png|jpe?g|webp|gif|mp4|webm|mov|mp3|wav)$/i.test(seg) ? seg : '';
+      var s = String(u || '');
+      var q = /[?&]url=([^&#]+)/.exec(s);
+      if (q) {
+        var inner = decodeURIComponent(q[1]);
+        if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(inner)) inner = 'https://' + inner;
+        var t = inner.split('#')[0];
+        var seg1 = decodeURIComponent(t.split('/').pop() || '');
+        if (/\.(png|jpe?g|webp|gif|mp4|webm|mov|mp3|wav)$/i.test(seg1)) return sanitize(seg1);
+      }
+      var plain = s.split('?')[0].split('#')[0];
+      var seg = decodeURIComponent(plain.split('/').pop() || '');
+      if (!/\.(png|jpe?g|webp|gif|mp4|webm|mov|mp3|wav)$/i.test(seg)) return '';
+      return sanitize(seg);
     } catch (e) { return ''; }
   }
 
@@ -4736,8 +4784,26 @@ window.__r86Archive = (function () {
     return S.count;
   }
 
+  function warnOnce(key, msg) {
+    if (warned[key]) return;
+    warned[key] = 1;
+    try { if (window.Toast && Toast.warning) Toast.warning(msg, 8000); } catch (e) {}
+  }
+
   async function pick() {
     if (!supported()) return { ok: false, msg: '此浏览器不支持本地目录（需 Chrome / Edge 桌面版）' };
+    /* ★ R91-C：已绑定过 ⇒ 先试**在原句柄上重新授权**（点击自带手势）。
+       刷新后权限退回 prompt，这里一键恢复，不用重新选目录。 */
+    if (S.handle) {
+      try {
+        var p0 = await S.handle.requestPermission({ mode: 'readwrite' });
+        if (p0 === 'granted') {
+          S.needGesture = false;
+          var n0 = await buildMap();
+          return { ok: true, msg: '已恢复本地目录「' + S.handle.name + '」· ' + n0 + ' 个文件' };
+        }
+      } catch (e) {}
+    }
     try {
       var h = await window.showDirectoryPicker({ id: 'w5-work', mode: 'readwrite' });
       var perm = await h.requestPermission({ mode: 'readwrite' });
@@ -4752,7 +4818,7 @@ window.__r86Archive = (function () {
     }
   }
 
-  /* 启动时尝试恢复（不需要手势的那一半）；权限若需重授，标记 needGesture 交给 UI 提示 */
+  /* 启动时尝试恢复（不需要手势的那一半）；权限退回 prompt ⇒ 标记 needGesture（不打扰） */
   async function restore() {
     if (!supported()) return false;
     var h = await kvGet(KEY);
@@ -4760,24 +4826,41 @@ window.__r86Archive = (function () {
     try {
       var p = await h.queryPermission({ mode: 'readwrite' });
       S.handle = h;
-      if (p !== 'granted') { S.needGesture = true; return false; }
+      if (p !== 'granted') { S.needGesture = true; S.ready = false; return false; }
+      S.needGesture = false;
       await buildMap();
       return true;
     } catch (e) { return false; }
   }
 
-  /* ★ 写入：转存 R2 时 blob 已在手，这里零额外网络 */
+  /* ★ 写入：blob 已在手（转存 R2 成功那一刻），这里零额外网络。
+     name 必须是 nameOf(url) 的返回值 —— 读写同一套命名，否则 hydrate 永远匹配不上（R91-B②）。 */
   async function save(name, blob) {
     if (!S.handle || !name || !blob) return false;
+    if (S.needGesture) {
+      warnOnce('perm', '本地目录权限已过期 —— 点顶栏的文件夹图标即可恢复（不用重新选目录）');
+      return false;
+    }
     try {
-      var fh = await S.handle.getFileHandle(name, { create: true });
+      var safe = sanitize(name);
+      var fh = await S.handle.getFileHandle(safe, { create: true });
       var w = await fh.createWritable();
       await w.write(blob);
       await w.close();
-      S.map[name] = fh;
+      S.map[safe] = fh;
       S.count = Object.keys(S.map).length;
+      S.error = '';
       return true;
-    } catch (e) { S.error = String(e).slice(0, 80); return false; }
+    } catch (e) {
+      S.error = String((e && e.name) || e).slice(0, 80) + ':' + String((e && e.message) || '').slice(0, 60);
+      if (String(e && e.name) === 'NotAllowedError') {
+        S.needGesture = true;
+        warnOnce('perm', '本地目录权限已过期 —— 点顶栏的文件夹图标即可恢复（不用重新选目录）');
+      } else {
+        warnOnce('other', '写入本地目录失败：' + S.error);
+      }
+      return false;
+    }
   }
 
   /* 把 DOM 里能命中本地的 http 图片/视频换成 blob:（本会话秒开）
@@ -4812,13 +4895,13 @@ window.__r86Archive = (function () {
   }
 
   async function forget() {
-    S.handle = null; S.map = {}; S.ready = false; S.count = 0;
+    S.handle = null; S.map = {}; S.ready = false; S.count = 0; S.needGesture = false;
     await kvSet(KEY, null);
     return true;
   }
 
   window.__r84Local = {
-    S: S, supported: supported, nameOf: nameOf, pick: pick, restore: restore,
+    S: S, supported: supported, nameOf: nameOf, sanitize: sanitize, pick: pick, restore: restore,
     save: save, buildMap: buildMap, hydrate: hydrate, forget: forget,
     status: function () { return { supported: supported(), ready: S.ready, count: S.count,
                                    name: S.handle ? S.handle.name : '', needGesture: S.needGesture,
@@ -9310,7 +9393,11 @@ if (Store.getSync() && KeyVault.unlocked) this._archivePendingHistory();
 },
 _scheduleHistorySync() {
 clearTimeout(this._historySyncTimer);
-this._historySyncTimer = setTimeout(() => this._syncHistoryToCloud(), 3e4);
+/* ★ R91-E：30s → 8s。修反馈「在另一台电脑生的图，这边统计看不到」——
+   推送此前只有「30s 去抖定时器 + pagehide beacon」两条路，而定时器期间**再生成会一直重置**
+   ⇒ 「生一批就切走」很可能一次都没推成（beacon 是最后一道保险，但不该是唯一一道）。
+   8s 仍能把连续生成合并成一次推送；服务端按 id 合并，PUT 幂等，无副作用。 */
+this._historySyncTimer = setTimeout(() => this._syncHistoryToCloud(), 8e3);
 },
 /* IMPL-125 B'：历史同步云端 base 选择——对齐 _statsCloudBase「TC 优先、R2 兜底」同款模式。
    考古实证（IMPL-124）：云端历史槽位 /userdata?key=history 一直在 R2 Worker（105 条），
@@ -12772,6 +12859,28 @@ prompt: prompt
 return null;
 }
 },
+/* ★ R91-A：会话内显示地址 —— 每个结果固定一个 blob:，转存完成不再换远端地址。
+   为什么：applyArchived 原先把显示中的图换成远端 R2 地址 ⇒ 必须重新下载原图（1~4MB）
+   ⇒ 用户看到「结果消失 → 再一点点刷出来」。blob 转存时本就在手 ⇒ 零额外网络。
+   ⚠ 写成这个对象的一个**方法**（而不是在对象字面量里声明 function —— 那样是语法错误）。
+   共享表挂 window.__r91Sess：渲染路径有好几条，别去猜哪个函数是不是方法。 */
+_r91SessionUrl(id, blob) {
+try {
+if (!id || !blob) return "";
+if (!window.__r91Sess) window.__r91Sess = new Map();
+const ex = window.__r91Sess.get(id);
+if (ex) return ex;
+const u = URL.createObjectURL(blob);
+window.__r91Sess.set(id, u);
+/* 上限 40 条，超了从最早的开始 revoke（否则长会话会一直占内存） */
+if (window.__r91Sess.size > 40) {
+const k = window.__r91Sess.keys().next().value;
+try { URL.revokeObjectURL(window.__r91Sess.get(k)); } catch (_e) {}
+window.__r91Sess.delete(k);
+}
+return u;
+} catch (e) { return ""; }
+},
 async _preloadResult(task) {
 const url = task.result?.url;
 if (!url || this._preloadCache.has(url)) return;
@@ -12789,6 +12898,8 @@ this._preloadCache.set(url, {
 blob: blob,
 timestamp: Date.now()
 });
+/* ★ R91-A：图片一预载就把会话显示地址定下来 ⇒ 首次渲染之后显示地址**再也不变**。 */
+try { if (task && task.id) this._r91SessionUrl(task.id, blob); } catch (_e91) {}
 if (this._preloadCache.size > 12) {
 const firstKey = this._preloadCache.keys().next().value;
 this._preloadCache.delete(firstKey);
@@ -12848,14 +12959,18 @@ const entry = this._preloadCache.get(url);
 this._preloadCache.delete(url);
 this._preloadCache.set(newUrl, entry);
 }
+/* ★ R91-A：显示中的图**不要**换成远端新地址 —— 换了就必须重新下载一次原图（1~4MB，
+   pub-*.r2.dev 无 cache-control，国内尤其慢）⇒「结果消失 → 再一点点刷出来」。
+   优先用会话 blob:（本地解码、零网络）。data-lightbox 仍指向真实地址（灯箱多图切换靠它索引）。 */
+const _r91d = (window.__r91Sess && window.__r91Sess.get(task.id)) || newUrl;
 document.querySelectorAll(`[data-lightbox="${url}"]`).forEach(el => {
 el.dataset.lightbox = newUrl;
 });
 document.querySelectorAll(`img[src="${url}"]`).forEach(el => {
-el.src = newUrl;
+el.src = _r91d;
 });
 document.querySelectorAll(`video[src="${url}"]`).forEach(el => {
-el.src = newUrl;
+el.src = _r91d;
 });
 this._renderTaskList();
 if ($("#historySidebar")?.classList.contains("show")) this.renderHistory();
@@ -12877,9 +12992,15 @@ const res = await fetch(url);
 if (!res.ok) throw new Error("HTTP " + res.status); /* IMPL-104：404 错误页不得被上传 R2 并覆盖历史 url */
 blob = await res.blob();
 }
-/* ★ R84：blob 已在手 ⇒ 顺手落本地目录（零额外网络）。未绑定/失败都静默，不影响转存。 */
-try { if (window.__r84Local) window.__r84Local.save(fileName, blob); } catch (_e84) {}
+/* ★ R91-B：本地写入**已移到拿到 R2 地址之后**（见下方 if (data.url) 分支）。旧写法有两处独立缺陷：
+   ① 文件名用的是这个 `fileName`，而它含比例串 —— "21:9" 里的冒号是 Windows 保留字符，
+      `getFileHandle` 直接抛错、整个写入静默失败；
+   ② 本地文件名（fileName）与 hydrate() 的查找名（URL 尾段）**不是同一套命名** ⇒ 即使写成功
+      也永远命中不了（R2 对象名是 Worker 生成的 `1791385704-r2_xxxx.png`）。
+   写入点后移 + 文件名统一取 nameOf(data.url)，两条一起解决。 */
 if (blob && /^text\/html/i.test(blob.type || "")) throw new Error("HTML 错误页而非媒体文件"); /* IMPL-104 */
+/* ★ R91-A：预载没跑（视频走的就是这条）或预载失败时，在这里补定一次会话显示地址。 */
+try { this._r91SessionUrl(task.id, blob); } catch (_e91b) {}
 /* ★ R74-2：blob: 的 URL 里没有扩展名 ⇒ 上面按 URL 推断一律得 png；MIME 以 blob.type 为准纠正回来 */
 let _upName = fileName;
 try {
@@ -12897,6 +13018,14 @@ body: formData
 const data = await uploadRes.json();
 if (data.url) {
 applyArchived(data.url);
+/* ★ R91-B：落本地目录 —— 文件名 = nameOf(data.url)，与 hydrate() 的查找名**完全同源**。
+   blob 已在手 ⇒ 零额外网络；失败不影响转存（本地只是热点缓存，R2 才是权威副本）。 */
+try {
+if (window.__r84Local) {
+const _r91ln = window.__r84Local.nameOf(data.url);
+if (_r91ln) window.__r84Local.save(_r91ln, blob);
+}
+} catch (_e91b2) {}
 console.log("[archive] 前端转存成功:", url, "→", data.url, "(", fileName, ")");
 /* ★ R76-A2：顺手出缩略图 —— blob 已在手上（同源），_r76ThumbFromBlob 不经过 URL ⇒ 不受 CORS 约束。
    生成后把 thumbUrl 写回 tasks/history，列表/历史自此加载缩略图（~40 KB）而非原图（1~4 MB）。
@@ -13331,6 +13460,8 @@ el.dataset.tid = task.id;
 const type = task.model?.type || "image";
 const status = task.status || "processing";
 const url = status === "succeeded" && task.result?.url ? task.result.url : "";
+/* ★ R91-A：媒体 src 用会话地址（blob:），url 本身保持真实地址（灯箱/下载/索引都用它） */
+const _r91u = (window.__r91Sess && window.__r91Sess.get(task.id)) || url;
 const thumbUrl = status === "succeeded" && task.result?.thumbUrl ? task.result.thumbUrl : "";
 const statusText = status === "processing" ? "生成中" : status === "succeeded" ? "成功" : status === "failed" ? "失败" : "超时";
 const n = (this.state.singleList || []).length;
@@ -13345,7 +13476,7 @@ mediaHtml = `<div class="sv-media is-loading"><div class="sv-waiting" role="stat
 const err = classifyErr(task.error || "未知错误");
 mediaHtml = `<div class="sv-error" role="alert"><div class="sv-error-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg></div><div class="sv-err-category">${esc(err.category)}错误</div><div class="sv-err-hint">${esc(err.hint)}</div></div>`;
 } else if (isPlain && type === "video") {
-mediaHtml = `<div class="sv-media is-plain is-video" title="单击播放/暂停"><video src="${esc(url)}" playsinline preload="metadata"></video></div>`;/* IMPL-107①：裸播——单击播放/单击暂停，控制面板移除（全屏走浮动菜单栏按钮） */
+mediaHtml = `<div class="sv-media is-plain is-video" title="单击播放/暂停"><video src="${esc(_r91u)}" playsinline preload="metadata"></video></div>`;/* IMPL-107①：裸播——单击播放/单击暂停，控制面板移除（全屏走浮动菜单栏按钮） */
 } else if (type === "audio") {
 mediaHtml = `<div class="sv-audio"><div class="sv-audio-disc"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect class="eqb e1" x="2.2" y="8.6" width="2.5" height="6.8" rx="1.25"/><rect class="eqb e2" x="6.5" y="5.2" width="2.5" height="13.6" rx="1.25"/><rect class="eqb e3" x="10.8" y="3.4" width="2.5" height="17.2" rx="1.25"/><rect class="eqb e4" x="15.1" y="6.4" width="2.5" height="11.2" rx="1.25"/><rect class="eqb e5" x="19.4" y="9.4" width="2.5" height="5.2" rx="1.25"/></svg></div><div class="sv-audio-info"><div class="sv-audio-name">${esc(trunc(task.prompt || task.model?.name || "音频作品", 46))}</div><div class="sv-aplayer" role="toolbar" aria-label="音频播放控制"><button class="sv-vbtn" data-vact="toggle" aria-label="播放或暂停"><svg class="vi-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg><svg class="vi-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="14" y="3" width="5" height="18" rx="1"/><rect x="5" y="3" width="5" height="18" rx="1"/></svg></button><span class="sv-vtime"><span class="vt-cur">0:00</span><i>/</i><span class="vt-dur">0:00</span></span><input class="sv-vseek" type="range" min="0" max="1000" value="0" step="1" aria-label="播放进度"><audio src="${esc(url)}" preload="metadata"></audio></div></div></div>`;
 } else if (type === "asr") {
@@ -13353,7 +13484,7 @@ const txt = (task.result && (task.result.text || (task.result.data && task.resul
 mediaHtml = `<div class="sv-asr"><div class="sv-asr-head"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19v3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><rect x="9" y="2" width="6" height="13" rx="3"/></svg><span class="sv-asr-title">语音识别结果</span><button class="sv-hb-btn" data-act="copyText" title="复制文本" aria-label="复制文本"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg></button></div><div class="sv-asr-text">${esc(txt)}</div></div>`;
 } else {
 const lqip = thumbUrl ? ` data-lqip="1" style="background-image:url('${esc(thumbUrl)}');background-size:contain;background-position:center;background-repeat:no-repeat"` : "";
-mediaHtml = `<div class="sv-media ${isPlain ? "is-plain " : ""}is-image" data-lightbox="${esc(url)}" role="button" tabindex="0" aria-label="查看大图" title="点击放大查看原图"${lqip}><img src="${esc(url)}" loading="eager" decoding="async" referrerpolicy="no-referrer" alt="${esc(trunc(task.prompt || "生成结果", 60))}"></div>`;
+mediaHtml = `<div class="sv-media ${isPlain ? "is-plain " : ""}is-image" data-lightbox="${esc(url)}" role="button" tabindex="0" aria-label="查看大图" title="点击放大查看原图"${lqip}><img src="${esc(_r91u)}" loading="eager" decoding="async" referrerpolicy="no-referrer" alt="${esc(trunc(task.prompt || "生成结果", 60))}"></div>`;
 }
 let progressRowHtml = "";
 if (status === "processing") {
@@ -13665,6 +13796,7 @@ th.setAttribute("aria-label", ((task.prompt || "").slice(0, 40) || "结果") + "
 th.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this._showSingleTask(task); } });
 const type = task.model?.type || "image";
 const url = task.status === "succeeded" && task.result?.url ? task.result.url : "";
+const _r91u = (window.__r91Sess && window.__r91Sess.get(task.id)) || url;
 const thumbUrl = task.result?.thumbUrl || "";
 const badge = svg => `<span class="strip-type-badge" aria-hidden="true">${svg}</span>`;
 const bPlay = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>';
@@ -13687,11 +13819,11 @@ if (_aSt === "running") _archBadge = '<span class="strip-arch-badge is-running" 
 else if (_aSt === "queued") _archBadge = '<span class="strip-arch-badge is-queued" aria-hidden="true">待转存</span>';
 else if (_aSt === "idle") _archBadge = '<span class="strip-arch-badge is-idle" aria-hidden="true">未转存</span>';
 } catch (_e86) {}
-mediaHtml = (thumbUrl ? `<img src="${esc(thumbUrl)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : `<video src="${esc(url)}" muted preload="metadata" playsinline></video>`) + badge(bPlay) + _archBadge;
+mediaHtml = (thumbUrl ? `<img src="${esc(thumbUrl)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : `<video src="${esc(_r91u)}" muted preload="metadata" playsinline></video>`) + badge(bPlay) + _archBadge;
 } else if (type === "audio") {
 mediaHtml = `<div class="strip-icon-only is-audio"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect class="eqb e1" x="2.2" y="8.6" width="2.5" height="6.8" rx="1.25"/><rect class="eqb e2" x="6.5" y="5.2" width="2.5" height="13.6" rx="1.25"/><rect class="eqb e3" x="10.8" y="3.4" width="2.5" height="17.2" rx="1.25"/><rect class="eqb e4" x="15.1" y="6.4" width="2.5" height="11.2" rx="1.25"/><rect class="eqb e5" x="19.4" y="9.4" width="2.5" height="5.2" rx="1.25"/></svg></div>` + badge(bWave);
 } else if (url) {
-mediaHtml = `<img src="${esc(thumbUrl || url)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` + (type === "image" ? "" : badge(bImg));
+mediaHtml = `<img src="${esc(thumbUrl || _r91u)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` + (type === "image" ? "" : badge(bImg));
 } else {
 mediaHtml = `<div class="strip-icon-only"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/></svg></div>`;
 }
@@ -15126,9 +15258,12 @@ const data = await res.json();
 if (!(data && data.ok && Array.isArray(data.data))) return { ok: false, reason: "empty" };
 const local = Store.getHistory();
 const fresh = data.data.filter(x => x && x.id && !local.some(l => l.id === x.id)).length;
+/* ★ R91-D：反向计数 —— 本机有、云端没有的条数。此前只报"云端 N 条"，
+   用户看到数字不对时无从判断是「没拉到」还是「没推上去」。 */
+const localOnly = local.filter(x => x && x.id && !data.data.some(c => c.id === x.id)).length;
 const merged = this._mergeHistory(local, data.data);
 Store.saveHistory(merged);
-return { ok: true, cloud: data.data.length, fresh, local: merged.length };
+return { ok: true, cloud: data.data.length, fresh, localOnly, local: merged.length };
 },
 /* ── 77-b Q5：打开统计即全量同步（拉+推一体）——append-only 按 id 去重合并后 PUT 全量（≤500 条），幂等安全；
 双端并发 = 后写者胜 + 记录并集不减（各自本地保有全量，下轮同步自动补齐，论证见 77-b 报告）。
@@ -15140,12 +15275,13 @@ const c = await this._statsCloudBase();
 if (!c) { st.textContent = "未配置云端同步 · 仅本机数据"; st.style.color = ""; return; }
 st.textContent = "云端同步中…";
 st.style.color = "";
-let cloud = 0, fresh = 0, err = null;
+let cloud = 0, fresh = 0, localOnly = 0, err = null;
 try {
 const pull = await this._statsPullCloud();
 if (pull.ok) {
 cloud = pull.cloud;
 fresh = pull.fresh;
+localOnly = pull.localOnly || 0;
 this._renderResultStrip();
 if (typeof this.renderHistoryBadge === "function") this.renderHistoryBadge();
 const cur = $("#statsTabs .stats-tab.active");
@@ -15160,7 +15296,7 @@ method: "PUT",
 headers: { "Content-Type": "application/json" },
 body: JSON.stringify(hist.slice(0, 500))
 });
-st.textContent = `已同步 · 云端 ${cloud} 条 · 本地新增 ${fresh} 条 · 合计 ${hist.length} 条`;
+st.textContent = `已同步 · 云端 ${cloud} 条 · 本机 ${hist.length} 条` + (fresh ? ` · 拉回 ${fresh} 条` : "") + (localOnly ? ` · 补传 ${localOnly} 条` : "");
 st.style.color = "var(--success)";
 } catch (e) {
 err = e;
