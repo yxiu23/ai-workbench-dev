@@ -1,0 +1,21 @@
+# ══ 部署仓只放"要发布的东西" ══
+# 2026-10-07 清理前的教训：
+#   · `线上备份-V26.9.175-不启用.html`（1.4 MB 旧版整站）混进来 ⇒ **公网可直接访问**
+#   · `worker-base.js`（63 KB Worker 源码）同样公网可读 ⇒ 不必要的暴露面
+#   · 15 个旧 `app.*` 累积 ≈14 MB（缓存缓冲其实只需要留 1~2 版：
+#     GitHub Pages 的 HTML 缓存 max-age=600 = **10 分钟**，CF Pages 的 _headers 已设 HTML 不缓存）
+
+# 快照 / 备份类（永不发布）
+*备份*
+*不启用*
+*.bak
+*.old
+
+# Worker 源码（源在 studio/worker/，这里不放）
+worker-base.js
+
+# 本地/临时
+*.log
+*.tmp
+.DS_Store
+Thumbs.db

@@ -2849,6 +2849,18 @@ const SKILL_MODEL_PRESETS = [
   { id: "apiyi:gemini-3.1-pro-preview", label: "Gemini 3.1 Pro（易）", vision: true, think: false, desc: "Google 多模态旗舰 · 看图理解强", billing: { type: "perToken", inUsdPerM: 1.8, outUsdPerM: 10.8, source: "api", note: "APIYI 官转（入 $1.8/M · 出 $10.8/M）" } }
 ];
 
+/* ★ R85：非 APIYI 直连档的费率表（只读查询，不参与 UI 模型列表）。单位与 APIYI 档一致 = **美元/百万 token**，
+   只在 calcEstimate 出口乘一次 USD_CNY(=7)。价格来源与峰谷口径见批次说明（R85）。
+   ⚠ 刻意不含 auto（路由无定价）与 qwen3-vl-plus（百炼现价页未公示）—— 查不到就不编。 */
+const LLM_RATE_TABLE = {
+  "deepseek:deepseek-flash": { type: "perToken", inUsdPerM: .15, outUsdPerM: .6, source: "official", note: "DeepSeek API Docs 平峰价 $0.15 / $0.60 每 M（峰时段工作日 01-04 / 06-10 UTC 翻倍）" },
+  "deepseek:deepseek-v4-pro": { type: "perToken", inUsdPerM: .66, outUsdPerM: 1.98, source: "official", note: "DeepSeek API Docs 平峰价 $0.66 / $1.98 每 M（峰时段翻倍）" },
+  "dashscope:qwen3.8-omni-flash": { type: "perToken", inUsdPerM: .8 / 7, outUsdPerM: 2.7 / 7, source: "official", note: "阿里云百炼官价 ¥0.8 / ¥2.7 每百万 token（USD_CNY=7 折美元）" },
+  "dashscope:qwen3.8-max-0902": { type: "perToken", inUsdPerM: 12 / 7, outUsdPerM: 36 / 7, source: "official", note: "阿里云百炼官价 ¥12 / ¥36 每百万 token（USD_CNY=7 折美元）" },
+  "siliconflow:Pro/moonshotai/Kimi-K2.6": { type: "perToken", inUsdPerM: .95, outUsdPerM: 4, source: "official", note: "SiliconFlow 官方发布价 $0.95 / $4.00 每 M" },
+  "siliconflow:zai-org/GLM-4.5V": { type: "perToken", inUsdPerM: .14, outUsdPerM: .86, source: "official", note: "SiliconFlow 官方发布价 $0.14 / $0.86 每 M" }
+};
+
 /* IMPL-72 需求②：思考能力守卫——判断模型能否安全携带 thinking 标志。
    预设查表优先（人工核实），家族正则兜底（对齐 Worker v3 注入语义，IMPL-68）：
    · dashscope：Worker 恒注入 enable_thinking（76-b 文档核实：qwen3.8-omni 默认开启思考，恒注入 false 为保命设计；
@@ -4464,6 +4476,459 @@ audio: []
 const $ = (s, r = document) => r.querySelector(s);
 
 const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+/* ★ R79-B：离开页面 / 切后台时立即推送。此前只有 30 秒定时器（期间再生成会重置），
+   关页面根本不推 ⇒ 「生完就关」= 从未同步。 */
+var _r79FlushHistory = function () {
+try {
+if (typeof Store === "undefined" || !Store.getSync()) return;
+var c = null;
+try {
+if (typeof TaskCenter !== "undefined" && TaskCenter.isAvailable()) {
+c = { base: TaskCenter.workerUrl, token: TaskCenter.token };
+} else {
+var u = (Store.getR2WorkerUrl() || "").trim().replace(/\/$/, "");
+var t = (Store.getR2AuthToken() || "").trim();
+if (u && t) c = { base: u, token: t };
+}
+} catch (_e) { c = null; }
+if (!c) return;
+var list = (Store.getHistory() || []).filter(function (h) {
+return String((h && h.result && h.result.url) || "").indexOf("blob:") !== 0;
+}).slice(0, 500);
+var body = JSON.stringify(list);
+var url = c.base + "/userdata?key=history&token=" + encodeURIComponent(c.token);
+if (navigator.sendBeacon) {
+/* sendBeacon 只能 POST、不能带自定义头 ⇒ 用 text/plain 避开预检；Worker 侧已加 POST 支持（R79-D） */
+navigator.sendBeacon(url, new Blob([body], { type: "text/plain" }));
+} else {
+fetch(url, { method: "PUT", keepalive: true, headers: { "Content-Type": "application/json" }, body: body });
+}
+/* ★ R80-D2：sendBeacon 这条路也把墓碑送上去 */
+try {
+var _tb2 = (window.__r80Tomb ? window.__r80Tomb.load() : []);
+if (_tb2.length && navigator.sendBeacon) {
+navigator.sendBeacon(c.base + "/userdata?key=historytomb&token=" + encodeURIComponent(c.token), new Blob([JSON.stringify(_tb2)], { type: "text/plain" }));
+}
+} catch (_e) {}
+try { localStorage.setItem("sc_hist_push_at", String(Date.now())); } catch (_e) {}
+} catch (_e) {}
+};
+/* 挂到 window —— 便于诊断，也让验收脚本能直接验证这段逻辑 */
+window.__r79FlushHistory = _r79FlushHistory;
+
+/* ══ R86 视频转存调度器（模块源码见 studio/_r86_archive.js）══ */
+/* ══════════════════════════════════════════════════════════════════════════════
+   R86 · 视频结果转存调度器 —— 「不点开不抢带宽」
+   ──────────────────────────────────────────────────────────────────────────────
+   修：「要转存到 R2，但不点开则只显示缩略图，因为视频可能比较大，加载转存可能都影响网速」
+
+   改造前的两条浪费（都能静态证明）：
+     ① `_preloadResult` 对**所有**结果做全量 `fetch(url)` 存进 `_preloadCache` ——
+        而那个缓存只服务「原图预览秒开」，对视频毫无意义（列表/历史用的是缩略图）
+     ② `_preloadResult` 尾部**立即** `_archiveResult(task)` ⇒ 又一次全量 fetch + 上传 R2
+     ⇒ 生成一个视频 = **当场下载两遍 + 上传一遍**，而且全在用户正用页面的那一刻
+
+   改造后：
+     · 视频**不进** `_preloadCache`，也不在生成完成时立即转存
+     · 改由本调度器**页面空闲时**启动（`requestIdleCallback`，退化 `setTimeout` 3s）
+     · **单并发串行** + 两次之间至少间隔 1.5s ⇒ 永远只有一条视频在占带宽
+     · 用户**点开**某个视频（进单视图 / 全屏）⇒ 它**插队**到队首（那时本来也要下载）
+     · 状态经 `stateOf()` 暴露：`done / running / queued / idle`，结果条据此显示角标
+   ⚠ 本模块位于主块顶层、而 `UI` / `Store` 的声明都在它**之后** ⇒ 一律**只在回调里**访问它们。
+     铁规矩 84：`typeof X` 对 TDZ 中的 const/class 会抛 ReferenceError（只对"未声明变量"安全），
+     所以**不能**拿 `typeof UI === "undefined"` 当守门 —— 这里靠"只延迟访问"来规避。
+   ══════════════════════════════════════════════════════════════════════════════ */
+window.__r86Archive = (function () {
+  var q = [];              /* [{ id, task }] —— 待转存队列，队首优先 */
+  var curId = null;        /* 正在转存的 task id（null = 空闲） */
+  var lastAt = 0;          /* 上次转存结束时刻（用于让路间隔） */
+  var pumpScheduled = false;
+  var listeners = [];
+  var GAP = 1500;          /* 两次转存之间的最小间隔：给用户自己的操作让路 */
+  var IDLE_TIMEOUT = 4000; /* requestIdleCallback 最长等待，超时也启动 */
+
+  function fire() {
+    for (var i = 0; i < listeners.length; i++) { try { listeners[i](); } catch (e) {} }
+  }
+  function isVideo(t) { return !!(t && t.model && t.model.type === "video"); }
+
+  /* ── 已经躺在 R2 上（或本就来自 R2）⇒ 无需再转 ── */
+  function isArchived(t) {
+    try {
+      var r = (t && t.result) || {};
+      if (r.originalUrl) return true;                 /* applyArchived 留下的标记 */
+      var u = String(r.url || "");
+      if (!u) return true;
+      if (/\.r2\.dev\//.test(u)) return true;
+      var w = "";
+      try {
+        w = (typeof TaskCenter !== "undefined" && TaskCenter.isAvailable())
+          ? String(TaskCenter.workerUrl || "")
+          : String(Store.getR2WorkerUrl() || "");
+      } catch (e0) { w = ""; }
+      w = w.trim().replace(/\/$/, "");
+      if (w && u.indexOf(w) === 0) return true;
+      return false;
+    } catch (e) { return true; }   /* 判不出来就当已转存，别乱下载 */
+  }
+
+  /* done / running / queued / idle / na（非视频） */
+  function stateOf(t) {
+    try {
+      if (!isVideo(t)) return "na";
+      if (isArchived(t)) return "done";
+      if (curId && t.id && curId === t.id) return "running";
+      for (var i = 0; i < q.length; i++) if (q[i].id === t.id) return "queued";
+      return "idle";
+    } catch (e) { return "na"; }
+  }
+
+  /* ── 空闲启动：优先 requestIdleCallback（超时兜底），否则退化为 setTimeout ── */
+  function idle(fn) {
+    try {
+      if (window.requestIdleCallback) return window.requestIdleCallback(fn, { timeout: IDLE_TIMEOUT });
+    } catch (e) {}
+    return setTimeout(fn, 3000);
+  }
+  function schedulePump() {
+    if (pumpScheduled) return;
+    pumpScheduled = true;
+    idle(function () { pumpScheduled = false; pump(); });
+  }
+
+  function pump() {
+    if (curId) return;   /* 单并发闸门②：已在跑就不开第二条
+                            ⚠ 「单并发」是**三重保证**，抓红实测过：只破这一道仍然串行 ——
+                              ① `schedulePump` 的 `pumpScheduled` 保证同一时刻只有一个 idle 回调在排队；
+                              ② 本行；
+                              ③ 跑完后的 GAP 让路间隔。
+                            构造并发坏例时必须三处一起破，否则坏例失效（= 假抓红，铁规矩 88）。 */
+    if (!q.length) return;
+    var gap = GAP - (Date.now() - lastAt);
+    if (gap > 0) { setTimeout(schedulePump, gap); return; }   /* 让路间隔没到，稍后再来 */
+    var item = q.shift();
+    curId = item.id;
+    fire();
+    var finish = function () {
+      curId = null;
+      lastAt = Date.now();
+      fire();
+      if (q.length) schedulePump();
+    };
+    try {
+      var p = UI._archiveResult(item.task);   /* ★ 只在回调里访问 UI（见文件头 TDZ 说明） */
+      if (p && typeof p.then === "function") { p.then(finish, finish); } else { finish(); }
+    } catch (e) { finish(); }
+  }
+
+  /* 入队（生成完成时调用）—— 幂等，已归档/已在队里都会直接返回 */
+  function schedule(task) {
+    try {
+      if (!isVideo(task) || isArchived(task)) return false;
+      for (var i = 0; i < q.length; i++) if (q[i].id === task.id) return false;
+      q.push({ id: task.id, task: task });
+      fire();
+      schedulePump();
+      return true;
+    } catch (e) { return false; }
+  }
+
+  /* 插队（用户点开时调用）—— 不在队里就现加，并清掉让路间隔（点开时本来就要下载） */
+  function open(task) {
+    try {
+      if (!isVideo(task) || isArchived(task)) return false;
+      var found = false;
+      for (var i = 0; i < q.length; i++) {
+        if (q[i].id === task.id) { q.unshift(q.splice(i, 1)[0]); found = true; break; }
+      }
+      if (!found) q.unshift({ id: task.id, task: task });
+      lastAt = 0;
+      fire();
+      schedulePump();
+      return true;
+    } catch (e) { return false; }
+  }
+
+  return {
+    schedule: schedule,
+    open: open,
+    stateOf: stateOf,
+    isArchived: isArchived,
+    notify: fire,
+    onChange: function (fn) { try { listeners.push(fn); } catch (e) {} },
+    /* 诊断用（验收脚本读它） */
+    _debug: function () { return { queued: q.length, curId: curId, lastAt: lastAt }; }
+  };
+})();
+
+/* ══ R84 本地工作目录（模块源码见 studio/_r84_local.js）══ */
+/* ══════════════════════════════════════════════════════════════════════════════
+   R84 · 本地工作目录（File System Access API）
+   ──────────────────────────────────────────────────────────────────────────────
+   修：「网站和本地路径绑定…我把本地路径改成同步盘 以后是不是都是秒加载」
+       「本地带宽可以忽略了，本来也是要加载到缓存里的」
+
+   设计（本地 = 热点缓存 · R2 = 权威副本）：
+     · 授权：用户选一次目录 → 句柄存 **原生 IndexedDB**（不用 Dexie —— 它走 CDN，国内慢时会拖垮这个功能）
+     · 写入：结果**转存 R2 时顺手写本地** —— 那时 blob 已在手，**零额外网络**
+     · 读取：`hydrate()` 把 DOM 里的 http 图片/视频换成本地 blob: ⇒ 本会话内秒开
+     · 降级：非 Chromium / 未授权 / 目录被移动 ⇒ **全部静默回落**现有链路，不报错
+
+   ⚠ 三条边界（浏览器限制，非偷懒）：
+     ① 仅 Chromium 系桌面版有 `showDirectoryPicker`（手机 / Firefox / Safari 没有）
+     ② 授权需要用户手势；刷新后句柄还在，但**权限可能需要重新点一次**（`queryPermission` 会返回 prompt）
+     ③ 不能静默写 —— 所以第一次必须由用户点按钮
+   ══════════════════════════════════════════════════════════════════════════════ */
+(function () {
+  var DB = 'w5local', STORE = 'kv', KEY = 'dir';
+  var S = { handle: null, map: {}, ready: false, needGesture: false, error: '', count: 0 };
+
+  function idb() {
+    return new Promise(function (res, rej) {
+      var r = indexedDB.open(DB, 1);
+      r.onupgradeneeded = function () { try { r.result.createObjectStore(STORE); } catch (e) {} };
+      r.onsuccess = function () { res(r.result); };
+      r.onerror = function () { rej(r.error); };
+    });
+  }
+  function kvGet(k) {
+    return idb().then(function (d) {
+      return new Promise(function (res) {
+        var t = d.transaction(STORE, 'readonly').objectStore(STORE).get(k);
+        t.onsuccess = function () { res(t.result); };
+        t.onerror = function () { res(null); };
+      });
+    }).catch(function () { return null; });
+  }
+  function kvSet(k, v) {
+    return idb().then(function (d) {
+      return new Promise(function (res) {
+        var t = d.transaction(STORE, 'readwrite').objectStore(STORE).put(v, k);
+        t.onsuccess = function () { res(true); };
+        t.onerror = function () { res(false); };
+      });
+    }).catch(function () { return false; });
+  }
+
+  function supported() { return typeof window.showDirectoryPicker === 'function'; }
+
+  /* 从 URL 取文件名（R2 key 最后一段）；取不到或不像媒体名 ⇒ 返回空串 */
+  function nameOf(u) {
+    try {
+      var s = String(u || '').split('?')[0].split('#')[0];
+      var seg = s.split('/').pop() || '';
+      seg = decodeURIComponent(seg);
+      return /\.(png|jpe?g|webp|gif|mp4|webm|mov|mp3|wav)$/i.test(seg) ? seg : '';
+    } catch (e) { return ''; }
+  }
+
+  async function buildMap() {
+    if (!S.handle) return 0;
+    var m = {};
+    try {
+      for await (var ent of S.handle.values()) {
+        if (ent.kind === 'file') m[ent.name] = ent;
+      }
+      S.map = m;
+      S.count = Object.keys(m).length;
+      S.ready = true;
+    } catch (e) { S.error = String(e).slice(0, 80); }
+    return S.count;
+  }
+
+  async function pick() {
+    if (!supported()) return { ok: false, msg: '此浏览器不支持本地目录（需 Chrome / Edge 桌面版）' };
+    try {
+      var h = await window.showDirectoryPicker({ id: 'w5-work', mode: 'readwrite' });
+      var perm = await h.requestPermission({ mode: 'readwrite' });
+      if (perm !== 'granted') return { ok: false, msg: '未获得读写权限' };
+      S.handle = h; S.needGesture = false;
+      await kvSet(KEY, h);
+      var n = await buildMap();
+      return { ok: true, msg: '已绑定「' + h.name + '」· 目录内已有 ' + n + ' 个文件' };
+    } catch (e) {
+      if (String(e && e.name) === 'AbortError') return { ok: false, msg: '已取消' };
+      return { ok: false, msg: String((e && e.message) || e).slice(0, 110) };
+    }
+  }
+
+  /* 启动时尝试恢复（不需要手势的那一半）；权限若需重授，标记 needGesture 交给 UI 提示 */
+  async function restore() {
+    if (!supported()) return false;
+    var h = await kvGet(KEY);
+    if (!h) return false;
+    try {
+      var p = await h.queryPermission({ mode: 'readwrite' });
+      S.handle = h;
+      if (p !== 'granted') { S.needGesture = true; return false; }
+      await buildMap();
+      return true;
+    } catch (e) { return false; }
+  }
+
+  /* ★ 写入：转存 R2 时 blob 已在手，这里零额外网络 */
+  async function save(name, blob) {
+    if (!S.handle || !name || !blob) return false;
+    try {
+      var fh = await S.handle.getFileHandle(name, { create: true });
+      var w = await fh.createWritable();
+      await w.write(blob);
+      await w.close();
+      S.map[name] = fh;
+      S.count = Object.keys(S.map).length;
+      return true;
+    } catch (e) { S.error = String(e).slice(0, 80); return false; }
+  }
+
+  /* 把 DOM 里能命中本地的 http 图片/视频换成 blob:（本会话秒开）
+     ⚠ 并发策略：只跑一个实例，但**排队**而不是丢弃 —— 早期版本 busy 时直接 return 0，
+       而 MutationObserver 的防抖调用很可能正在跑（页面一直在渲染），
+       于是"新渲染出来的图"这次就被漏掉了。第一版实测命中 0 处就是这么来的。 */
+  var busy = false, pending = false;
+  async function hydrate() {
+    if (!S.ready) return 0;
+    if (busy) { pending = true; return 0; }
+    busy = true;
+    var hit = 0;
+    try {
+      var els = document.querySelectorAll('img[src^="http"], video[src^="http"]');
+      for (var i = 0; i < els.length; i++) {
+        var el = els[i];
+        if (el.dataset && el.dataset.w5local === '1') continue;
+        var n = nameOf(el.getAttribute('src') || '');
+        if (!n || !S.map[n]) continue;
+        try {
+          var f = await S.map[n].getFile();
+          el.src = URL.createObjectURL(f);
+          if (el.dataset) el.dataset.w5local = '1';
+          hit++;
+        } catch (e) {}
+      }
+    } finally {
+      busy = false;
+      if (pending) { pending = false; setTimeout(function () { try { hydrate(); } catch (e) {} }, 0); }
+    }
+    return hit;
+  }
+
+  async function forget() {
+    S.handle = null; S.map = {}; S.ready = false; S.count = 0;
+    await kvSet(KEY, null);
+    return true;
+  }
+
+  window.__r84Local = {
+    S: S, supported: supported, nameOf: nameOf, pick: pick, restore: restore,
+    save: save, buildMap: buildMap, hydrate: hydrate, forget: forget,
+    status: function () { return { supported: supported(), ready: S.ready, count: S.count,
+                                   name: S.handle ? S.handle.name : '', needGesture: S.needGesture,
+                                   error: S.error }; }
+  };
+})();
+
+(function () {
+  var L = window.__r84Local; if (!L) return;
+  /* 顶部按钮排插一个入口（复用既有 .icon-btn 样式，零 HTML 改动） */
+  function mountBtn() {
+    if (document.getElementById("r84LocalBtn")) return;
+    var anchor = document.getElementById("themeToggleBtn");
+    if (!anchor || !anchor.parentElement) return;
+    var b = document.createElement("button");
+    b.className = anchor.className;
+    b.id = "r84LocalBtn";
+    b.title = "本地工作目录";
+    b.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+    b.addEventListener("click", async function () {
+      if (!L.supported()) { try { Toast.warning("此浏览器不支持本地目录（需 Chrome / Edge 桌面版）"); } catch (e) {} return; }
+      var r = await L.pick();
+      if (r.ok) { try { Toast.success(r.msg); } catch (e) {} try { L.hydrate(); } catch (e) {} }
+      else { try { Toast.warning(r.msg); } catch (e) {} }
+    });
+    anchor.parentElement.appendChild(b);
+  }
+  try { mountBtn(); setTimeout(mountBtn, 1500); } catch (e) {}
+  /* 启动恢复（无需手势的那一半）；权限需重授时只标记，不打扰） */
+  try { L.restore().then(function (ok) { if (ok) L.hydrate(); }); } catch (e) {}
+  /* 渲染后自动 hydrate（防抖） */
+  try {
+    var t = null;
+    new MutationObserver(function () {
+      if (t) clearTimeout(t);
+      t = setTimeout(function () { try { L.hydrate(); } catch (e) {} }, 400);
+    }).observe(document.body, { childList: true, subtree: true });
+  } catch (e) {}
+})();
+
+/* ★ R80-D：墓碑 —— 「本地删掉的历史」要能真的从云端消失。
+   实现用**推送快照对比**：每次推送时记住这次推上去的 id 列表，下次推送比一比，少掉的就是被删的。
+   为什么不包装 Store 的删除方法（第一版做法，失败）：本段代码位于 Store 声明之前，
+   此刻访问 `typeof Store` 对 TDZ 中的 const/class **会抛 ReferenceError**（typeof 只对"未声明的变量"安全），
+   整段被 catch 吞掉；就算把包装延迟到 setTimeout，也还依赖「方法确实挂在 Store 实例上」
+   （实测 deleteHistory 就不在，只有 clearHistory / deleteHistoryMany 在）。快照法不碰 Store 内部，稳得多。 */
+window.__r80Tomb = (function () {
+var KEY = "sc_hist_tomb";
+var SNAP = "sc_hist_snap";
+var read = function (k, d) { try { var a = JSON.parse(localStorage.getItem(k) || "null"); return a == null ? d : a; } catch (e) { return d; } };
+var write = function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+var load = function () { var a = read(KEY, []); return Array.isArray(a) ? a : []; };
+var add = function (ids) {
+try {
+var m = {};
+load().forEach(function (x) { var id = (x && x.id) || x; if (id) m[String(id)] = { id: String(id), at: (x && x.at) || Date.now() }; });
+(ids || []).forEach(function (id) { if (id) m[String(id)] = { id: String(id), at: Date.now() }; });
+write(KEY, Object.keys(m).map(function (k) { return m[k]; }));
+} catch (e) {}
+};
+/* 用本次推送的 id 列表刷新墓碑：与上次快照比，少掉的即被删 */
+var sync = function (currentIds) {
+try {
+var prev = read(SNAP, null);
+write(SNAP, currentIds || []);
+if (!Array.isArray(prev)) return;
+var now = {};
+(currentIds || []).forEach(function (id) { now[String(id)] = 1; });
+var gone = prev.filter(function (id) { return !now[String(id)]; });
+if (gone.length) add(gone);
+} catch (e) {}
+};
+return { load: load, add: add, sync: sync };
+})();
+
+/* ★ R80-C1/C2：输入框自动聚焦（仅鼠标设备）+ 有草稿时离开提醒。
+   · 聚焦只在 `pointer:fine` 时做 —— 触摸设备突然弹键盘是灾难。
+   · 用轮询而不是 DOMContentLoaded：输入框是懒渲染的，早于它就 focus 会落空。 */
+try {
+(function () {
+var PROMPT_SEL = ".prompt-module textarea, .param-group textarea, [data-key=\"prompt\"], [data-key=\"text\"]";
+var fine = true;
+try { fine = !(window.matchMedia && matchMedia("(pointer:coarse)").matches); } catch (e) {}
+if (fine) {
+var tries = 0;
+var t = setInterval(function () {
+tries++;
+var el = document.querySelector(PROMPT_SEL);
+if (el && el.offsetParent !== null) {
+clearInterval(t);
+try { el.focus({ preventScroll: true }); } catch (e) { try { el.focus(); } catch (e2) {} }
+} else if (tries > 25) { clearInterval(t); }
+}, 200);
+}
+window.addEventListener("beforeunload", function (e) {
+try {
+var el = document.querySelector(PROMPT_SEL);
+if (!el) return;
+var v = el.value != null ? el.value : el.textContent;
+if (v && v.trim().length > 0) { e.preventDefault(); e.returnValue = ""; }
+} catch (err) {}
+});
+})();
+} catch (e) {}
+try {
+window.addEventListener("pagehide", _r79FlushHistory);
+document.addEventListener("visibilitychange", function () {
+if (document.visibilityState === "hidden") _r79FlushHistory();
+});
+} catch (_e) {}
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, m => ({
 "&": "&amp;",
@@ -8766,44 +9231,6 @@ _generating: false,
 _preloadCache: new Map,
 init() {
 KeyVault.autoUnlock();
-/* ★ R79-B：离开页面 / 切后台时立即推送。此前只有 30 秒定时器（期间再生成会重置），
-   关页面根本不推 ⇒ 「生完就关」= 从未同步。 */
-var _r79FlushHistory = function () {
-try {
-if (typeof Store === "undefined" || !Store.getSync()) return;
-var c = null;
-try {
-if (typeof TaskCenter !== "undefined" && TaskCenter.isAvailable()) {
-c = { base: TaskCenter.workerUrl, token: TaskCenter.token };
-} else {
-var u = (Store.getR2WorkerUrl() || "").trim().replace(/\/$/, "");
-var t = (Store.getR2AuthToken() || "").trim();
-if (u && t) c = { base: u, token: t };
-}
-} catch (_e) { c = null; }
-if (!c) return;
-var list = (Store.getHistory() || []).filter(function (h) {
-return String((h && h.result && h.result.url) || "").indexOf("blob:") !== 0;
-}).slice(0, 500);
-var body = JSON.stringify(list);
-var url = c.base + "/userdata?key=history&token=" + encodeURIComponent(c.token);
-if (navigator.sendBeacon) {
-/* sendBeacon 只能 POST、不能带自定义头 ⇒ 用 text/plain 避开预检；Worker 侧已加 POST 支持（R79-D） */
-navigator.sendBeacon(url, new Blob([body], { type: "text/plain" }));
-} else {
-fetch(url, { method: "PUT", keepalive: true, headers: { "Content-Type": "application/json" }, body: body });
-}
-try { localStorage.setItem("sc_hist_push_at", String(Date.now())); } catch (_e) {}
-} catch (_e) {}
-};
-/* 挂到 window —— 便于诊断，也让验收脚本能直接验证这段逻辑 */
-window.__r79FlushHistory = _r79FlushHistory;
-try {
-window.addEventListener("pagehide", _r79FlushHistory);
-document.addEventListener("visibilitychange", function () {
-if (document.visibilityState === "hidden") _r79FlushHistory();
-});
-} catch (_e) {}
 this._updateVaultStatus();
 this._bindSwipeNav();
 setTimeout(() => VaultSync.bootCheck(), 2200);
@@ -8913,6 +9340,20 @@ headers: {
 },
 body: JSON.stringify(payload)
 });
+/* ★ R80-D2：墓碑单独推（独立 key）—— 即使线上 Worker 还是旧版（只认数组），history 也照常同步 */
+try {
+if (window.__r80Tomb) window.__r80Tomb.sync((payload || []).map(function (h) { return h && h.id; }).filter(Boolean));
+const _tb = (window.__r80Tomb ? window.__r80Tomb.load() : []);
+if (_tb.length) {
+await fetch(c.base + "/userdata?key=historytomb&token=" + encodeURIComponent(c.token), {
+method: "PUT",
+headers: {
+"Content-Type": "application/json"
+},
+body: JSON.stringify(_tb)
+});
+}
+} catch (_e) {}
 try { localStorage.setItem("sc_hist_push_at", String(Date.now())); } catch (_e) {}
 } catch (e) {}
 },
@@ -11998,15 +12439,18 @@ if (_apiDef67) {
   const _uAll67 = String(v.body.urls || "").split(",").map(function (x) { return x.trim(); }).filter(function (x) { return /^https?:\/\//.test(x); });
   if (_uAll67.length) {
     const _ds = [];
-    for (const _u of _uAll67.slice(0, 3)) { try { _ds.push(await _H67.blobUrlToDataURL(_u)); } catch (e) { console.info("[W5-route]", JSON.stringify({ phase: "apiyi-ref-fail", url: String(_u).slice(0, 80), ts: Date.now() })); } }
-    if (_ds.length) { _ex67.refDataUrls = _ds; if (_uAll67.length > 3) console.info("[W5-route]", JSON.stringify({ phase: "ref-cap", got: _uAll67.length, send: 3, ts: Date.now() })); }
+    for (const _u of _uAll67.slice(1, 4)) {   /* R82：第 1 张已作源图 image.png 发过，参考图从第 2 张起（原 slice(0,3) 会让图 1 重复发送） */ try { _ds.push(await _H67.blobUrlToDataURL(_u)); } catch (e) { console.info("[W5-route]", JSON.stringify({ phase: "apiyi-ref-fail", url: String(_u).slice(0, 80), ts: Date.now() })); } }
+    if (_ds.length) { _ex67.refDataUrls = _ds; if (_uAll67.length > 4) console.info("[W5-route]", JSON.stringify({ phase: "ref-cap", got: _uAll67.length, send: 3, ts: Date.now() })); }
   }
   /* 源图 / 遮罩：body.urls 首张即源图（csv 序 = 用户添加序），body.mask 为单图 URL（output:"single"） */
   const _maskUrl67 = String(v.body.mask || "").trim();
   let _img67 = null, _mask67 = null;
   try { if (_uAll67[0]) _img67 = await _H67.blobUrlToDataURL(_uAll67[0]); } catch (e) {}
   try { if (_maskUrl67 && /^https?:\/\//.test(_maskUrl67)) _mask67 = await _H67.blobUrlToDataURL(_maskUrl67); } catch (e) {}
-  const _prompt67 = String(v.body.prompt || v.body.text || "");
+  let _prompt67 = String(v.body.prompt || v.body.text || "");
+  /* R82：参考图存在时补一句事实声明（与编辑器侧同口径）。
+     有蒙版 ⇒ 说清「只改第 1 张蒙版区域」；无蒙版 ⇒ 不能说蒙版（会指向不存在的区域）。 */
+  if (_ex67.refDataUrls && _ex67.refDataUrls.length) _prompt67 = (_prompt67 ? _prompt67 + "；" : "") + (_mask67 ? "第 1 张为待修改的原图，其余为参考图，只修改第 1 张上蒙版圈出的区域" : "第 1 张为主图，其余为参考图，请综合参考其内容与风格");
   const _isVideo67 = String(_apiDef67.type || "") === "video";
   console.info("[W5-route]", JSON.stringify({ phase: "apiyi-host", model: _apiDef67.modelId, type: _apiDef67.type || "image", hasImg: !!_img67, hasMask: !!_mask67, refs: (_ex67.refDataUrls || []).length, ts: Date.now() }));
   /* 四路分流：与 bitmapHandler 的 apiDef 段**同口径**（video / gemini 原生 / edits(mask) / generations） */
@@ -12114,7 +12558,7 @@ if (e && e.code === "StageFailed" && location.protocol === "file:") {
 const hint = document.getElementById("fileModeHint");
 if (hint) {
 try {
-sessionStorage.removeItem("wb_filemode_hint_dismissed");
+try { localStorage.removeItem("wb_filemode_hint_dismissed"); } catch (_) {} try { sessionStorage.removeItem("wb_filemode_hint_dismissed"); } catch (_) {}
 } catch (_) {}
 hint.hidden = false;
 }
@@ -12320,6 +12764,11 @@ return null;
 async _preloadResult(task) {
 const url = task.result?.url;
 if (!url || this._preloadCache.has(url)) return;
+/* ★ R86：视频**不做全量预载、也不在此处即时转存** ——
+   ① _preloadCache 只服务「原图预览秒开」，对视频没意义；
+   ② 全量 fetch 几十 MB 再上传 R2，会当场抢用户带宽。
+   列表/历史只用缩略图，点开走浏览器原生加载 ⇒ 转存改由 __r86Archive 空闲串行调度。 */
+if (task.model?.type === "video") { try { window.__r86Archive.schedule(task); } catch (_e86) {} return; }
 try {
 const res = await fetch(url);
 if (!res.ok) throw new Error("HTTP " + res.status); /* IMPL-104：过期 URL 的 404 错误页不入缓存/不触发转存 */
@@ -12400,11 +12849,25 @@ el.src = newUrl;
 this._renderTaskList();
 if ($("#historySidebar")?.classList.contains("show")) this.renderHistory();
 this._scheduleHistorySync();
+/* ★ R86：转存完成 ⇒ 通知调度器（结果条上的「转存中」要变回常态） */
+try { window.__r86Archive.notify(); } catch (_e86) {}
 };
 try {
+/* ★ R86-⑦：**先复用预载缓存** —— `_preloadResult` 刚为同一 URL 拉过一份 blob（图片路径必然如此），
+   直接用可省掉第二次完整下载。实测：改前图片 URL 被 fetch 两次（预载一次 + 转存一次），
+   对 1~4MB 的原图就是白下一遍。缓存没有（视频走的就是这条）才真正走网络。 */
+let blob = null;
+try {
+const _pc = this._preloadCache && this._preloadCache.get(url);
+if (_pc && _pc.blob && _pc.blob.size > 0) blob = _pc.blob;
+} catch (_e86c) {}
+if (!blob) {
 const res = await fetch(url);
 if (!res.ok) throw new Error("HTTP " + res.status); /* IMPL-104：404 错误页不得被上传 R2 并覆盖历史 url */
-const blob = await res.blob();
+blob = await res.blob();
+}
+/* ★ R84：blob 已在手 ⇒ 顺手落本地目录（零额外网络）。未绑定/失败都静默，不影响转存。 */
+try { if (window.__r84Local) window.__r84Local.save(fileName, blob); } catch (_e84) {}
 if (blob && /^text\/html/i.test(blob.type || "")) throw new Error("HTML 错误页而非媒体文件"); /* IMPL-104 */
 /* ★ R74-2：blob: 的 URL 里没有扩展名 ⇒ 上面按 URL 推断一律得 png；MIME 以 blob.type 为准纠正回来 */
 let _upName = fileName;
@@ -12811,6 +13274,8 @@ strip.addEventListener("touchmove", () => { if (lpTimer) { clearTimeout(lpTimer)
 },
 _showSingleTask(task) {
 if (!task) return;
+/* ★ R86：点开视频 ⇒ 插队立即转存（此时本来也要下载，不额外占带宽） */
+try { window.__r86Archive.open(task); } catch (_e86) {}
 const arr = this.state.singleList || [];
 const si = arr.findIndex(t => t.id === task.id);
 if (si >= 0) this.state.singleIdx = si;
@@ -13202,7 +13667,16 @@ mediaHtml = `<div class="strip-icon-only strip-mini-spin"><span class="task-spin
 } else if (task.status === "failed" || task.status === "timeout") {
 mediaHtml = `<div class="strip-icon-only is-failed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg></div>` + badge(bWarn);
 } else if (type === "video") {
-mediaHtml = (thumbUrl ? `<img src="${esc(thumbUrl)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : `<video src="${esc(url)}" muted preload="metadata" playsinline></video>`) + badge(bPlay);
+/* ★ R86：转存状态角标 —— 未转存 / 待转存 / 转存中。
+   「已转存」刻意不显示（常态即此，多一个角标是噪声）；走 __r86Archive.stateOf 的单一真值源。 */
+let _archBadge = "";
+try {
+const _aSt = window.__r86Archive.stateOf(task);
+if (_aSt === "running") _archBadge = '<span class="strip-arch-badge is-running" aria-hidden="true">转存中</span>';
+else if (_aSt === "queued") _archBadge = '<span class="strip-arch-badge is-queued" aria-hidden="true">待转存</span>';
+else if (_aSt === "idle") _archBadge = '<span class="strip-arch-badge is-idle" aria-hidden="true">未转存</span>';
+} catch (_e86) {}
+mediaHtml = (thumbUrl ? `<img src="${esc(thumbUrl)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : `<video src="${esc(url)}" muted preload="metadata" playsinline></video>`) + badge(bPlay) + _archBadge;
 } else if (type === "audio") {
 mediaHtml = `<div class="strip-icon-only is-audio"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect class="eqb e1" x="2.2" y="8.6" width="2.5" height="6.8" rx="1.25"/><rect class="eqb e2" x="6.5" y="5.2" width="2.5" height="13.6" rx="1.25"/><rect class="eqb e3" x="10.8" y="3.4" width="2.5" height="17.2" rx="1.25"/><rect class="eqb e4" x="15.1" y="6.4" width="2.5" height="11.2" rx="1.25"/><rect class="eqb e5" x="19.4" y="9.4" width="2.5" height="5.2" rx="1.25"/></svg></div>` + badge(bWave);
 } else if (url) {
@@ -15096,7 +15570,7 @@ if (!el) return;
 const tcOk = typeof TaskCenter !== "undefined" && TaskCenter.isAvailable();
 const c = this._histCloudBase();/* IMPL-125 B'：状态行三态——TC / R2 直连 / 皆无 */
 if (!c) {
-el.textContent = "未配置云端同步——解锁保险箱后即自动同步最近结果；也可在「编辑密钥」添加 TASK_CENTER_URL / TASK_CENTER_TOKEN 或 R2_WORKER_URL / R2_AUTH_TOKEN。";
+el.textContent = "未配置云端同步 · 解锁保险箱后自动同步（或在「编辑密钥」填 R2 Worker 地址与令牌）"; /* ★ R87：原 105 字段落压到一行 —— 11px 小字里它占四行，放行后太挤 */
 el.dataset.tone = "warn";
 el.style.display = "";
 return;
@@ -16243,7 +16717,8 @@ if (!out) throw new Error("识图返回为空（模型 " + vm + "）");
 /* ★ R19：反推也是一笔钱（用户点一次 = 一次 LLM 调用）—— 同一套 calcEstimate 报账。
    反推用的模型多是 dashscope 系（Store.getSkillVisionModel）⇒ 费率未知 ⇒ 显示 token 数。 */
 try {
-const _p = _pr19m ? SKILL_MODEL_PRESETS.find(function(m) { return m.id === _pr19m; }) : null;
+const _p0 = _pr19m ? SKILL_MODEL_PRESETS.find(function(m) { return m.id === _pr19m; }) : null;
+const _p = (_p0 && _p0.billing) ? _p0 : (_pr19m && LLM_RATE_TABLE[_pr19m] ? { id: _pr19m, billing: LLM_RATE_TABLE[_pr19m] } : _p0);
 const _i = _pr19u ? (_pr19u.prompt_tokens != null ? _pr19u.prompt_tokens : _pr19u.input_tokens) : null;
 const _ot = _pr19u ? (_pr19u.completion_tokens != null ? _pr19u.completion_tokens : _pr19u.output_tokens) : null;
 let _txt = "";
@@ -16336,7 +16811,8 @@ tag: o.tag ? String(o.tag) : "studio-skill"
    · 费率未知但有用量 ⇒ 退一档显示 token 数（上游真值，不是估算）；
    · 无用量 ⇒ 静默不加（同 amount:null 口径，不编数）。 */
 try {
-const _p = _r19m ? SKILL_MODEL_PRESETS.find(function(m) { return m.id === _r19m; }) : null;
+const _p0 = _r19m ? SKILL_MODEL_PRESETS.find(function(m) { return m.id === _r19m; }) : null;
+const _p = (_p0 && _p0.billing) ? _p0 : (_r19m && LLM_RATE_TABLE[_r19m] ? { id: _r19m, billing: LLM_RATE_TABLE[_r19m] } : _p0);
 const _i = _r19u ? (_r19u.prompt_tokens != null ? _r19u.prompt_tokens : _r19u.input_tokens) : null;
 const _ot = _r19u ? (_r19u.completion_tokens != null ? _r19u.completion_tokens : _r19u.output_tokens) : null;
 let _txt = "";
@@ -16429,7 +16905,8 @@ const rds = op13.urls.map(function(u) { return u && u.dataUrl; }).filter(Boolean
 if (rds.length) { exA.refDataUrls = rds.slice(0, 3); if (rds.length > 3) console.info("[W5-route]", JSON.stringify({ phase: "ref-cap", got: rds.length, send: 3, ts: Date.now() })); }
 }
 if (maskData) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + "仅修改蒙版区域内的内容，蒙版外严格保持原样";
-if (exA.refDataUrls && exA.refDataUrls.length) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + "第 1 张为待修改的原图，其余为参考图，只修改第 1 张上蒙版圈出的区域";
+/* R82：无蒙版时不能说「只修改蒙版区域」—— 那是把模型指向一个不存在的区域 */
+if (exA.refDataUrls && exA.refDataUrls.length) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + (maskData ? "第 1 张为待修改的原图，其余为参考图，只修改第 1 张上蒙版圈出的区域" : "第 1 张为主图，其余为参考图，请综合参考其内容与风格");
 /* ★ R17①（修采纳）：等急了再点一次 = **双倍钱**（官方：断连不取消上游、照样计费）⇒ 明确劝阻。 */
 studioBusy((mm ? mm.label : "处理") + " 进行中… 已提交，别重复点击");
 try {
@@ -16445,7 +16922,7 @@ const rA = _isVideo
   ? await apiyiVideo(finalPrompt, apiDef, exA, imgData, exA.refDataUrls)
   : (apiDef.gemini
   ? await apiyiGemini(finalPrompt, apiDef, exA, imgData, exA.refDataUrls)
-  : (maskData ? await apiyiEdits(imgData, maskData, finalPrompt, apiDef, exA) : await apiyiImages(imgData, finalPrompt, apiDef, exA)));
+  : ((maskData || ((exA.refDataUrls && exA.refDataUrls.length) && imgData)) ? await apiyiEdits(imgData, maskData, finalPrompt, apiDef, exA) : await apiyiImages(imgData, finalPrompt, apiDef, exA)));   /* R82：有参考图也走 edits —— 否则 apiyiImages 会把参考图整个丢掉 */
 rA.name = actName(e.action);
 /* ★ R5：把上游回的用量交给**既有的** calcEstimate（不另写算钱的代码），结果只取一个「≈¥x.xx」。
    ⚠ calcEstimate 对"没有用量 / 费率未知"会返回 amount:null —— 那时**什么都不加**（不显示 0 元、不编数）。 */
@@ -16507,7 +16984,8 @@ if (rds.length > 3) console.info("[W5-route]", JSON.stringify({ phase: "ref-cap"
 if (maskData) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + "仅修改蒙版区域内的内容，蒙版外严格保持原样"; /* 4.3：input_fidelity 速创不透传，保真唯一硬手段=mask+约束句 */
 /* ★ R15.3：参考图存在时补一句**事实声明** —— 源图与参考图同处 urls 一个数组，不说清模型只能靠蒙版猜。
    ⚠ 与第 16521 行那条「仅修改蒙版区域内的内容…」同一性质：只说事实，不写风格。 */
-if (ex.refDataUrls && ex.refDataUrls.length) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + "第 1 张为待修改的原图，其余为参考图，只修改第 1 张上蒙版圈出的区域";
+/* R82：同上 —— 无蒙版时改说「主图/参考图」，不提蒙版 */
+if (ex.refDataUrls && ex.refDataUrls.length) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + (maskData ? "第 1 张为待修改的原图，其余为参考图，只修改第 1 张上蒙版圈出的区域" : "第 1 张为主图，其余为参考图，请综合参考其内容与风格");
 let economized = false;
 const dims = await imageDimsOf(imgData);
 if (!e.sourceImage) e.sourceImage = { width: dims.w, height: dims.h }; /* H2：源图像素真值回填（编辑器未带时宿主解码补齐；naturalWidth 级别真值） */
