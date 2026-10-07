@@ -5030,12 +5030,19 @@ const ta = document.createElement("textarea");
 ta.value = String(text);
 ta.setAttribute("readonly", "");
 ta.style.position = "fixed";
-ta.style.opacity = "0";
+ta.style.top = "0";
+ta.style.left = "-9999px";
+ta.style.opacity = "0.01";
 document.body.appendChild(ta);
+ta.focus();
 ta.select();
+try { ta.setSelectionRange(0, ta.value.length); } catch (_e88) {}
 const ok = document.execCommand("copy");
+/* ★ R88-b：只采信「选中范围确实覆盖全文」的情况 —— execCommand 返回 true 不代表真写进去了 */
+const _selLen88 = (function () { try { return String(window.getSelection() || "").length; } catch (_e88) { return 0; } })();
 ta.remove();
-return ok;
+if (ok && _selLen88 >= String(text).length) return true;
+return false;
 } catch {
 return false;
 }
@@ -7839,7 +7846,11 @@ return true;
 async copy(task) {
 const text = this.build(task);
 const ok = await copy(text);
-if (ok) Toast.success("工作流已复制到剪贴板"); else Toast.error("复制失败");
+/* ★ R88-c：失败时不再只弹一句「复制失败」就没下文 —— 打开手动复制面板，让用户一定拿得到内容 */
+if (ok) { Toast.success("工作流已复制到剪贴板"); } else {
+try { Toast.warning("浏览器拦下了自动复制，已打开手动复制"); } catch (_e88) {}
+try { UI._showManualCopy(text); } catch (_e88) {}
+}
 return ok;
 }
 };
@@ -15639,6 +15650,16 @@ _closeModal() {
 $("#modalOverlay").classList.remove("show");
 $("#modalOverlay .modal-content")?.classList.remove("modal-wide");
 $("#modalOverlay .modal-content")?.classList.remove("stats-modal-content");
+},
+/* ★ R88-d：手动复制兜底 —— 自动复制被浏览器拦下时，把内容原样摆出来让用户自己 Ctrl/⌘+C。
+   内容会进 innerHTML ⇒ 必须逃 &<>（引号在 textarea 文本节点里无害，但一并逃更稳）。 */
+_showManualCopy(text) {
+const _esc88 = (v) => String(v == null ? "" : v).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+this._showModal("手动复制", '<div style="font-size:12px;opacity:.72;margin-bottom:8px">浏览器拦下了自动复制。下面已全选，按 <b>Ctrl/⌘ + C</b> 即可拿走。</div><textarea readonly id="manualCopyArea" style="width:100%;height:280px;font:12px/1.55 ui-monospace,Menlo,Consolas,monospace;resize:vertical;white-space:pre">' + _esc88(text) + "</textarea>", [ { label: "关闭", primary: true, fn: () => this._closeModal() } ]);
+setTimeout(() => {
+const ta = document.getElementById("manualCopyArea");
+if (ta) { try { ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length); } catch (_e88) {} }
+}, 60);
 },
 _saveFormToCache() {
 if (!this.state.model) return;
