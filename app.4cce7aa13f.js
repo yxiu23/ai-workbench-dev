@@ -6226,6 +6226,33 @@ function _errText(err) {
   }
   return String(err);
 }
+/* ★★ R9E-APIYI-P1-5（报告 01）：SSE 单块解析**单处收口**。
+   原实现两处（循环内 + 尾部冲洗）各自 try { JSON.parse(payload) … } catch (e) {}，
+   **都只找 choices/usage、不看 j.error** ⇒ 流中途的 error 帧（内容审核拒绝 / 上游转流式错误）
+   被静默吞掉：delta 为空 → 无 onDelta → 循环读完 → 尾部冲洗无内容 → rec(true) **按成功记账**，
+   账本 ok:true、零内容、零错误痕迹（报告称"最难排查的静默失败"）。
+   ⇒ 返回 null = 非 JSON（心跳/注释行，合法忽略）；{error} = 错误帧（**必须上抛**）；否则 = 增量。 */
+function _r9eParseSse(payload) {
+  let j = null;
+  try { j = JSON.parse(payload); } catch (_e) { return null; }
+  if (!j || typeof j !== "object") return null;
+  if (j.error) return { error: j.error };
+  const delta = (j.choices && j.choices[0] && j.choices[0].delta) || {};
+  return { usage: j.usage || null, think: delta.reasoning_content || "", text: delta.content || "" };
+}
+
+/* ★ R9E-FE-P1-3（报告 02）：空 catch **分片治理**的收口工具（分级策略第一步）。
+   用途：把"允许失败但必须留痕"的点从 catch (e) {} 换成 swallow("tag", …)。
+   ⚠ 不是所有空 catch 都该换 —— 一部分是**合法的最佳努力**（Safari 隐私模式下的 localStorage 探测、
+     清理型 destroy、可选缓存）。全量 blanket 改写会刷屏、且无法逐处验证。
+   本批只覆盖**失败会影响用户可见结果**的三类：轮询 / 云同步 / 结果落盘（报告点名的就是这三类）。 */
+function swallow(tag, fn) {
+  try { return fn(); } catch (e) {
+    try { console.warn("[swallow:" + tag + "]", e); } catch (_e2) {}
+    return undefined;
+  }
+}
+
 const Api = {
 _uploadCache: new Map,
 async request(method, path, body, opts = {}) {
@@ -6243,9 +6270,13 @@ headers: {
 ...!isForm ? {
 "Content-Type": "application/json"
 } : {},
+/* ★ R9E-APIYI-P1-6（报告 01）：Worker 代理通道的**上游密钥一律由 Worker 注入**
+   （sf/ds/apiyi 用各自 *_API_KEY，wy 用 SPEEDX_KEY）⇒ 前端**不该**再带自己的速创 key。
+   原来会混发：用户配了速创 key 时，APIYI 图片/视频请求也附带一份无效 Authorization。
+   ⇒ _directReq 显式传 noAuth:true（不是靠"key 为空"侥幸）。 */
 ...(opts.authorization ? {
 Authorization: opts.authorization
-} : key ? {
+} : opts.noAuth ? {} : key ? {
 Authorization: key
 } : {}),
 ...opts.headers || {}
@@ -6345,7 +6376,7 @@ _directReq(method, path, body, opts = {}) {
   if (!w) throw new Error("no_worker_url: 未配置 R2 Worker 地址——直连模型的密钥已收敛到 Worker 变量（前端零密钥），请在 设置→编辑密钥 填入 R2 Worker 地址与 Token");
   const token = Store.getR2AuthToken() || "";
   const url = w + "/media/" + chan + (path.charAt(0) === "/" ? path : "/" + path) + (path.indexOf("?") >= 0 ? "&" : "?") + "token=" + encodeURIComponent(token);
-  return this.request(method, url, body, { skipAuth: true, ...opts });
+  return this.request(method, url, body, { skipAuth: true, noAuth: true, ...opts }); /* ★ R9E-APIYI-P1-6：上游密钥由 Worker 注入，前端不发自己的凭据 */
 },
 async _sfImage(model, body) {
   const payload = { model: model.modelId, prompt: body.prompt || "", image_size: body.image_size || "1024x1024" };
@@ -6587,6 +6618,8 @@ const ct = (res.headers.get("content-type") || "").toLowerCase();
 if (!res.body || ct.includes("application/json")) {
 const j = await res.json().catch(() => null);
 if (onActivity) { try { onActivity(); } catch (e) {} } /* IMPL-157：非流式分支响应到达同样续命 */
+/* ★ R9E-APIYI-P1-5：非流式分支也要认 error —— 否则会报「返回为空」，把用户引去查错方向 */
+if (j && j.error) throw this._llmErr("技能上游错误：" + _errText(j.error), i >= endpoints.length - 1);
 if (j?.usage) usage = j.usage;
 const txt = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content || "";
 if (!txt) throw this._llmErr("技能服务返回为空", i >= endpoints.length - 1);
@@ -6609,29 +6642,28 @@ sbuf = sbuf.slice(nl + 1);
 if (!line.startsWith("data:")) continue;
 const payload = line.slice(5).trim();
 if (payload === "[DONE]") { rec(true); return; }
-try {
-const j = JSON.parse(payload);
-if (j.usage) usage = j.usage;
-const delta = j?.choices?.[0]?.delta || {};
-// 思考模型：reasoning_content 增量 = 思考中信号（只做看门狗续命/提示，不进正文）
-if (delta.reasoning_content && onThink) onThink(delta.reasoning_content);
-const d = delta.content || "";
-if (d && onDelta) onDelta(d);
-} catch (e) {}
+/* ★ R9E-APIYI-P1-5：error 帧**必须上抛**（原来被空 catch 吞掉 ⇒ 误报成功、零内容） */
+const _r9ec = _r9eParseSse(payload);
+if (_r9ec && _r9ec.error) throw this._llmErr("技能上游流式错误：" + _errText(_r9ec.error), i >= endpoints.length - 1);
+if (_r9ec) {
+if (_r9ec.usage) usage = _r9ec.usage;
+if (_r9ec.think && onThink) onThink(_r9ec.think);
+if (_r9ec.text && onDelta) onDelta(_r9ec.text);
+}
 }
 }
 /* IMPL-74（74-c P2-7）：冲洗缓冲区残留的最后事件——上游无尾换行时最后一段 delta 会滞留 sbuf 丢失 */
 if (sbuf.trim().startsWith("data:")) {
 const payload = sbuf.trim().slice(5).trim();
 if (payload === "[DONE]") { rec(true); return; }
-try {
-const j = JSON.parse(payload);
-if (j.usage) usage = j.usage;
-const delta = j?.choices?.[0]?.delta || {};
-if (delta.reasoning_content && onThink) onThink(delta.reasoning_content);
-const d = delta.content || "";
-if (d && onDelta) onDelta(d);
-} catch (e) {}
+/* ★ R9E-APIYI-P1-5：与循环内同口径（原来这里是**第二份拷贝**，同样是空 catch） */
+const _r9ec2 = _r9eParseSse(payload);
+if (_r9ec2 && _r9ec2.error) throw this._llmErr("技能上游流式错误：" + _errText(_r9ec2.error), i >= endpoints.length - 1);
+if (_r9ec2) {
+if (_r9ec2.usage) usage = _r9ec2.usage;
+if (_r9ec2.think && onThink) onThink(_r9ec2.think);
+if (_r9ec2.text && onDelta) onDelta(_r9ec2.text);
+}
 }
 rec(true);
 return;
@@ -8962,6 +8994,7 @@ data: raw
 async _pollJob(jobId, onTick) {
 this._stopPoll();
 this._pollCount = 0;
+this._pollErrs = 0; /* ★ R9E-FE-P1-3：连续网络失败计数（成功即清零） */
 return new Promise((resolve, reject) => {
 this._pollTimer = setInterval(async () => {
 this._pollCount++;
@@ -8975,6 +9008,7 @@ try {
 const data = await this._transport("GetAsyncJobResult", {
 JobId: String(jobId)
 });
+this._pollErrs = 0; /* ★ R9E-FE-P1-3：拿到响应即视为网络恢复 */
 if (!data.ok) {
 this._stopPoll();
 reject(Object.assign(new Error(_errText(data.message) || "轮询失败"), {
@@ -8999,7 +9033,20 @@ reject(Object.assign(new Error(d0.ErrorMessage || data.data?.Message || "任务�
 code: d0.ErrorCode || data.data?.ErrorCode || "ProcessFailed"
 }));
 }
-} catch (e) {}
+} catch (e) {
+/* ★ R9E-FE-P1-3（报告 02 点名）：轮询期间的网络错误原来被空 catch 吞掉 ⇒
+   用户只看到「处理中(n/40)」，40 次跑完才以"超时"收场，中间完全不知道是网络在失败。
+   这里连续失败计数：第 3 次出声、第 10 次直接终止（不再白等 40 轮）。 */
+try { console.warn("[swallow:seg-poll]", e); } catch (_e2) {}
+this._pollErrs = (this._pollErrs || 0) + 1;
+if (this._pollErrs === 3) {
+try { Toast.error("轮询持续失败（连续 " + this._pollErrs + " 次）——网络可能不稳定；任务结果仍可能稍后可用", 6e3); } catch (_e3) {}
+}
+if (this._pollErrs >= 10) {
+this._stopPoll();
+reject(Object.assign(new Error("轮询连续失败 " + this._pollErrs + " 次，已停止 —— 网络不稳定或服务不可达（结果可能仍在上游生成，稍后可用历史核对）"), { code: "PollNetworkFail" }));
+}
+}
 }, 1800);
 });
 },
@@ -9544,7 +9591,16 @@ body: JSON.stringify(_tb)
 }
 } catch (_e) {}
 try { localStorage.setItem("sc_hist_push_at", String(Date.now())); } catch (_e) {}
-} catch (e) {}
+} catch (e) {
+/* ★ R9E-FE-P1-3：云同步**整链失败原来完全静默** —— 而"同步没生效"正是使用者反复报的症状。
+   出声（同因节流 60s）+ 把失败时刻写进 localStorage 供状态行/自查读取。 */
+try { console.warn("[swallow:hist-sync]", e); } catch (_e2) {}
+try {
+var _r9eNow = Date.now(), _r9eLast = Number(localStorage.getItem("sc_hist_push_err_at") || 0);
+localStorage.setItem("sc_hist_push_err_at", String(_r9eNow));
+if (_r9eNow - _r9eLast > 6e4) Toast.error("云端历史同步失败（本机数据不受影响）：" + _errText(e), 6e3);
+} catch (_e3) {}
+}
 },
 async _syncHistoryToCloudNow() {
 return this._syncHistoryToCloud(); /* IMPL-160：与 _syncHistoryToCloud 逐字节同体（IMPL-118 复制分裂）——收敛为委托防漂移 */
