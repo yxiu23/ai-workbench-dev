@@ -5556,6 +5556,51 @@ return `${this.SCHEMA}|zip|${this._b64(crcB)}|${this._b64(out)}`;
    这是功能与保密之间的硬矛盾。本批能做的是**收窄生命周期**：默认只写 sessionStorage
    （关闭标签页即失效），只有用户在设置里显式打开「在本机记住密码」才写 localStorage。
    ⚠ 不永久记住时**必须顺手删掉** localStorage 里的历史遗留，否则"关掉开关"只是不再新增、旧值仍在。 */
+/* ★★ R9K：双格式开簿。**旧格式路径永久保留** —— 它就是回退通道。
+   `WVLT` 头 = encryptBin/decryptBin（AES-GCM，与远端簿同一套）；`SCVB1|zip|` = 旧的 ZipCrypto。 */
+async _openBlob(blob, password) {
+const s = String(blob || "");
+if (s.slice(0, 10) === "SCVB1|zip|") return { obj: this.decrypt(s, password), legacy: true };
+let bytes = null;
+try { bytes = this._unb64(s.trim()); } catch (_e) { bytes = null; }
+if (!bytes || bytes.length < 12 || String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3]) !== "WVLT") {
+throw new Error("密钥簿格式无法识别");
+}
+return { obj: await this.decryptBin(bytes, password), legacy: false };
+},
+/* ★★ R9K：把 ZipCrypto 本地簿升级为 AES-GCM。
+   安全规则（三条，缺一不可）：
+     ① 只在**解锁成功之后**调用 —— 那一刻手里有明文 keys，重加密必然成功；
+     ② 写新值后**立刻读回并解密比对** keys —— 通过才算迁移成功；
+     ③ 任一步失败 ⇒ **写回原值**，保持旧格式继续可用（绝不留下一个解不开的簿）。
+   ⚠ 这里直接用 localStorage.setItem 而不用 storageSet —— 后者写失败会弹
+     「本地存储已满」的 Toast，而迁移是**后台行为**，不该打扰使用者。 */
+_migrateToAes(oldBlob, obj) {
+if (this._migrating) return Promise.resolve(false);
+this._migrating = true;
+const pw = this._pw;
+const done = (ok, why) => {
+this._migrating = false;
+swallow("r9k-vault-log", () => console[ok ? "info" : "warn"]("[W5-vault] " + (ok ? "本地密钥簿已升级为 AES-GCM（AEAD + 60000 轮 KDF）" : "AES-GCM 迁移未完成，继续使用旧格式：" + why)));
+return ok;
+};
+if (!pw) return Promise.resolve(done(false, "no-password"));
+return this.encryptBin(obj, pw).then(bytes => {
+const enc = this._b64(bytes);
+try { localStorage.setItem(this.LS_CUSTOM, enc); } catch (_e) { return done(false, "write-failed"); }
+return this.decryptBin(this._unb64(localStorage.getItem(this.LS_CUSTOM) || ""), pw).then(back => {
+const same = back && back.keys && JSON.stringify(back.keys) === JSON.stringify(obj.keys);
+if (!same) {
+swallow("r9k-vault-restore", () => localStorage.setItem(this.LS_CUSTOM, oldBlob));
+return done(false, "verify-mismatch");
+}
+return done(true, "");
+}).catch(e => {
+swallow("r9k-vault-restore", () => localStorage.setItem(this.LS_CUSTOM, oldBlob));
+return done(false, String((e && e.message) || e));
+});
+}).catch(e => done(false, String((e && e.message) || e)));
+},
 _persistPw(pw) {
 let keep = false;
 try { keep = !!(typeof Store !== "undefined" && Store.getVaultRemember && Store.getVaultRemember()); } catch (_e) { keep = false; }
@@ -5569,15 +5614,22 @@ _readPw() {
 try { const s = sessionStorage.getItem(this.LS_PW); if (s) return s; } catch (_e) {}
 try { return localStorage.getItem(this.LS_PW) || ""; } catch (_e) { return ""; }
 },
-unlock(password) {
+/* ★★ R9K：`unlock` 现在是 **async**（本地簿改用 AES-GCM，WebCrypto 异步）。
+   ⇒ **所有调用点必须 await**，否则拿到的是 Promise、且失败会变成 unhandled rejection
+   （症状 = "点解锁没反应"，控制台只有一条 unhandled rejection）。
+   `autoUnlock` 里那处也一并 async 化 —— 见下。 */
+async unlock(password) {
 const blob = this.activeBlob();
 if (!blob) throw new Error("没有可用的密钥簿");
-const obj = this.decrypt(blob, password);
+const opened = await this._openBlob(blob, password);
+const obj = opened.obj;
 this._keys = obj.keys;
 this._pw = password;
 this._healSegKeys();
 this._apply();
 this._persistPw(password);
+/* 旧格式（ZipCrypto）⇒ 后台升级成 AES-GCM。**不 await**：迁移失败与本次解锁无关。 */
+if (opened.legacy) this._migrateToAes(blob, obj).catch(() => {});
 const names = Object.keys(this._keys).filter(k => this._keys[k]);
 return {
 label: obj.label || "密钥簿",
@@ -5589,7 +5641,9 @@ names: names
 _healSegKeys() {
 return;
 },
-autoUnlock() {
+/* ★ R9K：随 `unlock` 一起 async 化。调用方（`UI.init`）**不 await**（初始化不能阻塞），
+   改为 `.then(ok => ok && UI._updateVaultStatus())`。 */
+async autoUnlock() {
 if (this.unlocked) return true;
 /* 会话优先，其次旧的 localStorage —— `unlock()` 成功后 `_persistPw` 会把凭据
    落到正确的位置（会话 / 永久按开关），并清掉不该留的那一份。
@@ -5597,7 +5651,7 @@ if (this.unlocked) return true;
 const pw = this._readPw();
 if (!pw) return false;
 try {
-this.unlock(pw);
+await this.unlock(pw);
 return true;
 } catch (e) {
 this.forgetPw();
@@ -5709,7 +5763,7 @@ let obj = null, usedPw = pw;
 /* IMPL-104（S-1）：只认用户密码——内嵌主密码回退已拆除 */
 obj = await KeyVault.decryptBin(remote.bytes, pw);
 storageSet(KeyVault.LS_CUSTOM, KeyVault.encrypt(obj, usedPw));
-KeyVault.unlock(usedPw);
+await KeyVault.unlock(usedPw);
 this.saveState({fp: remote.fp, at: Date.now()});
 return obj;
 },
@@ -5746,7 +5800,7 @@ withPw = pw;
 }
 if (obj) {
 storageSet(KeyVault.LS_CUSTOM, KeyVault.encrypt(obj, withPw));
-KeyVault.unlock(withPw);
+await KeyVault.unlock(withPw);
 this.saveState({fp: remote.fp, at: Date.now()});
 Toast.info("密码簿已同步更新");
 } else {
@@ -9538,7 +9592,12 @@ _titleTimer: null,
 _generating: false,
 _preloadCache: new Map,
 init() {
-KeyVault.autoUnlock();
+/* ★ R9K：autoUnlock 变 async（AES-GCM 走 WebCrypto）⇒ **不能阻塞初始化**（下面还有一堆同步初始化）。
+   先按"未解锁"渲染一次徽章，解锁成功后再刷一次。`autoUnlock` 内部已吞掉异常，这里再兜一层。 */
+const _self = this;
+KeyVault.autoUnlock().then(ok => {
+if (ok) _self._updateVaultStatus();
+}).catch(() => {});
 this._updateVaultStatus();
 this._bindSwipeNav();
 setTimeout(() => VaultSync.bootCheck(), 2200);
@@ -10077,14 +10136,14 @@ const _isLegacy = pw => { if (!pw) return false; const m = _lgMaster(); if (m &&
 const _remoteIssue = m => /尚未上传|不可用|拉取失败|未配置/.test(m || "");
 if (KeyVault.isCustomActive()) {
 try {
-r = KeyVault.unlock(pw);
+r = await KeyVault.unlock(pw);
 } catch (err) {
 const m = err && err.message || "";
 if (!/密码错误/.test(m) && !_remoteIssue(m)) throw err;
 if (!_remoteIssue(m)) {
 /* IMPL-116：legacy 优先离线解本地簿（不依赖网络） */
 if (_isLegacy(pw)) {
-try { r = KeyVault.unlock(_lgMaster()); _legacyHit = true; } catch (_e) {}
+try { r = await KeyVault.unlock(_lgMaster()); _legacyHit = true; } catch (_e) {}
 }
 if (!r) {
 let remote = null;
