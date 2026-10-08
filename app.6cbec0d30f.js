@@ -4983,7 +4983,7 @@ window.__r86Archive = (function () {
     new MutationObserver(function () {
       if (t) clearTimeout(t);
       t = setTimeout(function () { try { L.hydrate(); } catch (e) { _r9mNote("cleanup-001", e); } }, 400);
-    }).observe(document.body, { childList: true, subtree: true });
+    }).observe(document.getElementById("resultPanel") || document.body, { childList: true, subtree: true });
   } catch (e) { _r9mNote("cleanup-002", e); }
 })();
 
@@ -5004,7 +5004,11 @@ try {
 var m = {};
 load().forEach(function (x) { var id = (x && x.id) || x; if (id) m[String(id)] = { id: String(id), at: (x && x.at) || Date.now() }; });
 (ids || []).forEach(function (id) { if (id) m[String(id)] = { id: String(id), at: Date.now() }; });
-write(KEY, Object.keys(m).map(function (k) { return m[k]; }));
+/* ★ R9S（报告 02 FE-P3-3）：`sc_hist_tomb` 原本无上限增长 ⇒ 封顶 2000（单条 ~50B ⇒ 约 100KB，
+   远低于配额）。`Object.keys(m)` 按插入序（旧→新）⇒ `shift()` 丢最旧 = FIFO。 */
+var _r9sTombArr = Object.keys(m).map(function (k) { return m[k]; });
+while (_r9sTombArr.length > 2000) _r9sTombArr.shift();
+write(KEY, _r9sTombArr);
 } catch (e) { _r9mNote("misc-009", e); }
 };
 /* 用本次推送的 id 列表刷新墓碑：与上次快照比，少掉的即被删 */
@@ -6196,7 +6200,11 @@ setBudget(v) {
 storageSet(CONFIG.STORAGE_KEYS.BUDGET, String(v || 0));
 },
 getSpendAlert() {
-return true;
+/* ★ R9S（报告 04 UX-P3-5）：原来是 `return true;` —— 「¥10 提醒」变成不可关的硬编码。
+   ⚠ 如实记：全文件**目前没有任何地方写入** `sc_spend_alert`（KEY 早已存在但没人写），
+     所以这一步只是「让设置可被读取」；要真能关，还需要一个开关 UI（已列入待办，本批不做）。
+     ⇒ 本改动的价值 = 把死代码变成活读口，将来加开关即生效。 */
+return storageGet(CONFIG.STORAGE_KEYS.SPEND_ALERT, "1") !== "0";
 },
 getTodaySpend() {
 const todayStart = new Date((new Date).getFullYear(), (new Date).getMonth(), (new Date).getDate()).getTime();
@@ -9918,6 +9926,7 @@ next = "修的媒体工作台 " + (document.querySelector(".about-ver")?.textCon
 if (document.title !== next) document.title = next;
 },
 bindEvents() {
+["historyBtn", "statsBtn", "soundBtn", "themeToggleBtn", "openStudioBtn", "settingsBtn"].forEach(id => { var _r9tB = document.getElementById(id); if (_r9tB && !_r9tB.getAttribute("aria-label")) _r9tB.setAttribute("aria-label", _r9tB.title || id); });
 $("#tabs").addEventListener("click", e => {
 const t = e.target.closest(".tab");
 if (t) this.switchTab(t.dataset.tab);
@@ -9931,6 +9940,7 @@ this.state.model = m;
 this.state.modelKey = `${this.state.tab}/${m.id}`;
 this._updateModelBar();
 this.renderParamForm(m.id);
+try { storageSet("sc_tab_model_" + this.state.tab, m.id); } catch (_e) { _r9mNote("store-045", _e); }
 this._restoreFormFromCache();
 }
 });
@@ -10010,6 +10020,7 @@ $("#settingsBtn").addEventListener("click", () => this._openSettings());
   var MOON = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
   function paint(t) {
     root.setAttribute("data-theme", t);
+    try { if (window.__wbSyncThemeColor) window.__wbSyncThemeColor(); } catch (_) { _r9mNote("ui-027", _); }
     if (icon) icon.innerHTML = (t === "dark") ? SUN : MOON;
     if (btn) btn.title = (t === "dark") ? "切换到亮色" : "切换到暗色";
     try { document.dispatchEvent(new CustomEvent("w5:theme", { detail: { theme: t } })); } catch (_) { _r9mNote("ui-027", _); }
@@ -11267,7 +11278,9 @@ $("#paramForm").style.display = "flex";
 $("#paramForm").style.flexDirection = "column";
 $("#paramForm").style.gap = "14px";
 $(".model-select-wrap").style.display = "";
-const model = MODELS[tab][0];
+let _r9tPref = "";
+try { _r9tPref = storageGet("sc_tab_model_" + tab, ""); } catch (_e) { _r9mNote("store-044", _e); }
+const model = MODELS[tab].find(function (x) { return x.id === _r9tPref; }) || MODELS[tab][0];
 this.state.model = model;
 this.state.modelKey = `${tab}/${model.id}`;
 this._updateModelBar();
@@ -11338,6 +11351,14 @@ const list = $("#modelPickList");
 if (!list) return;
 /* ★ R63-③：价签与「同名比价」排序都按当前参数现算（含张数）⇒ 打开前重建一次 */
 try { this._updateModelBar(); } catch (e) { _r9mNote("ui-031", e); }
+if (!list.querySelector(".mp-legend")) {
+var _r9tLg = document.createElement("div");
+_r9tLg.className = "mp-legend";
+_r9tLg.setAttribute("role", "presentation");
+_r9tLg.setAttribute("style", "padding:8px 10px 4px;font-size:11px;line-height:14px;color:var(--text-dim);display:flex;align-items:center;border-top:1px solid var(--border);margin-top:4px");
+_r9tLg.innerHTML = '<span class="mp-chan" data-mp-chan="apiyi" style="margin-left:0">易</span>APIYI 官转<span class="mp-chan" data-mp-chan="speed" style="margin-left:10px">创</span>速创<span class="mp-chan" data-mp-chan="direct" style="margin-left:10px">连</span>直连';
+list.appendChild(_r9tLg);
+}
 list.classList.add("show");
 $("#modelPickBtn")?.setAttribute("aria-expanded", "true");
 this._positionModelPick();
@@ -11364,6 +11385,27 @@ bubbles: true
 this._closeModelPick();
 },
 _bindModelPick() {
+document.getElementById("modelPickBtn")?.addEventListener("keydown", e => {
+if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+e.preventDefault();
+this._openModelPick();
+var _r9tO = Array.prototype.slice.call(document.querySelectorAll("#modelPickList .model-pick-opt"));
+var _r9tT = e.key === "ArrowUp" ? _r9tO.length - 1 : 0;
+if (_r9tO[_r9tT]) _r9tO[_r9tT].focus();
+});
+document.getElementById("modelPickList")?.addEventListener("keydown", e => {
+var _r9tOpts = Array.prototype.slice.call(document.querySelectorAll("#modelPickList .model-pick-opt"));
+if (!_r9tOpts.length) return;
+var _r9tCur = _r9tOpts.indexOf(document.activeElement);
+var _r9tNext = -1;
+if (e.key === "ArrowDown") _r9tNext = _r9tCur < 0 ? 0 : (_r9tCur + 1) % _r9tOpts.length;
+else if (e.key === "ArrowUp") _r9tNext = _r9tCur < 0 ? _r9tOpts.length - 1 : (_r9tCur - 1 + _r9tOpts.length) % _r9tOpts.length;
+else if (e.key === "Home") _r9tNext = 0;
+else if (e.key === "End") _r9tNext = _r9tOpts.length - 1;
+else return;
+e.preventDefault();
+_r9tOpts[_r9tNext].focus();
+});
 $("#modelPickBtn")?.addEventListener("click", e => {
 e.stopPropagation();
 this._toggleModelPick();
@@ -12849,7 +12891,10 @@ if (prompt) Store.addPrompt(prompt);
 const count = this._getBatchCount();
 /* ★★ R95-1-2（报告 02 FE-P0-1）：循环前快照 genModel —— 生成中换模型不再影响本轮批次（端点/body/计费/卡片四者一致） */
 const genModel = this.state.model;
+/* ★ R9Q：**多张并发**（修 2026-10-09 定 ⓑ「一张失败只跳过这一张」）。 */
+const _r9qJobs = [];
 for (let i = 0; i < count; i++) {
+_r9qJobs.push((async () => {
 const task = {
 id: genId(),
 model: genModel,
@@ -13056,6 +13101,9 @@ this.playSuccessSound();
 this._celebrate(task);
 }
 }
+})().catch(function (_r9qE) { window.__r9qFail = (window.__r9qFail || 0) + 1; _r9mNote("r9q", _r9qE); }));
+/* 窗口满 3 或到最后一张 ⇒ 等这一批落地再继续（这就是并发上限） */
+if (_r9qJobs.length >= 3 || i === count - 1) { await Promise.all(_r9qJobs.splice(0)); }
 }
 } catch (e) {
 /* ★ R77-A：把在途的 APIYI 任务落成 failed 并写清原因。
@@ -13260,7 +13308,7 @@ const el = $("#generateBtnText");
 const pill = $("#genCostPill");
 if (!el) return;
 const hasActive = (Store.getTasks() || []).some(t => t.status === "processing");
-if (hasActive) { el.textContent = "生成中..."; if (pill) pill.classList.remove("show"); return; }
+if (hasActive) { if (!this._generating) el.textContent = "再生成一张"; if (pill) pill.classList.remove("show"); return; }
 /* ★ R26-C（修 2026-10-02）：金额改邻位费用胶囊；算不出 ⇒ 隐藏（不编数）。 */
 el.textContent = "生成";
 var est = null;
@@ -14163,7 +14211,9 @@ el.querySelectorAll(".sv-hb-btn[data-act]").forEach(btn => {
 btn.addEventListener("click", e => {
 e.stopPropagation();
 const act = btn.dataset.act;
-if (act === "zoom") this._openLightboxForTask(task); else if (act === "download") this._downloadFile(task.result.url, `${task.model?.id || "workbench"}_${task.id}`); else if (act === "compare") this._toggleCompare(task); else if (act === "delete") this._deleteTask(task.id); else if (act === "ref") this._useAsReference(task.result.url, task.model?.type); else if (act === "edit") this._openEditor(task.result.url); else if (act === "vfull") VideoFS.openFromTask(task);/* IMPL-107① */ else if (act === "wf") Workflow.copy(task); else if (act === "regen") this._regen(task); else if (act === "refresh") poller.manualRefresh(task.id); else if (act === "stop") poller.manualStop(task.id); else if (act === "retry") this._retryTask(task); else if (act === "copyErr") { const _t9 = String(task.error || "未知错误"); (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(_t9) : Promise.reject()).then(() => { try { Toast.success("错误信息已复制"); } catch (_) { _r9mNote("ui-036", _); } }, () => { try { this._showManualCopy(_t9); } catch (_) { _r9mNote("ui-037", _); } }); }
+if (act === "zoom") this._openLightboxForTask(task); else if (act === "download") this._downloadFile(task.result.url, `${task.model?.id || "workbench"}_${task.id}`); else if (act === "compare") this._toggleCompare(task); else if (act === "delete") this._deleteTask(task.id); else if (act === "ref") this._useAsReference(task.result.url, task.model?.type); else if (act === "edit") this._openEditor(task.result.url); else if (act === "vfull") VideoFS.openFromTask(task);/* IMPL-107① */ else if (act === "wf") Workflow.copy(task); else if (act === "regen") this._regen(task); else if (act === "refresh") poller.manualRefresh(task.id); /* ★ R9S（报告 04 UX-P2-7）：停止零确认，视频按时长计费 ⇒ 误触 = 白花钱。
+   沿项目既有形态用原生 confirm（同 10391 / 11779 两处的写法），不引入新组件。 */
+else if (act === "stop") { if (!confirm("停止这个任务？已提交的部分可能仍会计费。")) return; poller.manualStop(task.id); } else if (act === "retry") this._retryTask(task); else if (act === "copyErr") { const _t9 = String(task.error || "未知错误"); (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(_t9) : Promise.reject()).then(() => { try { Toast.success("错误信息已复制"); } catch (_) { _r9mNote("ui-036", _); } }, () => { try { this._showManualCopy(_t9); } catch (_) { _r9mNote("ui-037", _); } }); }
 });
 });
 el.querySelectorAll(".sv-hb-btn[data-batchact], .sv-sel-tag[data-batchact]").forEach(btn => { /* IMPL-142：批量操作组（sv-floatbar 复用，反馈1）；Z4（第六批）：sel-tag 徽标纳入委托=点击取消全部多选 */
@@ -15740,7 +15790,7 @@ Toast.success("已清理");
 },
 _confirmCleanLocal() {
 const html = `<div style="font-size:13px;line-height:1.7;color:var(--text-muted)">\n      将清除：历史记录、任务、提示词历史、预设、缩略图缓存。<br>\n      保留：密钥保险箱、偏好设置。\n    </div>`;
-this._showModal("清理本地数据", html, [ {
+this._showModal("清理本地数据", html, [ { label: "先导出备份", fn: () => this._exportHistory() }, {
 label: "取消",
 fn: () => this._closeModal()
 }, {
@@ -16568,7 +16618,13 @@ const activeEl = document.activeElement;
 if (activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA") && !imageFiles.length && !videoFiles.length) return;
 const targetKey = this._resolvePasteTarget(imageFiles.length ? "ref-image" : videoFiles.length ? "ref-video" : null);
 if (!targetKey) {
-if (text.trim() && /^https?:\/\/\S+$/i.test(text.trim())) {
+/* ★ R9S（报告 02 FE-P3-8）：原来只要文本是 URL 就被接管（非输入焦点时也 preventDefault），
+   会把用户想粘到别处的链接**悄悄变成参考图**。加前置：**只有当参考图网格真的可见**时才接管。
+   ⚠ 用 Array.from(document.querySelectorAll(...))，**不用**双美元简写 ——
+     因为 sub() 在命中恰好 1 次时走 String.replace 的字符串形式，美元号序列会被特殊解释
+     （写这批时**亲脚踩了一次**：注释里那个「美元美元」被吃成「美元+匹配前全文」⇒ 注释被撑破 ⇒
+       块 5 报 Invalid or unexpected token）。教训见铁 132。 */
+if (text.trim() && /^https?:\/\/\S+$/i.test(text.trim()) && Array.from(document.querySelectorAll("[data-ref-grid]")).some(function (g) { return g.offsetParent !== null; })) {
 const urlKey = this._resolvePasteTarget("ref-image");
 if (urlKey) {
 e.preventDefault();
@@ -16576,6 +16632,17 @@ this._addUrlRef(urlKey, text.trim());
 return;
 }
 }
+/* ★ R9S（报告 02 FE-P3-7）：走到这里 = 粘贴了图/视频但**没有对应的参考位** ⇒
+   旧行为是静默 return（用户以为粘贴坏了）。只在模型**确实没有**该参数位时出声，
+   避开「多候选参数位已弹选择器」那条分支（那种情况也不该报"不支持"）。
+   文案与 14565 行同句式。 */
+try {
+const _r9sP = (this.state.model && this.state.model.params) || [];
+const _r9sWant = imageFiles.length ? "ref-image" : (videoFiles.length ? "ref-video" : "");
+if (_r9sWant && !_r9sP.some(function (p) { return p.type === _r9sWant; })) {
+Toast.warning("当前模型不支持参考" + (imageFiles.length ? "图片" : "视频"));
+}
+} catch (_r9sE) { _r9mNote("r9s", _r9sE); }
 return;
 }
 e.preventDefault();
@@ -16688,7 +16755,7 @@ var base = /^#[0-9a-fA-F]{6}$/.test(b) ? b : "#1b1e24";
 var host = document.getElementById("svFloorBg");
 var on = !!(host && host.classList.contains("on"));
 var immersive = document.body.dataset.mview === "result" && on;
-mc.setAttribute("content", immersive ? base : "#ffffff");
+mc.setAttribute("content", immersive ? base : (document.documentElement.dataset.theme === "light" ? "#ffffff" : "#101112"));
 var mob = window.matchMedia && window.matchMedia("(max-width:768px)").matches;
 if (immersive && mob) {
 document.body.style.setProperty("background-color", base, "important");
@@ -16729,7 +16796,7 @@ btn.addEventListener("click", () => this._switchMobileView(btn.dataset.mview));
 });
 $("#generateBtn")?.addEventListener("click", () => {
 setTimeout(() => {
-if (window.innerWidth <= 768) {
+if (window.innerWidth <= 768 && this._generating) {
 this._switchMobileView("result");
 }
 }, 500);
@@ -17832,7 +17899,7 @@ ov.innerHTML = '<div class="studioModal" id="studioModal" role="dialog" aria-mod
 + '<div class="studioBusy" id="studioBusy" hidden><span class="studioBusySpin" aria-hidden="true"></span><span class="studioBusyText"></span></div>' /* IMPL-143 P2：位图动作执行期反馈条 */
 + '<div class="studioTopbar"><span class="studioTitle">图片工作台</span><span class="studioHint">编辑 · 裁切 · 排版 — 位图动作由工作台模型执行 · 提示词取自工作台输入框</span>'
 + '<div class="studioTopActions"><button class="studioClose" type="button" aria-label="关闭编辑器" title="关闭 (Esc)"><svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button></div></div>'
-+ '<div id="image-studio-root"><div class="studioLoading" role="status" aria-live="polite"><span class="studioLoadingSpin"></span>编辑器加载中…</div></div></div>';
++ '<div id="image-studio-root"><div class="studioLoading" role="status" aria-live="polite"><span class="studioLoadingSpin"></span>编辑器加载中…（约 0.7MB，首次打开需数秒）</div></div></div>';
 document.body.appendChild(ov);
 ov.querySelector(".studioClose").addEventListener("click", close);
 /* Z1（第六批）：点遮罩空白不再关闭编辑器（修拍板）——原 pointerdown 关闭监听已删；✕ 与 Esc 关闭保留 */
@@ -19790,7 +19857,9 @@ async function fetchVeoContent(taskId) {
     if (i) await new Promise(function (r) { setTimeout(r, 4000); });   /* 官方：等 4 秒重试 */
     let res = null;
     try {
-      res = await fetch(url);
+      /* ★ R9S（报告 01 APIYI-P2-5）：官方 `/content` 端点在 CDN 抖动时会一直挂着 ⇒ 加 60s 超时。
+         能力检测：老浏览器没有 AbortSignal.timeout 时退回原行为（不新增失败面）。 */
+      res = await fetch(url, (typeof AbortSignal !== "undefined" && AbortSignal.timeout) ? { signal: AbortSignal.timeout(6e4) } : undefined);
     } catch (e) {
       /* 网络层直接抛（离线 / 被拦 / CORS）—— 记原因后按"可重试"处理，别把裸 TypeError 抛给用户 */
       lastErr = String((e && e.message) || e);

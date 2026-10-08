@@ -1,4 +1,5 @@
-:root{color-scheme:light;--safe-top:env(safe-area-inset-top, 0px);--safe-bottom:env(safe-area-inset-bottom, 0px);--safe-left:env(safe-area-inset-left, 0px);--safe-right:env(safe-area-inset-right, 0px);--brand:#4657ea;--brand-rgb:70,87,234;--glass-rgb:255,255,255;--ink-rgb:0,0,0;--brand-hover:#3d4fe9;--brand-soft:rgba(var(--brand-rgb),.13);--brand-press:rgba(var(--brand-rgb),.24);--danger:#cc3a3a;--danger-soft:rgba(204,58,58,.11);--ink-badge:#5f5f59;--warning-ink:#8a5608; /* IMPL-104：徽章/识图小字 AA 专用墨色 */ /* IMPL-102：严格 AA 补齐（94e 六对遗漏 danger），soft 同步基色 */--success:#177e58;--success-soft:rgba(23,126,88,.12);--warning:#9d6209;--warning-soft:rgba(157,98,9,.12);--radius-sm:10px;--radius-md:15px;--radius-lg:20px;--radius-ctrl:12px;--spring:cubic-bezier(.34, 1.36, .44, 1);--spring-soft:cubic-bezier(.32, 1.08, .44, 1);--transition:240ms cubic-bezier(.34,.72,.24,1) /* IMPL-95⑦：--spring 系自文末补丁带归位 */;--transition-fast:150ms cubic-bezier(.34,.72,.24,1);--font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;--font-mono:"SF Mono",Menlo,Monaco,Consolas,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",monospace;--gold:#d9b06a;--font-serif:serif;--edge-border-grad:linear-gradient(168deg, rgba(28,28,26,.10) 0%, rgba(28,28,26,.10) 100%);--hl-inset:rgba(255,255,255,0);--sh-inset:rgba(28,28,26,.03)}
+/* ★ R9T：Firefox 侧此前只有 width/无配色（WebKit 那份用的是 var(--border)）⇒ 补齐并保持同源。 */
+:root{color-scheme:light;scrollbar-color:var(--border) transparent;--safe-top:env(safe-area-inset-top, 0px);--safe-bottom:env(safe-area-inset-bottom, 0px);--safe-left:env(safe-area-inset-left, 0px);--safe-right:env(safe-area-inset-right, 0px);--brand:#4657ea;--brand-rgb:70,87,234;--glass-rgb:255,255,255;--ink-rgb:0,0,0;--brand-hover:#3d4fe9;--brand-soft:rgba(var(--brand-rgb),.13);--brand-press:rgba(var(--brand-rgb),.24);--danger:#cc3a3a;--danger-soft:rgba(204,58,58,.11);--ink-badge:#5f5f59;--warning-ink:#8a5608; /* IMPL-104：徽章/识图小字 AA 专用墨色 */ /* IMPL-102：严格 AA 补齐（94e 六对遗漏 danger），soft 同步基色 */--success:#177e58;--success-soft:rgba(23,126,88,.12);--warning:#9d6209;--warning-soft:rgba(157,98,9,.12);--radius-sm:10px;--radius-md:15px;--radius-lg:20px;--radius-ctrl:12px;--spring:cubic-bezier(.34, 1.36, .44, 1);--spring-soft:cubic-bezier(.32, 1.08, .44, 1);--transition:240ms cubic-bezier(.34,.72,.24,1) /* IMPL-95⑦：--spring 系自文末补丁带归位 */;--transition-fast:150ms cubic-bezier(.34,.72,.24,1);--font-sans:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;--font-mono:"SF Mono",Menlo,Monaco,Consolas,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",monospace;--gold:#d9b06a;--font-serif:serif;--edge-border-grad:linear-gradient(168deg, rgba(28,28,26,.10) 0%, rgba(28,28,26,.10) 100%);--hl-inset:rgba(255,255,255,0);--sh-inset:rgba(28,28,26,.03)}
 @media all and (display-mode: standalone){
 :root{--safe-top:59px}}
 [data-theme="light"]{color-scheme:light;--bg:#f6f6f4;--bg-elev:#ffffff;--surface:#ffffff;--surface-2:#f5f5f2;--surface-3:#ececea;--border:#e7e7e3;--border-soft:#efefec;--text:#1c1c1a;--text-muted:#6d6d67;--text-dim:#6f6f69;--overlay:rgba(28, 28, 26, .30);--shadow-md:0 1px 2px rgba(28,28,26,.04),0 6px 20px rgba(28,28,26,.06);--shadow-lg:0 2px 8px rgba(28,28,26,.05),0 18px 44px rgba(28,28,26,.10);--glass-blur:none;--surface-glass:#ffffff;--surface-glass-2:#ffffff;--surface-glass-card:#ffffff;--surface-glass-pop:#ffffff;--surface-nested:#f6f6f4;--lift-card:0 1px 2px rgba(28,28,26,.04);--lift-ctrl:inset 0 1px 0 rgba(255,255,255,.6);--lg-gloss:none;--lg-edge:rgba(28,28,26,.10);--lg-hi:rgba(255,255,255,0);--lg-rim:rgba(28,28,26,.07);--lg-slab:0 0 0 1px var(--lg-rim),0 1px 2px rgba(28,28,26,.04),0 10px 28px -18px rgba(28,28,26,.16);--bg-grad:none;--gold:#a97e22;--edge-border-grad:linear-gradient(168deg, rgba(28,28,26,.10) 0%, rgba(28,28,26,.10) 100%);--hl-inset:rgba(255,255,255,0);--sh-inset:rgba(28,28,26,.03)}
@@ -6,7 +7,10 @@
 html,body{height:100%;overflow:clip}/* IMPL-110④⑤⑥：根级双轴 clip——单视图放大溢出直达视口=显示器边界，永不产生根滚动条 */
 *{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;font-feature-settings:"kern" 1,"liga" 1;font-variant-ligatures:common-ligatures;-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent;background:var(--bg-grad),var(--bg);background-attachment:fixed;color:var(--text);font-size:14px;line-height:1.55;overflow:hidden;display:flex;flex-direction:column;isolation:isolate}
-code,pre,.mono,[class*="mono"]{font-family:"SF Mono","Fira Code","JetBrains Mono","Cascadia Code",Consolas,"Liberation Mono",Menlo,"PingFang SC","Microsoft YaHei",monospace;font-feature-settings:"kern" 1,"liga" 0}
+/* ★ R9T（报告 05 UI-P3-10）：全站第二套 mono 栈（裸写）⇒ 统一到 --font-mono。
+   方向选择：按报告"统一走 token"，而不是把 token 扩成并集 —— 后者会波及 26 处 var(--font-mono) 引用，
+   影响面大得多（子代理判断）。被丢掉的 Fira/JetBrains/Cascadia 均未内嵌，实际通常落到 SF Mono/Consolas，差异小。 */
+code,pre,.mono,[class*="mono"]{font-family:var(--font-mono);font-feature-settings:"kern" 1,"liga" 0}
 h1,h2,h3,h4,h5,h6{letter-spacing:-0.01em}
 p,span,div,button,input,textarea,select,a,label,li{letter-spacing:0}
 button,input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
@@ -375,7 +379,8 @@ to{opacity:1;transform:none}}
 .ref-item{position:relative;aspect-ratio:1;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border);background:var(--surface-2)}
 .ref-seq{position:absolute;top:3px;left:3px;min-width:15px;height:15px;padding:0 4px;border-radius:8px;background:rgba(9,14,30,.62);color:#fff;font-size:10px;line-height:15px;text-align:center;font-weight:600;z-index:2;pointer-events:none /* 第十三批用户反馈②：参考图序号角标=发送顺序 */}
 .ref-reading{width:100%;height:100%;display:flex;align-items:center;justify-content:center /* 第十三批：FileReader 读取中占位（保序 push 的伴生态） */}
-.ref-reading::after{content:"";width:14px;height:14px;border:2px solid rgba(125,135,150,.35);border-top-color:#5b8def;border-radius:50%;animation:refspin .8s linear infinite}
+/* ★ R9T（报告 05 UI-P2-3）：旧蓝残句，靠后的 line 1993 已用 var(--brand) 覆盖 ⇒ 改 token，零视觉变化。 */
+.ref-reading::after{content:"";width:14px;height:14px;border:2px solid rgba(125,135,150,.35);border-top-color:var(--brand);border-radius:50%;animation:refspin .8s linear infinite}
 @keyframes refspin{to{transform:rotate(360deg)}}
 .ref-item-video{aspect-ratio:1}
 .ref-item img,.ref-item video{width:100%;height:100%;object-fit:cover;display:block}
@@ -640,10 +645,14 @@ to{opacity:1;transform:translateY(0)}}
 .atp-card .atp-cancel:hover{background:var(--danger-soft);color:var(--danger)}
 .atp-card .atp-cancel svg{width:14px;height:14px}
 .status-pill{padding:2.5px 10px;border-radius:999px;font-size:10px;font-weight:600;letter-spacing:.03em;-webkit-backdrop-filter:blur(8px) saturate(150%);backdrop-filter:blur(8px) saturate(150%);border:1px solid rgba(255,255,255,.34);box-shadow:0 1px 4px -2px rgba(9,14,30,.14),inset 0 1px 0 rgba(255,255,255,.28)}
-.status-pill.processing{background:linear-gradient(135deg,rgba(var(--brand-rgb),.10),rgba(var(--brand-rgb),.05));color:#3d4fe9} /* IMPL-104：tint 减淡+深化字色 3.43→5.06 */
-.status-pill.succeeded{background:linear-gradient(135deg,rgba(44,189,133,.16),rgba(44,189,133,.07));color:var(--success)}
-.status-pill.failed{background:linear-gradient(135deg,rgba(204,58,58,.15),rgba(204,58,58,.07));color:var(--danger)} /* IMPL-102：药丸底随主色 */
-.status-pill.timeout{background:linear-gradient(135deg,rgba(240,161,31,.17),rgba(240,161,31,.08));color:var(--warning)}
+/* ★ R9T：先写死旧靛蓝、再被靠后的 color:var(--brand) 覆盖 ⇒ 删残句，**零视觉变化**。 */
+.status-pill.processing{background:linear-gradient(135deg,rgba(var(--brand-rgb),.10),rgba(var(--brand-rgb),.05))} /* IMPL-104：tint 减淡+深化字色 3.43→5.06 */
+/* ★ R9T（报告 05 UI-P2-2）：底色是旧绿硬编码、文字读 --success ⇒ 同胶囊新老绿混色。
+   ⚠ 报告说"token 已有 --success-rgb 通道"是**错的**（本产物没有该通道，只有 --brand-rgb）
+   ⇒ 改走项目已在用的 color-mix 写法。代价：底色随主题（亮色下会明显深一些），这是"消除自相矛盾"的必然。 */
+.status-pill.succeeded{background:linear-gradient(135deg,color-mix(in srgb,var(--success) 16%,transparent),color-mix(in srgb,var(--success) 7%,transparent));color:var(--success)}
+.status-pill.failed{background:linear-gradient(135deg,color-mix(in srgb,var(--danger) 15%,transparent),color-mix(in srgb,var(--danger) 7%,transparent));color:var(--danger)} /* IMPL-102：药丸底随主色 */
+.status-pill.timeout{background:linear-gradient(135deg,color-mix(in srgb,var(--warning) 17%,transparent),color-mix(in srgb,var(--warning) 8%,transparent));color:var(--warning)}
 .file-mode-hint{position:relative;z-index:5;display:flex;align-items:center;gap:10px;width:calc(100% - 24px);max-width:680px;margin:8px auto 0;padding:9px 13px;border-radius:var(--radius-md);background:var(--lg-gloss),var(--surface-glass-card);border:1px solid rgba(240, 161, 31, .38);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--lg-slab);color:var(--text);font-size:12px;line-height:1.6;animation:fade-in .3s ease}
 .file-mode-hint[hidden]{display:none}
 .file-mode-hint svg{width:18px;height:18px;color:var(--warning);flex-shrink:0}
@@ -1640,6 +1649,12 @@ button:focus-visible,[role="button"]:focus-visible,input[type="range"]:focus-vis
 /* IMPL-70：缩略图旧浮起阴影弃用（凹陷体系由上方专属规则接管） */
 .brand-mark{display:flex;align-items:center;justify-content:center;gap:4px;padding:0 0 2px;margin-bottom:2px;user-select:none;position:relative;transition:transform .5s cubic-bezier(.22,1,.36,1)}
 .fav-btn.faved{color:var(--gold)}
+/* ★ R9T（报告 05 UI-P3-2）：`.ambient-stage` 原本**一条规则都没有**，全靠"未被定位的父级 → ICB 锚定"
+   的巧合；任何祖先将来加 position 就会破。补显式定位。
+   ⚠ 用 **absolute 而非 fixed**：fixed 会新建堆叠上下文 ⇒ 两个子层的 mix-blend-mode 从"与整页背景混合"
+     变成"只在本层内混合"，氛围光晕会被削弱（子代理实测判断）。absolute + z-index:auto 不新建上下文 ⇒
+     几何等价、混合不变。 */
+.ambient-stage{position:absolute;inset:0;pointer-events:none}
 .ambient-pulse{position:absolute;inset:0;opacity:0;pointer-events:none;background:radial-gradient(46% 40% at 50% 28%, rgba(44,189,133,.36), transparent 72%)}
 .ambient-pulse.flash{animation:ambient-success 1.5s cubic-bezier(.2,.6,.3,1)}
 @keyframes ambient-success{
