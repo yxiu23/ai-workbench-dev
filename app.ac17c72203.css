@@ -267,8 +267,6 @@ textarea{resize:vertical;min-height:80px}
 .vis-head span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .vis-live{margin-left:auto;flex-shrink:0;font-size:10px;color:var(--text-dim);font-weight:400;animation:spBlink 1.2s ease infinite}
 .vis-body{margin-top:6px;font-size:12px;white-space:pre-wrap;line-height:1.65;word-break:break-word;color:var(--ink-badge)}
-.sm-vision-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 2px}
-.sm-vision-row label{font-size:13px;font-weight:600;color:var(--text);flex-shrink:0}
 .sm-select{padding:5px 26px 5px 9px;font-size:12px;border-radius:8px;border:1px solid var(--border);background-color:var(--surface-2);color:var(--text);appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23707aa0' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 9px center;cursor:pointer;min-width:0;max-width:62%}
 .sm-select:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
 @media (prefers-reduced-motion: reduce){.vis-live{animation:none}}
@@ -413,9 +411,6 @@ to{opacity:1;transform:none}}
 .ref-video-warn.show{display:block}
 .param-group{background:var(--surface-nested);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px}
 .field-row{display:flex;flex-direction:column;gap:6px}
-.field-row.is-inline{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
-.field-row.is-inline .field-label{flex:0 1 auto;min-width:0}
-.field-row.is-inline select{flex:0 0 auto;width:auto;min-width:78px}
 /* ★ R29-B/C（修 2026-10-02）：滑动开关统一形态 · 多开关一行 · 桌面控件字号 12px（移动端 16px 防缩放规则保留） */
 .field-row.is-switch{flex-direction:row;align-items:center;justify-content:space-between;gap:10px}
 .field-row.is-switch .field-label{flex:1 1 auto;min-width:0}
@@ -472,7 +467,7 @@ to{transform:rotate(360deg)}}
 .generate-btn .gen-cost{display:none;align-items:center;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:700;font-family:var(--font-mono);letter-spacing:0;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);color:#fff}
 .generate-btn .gen-cost.show{display:inline-flex}
 @media (prefers-reduced-motion: reduce){
-.generate-btn svg,.generate-btn svg .gen-star,.generate-btn svg .gen-spark{animation:none !important}}
+.generate-btn svg{animation:none !important}}
 .form-actions-row{display:flex;gap:6px}
 .param-quick-btn{flex:1 1 0;min-width:0;display:flex;align-items:center;justify-content:center;gap:5px;height:40px;padding:0 10px;border-radius:999px;border:1px solid transparent;cursor:pointer;background:linear-gradient(var(--surface-nested),var(--surface-nested)) padding-box,var(--edge-border-grad) border-box;box-shadow:var(--lift-ctrl),0 0 0 1px var(--lg-rim);color:var(--text-muted);font-size:13px;font-weight:500;transition:all var(--transition-fast)} /* IMPL-88：大圆角 pill+提示词区同款浅底（渐变描边同源语言，去玻璃 blur） */
 .param-quick-btn[aria-expanded="true"]{color:var(--brand);border-color:var(--brand);background:var(--brand-soft)}
@@ -629,7 +624,6 @@ to{opacity:1;transform:translateY(0)}}
 .empty-state .empty-sub{font-size:12px;letter-spacing:.01em}
 .active-tasks-panel{margin-bottom:10px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);overflow:hidden;position:relative;z-index:3;padding:6px 8px;width:100%;box-sizing:border-box}/* IMPL-105⑥ */
 .active-tasks-panel.empty{display:none}
-.atp-header{padding:8px 12px;font-size:12px;font-weight:600;color:var(--text-muted);display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--border-soft)}
 .ping-dot{width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse-glow 1.5s ease-in-out infinite}
 @keyframes pulse-glow{
 0%,100%{box-shadow:0 0 0 0 rgba(44,189,133,.45)}
@@ -1282,8 +1276,6 @@ to{opacity:1;transform:scale(1) translateY(0)}}
 /* IMPL-72 需求②③：思考能力守卫 UI（灰 chip/锁定行）+ 识与论切模式徽标 */
 #setSecModel .sm-chip.think-off{background:color-mix(in srgb,var(--text-muted) 7%,transparent);border-style:dashed;color:var(--text-muted);opacity:.75}
 #setSecModel .sm-think-row.sm-think-locked{opacity:.45}
-#setSecModel .sm-mode-tag{font-size:10px;font-weight:600;line-height:1;padding:2px 7px;margin-left:6px;border-radius:99px;background:var(--surface-3);color:var(--ink-badge);vertical-align:1px}
-#setSecModel .sm-mode-tag.on{background:color-mix(in srgb,var(--brand) 12%,transparent);color:var(--brand)}
 #setSecModel .sm-desc{flex-basis:100%;margin-top:2px;padding-left:14px;font-size:11px;line-height:1.5;color:var(--text-dim)}
 /* IMPL-72 需求③：auto 卡去特殊化——与其他模型选项条样式一致，仅保留品牌色点作可辨析信号 */
 #setSecModel .skill-model-row[data-mid="auto"]{--dot:var(--brand)}
@@ -2289,12 +2281,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .skill-pick-btn #skillModelBadge{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .skill-pick-btn .mp-caret{position:absolute;right:10px;top:50%;width:12px;height:12px;transform:translateY(-50%);transition:transform .18s;color:var(--text-muted)}
 .skill-pick-btn[aria-expanded="true"] .mp-caret{transform:translateY(-50%) rotate(180deg)}
-.skill-head-wrap .skill-col-2 .sm-vision-row{height:100%;display:flex;align-items:center;gap:8px;padding:0 10px;background:var(--surface-2);border-radius:var(--radius-sm)}
-.skill-head-wrap .skill-col-2 .sm-vision-row label{flex:0 0 auto;font-size:12px;font-weight:500;color:var(--text-muted)}
 .skill-head-wrap .skill-col-2 .sm-select{flex:1 1 auto;min-width:0}
-.skill-toggles-row{display:flex;align-items:center;gap:18px;padding:1px 2px}
-.skill-toggles-row .settings-toggle{display:flex;align-items:center;gap:8px;padding:0;border:none;background:none}
-.skill-toggles-row .toggle-label{font-size:12px;color:var(--text-muted)}
 .skill-pop{position:absolute;left:0;right:0;top:calc(100% - 2px);z-index:46;background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);padding:12px 12px 6px;max-height:min(430px,62vh);overflow:auto}
 .skill-pop[hidden]{display:none}
 
@@ -2324,7 +2311,6 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 /* ── ① 技能区：统一到媒体模型框的规格 ── */
 .skill-pick-btn{padding:8px 28px 8px 11px;font-size:14px;font-weight:600}
 .skill-pick-btn #skillModelBadge{font-size:14px;font-weight:600}
-.skill-head-wrap .skill-col-2 .sm-vision-row{min-height:38px}
 .skill-head-wrap .skill-col-2 .sm-select{height:29px;padding:0 6px;border:none;background:var(--surface-3);border-radius:6px;font-size:13px;color:var(--text)}
 /* popover 内容：设置大行 → 弹窗紧凑行 */
 #setSecModel .skill-model-list{gap:6px;margin:0 0 8px}
@@ -2971,3 +2957,15 @@ html[data-theme="light"] .icon-btn-text{color:#6e6e6e}
    ⚠ 只放行这一个 id：特异性 (1,1,0) > 原规则 (0,2,0)；
      其余三个 set-status（vaultStatus / skillModelStatus / vaultManageStatus）保持隐藏。 */
 .settings-drawer #cloudSyncStatus{display:block}
+
+/* ═══ R99 · 设计常量归档（**仅文档，未启用**；清单 UI-P1-4/P1-6/P2-9）═══
+   现状实测（2026-10-08 扫产物）：
+   · 字号：8 个档位 —— 10 / 11 / 12 / 13 / 14 / 15 / 16 / 20（px，无 rem；14px 为 body 基准）
+   · 行高：15 种值散写
+   · z-index：29 种散值（无层级 token）
+   · 控件高度：.mode-btn 30 / .icon-btn 32 / .param-quick-btn 40 / .cp-opt 44 / .generate-btn 46
+   ⇒ 将来 token 化建议名（**别照抄，先按上面实测值对齐**）：
+      --fs-2xs/--fs-xs/--fs-sm/--fs-base/--fs-md/--fs-lg/--fs-xl/--fs-2xl
+      --lh-tight/--lh-base/--lh-loose · --space-1..6 · --ctrl-h-sm/md/lg
+      --z-base/--z-sticky/--z-drawer/--z-modal/--z-toast/--z-lightbox
+   ⚠ 本批**刻意不改任何现有值**（清单第八节：只增不改）—— 全量替换有视觉回归风险，另立批次。 */
