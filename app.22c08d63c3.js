@@ -39,6 +39,7 @@ SEG_SK: "wb_seg_sk",
 SEG_PROXY: "wb_seg_proxy",
 CLOUD_SYNC: "sc_cloud_sync",
 HIST_PROMPT_SYNC: "sc_hist_prompt_sync", /* ★ R9D-SEC-P1-5：提示词/请求体是否随云端历史上传（默认开＝保持原行为） */
+VAULT_REMEMBER: "sc_vault_remember", /* ★ R9I-SEC-P0-2：保险箱密码是否**永久**记在本机（默认 "0"＝只在本次会话内记） */
 SOUND: "sc_sound",
 HISTORY: "sc_history",
 TASKS: "sc_tasks",
@@ -5550,6 +5551,24 @@ st.upd(p);
 const crcB = new Uint8Array([ crc >>> 24 & 255, crc >>> 16 & 255, crc >>> 8 & 255, crc & 255 ]);
 return `${this.SCHEMA}|zip|${this._b64(crcB)}|${this._b64(out)}`;
 },
+/* ★★ R9I-SEC-P0-2：凭据落盘的两个口子（唯一出入口，避免散落多处各写一遍 —— 铁 104）。
+   为什么不是"不存任何东西"：`autoUnlock` 要能自动解密，就**必须**留下一份能解密的东西 ——
+   这是功能与保密之间的硬矛盾。本批能做的是**收窄生命周期**：默认只写 sessionStorage
+   （关闭标签页即失效），只有用户在设置里显式打开「在本机记住密码」才写 localStorage。
+   ⚠ 不永久记住时**必须顺手删掉** localStorage 里的历史遗留，否则"关掉开关"只是不再新增、旧值仍在。 */
+_persistPw(pw) {
+let keep = false;
+try { keep = !!(typeof Store !== "undefined" && Store.getVaultRemember && Store.getVaultRemember()); } catch (_e) { keep = false; }
+try { sessionStorage.setItem(this.LS_PW, pw); } catch (_e) { /* 隐私模式等：静默降级为不记住 */ }
+try {
+if (keep) localStorage.setItem(this.LS_PW, pw);
+else localStorage.removeItem(this.LS_PW);
+} catch (_e) { /* 同上 */ }
+},
+_readPw() {
+try { const s = sessionStorage.getItem(this.LS_PW); if (s) return s; } catch (_e) {}
+try { return localStorage.getItem(this.LS_PW) || ""; } catch (_e) { return ""; }
+},
 unlock(password) {
 const blob = this.activeBlob();
 if (!blob) throw new Error("没有可用的密钥簿");
@@ -5558,9 +5577,7 @@ this._keys = obj.keys;
 this._pw = password;
 this._healSegKeys();
 this._apply();
-try {
-storageSet(this.LS_PW, password);
-} catch (e) {}
+this._persistPw(password);
 const names = Object.keys(this._keys).filter(k => this._keys[k]);
 return {
 label: obj.label || "密钥簿",
@@ -5574,10 +5591,10 @@ return;
 },
 autoUnlock() {
 if (this.unlocked) return true;
-let pw = "";
-try {
-pw = localStorage.getItem(this.LS_PW) || "";
-} catch (e) {}
+/* 会话优先，其次旧的 localStorage —— `unlock()` 成功后 `_persistPw` 会把凭据
+   落到正确的位置（会话 / 永久按开关），并清掉不该留的那一份。
+   ⇒ 旧版本"明文密码永久落盘"的用户，**下次成功解锁即自动完成迁移**，不会打不开。 */
+const pw = this._readPw();
 if (!pw) return false;
 try {
 this.unlock(pw);
@@ -5588,9 +5605,8 @@ return false;
 }
 },
 forgetPw() {
-try {
-localStorage.removeItem(this.LS_PW);
-} catch (e) {}
+try { sessionStorage.removeItem(this.LS_PW); } catch (_e) {}
+try { localStorage.removeItem(this.LS_PW); } catch (_e) {}
 },
 _apply() {
 const k = this._keys || {};
@@ -5620,9 +5636,7 @@ keys: this._keys
 const nb = this.encrypt(obj, newPassword);
 if (!storageSet(this.LS_CUSTOM, nb)) throw new Error("本地存储写入失败，无法保存自定义密钥簿");
 this._pw = newPassword;
-try {
-storageSet(this.LS_PW, newPassword);
-} catch (e) {}
+this._persistPw(newPassword);
 return nb;
 },
 resetToEmbedded() {
@@ -5926,6 +5940,14 @@ return storageGet(CONFIG.STORAGE_KEYS.HIST_PROMPT_SYNC, "1") === "1";
 },
 setHistPromptSync(on) {
 storageSet(CONFIG.STORAGE_KEYS.HIST_PROMPT_SYNC, on ? "1" : "0");
+},
+/* ★ R9I-SEC-P0-2：默认 **false** —— 密码只记在 sessionStorage（关标签页即失效），
+   不再像旧版本那样永久明文落盘。想恢复旧行为的人可在保险箱区显式打开。 */
+getVaultRemember() {
+return storageGet(CONFIG.STORAGE_KEYS.VAULT_REMEMBER, "0") === "1";
+},
+setVaultRemember(on) {
+storageSet(CONFIG.STORAGE_KEYS.VAULT_REMEMBER, on ? "1" : "0");
 },
 getHistory() {
 /* IMPL-91：内存缓存——41 处调用点零改动受益（报告 5.2/4.1 首位项）；本 tab 写入统一经 _hwrite 同步缓存，跨标签页经 storage 事件失效 */
@@ -10213,6 +10235,7 @@ $("#cleanCloudBtn").addEventListener("click", () => this._confirmCleanCloud());
 $("#soundToggle").addEventListener("click", () => this.toggleSound());
 $("#cloudSyncToggle").addEventListener("click", () => this.toggleCloudSync());
 $("#histPromptSyncToggle").addEventListener("click", () => this.toggleHistPromptSync()); /* ★ R9D-SEC-P1-5 */
+$("#vaultRememberToggle").addEventListener("click", () => this.toggleVaultRemember()); /* ★ R9I-SEC-P0-2 */
 $("#soundBtn").addEventListener("click", () => this.toggleSound());
 $("#historyBtn").addEventListener("click", () => this._openHistory());
 $("#historyClose").addEventListener("click", () => this._closeHistory());
@@ -11023,6 +11046,13 @@ $("#soundIcon").innerHTML = on ? '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15
 toggleSound() {
 Store.setSound(!Store.getSound());
 this.applySoundIcon();
+},
+toggleVaultRemember() {
+const on = !Store.getVaultRemember();
+Store.setVaultRemember(on);
+const el = $("#vaultRememberToggle");
+if (el) el.classList.toggle("on", on);
+Toast.info(on ? "已在本机永久记住密码（下次打开自动解锁）" : "只在本次会话记住，关闭浏览器后需重新输入密码");
 },
 toggleHistPromptSync() {
 const on = !Store.getHistPromptSync();
@@ -16032,6 +16062,7 @@ if ($("#historySidebar")?.classList.contains("show")) this._closeHistory();
 $("#soundToggle").classList.toggle("on", Store.getSound());
 $("#cloudSyncToggle").classList.toggle("on", Store.getSync());
 $("#histPromptSyncToggle").classList.toggle("on", Store.getHistPromptSync()); /* ★ R9D-SEC-P1-5 */
+$("#vaultRememberToggle").classList.toggle("on", Store.getVaultRemember()); /* ★ R9I-SEC-P0-2 */
 const dv = $("#drawerVerBadge");/* IMPL-122：版本徽章回填（从唯一版本源 about-ver 取文本） */
 if (dv) {
 const v = document.querySelector(".about-ver")?.textContent?.trim() || "";

@@ -359,6 +359,13 @@ setTimeout(function() { if (!el.hidden) kill(false); }, 12000);
         </div>
         <div id="vaultStatus" class="set-status"></div>
       </div>
+      <div class="settings-toggle">
+        <div>
+          <div class="toggle-label">在本机记住密码</div>
+          <div class="toggle-sub">默认只在本次会话记住；打开后永久记住，下次打开自动解锁</div>
+        </div>
+        <div class="toggle-switch" id="vaultRememberToggle"></div>
+      </div>
       <div class="input-group" id="vaultManageRow" style="display:none">
         <div id="vaultManageStatus" class="set-status"></div>
         <div class="clean-grid vault-grid">
@@ -509,7 +516,7 @@ setTimeout(function() { if (!el.hidden) kill(false); }, 12000);
   撤销回填
 </button>
 <script src="https://cdn.jsdelivr.net/npm/dexie@4.0.10/dist/dexie.min.js" integrity="sha384-3VWLzUTczDc/wazaoH+b5qG4iME0duPONRO281rRiaFkfpV/b3w5uxrvod7rCHcW" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/filepond@4.31.4/dist/filepond.min.js" integrity="sha384-c078+4FiHYcn/w4KMWj9QOV3edh+OSlorDHKh9Y2J+zaNdGuInl1mOXvJUhUE0D6" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.min.js" integrity="sha384-wGezC7N90KbkjgHvCbNjlz7d502kSpRFW9oc/m/rd2xiKZHlKwA2sb5p5fa/nYil" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/filepond-plugin-file-validate-type@1.2.8/dist/filepond-plugin-file-validate-type.min.js" integrity="sha384-tMUBUcmF6dDU7B/pv8y3fjtIMko7kpuNZNcXtL2zZWOh9xfUotLE9BIj1r+A98v6" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js" integrity="sha384-HZZ/fukV+9G8gwTNjN7zQDG0Sp7MsZy5DDN6VfY3Be7V9dvQpEpR2jF2HlyFUUjU" crossorigin="anonymous"></script><script src="app.1a4231a96f.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/filepond@4.31.4/dist/filepond.min.js" integrity="sha384-c078+4FiHYcn/w4KMWj9QOV3edh+OSlorDHKh9Y2J+zaNdGuInl1mOXvJUhUE0D6" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.min.js" integrity="sha384-wGezC7N90KbkjgHvCbNjlz7d502kSpRFW9oc/m/rd2xiKZHlKwA2sb5p5fa/nYil" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/filepond-plugin-file-validate-type@1.2.8/dist/filepond-plugin-file-validate-type.min.js" integrity="sha384-tMUBUcmF6dDU7B/pv8y3fjtIMko7kpuNZNcXtL2zZWOh9xfUotLE9BIj1r+A98v6" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js" integrity="sha384-HZZ/fukV+9G8gwTNjN7zQDG0Sp7MsZy5DDN6VfY3Be7V9dvQpEpR2jF2HlyFUUjU" crossorigin="anonymous"></script><script src="app.22c08d63c3.js"></script>
 
 </body>
 </html>
