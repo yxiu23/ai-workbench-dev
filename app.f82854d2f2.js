@@ -1048,6 +1048,7 @@ name: "Nano Banana 一代（易）",
 endpoint: "/v1beta/models/gemini-2.5-flash-image:generateContent",
 endpointModel: "gemini-2.5-flash-image",
 gemini: true,
+thinking: false, /* ★ R95-1-3：把「是否支持 thinkingLevel」写入定义 —— 原来 apiyiGemini 读 def.thinking 而定义里根本没这字段（恒 undefined ⇒ 思考参数永不下发） */
 price: "0.14元/张（$0.02/次）",
 async: false,
 type: "image",
@@ -1089,6 +1090,7 @@ name: "Nano Banana 2 Lite（易）",
 endpoint: "/v1beta/models/gemini-3.1-flash-lite-image:generateContent",
 endpointModel: "gemini-3.1-flash-lite-image",
 gemini: true,
+thinking: true, /* ★ R95-1-3：把「是否支持 thinkingLevel」写入定义 —— 原来 apiyiGemini 读 def.thinking 而定义里根本没这字段（恒 undefined ⇒ 思考参数永不下发） */
 price: "0.09元/张（$0.0134 实测）",
 async: false,
 type: "image",
@@ -1130,6 +1132,7 @@ name: "Nano Banana 2（易）",
 endpoint: "/v1beta/models/gemini-3.1-flash-image:generateContent",
 endpointModel: "gemini-3.1-flash-image",
 gemini: true,
+thinking: true, /* ★ R95-1-3：把「是否支持 thinkingLevel」写入定义 —— 原来 apiyiGemini 读 def.thinking 而定义里根本没这字段（恒 undefined ⇒ 思考参数永不下发） */
 price: "0.23元/张（$0.0331 实测）",
 async: false,
 type: "image",
@@ -1171,6 +1174,7 @@ name: "Nano Banana Pro（易）",
 endpoint: "/v1beta/models/gemini-3-pro-image:generateContent",
 endpointModel: "gemini-3-pro-image",
 gemini: true,
+thinking: false, /* ★ R95-1-3：把「是否支持 thinkingLevel」写入定义 —— 原来 apiyiGemini 读 def.thinking 而定义里根本没这字段（恒 undefined ⇒ 思考参数永不下发） */
 price: "0.63元/张（$0.09/次）",
 async: false,
 type: "image",
@@ -6535,8 +6539,10 @@ throw this._llmErr("技能服务路由未挂载（HTTP " + res.status + (res.sta
 }
 if (res.status === 401 || res.status === 403) throw this._llmErr("Worker 令牌无效——请到设置或保险箱更新 AUTH_TOKEN", true);
 if (res.status === 429) {
-let msg = "今日技能额度已用完";
-try { const j = await res.json(); msg = j && j.error && j.error.message || msg; } catch (e) {}
+/* ★★ R95-1-4（报告 01 P1-3）：官方口径 429 = 「限流 **或** 额度/余额不足」，**不该猜死** ——
+   旧文案「今日技能额度已用完」把两种可能说成一种，用户会照着错的去等待/充值。优先用上游原话，兜底给中性描述。 */
+let msg = "技能服务限流或额度不足（HTTP 429）——请稍后重试；若持续出现请检查账户额度";
+try { const j = await res.json(); msg = (j && j.error && j.error.message) || msg; } catch (e) {}
 throw this._llmErr(msg, true);
 }
 if (!res.ok) {
@@ -12365,6 +12371,10 @@ waited += 1e3;
 }
 const failed = refs.filter(r => r.kind === "local" && r.uploadError);
 if (failed.length > 0) throw new Error("参考图上传失败，请删除失败的参考图或重新上传");
+/* ★★ R95-A：60s 等完后仍有「既没成功也没失败」（还在传）的 —— 旧代码被下游 URL 过滤静默滤掉。
+   这里显式报错，杜绝"没带参考图就生成（烧钱）"，口径与同步版 _collectRefImage 一致。 */
+const _stillR95 = refs.filter(r => r.kind === "local" && !r.uploaded && !r.uploadError);
+if (_stillR95.length > 0) throw new Error("参考图上传超时未完成（" + _stillR95.length + " 张）——已阻止提交，请等上传完成或移除该项后重试");
 const urls = refs.map(r => r.kind === "url" ? r.src : r.remote).filter(u => u && /^https?:\/\//.test(u));
 const param = this.state.model.params.find(p => p.key === key);
 if (!param) return null;
@@ -12387,6 +12397,8 @@ waited += 1e3;
 }
 const failed = refs.filter(r => r.kind === "local-video" && r.uploadError);
 if (failed.length > 0) throw new Error("参考视频上传失败，请删除或重新上传");
+const _stillR95v = refs.filter(r => r.kind === "local-video" && !r.uploaded && !r.uploadError);
+if (_stillR95v.length > 0) throw new Error("参考视频上传超时未完成（" + _stillR95v.length + " 个）——已阻止提交，请等上传完成或移除该项后重试");
 const urls = refs.map(r => r.remote).filter(u => u && /^https?:\/\//.test(u));
 const param = this.state.model.params.find(p => p.key === key);
 if (!param) return null;
@@ -12408,6 +12420,8 @@ waited += 1e3;
 }
 const failed = refs.filter(r => r.kind === "local-audio" && r.uploadError);
 if (failed.length > 0) throw new Error("参考音频上传失败，请删除或重新上传");
+const _stillR95a = refs.filter(r => r.kind === "local-audio" && !r.uploaded && !r.uploadError);
+if (_stillR95a.length > 0) throw new Error("参考音频上传超时未完成（" + _stillR95a.length + " 个）——已阻止提交，请等上传完成或移除该项后重试");
 const urls = refs.map(r => r.remote).filter(u => u && /^https?:\/\//.test(u));
 const param = this.state.model.params.find(p => p.key === key);
 if (!param) return null;
@@ -12451,10 +12465,12 @@ return;
 const prompt = body.prompt || body.text || "";
 if (prompt) Store.addPrompt(prompt);
 const count = this._getBatchCount();
+/* ★★ R95-1-2（报告 02 FE-P0-1）：循环前快照 genModel —— 生成中换模型不再影响本轮批次（端点/body/计费/卡片四者一致） */
+const genModel = this.state.model;
 for (let i = 0; i < count; i++) {
 const task = {
 id: genId(),
-model: this.state.model,
+model: genModel,
 body: v.body,
 prompt: prompt,
 status: "processing",
@@ -12463,7 +12479,7 @@ apiId: null,
 batchIndex: count > 1 ? i + 1 : undefined,
 batchTotal: count > 1 ? count : undefined
 };
-if (this.state.model.async) {
+if (genModel.async) {
 const useTaskCenter = TaskCenter.isAvailable();
 /* IMPL-124①：占位卡前置——原实现卡片在 submit 网络往返返回后才创建（TC 提交超时 15s+失败再 fallback 直连=最坏 20s+ 空窗），点击后页面零动静「像卡住了」；现改为点击瞬间先插 processing 占位卡（spinner+计时），提交成功原位回填 apiId 并入轮询，双路皆败原位转 failed 可见 */
 const _t0 = Store.getTasks();
@@ -12473,7 +12489,7 @@ this._renderTask(task);
 this._renderActiveTasks();
 let _ok = false, _err = null;
 try {
-const res = useTaskCenter ? await TaskCenter.submit(task) : await Api.submit(this.state.model, v.body);
+const res = useTaskCenter ? await TaskCenter.submit(task) : await Api.submit(genModel, v.body);
 task.apiId = res.id;
 task.dispatchedVia = useTaskCenter ? "taskcenter" : "direct";
 _ok = true;
@@ -12483,7 +12499,7 @@ _err = e;
 if (useTaskCenter) {
 console.warn("[TaskCenter] submit failed, falling back to direct:", e);
 try {
-const res = await Api.submit(this.state.model, v.body);
+const res = await Api.submit(genModel, v.body);
 task.apiId = res.id;
 task.dispatchedVia = "direct";
 _ok = true;
@@ -12518,8 +12534,8 @@ $("#generateBtnText").textContent = count > 1 ? `生成中 ${i + 1}/${count}...`
    nginx 对 OPTIONS 返 404 且无 CORS 头 ⇒ 浏览器预抛 Failed to fetch ⇒ 「网络请求失败，可能是跨域」。
    ★★ R68：所有跨块函数一律经 window.__w5Host（三个内联 script 块作用域互相独立，
    裸调 = ReferenceError —— 这是 R44 的同一教训）。 */
-const _apiDef67 = (this.state.model && this.state.model.channel === "apiyi")
-  ? ((window.__w5Host && window.__w5Host.apiModelById) ? window.__w5Host.apiModelById(this.state.model.id) : null) : null;
+const _apiDef67 = (genModel && genModel.channel === "apiyi")
+  ? ((window.__w5Host && window.__w5Host.apiModelById) ? window.__w5Host.apiModelById(genModel.id) : null) : null;
 let data;
 if (_apiDef67) {
   const _H67 = window.__w5Host || {};
@@ -12534,7 +12550,7 @@ if (_apiDef67) {
   const _wA67 = (typeof KeyVault !== "undefined" && KeyVault.keys && KeyVault.keys().R2_WORKER_URL)
     || (Store.getR2WorkerUrl && Store.getR2WorkerUrl()) || "";
   if (!_wA67) {
-    Toast.warning((this.state.model.name || "APIYI") + "：通道未配置 —— 请在 设置 → 编辑密钥 填入 R2 Worker 地址与 Token");
+    Toast.warning((genModel.name || "APIYI") + "：通道未配置 —— 请在 设置 → 编辑密钥 填入 R2 Worker 地址与 Token");
     return;
   }
   /* ★ R76-E1（2026-10-07）：与速创同款「点击即有卡」。
@@ -12625,7 +12641,7 @@ if (_apiDef67) {
     this._renderActiveTasks();
   } catch (_e) {}
 } else {
-  data = this.state.model.direct ? await Api.directRun(this.state.model, v.body) : await Api.syncCall(this.state.model, v.body);
+  data = genModel.direct ? await Api.directRun(genModel, v.body) : await Api.syncCall(genModel, v.body);
 }
 const url = Api.extractUrl(data);
 task.status = "succeeded";
@@ -12634,7 +12650,7 @@ url: url,
 data: data
 };
 task.completedAt = Date.now();
-const cost = calcEstimate(this.state.model, Object.assign({}, v.body, usageOfResult(data) || {})); /* ★ R22-d：并上真实 usage */
+const cost = calcEstimate(genModel, Object.assign({}, v.body, usageOfResult(data) || {})); /* ★ R22-d：并上真实 usage */
 task.cost = cost?.amount;
 Store.addHistory({
 id: task.id,
@@ -16713,17 +16729,34 @@ function apiyiSize(ratio, tier) {
 /** 统一收口：POST 到 APIYI 并把 data[].b64_json / .url 换成可显示 URL 数组。
  *  ⚠ **绝不传 response_format**（官方：传了直接 400）；b64_json 无 data: 前缀（自己造 Blob）。 */
 async function apiyiPost(pathname, body, def, size) {
-  const r = await Api._directReq("POST", pathname, body, { apiyi: true, timeout: apiyiTimeoutOf(def && def.modelId, def, size) });
-  const arr = (r && Array.isArray(r.data)) ? r.data : [];
-  const raw = arr.map(function(it) { return (it && (it.b64_json || it.url)) || ""; }).filter(Boolean);
-  if (!raw.length) {
-    const em = (r && r.error && (r.error.message || r.error)) || "";
-    throw new Error("APIYI 未返回图片数据" + (em ? "：" + String(em) : "") + " · " + JSON.stringify(r).slice(0, 200));
+  /* ★★ R95-1-4（报告 01 P1-3）：429 / 5xx **带抖动退避**，上限 2 次重试。
+     官方口径：429 = 「限流 **或** 余额/额度不足」，不该一次就放弃、也不该猜死是哪一个。
+     ⚠ 只在**明确是限流/服务端错误**时重试；参数类 4xx **绝不重试**（重试无用、还可能白跑）。 */
+  const _delays = [700, 1900];
+  let _attempt = 0;
+  for (;;) {
+    try {
+      const r = await Api._directReq("POST", pathname, body, { apiyi: true, timeout: apiyiTimeoutOf(def && def.modelId, def, size) });
+      const arr = (r && Array.isArray(r.data)) ? r.data : [];
+      const raw = arr.map(function(it) { return (it && (it.b64_json || it.url)) || ""; }).filter(Boolean);
+      if (!raw.length) {
+        const em = (r && r.error && (r.error.message || r.error)) || "";
+        throw new Error("APIYI 未返回图片数据" + (em ? "：" + String(em) : "") + " · " + JSON.stringify(r).slice(0, 200));
+      }
+      /* ★ R5：把**上游给的用量原样带回去**（不归一、不改名）—— 归属与算法交给 calcEstimate 那一层。
+         OpenAI 形态是 usage；Gemini 形态是 usageMetadata（下面 apiyiGemini 自己取）。 */
+      const _usage = (r && r.usage) || null;
+      return { urls: raw.map(function(v) { return /^https?:\/\//i.test(v) ? v : b64ToBlobUrl(v); }), usage: _usage };
+    } catch (e) {
+      const _m = String((e && e.message) || e);
+      const _retri = /429|50[0-9]|rate.?limit|too many|频繁|限流|overload/i.test(_m);
+      if (!_retri || _attempt >= _delays.length) throw e;
+      const _wait = _delays[_attempt] + Math.floor(Math.random() * 400);
+      _attempt++;
+      console.info("[W5-route]", JSON.stringify({ phase: "apiyi-retry", n: _attempt, waitMs: _wait, ts: Date.now() }));
+      await new Promise(function(res) { setTimeout(res, _wait); });
+    }
   }
-  /* ★ R5：把**上游给的用量原样带回去**（不归一、不改名）—— 归属与算法交给 calcEstimate 那一层。
-     OpenAI 形态是 `usage`；Gemini 形态是 `usageMetadata`（下面 apiyiGemini 自己取）。 */
-  const _usage = (r && r.usage) || null;
-  return { urls: raw.map(function(v) { return /^https?:\/\//i.test(v) ? v : b64ToBlobUrl(v); }), usage: _usage };
 }
 
 /** ★★ Nano Banana 系（Gemini 原生端点）—— 与 OpenAI 形态**完全不同的一套**。
@@ -16753,12 +16786,16 @@ async function apiyiGemini(prompt, def, ex, imgData, refs) {
   const cfg = { responseModalities: ["IMAGE"] };
   const ic = {};
   const ratio = String(e.aspectRatio || "").trim();
-  /* ★ 逐模型白名单：不在本模型比例表里的**不下发**（回落官方默认 1:1），不当场报错也不硬塞 */
-  if (ratio && (def.ratios || []).indexOf(ratio) >= 0) ic.aspectRatio = ratio;
+  /* ★★ R95-1-3（报告 01 P0-1，必修）：原来读 def.ratios / def.sizes —— 而**模型定义里从来没有这两个字段**
+     （档位真值只存在于 params[].options，由 geminiModel() 生成）⇒ 白名单恒为 [] ⇒ indexOf 恒 -1
+     ⇒ 选 16:9 出 1:1、选 2K 出 1K（**三个参数 100% 静默失效**）。与 R90「比例静默失效」同性质。
+     ⇒ 改为与**参数声明同源**：直接读 params 里 aspectRatio / resolution 的 options（杜绝字段漂移复发）。 */
+  const _pr95 = (def.params || []).find(function(p) { return p.key === "aspectRatio"; }) || {};
+  if (ratio && (_pr95.options || []).indexOf(ratio) >= 0) ic.aspectRatio = ratio;
   const size = String(e.resolution || "").trim();
-  /* ★★ 这道闸是必须的：Lite / 一代 **只接受 1K**，传 2K/4K 上游直接报错（官方明写）；
-     而编辑器下拉已经按 def.sizes 裁剪 ⇒ 正常路径传不出非法值，这里是第二道防线。 */
-  if (size && (def.sizes || []).indexOf(size) >= 0) ic.imageSize = size;
+  /* ★★ 这道闸仍是必须的：Lite / 一代 **只接受 1K**，传 2K/4K 上游直接报错（官方明写）。 */
+  const _ps95 = (def.params || []).find(function(p) { return p.key === "resolution"; }) || {};
+  if (size && (_ps95.options || []).indexOf(size) >= 0) ic.imageSize = size;
   if (Object.keys(ic).length) cfg.imageConfig = ic;
   /* thinkingLevel：**仅 NB2 / 2 Lite 支持**（默认 minimal）。Pro 传了不报错但无效 ⇒ 干脆不传，
      而且开 high 会 **+54% 费用** ⇒ 默认不开，只认显式请求。 */
@@ -16813,7 +16850,9 @@ async function apiyiEdits(imgData, maskData, prompt, def, ex) {
      比例一变 mask 就对不上原图了（R16 想防的正是这个，只是「不下发」把方向做反了）。
      编辑器现按源图真实像素算好一个合法且同几何的尺寸、以 maskSize 透出，这里校验后采用。
      ⚠ 只认严格 WxH 形态；格式不对宁可不发（交回上游 auto，与改前一致，无回退风险）。 */
-  if (!sz && maskData && typeof e.maskSize === "string" && /^d+xd+$/.test(e.maskSize)) sz = e.maskSize;
+  /* ⚠⚠ 铁 100：这段在**模板字符串**里，d 不是合法转义 ⇒ JS 静默吃掉反斜杠 ⇒ 产物成了 /^d+xd+$/ 恒不匹配。
+     所以一律用**零转义**字符类 /^[0-9]+x[0-9]+$/（R95 修 R93-B 那次落空）。 */
+  if (!sz && maskData && typeof e.maskSize === "string" && /^[0-9]+x[0-9]+$/.test(e.maskSize)) sz = e.maskSize;
   if (sz) fd.append("size", sz);
   if (e.quality) fd.append("quality", e.quality);
   /* ★★ R93 C —— 有 mask 时背景必须显式 opaque：
