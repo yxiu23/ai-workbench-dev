@@ -38,6 +38,7 @@ SEG_AK: "wb_seg_ak",
 SEG_SK: "wb_seg_sk",
 SEG_PROXY: "wb_seg_proxy",
 CLOUD_SYNC: "sc_cloud_sync",
+HIST_PROMPT_SYNC: "sc_hist_prompt_sync", /* ★ R9D-SEC-P1-5：提示词/请求体是否随云端历史上传（默认开＝保持原行为） */
 SOUND: "sc_sound",
 HISTORY: "sc_history",
 TASKS: "sc_tasks",
@@ -1224,7 +1225,7 @@ async: false,
 type: "video",
 channel: "apiyi",
 modelId: "doubao-seedance-2-5-260628",
-desc: "长时直出，多参考融合强",
+desc: "长时直出，多参考融合强 · 需 SeeDance2 分组",
 billing: { type: "perToken", inUsdPerM: 12.6, outUsdPerM: 12.6, source: "api", note: "Seedance 2.5 官方实测两档 token 单价：输入不含视频（文生/图生/参考图）$12.60/M、含参考视频 $7.56/M；本通道不传 video_url ⇒ 走 12.6 档。校验：720p/5s = 108,900 tokens × 12.6/M = $1.3721 = ¥9.60，与官方价格表逐格吻合" },
 params: [ {
 key: "prompt",
@@ -1424,7 +1425,7 @@ async: false,
 type: "video",
 channel: "apiyi",
 modelId: "wan3.0-video",
-desc: "阿里万相 · 全模态旗舰",
+desc: "阿里万相 · 全模态旗舰 · 需 Wan 分组",
 billing: { type: "perToken", inUsdPerM: 0.48, outUsdPerM: 0.48, source: "api", note: "视频按量计费（$0.48/M，CSV 真值）；折算方式官方未提供 ⇒ 不估每条价" },
 params: [ {
 key: "prompt",
@@ -4517,9 +4518,7 @@ if (u && t) c = { base: u, token: t };
 }
 } catch (_e) { c = null; }
 if (!c) return;
-var list = (Store.getHistory() || []).filter(function (h) {
-return String((h && h.result && h.result.url) || "").indexOf("blob:") !== 0;
-}).slice(0, 500);
+var list = _r9dHistPayload(Store.getHistory() || []); /* ★ R9D-SEC-P1-5：走统一构造（含提示词开关） */
 var body = JSON.stringify(list);
 var url = c.base + "/userdata?key=history&token=" + encodeURIComponent(c.token);
 if (navigator.sendBeacon) {
@@ -5921,6 +5920,13 @@ return storageGet(CONFIG.STORAGE_KEYS.CLOUD_SYNC, "1") === "1";
 setSync(on) {
 storageSet(CONFIG.STORAGE_KEYS.CLOUD_SYNC, on ? "1" : "0");
 },
+/* ★ R9D-SEC-P1-5：提示词随云同步（默认开 —— 不改老用户语义） */
+getHistPromptSync() {
+return storageGet(CONFIG.STORAGE_KEYS.HIST_PROMPT_SYNC, "1") === "1";
+},
+setHistPromptSync(on) {
+storageSet(CONFIG.STORAGE_KEYS.HIST_PROMPT_SYNC, on ? "1" : "0");
+},
 getHistory() {
 /* IMPL-91：内存缓存——41 处调用点零改动受益（报告 5.2/4.1 首位项）；本 tab 写入统一经 _hwrite 同步缓存，跨标签页经 storage 事件失效 */
 if (this._histCache === null) {
@@ -6869,6 +6875,21 @@ function _r76ThumbFromBlob(srcBlob, maxEdge, quality) {
 /* ★★ R76-G：历史条目瘦身 —— 实测 `model` 占单条 JSON 的 **67%**（云端历史真机实测 2049 B/条，model 1.3 KB）。
    只保留**确实被读取**的字段（全站 grep 实证：type / name / id / seg / endpoint 五个，
    外加 channel 与 billing 供价签显示）⇒ 500 条从 ~823 KB 降到 ~300 KB。 */
+/* ★★ R9D-SEC-P1-5：云端历史上传的**唯一** payload 构造点（两个上传点共用，防"改一条漏一条"）。
+   ① 滤掉 blob: 条目（本页内存句柄，别设备打不开）；② 上限 500 条；
+   ③ 开关关闭时剥掉 `prompt` 与 `body` —— 提示词原文与请求体（可能含参考图 dataURL）只留本机。 */
+function _r9dHistPayload(list) {
+  const arr = (Array.isArray(list) ? list : []).filter(function (h) {
+    return String((h && h.result && h.result.url) || "").indexOf("blob:") !== 0;
+  }).slice(0, 500);
+  let hide = false;
+  try { hide = !Store.getHistPromptSync(); } catch (_e) { hide = false; }
+  if (!hide) return arr;
+  return arr.map(function (h) {
+    try { const o = Object.assign({}, h); delete o.prompt; delete o.body; return o; } catch (_e) { return h; }
+  });
+}
+
 function _r76SlimHistory(item) {
   try {
     if (!item || !item.model || typeof item.model !== "object") return item;
@@ -9500,9 +9521,7 @@ if (d && d.ok && Array.isArray(d.data)) cloud = d.data;
 const merged = cloud.length ? this._mergeHistory(local, cloud) : local;
 if (merged !== local) { try { Store.saveHistory(merged); } catch (_e) {} }
 /* ★ R79-C：滤掉还没转存的 blob: 条目 —— 它们只在本页有效，推上云别的设备必然打不开 */
-const payload = (Array.isArray(merged) ? merged : []).filter(function (h) {
-return String((h && h.result && h.result.url) || "").indexOf("blob:") !== 0;
-}).slice(0, 500);
+const payload = _r9dHistPayload(merged); /* ★ R9D-SEC-P1-5：与离页那条共用同一构造 */
 await fetch(c.base + "/userdata?key=history&token=" + encodeURIComponent(c.token), {
 method: "PUT",
 headers: {
@@ -10085,6 +10104,7 @@ $("#cleanLocalBtn").addEventListener("click", () => this._confirmCleanLocal());
 $("#cleanCloudBtn").addEventListener("click", () => this._confirmCleanCloud());
 $("#soundToggle").addEventListener("click", () => this.toggleSound());
 $("#cloudSyncToggle").addEventListener("click", () => this.toggleCloudSync());
+$("#histPromptSyncToggle").addEventListener("click", () => this.toggleHistPromptSync()); /* ★ R9D-SEC-P1-5 */
 $("#soundBtn").addEventListener("click", () => this.toggleSound());
 $("#historyBtn").addEventListener("click", () => this._openHistory());
 $("#historyClose").addEventListener("click", () => this._closeHistory());
@@ -10895,6 +10915,13 @@ $("#soundIcon").innerHTML = on ? '<path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15
 toggleSound() {
 Store.setSound(!Store.getSound());
 this.applySoundIcon();
+},
+toggleHistPromptSync() {
+const on = !Store.getHistPromptSync();
+Store.setHistPromptSync(on);
+const el = $("#histPromptSyncToggle");
+if (el) el.classList.toggle("on", on);
+Toast.info(on ? "提示词将随云端历史同步" : "提示词只留本机（结果图与参数仍同步）");
 },
 toggleCloudSync() {
 const on = !Store.getSync();
@@ -15896,6 +15923,7 @@ _openSettings() {
 if ($("#historySidebar")?.classList.contains("show")) this._closeHistory();
 $("#soundToggle").classList.toggle("on", Store.getSound());
 $("#cloudSyncToggle").classList.toggle("on", Store.getSync());
+$("#histPromptSyncToggle").classList.toggle("on", Store.getHistPromptSync()); /* ★ R9D-SEC-P1-5 */
 const dv = $("#drawerVerBadge");/* IMPL-122：版本徽章回填（从唯一版本源 about-ver 取文本） */
 if (dv) {
 const v = document.querySelector(".about-ver")?.textContent?.trim() || "";
