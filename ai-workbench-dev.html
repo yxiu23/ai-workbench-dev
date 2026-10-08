@@ -31,11 +31,11 @@ if (!el) return;
 el.hidden = false;
 var kill = function(persist) {
 el.hidden = true;
-if (persist) { try { localStorage.setItem("wb_filemode_hint_dismissed", "1"); } catch (e) {} }
+if (persist) { try { localStorage.setItem("wb_filemode_hint_dismissed", "1"); } catch (e) { _r9mNote("store-001", e); } }
 };
 el.querySelector(".fmh-close").addEventListener("click", function() { kill(true); });
 setTimeout(function() { if (!el.hidden) kill(false); }, 12000);
-} catch (e) {}
+} catch (e) { _r9mNote("store-002", e); }
 })();</script>
 <div class="ambient-stage" aria-hidden="true">
   <div class="ambient-pulse" id="ambientPulse"></div>
@@ -516,7 +516,7 @@ setTimeout(function() { if (!el.hidden) kill(false); }, 12000);
   撤销回填
 </button>
 <script src="https://cdn.jsdelivr.net/npm/dexie@4.0.10/dist/dexie.min.js" integrity="sha384-3VWLzUTczDc/wazaoH+b5qG4iME0duPONRO281rRiaFkfpV/b3w5uxrvod7rCHcW" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/filepond@4.31.4/dist/filepond.min.js" integrity="sha384-c078+4FiHYcn/w4KMWj9QOV3edh+OSlorDHKh9Y2J+zaNdGuInl1mOXvJUhUE0D6" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.min.js" integrity="sha384-wGezC7N90KbkjgHvCbNjlz7d502kSpRFW9oc/m/rd2xiKZHlKwA2sb5p5fa/nYil" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/filepond-plugin-file-validate-type@1.2.8/dist/filepond-plugin-file-validate-type.min.js" integrity="sha384-tMUBUcmF6dDU7B/pv8y3fjtIMko7kpuNZNcXtL2zZWOh9xfUotLE9BIj1r+A98v6" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js" integrity="sha384-HZZ/fukV+9G8gwTNjN7zQDG0Sp7MsZy5DDN6VfY3Be7V9dvQpEpR2jF2HlyFUUjU" crossorigin="anonymous"></script><script src="app.756da918d5.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/filepond@4.31.4/dist/filepond.min.js" integrity="sha384-c078+4FiHYcn/w4KMWj9QOV3edh+OSlorDHKh9Y2J+zaNdGuInl1mOXvJUhUE0D6" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.min.js" integrity="sha384-wGezC7N90KbkjgHvCbNjlz7d502kSpRFW9oc/m/rd2xiKZHlKwA2sb5p5fa/nYil" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/filepond-plugin-file-validate-type@1.2.8/dist/filepond-plugin-file-validate-type.min.js" integrity="sha384-tMUBUcmF6dDU7B/pv8y3fjtIMko7kpuNZNcXtL2zZWOh9xfUotLE9BIj1r+A98v6" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js" integrity="sha384-HZZ/fukV+9G8gwTNjN7zQDG0Sp7MsZy5DDN6VfY3Be7V9dvQpEpR2jF2HlyFUUjU" crossorigin="anonymous"></script><script src="app.4385658751.js"></script>
 
 </body>
 </html>

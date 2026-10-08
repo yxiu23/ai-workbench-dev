@@ -2979,10 +2979,10 @@ const SkillSession = {
     try {
       const v = JSON.parse(storageGet(this.LS_ACTIVE, "[]"));
       if (Array.isArray(v)) this.active = v.filter(id => SKILLS.some(s => s.skillId === id));
-    } catch (e) {}
+    } catch (e) { _r9mNote("store-003", e); }
   },
   save() {
-    try { storageSet(this.LS_ACTIVE, JSON.stringify(this.active)); } catch (e) {}
+    try { storageSet(this.LS_ACTIVE, JSON.stringify(this.active)); } catch (e) { _r9mNote("store-004", e); }
   },
   get(id) {
     return SKILLS.find(s => s.skillId === id) || null;
@@ -3013,7 +3013,7 @@ const SkillSession = {
     this.render();
   },
   end(msg) {
-    if (this.ses && this.ses.abort) { try { this.ses.abort.abort(); } catch (e) {} }
+    if (this.ses && this.ses.abort) { try { this.ses.abort.abort(); } catch (e) { _r9mNote("ui-001", e); } }
     this._disarmWatchdog();
     this.pendingDocs = [];
     this.ses = null;
@@ -3022,7 +3022,7 @@ const SkillSession = {
   },
   onTabSwitch() {
     if (this.ses) {
-      if (this.ses.abort) { try { this.ses.abort.abort(); } catch (e) {} } /* IMPL-104：中止在途流，防孤立会话整段上游计费且输出全弃 */
+      if (this.ses.abort) { try { this.ses.abort.abort(); } catch (e) { _r9mNote("ui-002", e); } } /* IMPL-104：中止在途流，防孤立会话整段上游计费且输出全弃 */
       this._disarmWatchdog();
       this.ses = null;
       Toast.info("已切换分类，技能会话结束");
@@ -3043,7 +3043,7 @@ const SkillSession = {
   /* ── 魔棒三态状态机：未挂技能=开选择器 / 挂了=发送 / 有会话=下一轮 / 执行中=中止 ── */
   onWandClick() {
     if (this.ses && this.ses.streaming) {
-      if (this.ses.abort) { try { this.ses.abort.abort(); } catch (e) {} }
+      if (this.ses.abort) { try { this.ses.abort.abort(); } catch (e) { _r9mNote("misc-001", e); } }
       return;
     }
     const list = this.listForTab(UI.state.tab);
@@ -3354,7 +3354,7 @@ const SkillSession = {
         signal: this.ses.abort.signal,
         onActivity: () => { this._disarmWatchdog(); this._armWatchdog(o.watchMs || 25000); }, /* IMPL-157：任意字节续命（真实语义=静默 watchMs 才算超时） */
         onThink: t => {
-          if (o.onThink) { try { o.onThink(t); } catch (e) {} }
+          if (o.onThink) { try { o.onThink(t); } catch (e) { _r9mNote("misc-002", e); } }
           this._disarmWatchdog();
           this._armWatchdog(o.watchMs || 25000); /* IMPL-158-a：兜底对齐 onActivity（漏传 watchMs 不再静默降级 15s） */
           const el = this.wrap?.querySelector(o.liveSel || "[data-sp-stream]");
@@ -3636,7 +3636,7 @@ const SkillSession = {
       if (ses && ses.streaming && ses.abort) {
         /* IMPL-74（74-c P2-2）：标记看门狗触发，catch 里区分「误杀」与用户主动中止 */
         this._watchdogFired = true;
-        try { ses.abort.abort(); } catch (e) {}
+        try { ses.abort.abort(); } catch (e) { _r9mNote("misc-003", e); }
       }
     }, ms || 15000);
   },
@@ -4534,9 +4534,9 @@ var _tb2 = (window.__r80Tomb ? window.__r80Tomb.load() : []);
 if (_tb2.length && navigator.sendBeacon) {
 navigator.sendBeacon(c.base + "/userdata?key=historytomb&token=" + encodeURIComponent(c.token), new Blob([JSON.stringify(_tb2)], { type: "text/plain" }));
 }
-} catch (_e) {}
-try { localStorage.setItem("sc_hist_push_at", String(Date.now())); } catch (_e) {}
-} catch (_e) {}
+} catch (_e) { _r9mNote("parse-001", _e); }
+try { localStorage.setItem("sc_hist_push_at", String(Date.now())); } catch (_e) { _r9mNote("store-005", _e); }
+} catch (_e) { _r9mNote("store-006", _e); }
 };
 /* 挂到 window —— 便于诊断，也让验收脚本能直接验证这段逻辑 */
 window.__r79FlushHistory = _r79FlushHistory;
@@ -4573,7 +4573,7 @@ window.__r86Archive = (function () {
   var IDLE_TIMEOUT = 4000; /* requestIdleCallback 最长等待，超时也启动 */
 
   function fire() {
-    for (var i = 0; i < listeners.length; i++) { try { listeners[i](); } catch (e) {} }
+    for (var i = 0; i < listeners.length; i++) { try { listeners[i](); } catch (e) { _r9mNote("misc-004", e); } }
   }
   function isVideo(t) { return !!(t && t.model && t.model.type === "video"); }
 
@@ -4612,7 +4612,7 @@ window.__r86Archive = (function () {
   function idle(fn) {
     try {
       if (window.requestIdleCallback) return window.requestIdleCallback(fn, { timeout: IDLE_TIMEOUT });
-    } catch (e) {}
+    } catch (e) { _r9mNote("misc-005", e); }
     return setTimeout(fn, 3000);
   }
   function schedulePump() {
@@ -4680,7 +4680,7 @@ window.__r86Archive = (function () {
     stateOf: stateOf,
     isArchived: isArchived,
     notify: fire,
-    onChange: function (fn) { try { listeners.push(fn); } catch (e) {} },
+    onChange: function (fn) { try { listeners.push(fn); } catch (e) { _r9mNote("misc-006", e); } },
     /* 诊断用（验收脚本读它） */
     _debug: function () { return { queued: q.length, curId: curId, lastAt: lastAt }; }
   };
@@ -4730,7 +4730,7 @@ window.__r86Archive = (function () {
   function idb() {
     return new Promise(function (res, rej) {
       var r = indexedDB.open(DB, 1);
-      r.onupgradeneeded = function () { try { r.result.createObjectStore(STORE); } catch (e) {} };
+      r.onupgradeneeded = function () { try { r.result.createObjectStore(STORE); } catch (e) { _r9mNote("misc-007", e); } };
       r.onsuccess = function () { res(r.result); };
       r.onerror = function () { rej(r.error); };
     });
@@ -4823,7 +4823,7 @@ window.__r86Archive = (function () {
   function warnOnce(key, msg) {
     if (warned[key]) return;
     warned[key] = 1;
-    try { if (window.Toast && Toast.warning) Toast.warning(msg, 8000); } catch (e) {}
+    try { if (window.Toast && Toast.warning) Toast.warning(msg, 8000); } catch (e) { _r9mNote("ui-003", e); }
   }
 
   async function pick() {
@@ -4839,7 +4839,7 @@ window.__r86Archive = (function () {
           await loadAlias();
           return { ok: true, msg: '已恢复本地目录「' + S.handle.name + '」· ' + n0 + ' 个文件' };
         }
-      } catch (e) {}
+      } catch (e) { _r9mNote("misc-008", e); }
     }
     try {
       var h = await window.showDirectoryPicker({ id: 'w5-work', mode: 'readwrite' });
@@ -4930,11 +4930,11 @@ window.__r86Archive = (function () {
           el.src = URL.createObjectURL(f);
           if (el.dataset) el.dataset.w5local = '1';
           hit++;
-        } catch (e) {}
+        } catch (e) { _r9mNote("blob-001", e); }
       }
     } finally {
       busy = false;
-      if (pending) { pending = false; setTimeout(function () { try { hydrate(); } catch (e) {} }, 0); }
+      if (pending) { pending = false; setTimeout(function () { try { hydrate(); } catch (e) { _r9mNote("blob-002", e); } }, 0); }
     }
     return hit;
   }
@@ -4967,24 +4967,24 @@ window.__r86Archive = (function () {
     b.title = "本地工作目录";
     b.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
     b.addEventListener("click", async function () {
-      if (!L.supported()) { try { Toast.warning("此浏览器不支持本地目录（需 Chrome / Edge 桌面版）"); } catch (e) {} return; }
+      if (!L.supported()) { try { Toast.warning("此浏览器不支持本地目录（需 Chrome / Edge 桌面版）"); } catch (e) { _r9mNote("ui-004", e); } return; }
       var r = await L.pick();
-      if (r.ok) { try { Toast.success(r.msg); } catch (e) {} try { L.hydrate(); } catch (e) {} }
-      else { try { Toast.warning(r.msg); } catch (e) {} }
+      if (r.ok) { try { Toast.success(r.msg); } catch (e) { _r9mNote("ui-005", e); } try { L.hydrate(); } catch (e) { _r9mNote("ui-006", e); } }
+      else { try { Toast.warning(r.msg); } catch (e) { _r9mNote("ui-007", e); } }
     });
     anchor.parentElement.appendChild(b);
   }
-  try { mountBtn(); setTimeout(mountBtn, 1500); } catch (e) {}
+  try { mountBtn(); setTimeout(mountBtn, 1500); } catch (e) { _r9mNote("ui-008", e); }
   /* 启动恢复（无需手势的那一半）；权限需重授时只标记，不打扰） */
-  try { L.restore().then(function (ok) { if (ok) L.hydrate(); }); } catch (e) {}
+  try { L.restore().then(function (ok) { if (ok) L.hydrate(); }); } catch (e) { _r9mNote("ui-009", e); }
   /* 渲染后自动 hydrate（防抖） */
   try {
     var t = null;
     new MutationObserver(function () {
       if (t) clearTimeout(t);
-      t = setTimeout(function () { try { L.hydrate(); } catch (e) {} }, 400);
+      t = setTimeout(function () { try { L.hydrate(); } catch (e) { _r9mNote("cleanup-001", e); } }, 400);
     }).observe(document.body, { childList: true, subtree: true });
-  } catch (e) {}
+  } catch (e) { _r9mNote("cleanup-002", e); }
 })();
 
 /* ★ R80-D：墓碑 —— 「本地删掉的历史」要能真的从云端消失。
@@ -4997,7 +4997,7 @@ window.__r80Tomb = (function () {
 var KEY = "sc_hist_tomb";
 var SNAP = "sc_hist_snap";
 var read = function (k, d) { try { var a = JSON.parse(localStorage.getItem(k) || "null"); return a == null ? d : a; } catch (e) { return d; } };
-var write = function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+var write = function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { _r9mNote("store-007", e); } };
 var load = function () { var a = read(KEY, []); return Array.isArray(a) ? a : []; };
 var add = function (ids) {
 try {
@@ -5005,7 +5005,7 @@ var m = {};
 load().forEach(function (x) { var id = (x && x.id) || x; if (id) m[String(id)] = { id: String(id), at: (x && x.at) || Date.now() }; });
 (ids || []).forEach(function (id) { if (id) m[String(id)] = { id: String(id), at: Date.now() }; });
 write(KEY, Object.keys(m).map(function (k) { return m[k]; }));
-} catch (e) {}
+} catch (e) { _r9mNote("misc-009", e); }
 };
 /* 用本次推送的 id 列表刷新墓碑：与上次快照比，少掉的即被删 */
 var sync = function (currentIds) {
@@ -5017,7 +5017,7 @@ var now = {};
 (currentIds || []).forEach(function (id) { now[String(id)] = 1; });
 var gone = prev.filter(function (id) { return !now[String(id)]; });
 if (gone.length) add(gone);
-} catch (e) {}
+} catch (e) { _r9mNote("misc-010", e); }
 };
 return { load: load, add: add, sync: sync };
 })();
@@ -5029,7 +5029,7 @@ try {
 (function () {
 var PROMPT_SEL = ".prompt-module textarea, .param-group textarea, [data-key=\"prompt\"], [data-key=\"text\"]";
 var fine = true;
-try { fine = !(window.matchMedia && matchMedia("(pointer:coarse)").matches); } catch (e) {}
+try { fine = !(window.matchMedia && matchMedia("(pointer:coarse)").matches); } catch (e) { _r9mNote("misc-011", e); }
 if (fine) {
 var tries = 0;
 var t = setInterval(function () {
@@ -5037,7 +5037,7 @@ tries++;
 var el = document.querySelector(PROMPT_SEL);
 if (el && el.offsetParent !== null) {
 clearInterval(t);
-try { el.focus({ preventScroll: true }); } catch (e) { try { el.focus(); } catch (e2) {} }
+try { el.focus({ preventScroll: true }); } catch (e) { try { el.focus(); } catch (e2) { _r9mNote("ui-010", e2); } }
 } else if (tries > 25) { clearInterval(t); }
 }, 200);
 }
@@ -5047,16 +5047,16 @@ var el = document.querySelector(PROMPT_SEL);
 if (!el) return;
 var v = el.value != null ? el.value : el.textContent;
 if (v && v.trim().length > 0) { e.preventDefault(); e.returnValue = ""; }
-} catch (err) {}
+} catch (err) { _r9mNote("ui-011", err); }
 });
 })();
-} catch (e) {}
+} catch (e) { _r9mNote("ui-012", e); }
 try {
 window.addEventListener("pagehide", _r79FlushHistory);
 document.addEventListener("visibilitychange", function () {
 if (document.visibilityState === "hidden") _r79FlushHistory();
 });
-} catch (_e) {}
+} catch (_e) { _r9mNote("misc-012", _e); }
 
 const esc = s => String(s ?? "").replace(/[&<>"']/g, m => ({
 "&": "&amp;",
@@ -5164,7 +5164,7 @@ ta.style.opacity = "0.01";
 document.body.appendChild(ta);
 ta.focus();
 ta.select();
-try { ta.setSelectionRange(0, ta.value.length); } catch (_e88) {}
+try { ta.setSelectionRange(0, ta.value.length); } catch (_e88) { _r9mNote("ui-013", _e88); }
 const ok = document.execCommand("copy");
 /* ★ R88-b：只采信「选中范围确实覆盖全文」的情况 —— execCommand 返回 true 不代表真写进去了 */
 const _selLen88 = (function () { try { return String(window.getSelection() || "").length; } catch (_e88) { return 0; } })();
@@ -5611,7 +5611,7 @@ else localStorage.removeItem(this.LS_PW);
 } catch (_e) { /* 同上 */ }
 },
 _readPw() {
-try { const s = sessionStorage.getItem(this.LS_PW); if (s) return s; } catch (_e) {}
+try { const s = sessionStorage.getItem(this.LS_PW); if (s) return s; } catch (_e) { _r9mNote("store-008", _e); }
 try { return localStorage.getItem(this.LS_PW) || ""; } catch (_e) { return ""; }
 },
 /* ★★ R9K：`unlock` 现在是 **async**（本地簿改用 AES-GCM，WebCrypto 异步）。
@@ -5659,8 +5659,8 @@ return false;
 }
 },
 forgetPw() {
-try { sessionStorage.removeItem(this.LS_PW); } catch (_e) {}
-try { localStorage.removeItem(this.LS_PW); } catch (_e) {}
+try { sessionStorage.removeItem(this.LS_PW); } catch (_e) { _r9mNote("store-009", _e); }
+try { localStorage.removeItem(this.LS_PW); } catch (_e) { _r9mNote("store-010", _e); }
 },
 _apply() {
 const k = this._keys || {};
@@ -5696,7 +5696,7 @@ return nb;
 resetToEmbedded() {
 try {
 localStorage.removeItem(this.LS_CUSTOM);
-} catch (e) {}
+} catch (e) { _r9mNote("store-011", e); }
 this.lock();
 }
 };
@@ -5713,7 +5713,7 @@ return storageGetJSON(this.LS_STATE, null) || {};
 saveState(s) {
 try {
 if (s) localStorage.setItem(this.LS_STATE, JSON.stringify(s)); else localStorage.removeItem(this.LS_STATE);
-} catch (e) {}
+} catch (e) { _r9mNote("store-012", e); }
 },
 configured() {
 const c = this.cfg();
@@ -5796,7 +5796,7 @@ if (pw) { /* IMPL-104（S-1）：主密码回退已拆除，无本地密码时�
 try {
 obj = await KeyVault.decryptBin(remote.bytes, pw);
 withPw = pw;
-} catch (e1) {}
+} catch (e1) { _r9mNote("misc-013", e1); }
 }
 if (obj) {
 storageSet(KeyVault.LS_CUSTOM, KeyVault.encrypt(obj, withPw));
@@ -5808,7 +5808,7 @@ this.saveState(null);
 KeyVault.lock();
 Toast.warning("密码簿已更新，请重新输入密码解锁");
 }
-} catch (e) {}
+} catch (e) { _r9mNote("store-013", e); }
 }
 };
 
@@ -5889,7 +5889,7 @@ try {
 const h = location.hostname;
 local = (h === "localhost" || h === "127.0.0.1" || h === "0.0.0.0");
 isFile = location.protocol === "file:";
-} catch (e) {}
+} catch (e) { _r9mNote("misc-014", e); }
 // 沙箱兜底（XTransformPort 是沙箱网关专用约定）：file:// 双击打开时相对端点
 // 必然 Failed to fetch，剔除避免无意义探测；本地静态服务器上失败也无副作用
 if ((w || local) && !isFile) list.push("/llm/chat?XTransformPort=3031");
@@ -5913,7 +5913,7 @@ getSkillRelay() {
 const v = storageGet(CONFIG.STORAGE_KEYS.SKILL_RELAY, null);
 if (v !== null) return v !== "0";
 const legacy = storageGet(CONFIG.STORAGE_KEYS.SKILL_COMBO, null);
-try { localStorage.removeItem(CONFIG.STORAGE_KEYS.SKILL_COMBO); } catch (e) {}
+try { localStorage.removeItem(CONFIG.STORAGE_KEYS.SKILL_COMBO); } catch (e) { _r9mNote("store-014", e); }
 const on = legacy !== null ? legacy !== "0" : true;
 storageSet(CONFIG.STORAGE_KEYS.SKILL_RELAY, on ? "1" : "0");
 return on;
@@ -5946,7 +5946,7 @@ const v = storageGetJSON(CONFIG.STORAGE_KEYS.SKILL_MODELS_CATALOG, null);
 return v && typeof v === "object" && v.providers && typeof v.providers === "object" ? v : null;
 },
 setSkillCatalog(c) {
-try { storageSet(CONFIG.STORAGE_KEYS.SKILL_MODELS_CATALOG, JSON.stringify(c || null)); } catch (e) {}
+try { storageSet(CONFIG.STORAGE_KEYS.SKILL_MODELS_CATALOG, JSON.stringify(c || null)); } catch (e) { _r9mNote("store-015", e); }
 },
 getSegAk() {
 return typeof KeyVault !== "undefined" ? KeyVault.keys().IMAGESEG_AK || "" : "";
@@ -6297,7 +6297,7 @@ function _errText(err) {
     try {
       var j = JSON.stringify(err);
       if (j && j !== "{}" && j !== "[]") return j.length > 300 ? j.slice(0, 300) + "…" : j;
-    } catch (_) {}
+    } catch (_) { _r9mNote("ui-014", _); }
     return "[上游返回了无法解析的错误对象]";
   }
   return String(err);
@@ -6322,9 +6322,22 @@ function _r9eParseSse(payload) {
    ⚠ 不是所有空 catch 都该换 —— 一部分是**合法的最佳努力**（Safari 隐私模式下的 localStorage 探测、
      清理型 destroy、可选缓存）。全量 blanket 改写会刷屏、且无法逐处验证。
    本批只覆盖**失败会影响用户可见结果**的三类：轮询 / 云同步 / 结果落盘（报告点名的就是这三类）。 */
+/* ★★ R9M-FE-P1-3：空 catch 的统一留痕口（**行为不变**，只让"吞了什么"看得见）。
+   为什么不开 Toast、不上报：这些 catch 绝大多数是**合法最佳努力**（隐私模式下的 localStorage、
+   清理型 revoke、可选的解析），弹窗会刷屏、上报涉隐私 ⇒ 只进 devtools，按 tag 去重 + 节流。 */
+var _r9mSeen = {};
+function _r9mNote(tag, e) {
+try {
+var n = (_r9mSeen[tag] = (_r9mSeen[tag] || 0) + 1);
+if (n <= 3) {
+var m = e && (e.message || e);
+console.debug("[quiet:" + tag + "]" + (n > 1 ? " (x" + n + ")" : ""), m || e);
+}
+} catch (_e2) {}
+}
 function swallow(tag, fn) {
   try { return fn(); } catch (e) {
-    try { console.warn("[swallow:" + tag + "]", e); } catch (_e2) {}
+    try { console.warn("[swallow:" + tag + "]", e); } catch (_e2) { _r9mNote("store-016", _e2); }
     return undefined;
   }
 }
@@ -6502,7 +6515,7 @@ return data;
 } catch (e) {
 clearTimeout(timer);
 if (e.name === "AbortError") throw new Error("timeout: 请求超时");
-if (e.message === "Failed to fetch") { if (String(path || "").includes("/media/")) { let probe = false, ver = ""; try { const pr = await fetch(url, { method: "OPTIONS", signal: AbortSignal.timeout(8000) }); probe = pr.ok; ver = (pr.headers.get("X-Media-Proxy-Version") || "").trim(); } catch (_) {} if (probe && ver) throw new Error("Worker 媒体代理预检探测通过（部署版本 " + ver + " 在位）但请求仍失败——可能为瞬时网络抖动或 Worker 运行时异常，请重试一次；持续失败请到 Cloudflare Dashboard 查看 Worker 实时日志（IMPL-113③ 自诊断）"); if (probe) throw new Error("Worker 媒体代理可达但响应缺版本特征——线上仍为旧版部署（旧版预检白名单缺 X-Enable-Watermark，水印关闭时必被拒，IMPL-113 真根因）。请到 Cloudflare Dashboard 重新部署 upload/worker-ai-media-proxy-merged.js（IMPL-113 版）：Workers & Pages → 选中 Worker → Edit code → 全选粘贴该文件全文 → Deploy，完成后硬刷新本页（IMPL-113③ 自诊断）"); throw new Error("Worker 媒体代理不通（网络不可达或未部署）——请先核对 设置→R2 Worker 地址 域名是否正确；如域名无误请到 Cloudflare Dashboard 重新部署 upload/worker-ai-media-proxy-merged.js（IMPL-113 版已修正预检真根因）：Workers & Pages → 选中 Worker → Edit code → 全选粘贴该文件全文 → Deploy，完成后硬刷新本页（IMPL-113③ 自诊断）"); } throw new Error("网络请求失败，可能是跨域(CORS)或网络问题"); }
+if (e.message === "Failed to fetch") { if (String(path || "").includes("/media/")) { let probe = false, ver = ""; try { const pr = await fetch(url, { method: "OPTIONS", signal: AbortSignal.timeout(8000) }); probe = pr.ok; ver = (pr.headers.get("X-Media-Proxy-Version") || "").trim(); } catch (_) { _r9mNote("net-001", _); } if (probe && ver) throw new Error("Worker 媒体代理预检探测通过（部署版本 " + ver + " 在位）但请求仍失败——可能为瞬时网络抖动或 Worker 运行时异常，请重试一次；持续失败请到 Cloudflare Dashboard 查看 Worker 实时日志（IMPL-113③ 自诊断）"); if (probe) throw new Error("Worker 媒体代理可达但响应缺版本特征——线上仍为旧版部署（旧版预检白名单缺 X-Enable-Watermark，水印关闭时必被拒，IMPL-113 真根因）。请到 Cloudflare Dashboard 重新部署 upload/worker-ai-media-proxy-merged.js（IMPL-113 版）：Workers & Pages → 选中 Worker → Edit code → 全选粘贴该文件全文 → Deploy，完成后硬刷新本页（IMPL-113③ 自诊断）"); throw new Error("Worker 媒体代理不通（网络不可达或未部署）——请先核对 设置→R2 Worker 地址 域名是否正确；如域名无误请到 Cloudflare Dashboard 重新部署 upload/worker-ai-media-proxy-merged.js（IMPL-113 版已修正预检真根因）：Workers & Pages → 选中 Worker → Edit code → 全选粘贴该文件全文 → Deploy，完成后硬刷新本页（IMPL-113③ 自诊断）"); } throw new Error("网络请求失败，可能是跨域(CORS)或网络问题"); }
 throw e;
 }
 },
@@ -6770,7 +6783,7 @@ Store.pushLlmUsage({ t: Date.now(), model: model || "auto", tag: tag || "skill",
 /* ★ R19：用量回传（**可选回调**；与账本同一守卫 —— 首个出口恰好一次）。
    形状原样给（OpenAI 形态 prompt_tokens / completion_tokens）——由回调侧自行归一。
    失败 / 用户中止时 usage 为 null，回调侧自行判空。 */
-try { if (typeof onUsage === "function") onUsage(usage, { model: model || "auto", ok: !!ok, ms: Date.now() - t0, tag: tag || "skill" }); } catch (_) {}
+try { if (typeof onUsage === "function") onUsage(usage, { model: model || "auto", ok: !!ok, ms: Date.now() - t0, tag: tag || "skill" }); } catch (_) { _r9mNote("misc-015", _); }
 };
 try {
 for (let i = 0; i < endpoints.length; i++) {
@@ -6803,12 +6816,12 @@ if (res.status === 429) {
 /* ★★ R95-1-4（报告 01 P1-3）：官方口径 429 = 「限流 **或** 额度/余额不足」，**不该猜死** ——
    旧文案「今日技能额度已用完」把两种可能说成一种，用户会照着错的去等待/充值。优先用上游原话，兜底给中性描述。 */
 let msg = "技能服务限流或额度不足（HTTP 429）——请稍后重试；若持续出现请检查账户额度";
-try { const j = await res.json(); msg = (j && j.error && j.error.message) || msg; } catch (e) {}
+try { const j = await res.json(); msg = (j && j.error && j.error.message) || msg; } catch (e) { _r9mNote("net-002", e); }
 throw this._llmErr(msg, true);
 }
 if (!res.ok) {
 let detail = "";
-try { detail = (await res.text()).slice(0, 160); } catch (e) {}
+try { detail = (await res.text()).slice(0, 160); } catch (e) { _r9mNote("net-003", e); }
 /* IMPL-75：网关 HTML 错误页对用户无意义——消毒为中文提示，不再整段 <html> 糊脸 */
 if (/<html[\s>]|<!doctype/i.test(detail)) detail = "网关返回 HTML 错误页（非 JSON）——多为路由未挂载或网关拦截";
 throw this._llmErr("技能服务错误 HTTP " + res.status + (detail ? "：" + detail : ""), i >= endpoints.length - 1);
@@ -6816,7 +6829,7 @@ throw this._llmErr("技能服务错误 HTTP " + res.status + (detail ? "：" + d
 const ct = (res.headers.get("content-type") || "").toLowerCase();
 if (!res.body || ct.includes("application/json")) {
 const j = await res.json().catch(() => null);
-if (onActivity) { try { onActivity(); } catch (e) {} } /* IMPL-157：非流式分支响应到达同样续命 */
+if (onActivity) { try { onActivity(); } catch (e) { _r9mNote("net-004", e); } } /* IMPL-157：非流式分支响应到达同样续命 */
 /* ★ R9E-APIYI-P1-5：非流式分支也要认 error —— 否则会报「返回为空」，把用户引去查错方向 */
 if (j && j.error) throw this._llmErr("技能上游错误：" + _errText(j.error), i >= endpoints.length - 1);
 if (j?.usage) usage = j.usage;
@@ -6832,7 +6845,7 @@ let sbuf = "";
 for (;;) {
 const { done, value } = await reader.read();
 if (done) break;
-if (onActivity && value && value.length) { try { onActivity(); } catch (e) {} } /* IMPL-157：字节级存活续命 */
+if (onActivity && value && value.length) { try { onActivity(); } catch (e) { _r9mNote("misc-016", e); } } /* IMPL-157：字节级存活续命 */
 sbuf += dec.decode(value, { stream: true });
 let nl;
 while ((nl = sbuf.indexOf("\n")) !== -1) {
@@ -6873,7 +6886,7 @@ if (e && e.noRetry) throw e;
 // 原始英文报错对用户无意义，包裹为可操作中文指引
 if (e instanceof TypeError && /fetch/i.test(e.message || "")) {
 let isFile = false;
-try { isFile = location.protocol === "file:"; } catch (err) {}
+try { isFile = location.protocol === "file:"; } catch (err) { _r9mNote("net-005", err); }
 e = this._llmErr(isFile
 ? "无法连接技能服务（file:// 本地打开）——请把交付件 worker-llm-chat-route.js 挂入你的生产 Worker 后使用（保险箱解锁状态下自动连接）"
 : "无法连接技能服务（网络层失败）——请检查网络连接后重试", i >= endpoints.length - 1);
@@ -7078,7 +7091,7 @@ function _r76ThumbFromBlob(srcBlob, maxEdge, quality) {
       const finish = function (v) {
         if (_done) return;
         _done = true;
-        try { URL.revokeObjectURL(_u); } catch (_e) {}
+        try { URL.revokeObjectURL(_u); } catch (_e) { _r9mNote("blob-003", _e); }
         resolve(v);
       };
       const img = new Image();
@@ -7174,10 +7187,10 @@ function _r76HistorySweep() {
       m++;
     });
     if (m) Store.saveTasks(tasks);
-  } catch (_e) {}
+  } catch (_e) { _r9mNote("misc-017", _e); }
 }
 
-try { window.__r76BootAt = Date.now(); } catch (_e) {}
+try { window.__r76BootAt = Date.now(); } catch (_e) { _r9mNote("misc-018", _e); }
 
 const ThumbService = {
 THUMB_SIZE: 640,
@@ -7303,7 +7316,7 @@ if (cached && cached.thumbUrl) {
 this._memCache.set(url, cached.thumbUrl);
 return cached.thumbUrl;
 }
-} catch (e) {}
+} catch (e) { _r9mNote("misc-019", e); }
 }
 if (result.thumbUrl) {
 this._memCache.set(url, result.thumbUrl);
@@ -7314,7 +7327,7 @@ url: url,
 thumbUrl: result.thumbUrl,
 ts: Date.now()
 });
-} catch (e) {}
+} catch (e) { _r9mNote("misc-020", e); }
 }
 return result.thumbUrl;
 }
@@ -7338,7 +7351,7 @@ url: url,
 thumbUrl: thumbUrl,
 ts: Date.now()
 });
-} catch (e) {}
+} catch (e) { _r9mNote("misc-021", e); }
 }
 return thumbUrl;
 } catch (e) {
@@ -7409,7 +7422,7 @@ Store.saveHistory(hist);
 }
 if (typeof onUpdate === "function") onUpdate(record);
 }
-} catch (e) {}
+} catch (e) { _r9mNote("misc-022", e); }
 }, 50 + this._activeCount * 100);
 }
 };
@@ -7550,7 +7563,7 @@ this.stop(taskId);
 try {
 const _mt = Store.getTasks().find(x => x.id === taskId);
 if (_mt && (_mt.dispatchedVia === "taskcenter" || /^tc_/.test(String(_mt.apiId || "")))) TaskCenter.cancel(taskId).catch(() => {});
-} catch (e) {}
+} catch (e) { _r9mNote("misc-023", e); }
 UI.onTaskResult(taskId, {
 status: "failed",
 error: "已手动停止"
@@ -7846,7 +7859,7 @@ this._submitted.delete(taskId);
 /* queued/running/未知状态：保持监视等待下一轮（不误派不误删） */
 continue;
 }
-} catch (e) {}
+} catch (e) { _r9mNote("misc-024", e); }
 if (info.lastStatus === "processing" && Date.now() - info.startTime > 3e4) {
 this._fire("error", {
 taskId: taskId,
@@ -8248,15 +8261,15 @@ let text = "";
 try {
 text = this.build(task);
 } catch (e) {
-try { Toast.error("复制工作流失败：" + ((e && e.message) || e)); } catch (_e) {}
+try { Toast.error("复制工作流失败：" + ((e && e.message) || e)); } catch (_e) { _r9mNote("ui-015", _e); }
 return false;
 }
-if (!text) { try { Toast.warning("这条记录没有可导出的工作流内容"); } catch (_e) {} return false; }
+if (!text) { try { Toast.warning("这条记录没有可导出的工作流内容"); } catch (_e) { _r9mNote("ui-016", _e); } return false; }
 const ok = await copy(text);
 /* ★ R88-c：失败时不再只弹一句「复制失败」就没下文 —— 打开手动复制面板，让用户一定拿得到内容 */
 if (ok) { Toast.success("工作流已复制到剪贴板"); } else {
-try { Toast.warning("浏览器拦下了自动复制，已打开手动复制"); } catch (_e88) {}
-try { UI._showManualCopy(text); } catch (_e88) {}
+try { Toast.warning("浏览器拦下了自动复制，已打开手动复制"); } catch (_e88) { _r9mNote("ui-017", _e88); }
+try { UI._showManualCopy(text); } catch (_e88) { _r9mNote("ui-018", _e88); }
 }
 return ok;
 }
@@ -8289,7 +8302,7 @@ tint.style.setProperty("--tint-c", rgb);
 tint.classList.remove("glow");
 void tint.offsetWidth;
 tint.classList.add("glow");
-} catch (e) {}
+} catch (e) { _r9mNote("ui-019", e); }
 },
 _dominantColor(url) {
 return new Promise(resolve => {
@@ -8468,7 +8481,7 @@ box.classList.remove("video-away");
 box.style.height = "";
 box.appendChild(v);
 } else {
-try { v.pause(); } catch (_e) {}
+try { v.pause(); } catch (_e) { _r9mNote("ui-020", _e); }
 }
 }
 this._video = null; this._box = null;
@@ -8813,13 +8826,13 @@ return null;
 }
 const w = bmp.width || 0, h = bmp.height || 0;
 if (!w || !h) {
-try { bmp.close(); } catch (e) {}
+try { bmp.close(); } catch (e) { _r9mNote("misc-025", e); }
 return null;
 }
 const scale = Math.min(1, maxSide / Math.max(w, h));
 const overFile = blob.size > maxBytes;
 if (scale === 1 && !overFile) {
-try { bmp.close(); } catch (e) {}
+try { bmp.close(); } catch (e) { _r9mNote("misc-026", e); }
 return null;
 }
 const tw = Math.max(1, Math.round(w * scale)), th = Math.max(1, Math.round(h * scale));
@@ -8830,7 +8843,7 @@ const cx = c.getContext("2d");
 cx.imageSmoothingEnabled = true;
 cx.imageSmoothingQuality = "high";
 cx.drawImage(bmp, 0, 0, tw, th);
-try { bmp.close(); } catch (e) {}
+try { bmp.close(); } catch (e) { _r9mNote("misc-027", e); }
 const enc = (m, q) => new Promise(res => {
 try { c.toBlob(b => res(b || null), m, q); } catch (e) { res(null); }
 });
@@ -9252,10 +9265,10 @@ code: d0.ErrorCode || data.data?.ErrorCode || "ProcessFailed"
 /* ★ R9E-FE-P1-3（报告 02 点名）：轮询期间的网络错误原来被空 catch 吞掉 ⇒
    用户只看到「处理中(n/40)」，40 次跑完才以"超时"收场，中间完全不知道是网络在失败。
    这里连续失败计数：第 3 次出声、第 10 次直接终止（不再白等 40 轮）。 */
-try { console.warn("[swallow:seg-poll]", e); } catch (_e2) {}
+try { console.warn("[swallow:seg-poll]", e); } catch (_e2) { _r9mNote("misc-028", _e2); }
 this._pollErrs = (this._pollErrs || 0) + 1;
 if (this._pollErrs === 3) {
-try { Toast.error("轮询持续失败（连续 " + this._pollErrs + " 次）——网络可能不稳定；任务结果仍可能稍后可用", 6e3); } catch (_e3) {}
+try { Toast.error("轮询持续失败（连续 " + this._pollErrs + " 次）——网络可能不稳定；任务结果仍可能稍后可用", 6e3); } catch (_e3) { _r9mNote("ui-021", _e3); }
 }
 if (this._pollErrs >= 10) {
 this._stopPoll();
@@ -9418,7 +9431,7 @@ function billKindOf(mm) {
 }
 function billTextOf(mm) {
   var est = null;
-  try { est = estCostCny(mm, billParamsOf()); } catch (e) {}
+  try { est = estCostCny(mm, billParamsOf()); } catch (e) { _r9mNote("misc-029", e); }
   if (!est || !(est.cny > 0)) return "";
   return (est.approx ? "≈¥" : "¥") + (est.cny < 1 ? est.cny.toFixed(2) : est.cny.toFixed(1));
 }
@@ -9429,7 +9442,7 @@ function estCostCny(model, body) {
     /* ★ R63-①：张数计入计费 —— 宿主无 num 参数；逐级回退到 DOM 真值（count chip） */
     var _numSrc = (body && body.num != null && body.num !== "") ? body.num
       : (body && body.n != null && body.n !== "") ? body.n : null;
-    if (_numSrc == null) { try { _numSrc = (window.UI && window.UI._getBatchCount) ? window.UI._getBatchCount() : 1; } catch (e) {} }
+    if (_numSrc == null) { try { _numSrc = (window.UI && window.UI._getBatchCount) ? window.UI._getBatchCount() : 1; } catch (e) { _r9mNote("misc-030", e); } }
     var num = Math.max(1, parseInt(_numSrc, 10) || 1);
     if (b.type === "perSecond") {
       var s = parseFloat(body && body.duration);
@@ -9468,7 +9481,7 @@ function estCostCny(model, body) {
       if (usd <= 0) return null;
       return { cny: usd * 7, approx: px > 1, detail: q + "·" + (body.size || "1K") + (inImgs ? "·含" + inImgs + "图" : "") + (num > 1 ? "·×" + num : "") };
     }
-  } catch (e) {}
+  } catch (e) { _r9mNote("misc-031", e); }
   return null;
 }
 function priceCnyOf(mm) {
@@ -9508,7 +9521,7 @@ const VoiceInput = {
     let mime = "";
     const cands = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"];
     for (const c of cands) {
-      try { if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(c)) { mime = c; break; } } catch (e) {}
+      try { if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(c)) { mime = c; break; } } catch (e) { _r9mNote("misc-032", e); }
     }
     try {
       this._rec = mime ? new MediaRecorder(this._stream, { mimeType: mime }) : new MediaRecorder(this._stream);
@@ -9568,7 +9581,7 @@ const VoiceInput = {
     if (!AC) throw new Error("浏览器不支持音频解码");
     const ctx = new AC();
     let buf;
-    try { buf = await ctx.decodeAudioData(ab); } finally { try { ctx.close(); } catch (e) {} }
+    try { buf = await ctx.decodeAudioData(ab); } finally { try { ctx.close(); } catch (e) { _r9mNote("ui-022", e); } }
     const rate = 16000, n = Math.max(1, Math.round(buf.duration * rate));
     const chans = [];
     for (let c = 0; c < buf.numberOfChannels; c++) chans.push(buf.getChannelData(c));
@@ -9638,7 +9651,7 @@ const VoiceInput = {
         cost: cost ? cost.amount : 0
       });
       if (typeof UI !== "undefined" && UI.renderHistoryBadge) UI.renderHistoryBadge();
-    } catch (e) {}
+    } catch (e) { _r9mNote("misc-033", e); }
   }
 };
 
@@ -9740,13 +9753,13 @@ try {
 const _v = document.querySelector(".about-ver")?.textContent?.trim() || "";
 if (_v) {
 let _lv = null;
-try { _lv = localStorage.getItem("sc_last_ver"); } catch (e) {}
+try { _lv = localStorage.getItem("sc_last_ver"); } catch (e) { _r9mNote("store-017", e); }
 if (_lv !== _v) {
-setTimeout(() => { try { Toast.success("已更新到 " + _v + " —— 看到此提示说明页面已加载最新版"); } catch (e) {} }, 4200);
-try { localStorage.setItem("sc_last_ver", _v); } catch (e) {}
+setTimeout(() => { try { Toast.success("已更新到 " + _v + " —— 看到此提示说明页面已加载最新版"); } catch (e) { _r9mNote("store-018", e); } }, 4200);
+try { localStorage.setItem("sc_last_ver", _v); } catch (e) { _r9mNote("store-019", e); }
 }
 }
-} catch (e) {}
+} catch (e) { _r9mNote("store-020", e); }
 setTimeout(() => {
 if (Store.getSync() && KeyVault.unlocked) this._archivePendingHistory();
 }, 3500);
@@ -9784,9 +9797,9 @@ try {
 const r = await fetch(c.base + "/userdata?key=history&token=" + encodeURIComponent(c.token));
 const d = await r.json();
 if (d && d.ok && Array.isArray(d.data)) cloud = d.data;
-} catch (_e) {}
+} catch (_e) { _r9mNote("parse-002", _e); }
 const merged = cloud.length ? this._mergeHistory(local, cloud) : local;
-if (merged !== local) { try { Store.saveHistory(merged); } catch (_e) {} }
+if (merged !== local) { try { Store.saveHistory(merged); } catch (_e) { _r9mNote("parse-003", _e); } }
 /* ★ R79-C：滤掉还没转存的 blob: 条目 —— 它们只在本页有效，推上云别的设备必然打不开 */
 const payload = _r9dHistPayload(merged); /* ★ R9D-SEC-P1-5：与离页那条共用同一构造 */
 await fetch(c.base + "/userdata?key=history&token=" + encodeURIComponent(c.token), {
@@ -9809,17 +9822,17 @@ headers: {
 body: JSON.stringify(_tb)
 });
 }
-} catch (_e) {}
-try { localStorage.setItem("sc_hist_push_at", String(Date.now())); } catch (_e) {}
+} catch (_e) { _r9mNote("parse-004", _e); }
+try { localStorage.setItem("sc_hist_push_at", String(Date.now())); } catch (_e) { _r9mNote("store-021", _e); }
 } catch (e) {
 /* ★ R9E-FE-P1-3：云同步**整链失败原来完全静默** —— 而"同步没生效"正是使用者反复报的症状。
    出声（同因节流 60s）+ 把失败时刻写进 localStorage 供状态行/自查读取。 */
-try { console.warn("[swallow:hist-sync]", e); } catch (_e2) {}
+try { console.warn("[swallow:hist-sync]", e); } catch (_e2) { _r9mNote("store-022", _e2); }
 try {
 var _r9eNow = Date.now(), _r9eLast = Number(localStorage.getItem("sc_hist_push_err_at") || 0);
 localStorage.setItem("sc_hist_push_err_at", String(_r9eNow));
 if (_r9eNow - _r9eLast > 6e4) Toast.error("云端历史同步失败（本机数据不受影响）：" + _errText(e), 6e3);
-} catch (_e3) {}
+} catch (_e3) { _r9mNote("store-023", _e3); }
 }
 },
 async _syncHistoryToCloudNow() {
@@ -9833,7 +9846,7 @@ this._renderTaskList();
 this.renderHistoryBadge();
 if ($("#historySidebar")?.classList.contains("show")) this.renderHistory();
 }).catch(() => {});
-try { this._archivePendingHistory(); } catch (e) {}
+try { this._archivePendingHistory(); } catch (e) { _r9mNote("ui-023", e); }
 },
 async _syncHistoryFromCloud(force) {
 if (!Store.getSync() && !force) return; /* IMPL-118③：force=解锁后显式拉取，绕过自动同步开关（开关仅管后台轮询/归档） */
@@ -9846,12 +9859,12 @@ if (data.ok && data.data && Array.isArray(data.data)) {
 const local = Store.getHistory();
 const merged = this._mergeHistory(local, data.data);
 Store.saveHistory(merged);
-try { localStorage.setItem("sc_hist_sync_at", String(Date.now())); } catch (e) {}/* IMPL-122：上次云端拉取时间（设置抽屉状态行展示） */
+try { localStorage.setItem("sc_hist_sync_at", String(Date.now())); } catch (e) { _r9mNote("store-024", e); }/* IMPL-122：上次云端拉取时间（设置抽屉状态行展示） */
 this._renderCloudSyncStatus();/* IMPL-122：抽屉开着时状态行即时刷新 */
 this._renderResultStrip();
 this._archivePendingHistory();
 }
-} catch (e) {}
+} catch (e) { _r9mNote("store-025", e); }
 },
 _archivePendingHistory() {
 if (!Store.getSync()) return;
@@ -9939,9 +9952,9 @@ $("#restoreBtn").addEventListener("click", () => this._restoreHidden());
 if (!window.__r22CostHooked) {
 window.__r22CostHooked = true;
 var _r22t = 0;
-var _r22refresh = function() { clearTimeout(_r22t); _r22t = setTimeout(function() { try { if (window.UI && UI._refreshGenerateBtn) UI._refreshGenerateBtn(); } catch (_) {} }, 200); };
-document.addEventListener("input", function(e) { try { if (e.target && e.target.closest && e.target.closest("[data-key]")) _r22refresh(); } catch (_) {} });
-document.addEventListener("change", function(e) { try { if (e.target && e.target.closest && (e.target.closest("[data-key]") || e.target.closest("#modelSelect"))) _r22refresh(); } catch (_) {} });
+var _r22refresh = function() { clearTimeout(_r22t); _r22t = setTimeout(function() { try { if (window.UI && UI._refreshGenerateBtn) UI._refreshGenerateBtn(); } catch (_) { _r9mNote("cleanup-003", _); } }, 200); };
+document.addEventListener("input", function(e) { try { if (e.target && e.target.closest && e.target.closest("[data-key]")) _r22refresh(); } catch (_) { _r9mNote("cleanup-004", _); } });
+document.addEventListener("change", function(e) { try { if (e.target && e.target.closest && (e.target.closest("[data-key]") || e.target.closest("#modelSelect"))) _r22refresh(); } catch (_) { _r9mNote("misc-034", _); } });
 }
 /* ★ R26-G（2026-10-02）：window.UI 此前**从未赋值** ⇒ 'window.UI && UI._refreshGenerateBtn' 恒短路，
    生成按钮金额从未刷新过（R22 上线即假绿）。此处补引用 + 切模型（#modelSelect）也触发刷新。 */
@@ -9954,16 +9967,16 @@ try {
     window.__r9bGlobalHooked = true;
     var _r9bLastAt = 0;
     var _r9bReport = function (kind, msg) {
-      try { console.warn("[R9B-global] " + kind + ": " + msg); } catch (_) {}
+      try { console.warn("[R9B-global] " + kind + ": " + msg); } catch (_) { _r9mNote("ui-024", _); }
       var _now = Date.now();
       if (_now - _r9bLastAt < 1e4) return;
       _r9bLastAt = _now;
-      try { Toast.error("页面出现未处理异常（" + kind + "）：功能可能未完成，详情已记录到控制台", 6e3); } catch (_) {}
+      try { Toast.error("页面出现未处理异常（" + kind + "）：功能可能未完成，详情已记录到控制台", 6e3); } catch (_) { _r9mNote("ui-025", _); }
     };
-    window.addEventListener("unhandledrejection", function (e) { try { var r = e && e.reason; _r9bReport("promise", String((r && (r.message || r)) || "").slice(0, 160)); } catch (_) {} });
-    window.addEventListener("error", function (e) { try { _r9bReport("error", String((e && e.message) || "").slice(0, 200)); } catch (_) {} });
+    window.addEventListener("unhandledrejection", function (e) { try { var r = e && e.reason; _r9bReport("promise", String((r && (r.message || r)) || "").slice(0, 160)); } catch (_) { _r9mNote("ui-026", _); } });
+    window.addEventListener("error", function (e) { try { _r9bReport("error", String((e && e.message) || "").slice(0, 200)); } catch (_) { _r9mNote("misc-035", _); } });
   }
-} catch (_) {}
+} catch (_) { _r9mNote("misc-036", _); }
 $("#generateBtn").addEventListener("click", () => this.handleGenerate());
 $("#copyWorkflowBtn").addEventListener("click", () => {
 const task = this._buildCurrentTask();
@@ -9993,13 +10006,13 @@ $("#settingsBtn").addEventListener("click", () => this._openSettings());
     root.setAttribute("data-theme", t);
     if (icon) icon.innerHTML = (t === "dark") ? SUN : MOON;
     if (btn) btn.title = (t === "dark") ? "切换到亮色" : "切换到暗色";
-    try { document.dispatchEvent(new CustomEvent("w5:theme", { detail: { theme: t } })); } catch (_) {}
+    try { document.dispatchEvent(new CustomEvent("w5:theme", { detail: { theme: t } })); } catch (_) { _r9mNote("ui-027", _); }
   }
   paint(root.getAttribute("data-theme") === "light" ? "light" : "dark");
   if (btn) btn.addEventListener("click", function () {
     var next = (root.getAttribute("data-theme") === "dark") ? "light" : "dark";
     paint(next);
-    try { localStorage.setItem("w5_theme", next); } catch (_) {}
+    try { localStorage.setItem("w5_theme", next); } catch (_) { _r9mNote("store-026", _); }
   });
 })();
 $("#openStudioBtn").addEventListener("click", () => {
@@ -10010,7 +10023,7 @@ $("#openStudioBtn").addEventListener("click", () => {
 $("#skillModelRefreshBtn").addEventListener("click", () => this.refreshSkillModels());
 /* R51-4b：技能区现常显于主面板（此前 renderSkillModels 只在「打开设置」时被调 —— @openSettings）
    ⇒ 补一次初始渲染，否则列表/徽标到首次打开设置前都是空的 */
-try { this.renderSkillModels(); } catch (_) {}
+try { this.renderSkillModels(); } catch (_) { _r9mNote("misc-037", _); }
 /* ── R52：三模式按钮的事件绑定（原提示词工具行的按钮 → 技能区；原 wrap 内绑定随搬离失效）── */
 (function (app) {
   var box = document.querySelector(".skill-mode-row");
@@ -10036,11 +10049,11 @@ try { this.renderSkillModels(); } catch (_) {}
   if (btn && sel) {
     btn.addEventListener("click", function (e) {
       e.stopPropagation();
-      try { sel.showPicker(); } catch (_) { try { sel.focus(); } catch (__) {} }
+      try { sel.showPicker(); } catch (_) { try { sel.focus(); } catch (__) { _r9mNote("misc-038", __); } }
     });
     sel.addEventListener("change", syncBadge);
     if (window.MutationObserver) {
-      try { new MutationObserver(syncBadge).observe(sel, { childList: true }); } catch (_) {}
+      try { new MutationObserver(syncBadge).observe(sel, { childList: true }); } catch (_) { _r9mNote("misc-039", _); }
     }
     syncBadge();
   }
@@ -10053,11 +10066,11 @@ try { this.renderSkillModels(); } catch (_) {}
     var on = !!document.querySelector(".skill-bubbles .sb-chip");
     wrap.classList.toggle("is-skill-off", !on);
   }
-  if (window.MutationObserver) { try { new MutationObserver(sync).observe(document.body, { childList: true, subtree: true }); } catch (e) {} }
+  if (window.MutationObserver) { try { new MutationObserver(sync).observe(document.body, { childList: true, subtree: true }); } catch (e) { _r9mNote("ui-028", e); } }
   sync();
 })();
 /* R60：加载即刷新一次金额胶囊（原先要换一次模型才显示） */
-setTimeout(function () { try { if (window.UI && window.UI._refreshGenerateBtn) window.UI._refreshGenerateBtn(); } catch (e) {} }, 400);
+setTimeout(function () { try { if (window.UI && window.UI._refreshGenerateBtn) window.UI._refreshGenerateBtn(); } catch (e) { _r9mNote("misc-040", e); } }, 400);
 /* ── R51：技能模型区（弹出面板开合 + 讨论模式单/双栏联动）── */
 (function () {
   var btn = document.getElementById("skillModelPickBtn");
@@ -10085,7 +10098,7 @@ setTimeout(function () { try { if (window.UI && window.UI._refreshGenerateBtn) w
   function syncCols() {
     if (!wrap) return;
     var on = false;
-    try { if (typeof Store !== "undefined" && Store.getSkillDiscuss) on = !!Store.getSkillDiscuss(); } catch (_) {}
+    try { if (typeof Store !== "undefined" && Store.getSkillDiscuss) on = !!Store.getSkillDiscuss(); } catch (_) { _r9mNote("misc-041", _); }
     wrap.setAttribute("data-discuss", on ? "1" : "0");
   }
   syncCols();
@@ -10093,7 +10106,7 @@ setTimeout(function () { try { if (window.UI && window.UI._refreshGenerateBtn) w
      ⇒ 观察对象改为技能区的讨论按钮（_syncModeUI 会更新它的 class / aria-pressed） */
   var discSw = document.querySelector(".skill-mode-row [data-mode-discuss]") || document.getElementById("skillDiscussToggle");
   if (discSw && window.MutationObserver) {
-    try { new MutationObserver(syncCols).observe(discSw, { attributes: true, attributeFilter: ["class", "aria-checked", "aria-pressed"] }); } catch (_) {}
+    try { new MutationObserver(syncCols).observe(discSw, { attributes: true, attributeFilter: ["class", "aria-checked", "aria-pressed"] }); } catch (_) { _r9mNote("ui-029", _); }
   }
 })();
 {
@@ -10230,7 +10243,7 @@ if (!/密码错误/.test(m) && !_remoteIssue(m)) throw err;
 if (!_remoteIssue(m)) {
 /* IMPL-116：legacy 优先离线解本地簿（不依赖网络） */
 if (_isLegacy(pw)) {
-try { r = await KeyVault.unlock(_lgMaster()); _legacyHit = true; } catch (_e) {}
+try { r = await KeyVault.unlock(_lgMaster()); _legacyHit = true; } catch (_e) { _r9mNote("misc-042", _e); }
 }
 if (!r) {
 let remote = null;
@@ -10276,7 +10289,7 @@ storageSet(CONFIG.STORAGE_KEYS.TASK_CENTER_URL, String(_k.TASK_CENTER_URL).trim(
 storageSet(CONFIG.STORAGE_KEYS.TASK_CENTER_TOKEN, String(_k.TASK_CENTER_TOKEN).trim());
 if (typeof TaskCenter !== "undefined" && !TaskCenter.enabled) TaskCenter.init().then(() => this._vaultAfterUnlock()).catch(() => {});
 }
-} catch (e) {}
+} catch (e) { _r9mNote("store-027", e); }
 if (this._histCloudBase()) this._vaultAfterUnlock();/* IMPL-125 B'：解锁即同步（TC 或 R2 任一就位） */
 else setTimeout(() => { if (Store.getSync() && !this._histCloudBase()) Toast.info("解锁保险箱并配置云端同步后，可跨设备同步最近结果"); }, 2500);
 } catch (err) {
@@ -10340,7 +10353,7 @@ const pw = KeyVault._pw || "";
 if (pw) { /* IMPL-104（S-1）：master 兜底已拆除 */
 try {
 KeyVault.reEncrypt(pw);
-} catch (e) {}
+} catch (e) { _r9mNote("ui-030", e); }
 }
 const form = $("#keyEditForm"), done = $("#keyEditDone");
 if (form) form.style.display = "none";
@@ -11318,7 +11331,7 @@ _openModelPick() {
 const list = $("#modelPickList");
 if (!list) return;
 /* ★ R63-③：价签与「同名比价」排序都按当前参数现算（含张数）⇒ 打开前重建一次 */
-try { this._updateModelBar(); } catch (e) {}
+try { this._updateModelBar(); } catch (e) { _r9mNote("ui-031", e); }
 list.classList.add("show");
 $("#modelPickBtn")?.setAttribute("aria-expanded", "true");
 this._positionModelPick();
@@ -12360,7 +12373,7 @@ this._registerFilePondPlugins();
 const close = () => {
 try {
 FilePond.destroy(fp);
-} catch (_) {}
+} catch (_) { _r9mNote("cleanup-005", _); }
 if (modal.parentNode) modal.remove();
 };
 const modal = document.createElement("div");
@@ -12518,7 +12531,7 @@ if (typeof Sortable !== "undefined" && refItems.length > 1) {
 if (grid._sortableInst) {
 try {
 grid._sortableInst.destroy();
-} catch (_) {}
+} catch (_) { _r9mNote("cleanup-006", _); }
 grid._sortableInst = null;
 }
 try {
@@ -12877,7 +12890,7 @@ if (_at >= 0) tasks[_at] = task; else tasks.unshift(task);
 Store.saveTasks(tasks);
 this._renderTask(task);
 this._renderActiveTasks();
-if (!useTaskCenter || task.dispatchedVia === "direct") poller.start(task); else { /* ★ R77-C：任务中心已启用但监视循环没在跑 ⇒ 结果永远回不来（enabled 与 pollTimer 可能被瞬时故障拆散） */ try { if (!TaskCenter.pollTimer) TaskCenter.startPolling(); } catch (_e) {} }
+if (!useTaskCenter || task.dispatchedVia === "direct") poller.start(task); else { /* ★ R77-C：任务中心已启用但监视循环没在跑 ⇒ 结果永远回不来（enabled 与 pollTimer 可能被瞬时故障拆散） */ try { if (!TaskCenter.pollTimer) TaskCenter.startPolling(); } catch (_e) { _r9mNote("misc-043", _e); } }
 } else {
 task.status = "failed";
 task.error = (_err && _err.message) || "提交失败";
@@ -12936,7 +12949,7 @@ if (_apiDef67) {
     try {
       const _el = document.querySelector('[data-tid="' + task.id + '"] .tm-elapsed');
       if (_el) _el.textContent = "已用 " + fmtDur(Date.now() - task.createdAt);
-    } catch (_e) {}
+    } catch (_e) { _r9mNote("ui-032", _e); }
   }, 1000);
   /* ── 参数装配：与 bitmapHandler 的 exA 同形（apiyiImages/apiyiEdits/apiyiGemini 的 ex 契约） ── */
   const _ex67 = {};
@@ -12954,8 +12967,8 @@ if (_apiDef67) {
   /* 源图 / 遮罩：body.urls 首张即源图（csv 序 = 用户添加序），body.mask 为单图 URL（output:"single"） */
   const _maskUrl67 = String(v.body.mask || "").trim();
   let _img67 = null, _mask67 = null;
-  try { if (_uAll67[0]) _img67 = await _H67.blobUrlToDataURL(_uAll67[0]); } catch (e) {}
-  try { if (_maskUrl67 && /^https?:\/\//.test(_maskUrl67)) _mask67 = await _H67.blobUrlToDataURL(_maskUrl67); } catch (e) {}
+  try { if (_uAll67[0]) _img67 = await _H67.blobUrlToDataURL(_uAll67[0]); } catch (e) { _r9mNote("misc-044", e); }
+  try { if (_maskUrl67 && /^https?:\/\//.test(_maskUrl67)) _mask67 = await _H67.blobUrlToDataURL(_maskUrl67); } catch (e) { _r9mNote("misc-045", e); }
   let _prompt67 = String(v.body.prompt || v.body.text || "");
   /* R82：参考图存在时补一句事实声明（与编辑器侧同口径）。
      有蒙版 ⇒ 说清「只改第 1 张蒙版区域」；无蒙版 ⇒ 不能说蒙版（会指向不存在的区域）。 */
@@ -13002,7 +13015,7 @@ if (_apiDef67) {
     const _ts2 = Store.getTasks().filter(t => t.id !== task.id);
     Store.saveTasks(_ts2);
     this._renderActiveTasks();
-  } catch (_e) {}
+  } catch (_e) { _r9mNote("misc-046", _e); }
 } else {
   data = genModel.direct ? await Api.directRun(genModel, v.body) : await Api.syncCall(genModel, v.body);
 }
@@ -13062,13 +13075,13 @@ this._renderTask(_r77failed[_r77failed.length - 1]);
 this._renderActiveTasks();
 this._renderResultStrip();
 }
-} catch (_e77) {}
+} catch (_e77) { _r9mNote("misc-047", _e77); }
 if (e && e.code === "StageFailed" && location.protocol === "file:") {
 const hint = document.getElementById("fileModeHint");
 if (hint) {
 try {
-try { localStorage.removeItem("wb_filemode_hint_dismissed"); } catch (_) {} try { sessionStorage.removeItem("wb_filemode_hint_dismissed"); } catch (_) {}
-} catch (_) {}
+try { localStorage.removeItem("wb_filemode_hint_dismissed"); } catch (_) { _r9mNote("store-028", _); } try { sessionStorage.removeItem("wb_filemode_hint_dismissed"); } catch (_) { _r9mNote("store-029", _); }
+} catch (_) { _r9mNote("store-030", _); }
 hint.hidden = false;
 }
 Toast.error(e.message, 9e3, {
@@ -13086,11 +13099,11 @@ console.error(e);
 /* ★ R76-E3：兜底清理 —— 无论正常、抛错还是提前 return，都不留 1s tick、也不留转圈的占位卡 */
 try {
 const _tk = this._r76Ticks || {};
-Object.keys(_tk).forEach(k => { try { clearInterval(_tk[k]); } catch (_e) {} delete _tk[k]; });
+Object.keys(_tk).forEach(k => { try { clearInterval(_tk[k]); } catch (_e) { _r9mNote("ui-033", _e); } delete _tk[k]; });
 const _all = Store.getTasks();
 const _keep = _all.filter(t => !(t._r76Api && t.status === "processing"));
 if (_keep.length !== _all.length) { Store.saveTasks(_keep); this._renderActiveTasks(); }
-} catch (_e) {}
+} catch (_e) { _r9mNote("misc-048", _e); }
 btn.disabled = false;
 this._generating = false;
 this._refreshGenerateBtn();
@@ -13245,9 +13258,9 @@ if (hasActive) { el.textContent = "生成中..."; if (pill) pill.classList.remov
 /* ★ R26-C（修 2026-10-02）：金额改邻位费用胶囊；算不出 ⇒ 隐藏（不编数）。 */
 el.textContent = "生成";
 var est = null;
-try { est = estCostCny(this.state.model, this._collectParamsSync()); } catch (e) {}
+try { est = estCostCny(this.state.model, this._collectParamsSync()); } catch (e) { _r9mNote("ui-034", e); }
 /* R60：perChar（语音合成）estCostCny 不覆盖 ⇒ 按 字符数×单价 就地补算（仅本胶囊） */
-if (!est) { try { var _rb = this.state.model && this.state.model.billing; if (_rb && _rb.type === "perChar") { var _rt = String((this._collectParamsSync() || {})[_rb.charKey || "text"] || ""); if (_rt.length) est = { cny: _rt.length * _rb.unit, approx: false, detail: _rt.length + "字" }; } } catch (e) {} }
+if (!est) { try { var _rb = this.state.model && this.state.model.billing; if (_rb && _rb.type === "perChar") { var _rt = String((this._collectParamsSync() || {})[_rb.charKey || "text"] || ""); if (_rt.length) est = { cny: _rt.length * _rb.unit, approx: false, detail: _rt.length + "字" }; } } catch (e) { _r9mNote("misc-049", e); } }
 if (pill) {
 if (est && est.cny > 0) {
 pill.textContent = (est.approx ? "≈¥" : "¥") + (est.cny < 0.01 ? est.cny.toFixed(3) : est.cny < 1 ? est.cny.toFixed(2) : est.cny.toFixed(1));
@@ -13288,8 +13301,8 @@ if (Array.isArray(m.params)) return m;
 const id = m.id;
 if (id) {
 const pools = [];
-try { if (typeof MODELS !== "undefined" && MODELS) pools.push(MODELS.image || [], MODELS.video || [], MODELS.audio || []); } catch (_e) {}
-try { if (typeof SKILL_MODEL_PRESETS !== "undefined" && Array.isArray(SKILL_MODEL_PRESETS)) pools.push(SKILL_MODEL_PRESETS); } catch (_e) {}
+try { if (typeof MODELS !== "undefined" && MODELS) pools.push(MODELS.image || [], MODELS.video || [], MODELS.audio || []); } catch (_e) { _r9mNote("misc-050", _e); }
+try { if (typeof SKILL_MODEL_PRESETS !== "undefined" && Array.isArray(SKILL_MODEL_PRESETS)) pools.push(SKILL_MODEL_PRESETS); } catch (_e) { _r9mNote("misc-051", _e); }
 for (const pool of pools) {
 const hit = (pool || []).find(x => x && x.id === id);
 if (hit && Array.isArray(hit.params)) return Object.assign({}, hit, { name: m.name || hit.name, type: m.type || hit.type });
@@ -13329,7 +13342,7 @@ window.__r91Sess.set(id, u);
 /* 上限 40 条，超了从最早的开始 revoke（否则长会话会一直占内存） */
 if (window.__r91Sess.size > 40) {
 const k = window.__r91Sess.keys().next().value;
-try { URL.revokeObjectURL(window.__r91Sess.get(k)); } catch (_e) {}
+try { URL.revokeObjectURL(window.__r91Sess.get(k)); } catch (_e) { _r9mNote("blob-004", _e); }
 window.__r91Sess.delete(k);
 }
 return u;
@@ -13342,7 +13355,7 @@ if (!url || this._preloadCache.has(url)) return;
    ① _preloadCache 只服务「原图预览秒开」，对视频没意义；
    ② 全量 fetch 几十 MB 再上传 R2，会当场抢用户带宽。
    列表/历史只用缩略图，点开走浏览器原生加载 ⇒ 转存改由 __r86Archive 空闲串行调度。 */
-if (task.model?.type === "video") { try { window.__r86Archive.schedule(task); } catch (_e86) {} return; }
+if (task.model?.type === "video") { try { window.__r86Archive.schedule(task); } catch (_e86) { _r9mNote("net-006", _e86); } return; }
 try {
 const res = await fetch(url);
 if (!res.ok) throw new Error("HTTP " + res.status); /* IMPL-104：过期 URL 的 404 错误页不入缓存/不触发转存 */
@@ -13353,12 +13366,12 @@ blob: blob,
 timestamp: Date.now()
 });
 /* ★ R91-A：图片一预载就把会话显示地址定下来 ⇒ 首次渲染之后显示地址**再也不变**。 */
-try { if (task && task.id) this._r91SessionUrl(task.id, blob); } catch (_e91) {}
+try { if (task && task.id) this._r91SessionUrl(task.id, blob); } catch (_e91) { _r9mNote("misc-052", _e91); }
 if (this._preloadCache.size > 12) {
 const firstKey = this._preloadCache.keys().next().value;
 this._preloadCache.delete(firstKey);
 }
-} catch (e) {}
+} catch (e) { _r9mNote("misc-053", e); }
 if (Store.getSync() && (typeof TaskCenter !== "undefined" && TaskCenter.isAvailable() || (Store.getR2WorkerUrl() || "").trim() && (Store.getR2AuthToken() || "").trim())) {
 this._archiveResult(task).catch(() => {});
 }
@@ -13375,11 +13388,11 @@ _r9bLocalOnly(task, why) {
       const arr = Store.getTasks();
       const i = arr.findIndex(t => t.id === task.id);
       if (i >= 0) { arr[i].localOnly = true; arr[i].localOnlyReason = task.localOnlyReason; Store.saveTasks(arr); }
-    } catch (_) {}
-    try { this._renderTaskList(); } catch (_) {}
-    try { Toast.warning("结果未能转存到云端：仅在本页有效，关闭/刷新后会丢失 —— 已为你触发一次下载", 9e3); } catch (_) {}
-    try { if (task.result && task.result.url) this._downloadFile(task.result.url, (task.model && task.model.id ? task.model.id : "workbench") + "_" + task.id); } catch (_) {}
-  } catch (_) {}
+    } catch (_) { _r9mNote("misc-054", _); }
+    try { this._renderTaskList(); } catch (_) { _r9mNote("misc-055", _); }
+    try { Toast.warning("结果未能转存到云端：仅在本页有效，关闭/刷新后会丢失 —— 已为你触发一次下载", 9e3); } catch (_) { _r9mNote("ui-035", _); }
+    try { if (task.result && task.result.url) this._downloadFile(task.result.url, (task.model && task.model.id ? task.model.id : "workbench") + "_" + task.id); } catch (_) { _r9mNote("ui-036", _); }
+  } catch (_) { _r9mNote("ui-037", _); }
 },
 async _archiveResult(task) {
 if (!Store.getSync()) return;
@@ -13404,8 +13417,8 @@ try {
 if (!window.__r92Arch) window.__r92Arch = {};
 if (window.__r92Arch[_r92key]) return;
 window.__r92Arch[_r92key] = 1;
-setTimeout(function () { try { delete window.__r92Arch[_r92key]; } catch (e) {} }, 30000);
-} catch (e) {}
+setTimeout(function () { try { delete window.__r92Arch[_r92key]; } catch (e) { _r9mNote("misc-056", e); } }, 30000);
+} catch (e) { _r9mNote("misc-057", e); }
 const modelName = (task.model?.name || "unknown").replace(/[^a-zA-Z0-9_-]/g, "_");
 const time = new Date(task.completedAt || task.createdAt || Date.now()).toISOString().slice(0, 19).replace(/[:T]/g, "-");
 const ratio = task.body?.aspectRatio || task.body?.ratio || "auto";
@@ -13458,7 +13471,7 @@ this._renderTaskList();
 if ($("#historySidebar")?.classList.contains("show")) this.renderHistory();
 this._scheduleHistorySync();
 /* ★ R86：转存完成 ⇒ 通知调度器（结果条上的「转存中」要变回常态） */
-try { window.__r86Archive.notify(); } catch (_e86) {}
+try { window.__r86Archive.notify(); } catch (_e86) { _r9mNote("ui-038", _e86); }
 };
 try {
 /* ★ R86-⑦：**先复用预载缓存** —— `_preloadResult` 刚为同一 URL 拉过一份 blob（图片路径必然如此），
@@ -13468,7 +13481,7 @@ let blob = null;
 try {
 const _pc = this._preloadCache && this._preloadCache.get(url);
 if (_pc && _pc.blob && _pc.blob.size > 0) blob = _pc.blob;
-} catch (_e86c) {}
+} catch (_e86c) { _r9mNote("net-007", _e86c); }
 if (!blob) {
 const res = await fetch(url);
 if (!res.ok) throw new Error("HTTP " + res.status); /* IMPL-104：404 错误页不得被上传 R2 并覆盖历史 url */
@@ -13482,14 +13495,14 @@ blob = await res.blob();
    写入点后移 + 文件名统一取 nameOf(data.url)，两条一起解决。 */
 if (blob && /^text\/html/i.test(blob.type || "")) throw new Error("HTML 错误页而非媒体文件"); /* IMPL-104 */
 /* ★ R91-A：预载没跑（视频走的就是这条）或预载失败时，在这里补定一次会话显示地址。 */
-try { this._r91SessionUrl(task.id, blob); } catch (_e91b) {}
+try { this._r91SessionUrl(task.id, blob); } catch (_e91b) { _r9mNote("misc-058", _e91b); }
 /* ★ R74-2：blob: 的 URL 里没有扩展名 ⇒ 上面按 URL 推断一律得 png；MIME 以 blob.type 为准纠正回来 */
 let _upName = fileName;
 try {
 const _mt = { "image/jpeg": "jpg", "image/jpg": "jpg", "image/webp": "webp", "image/gif": "gif", "image/png": "png", "video/mp4": "mp4", "video/webm": "mp4", "audio/mpeg": "mp3", "audio/wav": "wav", "audio/x-wav": "wav" };
 const _me = _mt[String((blob && blob.type) || "").toLowerCase()];
 if (_me) _upName = String(fileName).replace(/\.[a-z0-9]+$/i, "." + _me);
-} catch (_) {}
+} catch (_) { _r9mNote("misc-059", _); }
 const formData = new FormData;
 formData.append("file", blob, _upName);
 const uploadUrl = workerUrl + "/upload?token=" + encodeURIComponent(token) + "&dir=results";
@@ -13511,7 +13524,7 @@ const _r92ext = (String(data.url).match(/\.([a-z0-9]+)(?:\?|$)/i) || [ , "png" ]
 const _r92ln = (this._r92LocalName && this._r92LocalName(task, _r92ext)) || _r92alias;
 if (_r92ln) window.__r84Local.save(_r92ln, blob, _r92alias);
 }
-} catch (_e91b2) {}
+} catch (_e91b2) { _r9mNote("misc-060", _e91b2); }
 console.log("[archive] 前端转存成功:", url, "→", data.url, "(", fileName, ")");
 /* ★ R76-A2：顺手出缩略图 —— blob 已在手上（同源），_r76ThumbFromBlob 不经过 URL ⇒ 不受 CORS 约束。
    生成后把 thumbUrl 写回 tasks/history，列表/历史自此加载缩略图（~40 KB）而非原图（1~4 MB）。
@@ -13810,7 +13823,7 @@ const ci = this.state.singleIdx || 0;
 const t = vi[off];
 if (t && t.result && t.result.url) this._preloadResult(t);
 });
-} catch (e) {}
+} catch (e) { _r9mNote("misc-061", e); }
 },
 _singleNav(dir) {
 const arr = this.state.singleList || [];
@@ -13877,7 +13890,7 @@ const fo = e.target.closest(".rf-folder");
 if (fo && fo.dataset.fid) {
 lpTimer = setTimeout(() => {
 lpTimer = null;
-try { navigator.vibrate && navigator.vibrate(30); } catch (err) {}
+try { navigator.vibrate && navigator.vibrate(30); } catch (err) { _r9mNote("misc-062", err); }
 this._openFolderMenu(fo.dataset.fid, fo);
 }, 480);
 return;
@@ -13889,7 +13902,7 @@ lpTimer = setTimeout(() => {
 lpTimer = null;
 this._lpSel = th.dataset.tid; this._lpSelAt = Date.now(); /* IMPL-139：登记长按已消费（抑制松手合成 click 翻转） */
 const task = [...Store.getTasks(), ...Store.getHistory()].find(t => t.id === th.dataset.tid);
-try { navigator.vibrate && navigator.vibrate(30); } catch (err) {}
+try { navigator.vibrate && navigator.vibrate(30); } catch (err) { _r9mNote("misc-063", err); }
 if (this.state.selMode) {
 /* IMPL-142b：已处多选模式时长按=打开该卡查看器——sv-floatbar 批量组即触屏批量操作入口（sel-bar 移除后的闭环） */
 if (task) this._showSingleTask(task);
@@ -13906,7 +13919,7 @@ strip.addEventListener("touchmove", () => { if (lpTimer) { clearTimeout(lpTimer)
 _showSingleTask(task) {
 if (!task) return;
 /* ★ R86：点开视频 ⇒ 插队立即转存（此时本来也要下载，不额外占带宽） */
-try { window.__r86Archive.open(task); } catch (_e86) {}
+try { window.__r86Archive.open(task); } catch (_e86) { _r9mNote("cleanup-007", _e86); }
 const arr = this.state.singleList || [];
 const si = arr.findIndex(t => t.id === task.id);
 if (si >= 0) this.state.singleIdx = si;
@@ -14131,14 +14144,14 @@ el.querySelectorAll(".sv-hb-btn[data-act]").forEach(btn => {
 btn.addEventListener("click", e => {
 e.stopPropagation();
 const act = btn.dataset.act;
-if (act === "zoom") this._openLightboxForTask(task); else if (act === "download") this._downloadFile(task.result.url, `${task.model?.id || "workbench"}_${task.id}`); else if (act === "compare") this._toggleCompare(task); else if (act === "delete") this._deleteTask(task.id); else if (act === "ref") this._useAsReference(task.result.url, task.model?.type); else if (act === "edit") this._openEditor(task.result.url); else if (act === "vfull") VideoFS.openFromTask(task);/* IMPL-107① */ else if (act === "wf") Workflow.copy(task); else if (act === "regen") this._regen(task); else if (act === "refresh") poller.manualRefresh(task.id); else if (act === "stop") poller.manualStop(task.id); else if (act === "retry") this._retryTask(task); else if (act === "copyErr") { const _t9 = String(task.error || "未知错误"); (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(_t9) : Promise.reject()).then(() => { try { Toast.success("错误信息已复制"); } catch (_) {} }, () => { try { this._showManualCopy(_t9); } catch (_) {} }); }
+if (act === "zoom") this._openLightboxForTask(task); else if (act === "download") this._downloadFile(task.result.url, `${task.model?.id || "workbench"}_${task.id}`); else if (act === "compare") this._toggleCompare(task); else if (act === "delete") this._deleteTask(task.id); else if (act === "ref") this._useAsReference(task.result.url, task.model?.type); else if (act === "edit") this._openEditor(task.result.url); else if (act === "vfull") VideoFS.openFromTask(task);/* IMPL-107① */ else if (act === "wf") Workflow.copy(task); else if (act === "regen") this._regen(task); else if (act === "refresh") poller.manualRefresh(task.id); else if (act === "stop") poller.manualStop(task.id); else if (act === "retry") this._retryTask(task); else if (act === "copyErr") { const _t9 = String(task.error || "未知错误"); (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(_t9) : Promise.reject()).then(() => { try { Toast.success("错误信息已复制"); } catch (_) { _r9mNote("ui-039", _); } }, () => { try { this._showManualCopy(_t9); } catch (_) { _r9mNote("ui-040", _); } }); }
 });
 });
 el.querySelectorAll(".sv-hb-btn[data-batchact], .sv-sel-tag[data-batchact]").forEach(btn => { /* IMPL-142：批量操作组（sv-floatbar 复用，反馈1）；Z4（第六批）：sel-tag 徽标纳入委托=点击取消全部多选 */
 btn.addEventListener("click", e => {
 e.stopPropagation();
 const act = btn.dataset.batchact;
-if (act === "clearsel") { this._clearSelection(); try { Toast.info("已取消全部选择"); } catch (_) {} return; } else if (act === "folder") this._openMoveToMenu(btn); else if (act === "compare") this._showCompareGrid(); else if (act === "download") this._downloadSelected(); else if (act === "edit") this._editSelected();/* W5 反馈②：批量导出/清除多选图标移除（减选出口=再点选中卡片/点徽标，归零自动退多选模式） */
+if (act === "clearsel") { this._clearSelection(); try { Toast.info("已取消全部选择"); } catch (_) { _r9mNote("ui-041", _); } return; } else if (act === "folder") this._openMoveToMenu(btn); else if (act === "compare") this._showCompareGrid(); else if (act === "download") this._downloadSelected(); else if (act === "edit") this._editSelected();/* W5 反馈②：批量导出/清除多选图标移除（减选出口=再点选中卡片/点徽标，归零自动退多选模式） */
 });
 });
 const hbPrompt = el.querySelector(".sv-cap-prompt");
@@ -14152,7 +14165,7 @@ const tasks = Store.getTasks().filter(t => t.result?.url && t.model?.type !== "a
 tasks.slice(0, 10).forEach(t => {
 ThumbService.ensureThumb(t).catch(() => {});
 });
-} catch (e) {}
+} catch (e) { _r9mNote("ui-042", e); }
 },
 _bulkDeleteByFilter() {
 const tasks = Store.getTasks();
@@ -14312,7 +14325,7 @@ const _aSt = window.__r86Archive.stateOf(task);
 if (_aSt === "running") _archBadge = '<span class="strip-arch-badge is-running" aria-hidden="true">转存中</span>';
 else if (_aSt === "queued") _archBadge = '<span class="strip-arch-badge is-queued" aria-hidden="true">待转存</span>';
 else if (_aSt === "idle") _archBadge = '<span class="strip-arch-badge is-idle" aria-hidden="true">未转存</span>';
-} catch (_e86) {}
+} catch (_e86) { _r9mNote("misc-064", _e86); }
 mediaHtml = (thumbUrl ? `<img src="${esc(thumbUrl)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : `<video src="${esc(_r91u)}" muted preload="metadata" playsinline></video>`) + badge(bPlay) + _archBadge;
 } else if (type === "audio") {
 mediaHtml = `<div class="strip-icon-only is-audio"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect class="eqb e1" x="2.2" y="8.6" width="2.5" height="6.8" rx="1.25"/><rect class="eqb e2" x="6.5" y="5.2" width="2.5" height="13.6" rx="1.25"/><rect class="eqb e3" x="10.8" y="3.4" width="2.5" height="17.2" rx="1.25"/><rect class="eqb e4" x="15.1" y="6.4" width="2.5" height="11.2" rx="1.25"/><rect class="eqb e5" x="19.4" y="9.4" width="2.5" height="5.2" rx="1.25"/></svg></div>` + badge(bWave);
@@ -14340,7 +14353,7 @@ e.dataTransfer.setData("application/x-wb-task", task.id); e.dataTransfer.setData
 const inSel = this.state.compareList.some(t => t.id === task.id); /* Z2（第六批）：uri-list 载荷（T2 契约，拖进画板即通）——多选拖拽=选中集整组 url（\n 多值标准形式），单拖=本卡 url */
 const dragUrls = (inSel && this.state.compareList.length > 1 ? this.state.compareList : [task]).map(t => t.result && t.result.url).filter(Boolean).join("\n");
 if (dragUrls) e.dataTransfer.setData("text/uri-list", dragUrls);
-e.dataTransfer.effectAllowed = "copy"; } catch (err) {}
+e.dataTransfer.effectAllowed = "copy"; } catch (err) { _r9mNote("misc-065", err); }
 th.classList.add("dragging");
 this._showStripGhost();
 });
@@ -14590,7 +14603,7 @@ _weservProxy(u) { /* IMPL-160：_editSelected/_openEditor 双份 weserv 代理 l
 return (u.startsWith("data:") || u.startsWith("blob:")) ? u : u.startsWith("https://images.weserv.nl/") ? u + (u.includes("?") ? "&" : "?") + "_=" + Date.now() : "https://images.weserv.nl/?url=" + encodeURIComponent(u.replace(/^https?:\/\//, "")) + "&_=" + Date.now();
 },
 _studioGuard() { /* IMPL-160：编辑器打开前置守卫双份收敛（预载/R2 凭据/内核判空/回 image 页签），通过返回当前 model、被拒返回 null */
-if (typeof window.StudioEditorPreload === "function") { try { window.StudioEditorPreload(); } catch (_) {} }
+if (typeof window.StudioEditorPreload === "function") { try { window.StudioEditorPreload(); } catch (_) { _r9mNote("parse-005", _); } }
 if (!Store.getR2WorkerUrl() || !Store.getR2AuthToken()) {
 Toast.warning("编辑器需要 R2 凭据才能导出图 —— 请在 设置 → 密钥保险箱 解锁");
 this._openSettings();
@@ -14647,7 +14660,7 @@ this.state.folders = Array.isArray(v) ? v.filter(f => f && f.id && Array.isArray
 } catch (e) { this.state.folders = []; }
 },
 _saveFolders() {
-try { storageSet(CONFIG.STORAGE_KEYS.FOLDERS, JSON.stringify(this.state.folders)); } catch (e) {}
+try { storageSet(CONFIG.STORAGE_KEYS.FOLDERS, JSON.stringify(this.state.folders)); } catch (e) { _r9mNote("store-031", e); }
 },
 _buildFolderEl(f, isOpen) { /* IMPL-142：文件夹图标（三层纸视觉；open=展开态纸片保持绽开） */
 const el = document.createElement("div");
@@ -14903,7 +14916,7 @@ slider.addEventListener("pointerdown", e => {
 dragging = true;
 try {
 slider.setPointerCapture(e.pointerId);
-} catch (err) {}
+} catch (err) { _r9mNote("ui-043", err); }
 setPct(posFromEvent(e));
 });
 slider.addEventListener("pointermove", e => {
@@ -14934,7 +14947,7 @@ if (card) {
 card.classList.add("fresh-reveal");
 setTimeout(() => card.classList.remove("fresh-reveal"), 1500);
 }
-} catch (e) {}
+} catch (e) { _r9mNote("ui-044", e); }
 AmbientFX.successPulse();
 AmbientFX.illuminate(task.result?.thumbUrl || task.result?.url, task.model?.type);
 },
@@ -14963,7 +14976,7 @@ const prevWrap = $("#lbContent .lb-img-wrap");
 if (prevWrap && prevWrap._lbCleanup) {
 try {
 prevWrap._lbCleanup();
-} catch (e) {}
+} catch (e) { _r9mNote("ui-045", e); }
 }
 const isVideo = this.state.lightboxIsVideo;
 const isAudio = this.state.lightboxIsAudio;
@@ -15250,7 +15263,7 @@ const wrap = c && c.querySelector(".lb-img-wrap");
 if (wrap && wrap._lbCleanup) {
 try {
 wrap._lbCleanup();
-} catch (e) {}
+} catch (e) { _r9mNote("ui-046", e); }
 }
 c.innerHTML = "";
 const tb = $("#lbToolbar");
@@ -15678,11 +15691,11 @@ try {
 [ "sc_history", "sc_tasks", "sc_prompt_history", "sc_presets" ].forEach(k => {
 try {
 localStorage.removeItem(k);
-} catch (e) {}
+} catch (e) { _r9mNote("store-032", e); }
 });
 try {
 sessionStorage.clear();
-} catch (e) {}
+} catch (e) { _r9mNote("store-033", e); }
 if (typeof IDB !== "undefined" && IDB.db) {
 Promise.allSettled([ IDB.db.history.clear(), IDB.db.tasks.clear(), IDB.db.thumbs.clear() ]).catch(() => {});
 }
@@ -16238,7 +16251,7 @@ if (t) {
 const d = Date.now() - t;
 at = d < 60e3 ? "刚刚" : d < 36e5 ? Math.floor(d / 60e3) + " 分钟前" : d < 864e5 ? Math.floor(d / 36e5) + " 小时前" : Math.floor(d / 864e5) + " 天前";
 }
-} catch (e) {}
+} catch (e) { _r9mNote("store-034", e); }
 let pat = "—";
 try {
 const tp = parseInt(localStorage.getItem("sc_hist_push_at") || "0", 10) || 0;
@@ -16246,7 +16259,7 @@ if (tp) {
 const d2 = Date.now() - tp;
 pat = d2 < 60e3 ? "刚刚" : d2 < 36e5 ? Math.floor(d2 / 60e3) + " 分钟前" : d2 < 864e5 ? Math.floor(d2 / 36e5) + " 小时前" : Math.floor(d2 / 864e5) + " 天前";
 }
-} catch (e) {}
+} catch (e) { _r9mNote("store-035", e); }
 /* ★ R79-E：加「上次推送」—— 只有「上次拉取」时，推送失败是看不出来的（这正是本次事故的盲区） */
 el.textContent = (tcOk ? "已连接 · " : "已连接（R2 直连）· ") + "云同步" + (Store.getSync() ? "开" : "关") + " · 上次云端拉取 " + at + " · 上次推送 " + pat;
 el.dataset.tone = "ok";
@@ -16260,11 +16273,11 @@ const lastKey = "sc_last_alert_threshold_" + (new Date).toDateString();
 let last = 0;
 try {
 last = parseInt(localStorage.getItem(lastKey) || "0", 10) || 0;
-} catch (e) {}
+} catch (e) { _r9mNote("store-036", e); }
 if (threshold > last && threshold > 0) {
 try {
 localStorage.setItem(lastKey, String(threshold));
-} catch (e) {}
+} catch (e) { _r9mNote("store-037", e); }
 Toast.warning(`今日累计已消费 ¥${threshold.toFixed(2)}+`);
 }
 }
@@ -16303,7 +16316,7 @@ const _esc88 = (v) => String(v == null ? "" : v).replace(/[&<>]/g, (c) => ({ "&"
 this._showModal("手动复制", '<div style="font-size:12px;opacity:.72;margin-bottom:8px">浏览器拦下了自动复制。下面已全选，按 <b>Ctrl/⌘ + C</b> 即可拿走。</div><textarea readonly id="manualCopyArea" style="width:100%;height:280px;font:12px/1.55 ui-monospace,Menlo,Consolas,monospace;resize:vertical;white-space:pre">' + _esc88(text) + "</textarea>", [ { label: "关闭", primary: true, fn: () => this._closeModal() } ]);
 setTimeout(() => {
 const ta = document.getElementById("manualCopyArea");
-if (ta) { try { ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length); } catch (_e88) {} }
+if (ta) { try { ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length); } catch (_e88) { _r9mNote("misc-066", _e88); } }
 }, 60);
 },
 _saveFormToCache() {
@@ -16639,11 +16652,11 @@ if (!window.__wbVvBound) { window.__wbVvBound = true; vv.addEventListener("resiz
 } else if (document.body.style.height) {
 document.body.style.removeProperty("height"); /* 环境支持 dvh/跨断点回桌面：还权 CSS */
 }
-} catch (e) {}
-} catch (e) {}
+} catch (e) { _r9mNote("ui-047", e); }
+} catch (e) { _r9mNote("ui-048", e); }
 };
 window.addEventListener("resize", function () { if (window.__wbSyncThemeColor) window.__wbSyncThemeColor(); }, { passive: true });/* IMPL-115③：跨断点旋转/缩放即时回落，防深色内联残留到桌面态 */
-try { window.__wbSyncThemeColor(); } catch (e) {}/* IMPL-121①：首屏自调一次——dvh 失效环境不等首次 resize/切视图即修正 body 高 */
+try { window.__wbSyncThemeColor(); } catch (e) { _r9mNote("ui-049", e); }/* IMPL-121①：首屏自调一次——dvh 失效环境不等首次 resize/切视图即修正 body 高 */
 }
 const sw = $("#mobileViewSwitch");
 if (sw) {
@@ -16739,14 +16752,14 @@ try {
   const _bl91 = document.querySelector(".brand-logo");
   const _fl91 = document.querySelector("#faviconLink");
   if (_bl91 && _fl91 && _bl91.getAttribute("src")) _fl91.href = _bl91.getAttribute("src");
-} catch (e) {}
+} catch (e) { _r9mNote("ui-050", e); }
 /* IMPL-91② Store.getHistory 内存缓存：跨标签页写入 / 其他键清空时失效（本 tab 写路径已全部经 _hwrite 收口） */
 window.addEventListener("storage", e => {
   try {
     if (!e || e.key === null || e.key === CONFIG.STORAGE_KEYS.HISTORY) Store._histCache = null;
-  } catch (err) {}
+  } catch (err) { _r9mNote("store-038", err); }
 });
-document.addEventListener("DOMContentLoaded", () => { UI.init(); /* ★ R76-J：启动清扫跨会话必然失效的 blob: 记录（清 url ⇒ 渲染走无图分支，不再尝试 fetch） */ setTimeout(function () { try { _r76HistorySweep(); } catch (_e) {} }, 1200); });
+document.addEventListener("DOMContentLoaded", () => { UI.init(); /* ★ R76-J：启动清扫跨会话必然失效的 blob: 记录（清 url ⇒ 渲染走无图分支，不再尝试 fetch） */ setTimeout(function () { try { _r76HistorySweep(); } catch (_e) { _r9mNote("net-008", _e); } }, 1200); });
 
 
 ;
@@ -16797,7 +16810,7 @@ if (!m) return;
 cat.models[id] = { name: String(m.name || "").replace(/（[易创连]）[ 　]*$/, "").trim(), price: m.price || "", desc: m.desc || "", icon: modelLogoOf(id) || "", channel: m.channel === "apiyi" ? "apiyi" : (m.direct ? "direct" : "wy"), modelId: m.modelId || id, billing: m.billing || null, params: (m.params || []).map(function(p) { return { key: p.key, label: p.label, type: p.type, required: !!p.required, default: p.default != null ? p.default : "", options: p.options || null, max: p.max != null ? p.max : null, output: p.output || "", placeholder: p.placeholder || "" }; }) }; /* 2026-10-01：+channel/modelId（编辑器据此在模型键上标通道）；R21-2：+billing（编辑器价格列按它算纯人民币）；旧嵌入包忽略未知键无副作用 */
 });
 }
-} catch (_) {}
+} catch (_) { _r9mNote("misc-067", _); }
 /* ★★ R42：视频档投影（与编辑器 videoModelsOf 的 type:"video" 判据配对）。
    排除表见上方注释：包装类 / 工具类 / 直连重复档**故意不下发**（修拍板）。
    图像档保持无 type —— 编辑器 normalizeModels 遇 type:"video" 会跳过，不污染位图面板。 */
@@ -16810,7 +16823,7 @@ var ch = String(m.channel || "") === "apiyi" ? "apiyi" : (ep.indexOf("/api/async
 cat.models[m.id] = { type: "video", name: String(m.name || "").replace(/（[易创连]）[ 　]*$/, "").trim(), price: m.price || "", desc: m.desc || "", icon: modelLogoOf(m.id) || "", channel: ch, modelId: m.modelId || m.id, endpoint: ep, billing: m.billing || null, refGroups: m.refGroups || null, params: (m.params || []).map(function(p) { return { key: p.key, label: p.label, type: p.type, required: !!p.required, default: p.default != null ? p.default : "", options: p.options || null, max: p.max != null ? p.max : null, min: p.min != null ? p.min : null, step: p.step != null ? p.step : null, unit: p.unit || "", output: p.output || "", placeholder: p.placeholder || "", hint: p.hint || "" }; }) };
 });
 }
-} catch (_) {}
+} catch (_) { _r9mNote("misc-068", _); }
 return cat;
 }
 function loadStudio() {
@@ -16832,8 +16845,8 @@ return scriptP;
 }
 window.StudioEditorPreload = loadStudio; /* 预加载句柄（幂等）：可在 hover / 空闲时提前拉取 */
 function close() {
-if (api) { try { api.destroy(); } catch (e) {} api = null; }
-const ip = document.getElementById("studioInlinePrompt"); if (ip && ip._resolve) { try { ip._resolve(""); } catch (e) {} } /* Z6：编辑器关闭时输入条在场=取消（Promise 收口防挂起） */
+if (api) { try { api.destroy(); } catch (e) { _r9mNote("cleanup-008", e); } api = null; }
+const ip = document.getElementById("studioInlinePrompt"); if (ip && ip._resolve) { try { ip._resolve(""); } catch (e) { _r9mNote("cleanup-009", e); } } /* Z6：编辑器关闭时输入条在场=取消（Promise 收口防挂起） */
 if (ov) { ov.remove(); ov = null; }
 if (escHandler) { document.removeEventListener("keydown", escHandler, true); escHandler = null; }
 onSaveCb = null;
@@ -16863,12 +16876,12 @@ createdAt: Date.now(),
 completedAt: Date.now()
 });
 }
-if (!cards.length) { try { Toast.warning("未收到可落位的多图产物"); } catch (_) {} return false; }
+if (!cards.length) { try { Toast.warning("未收到可落位的多图产物"); } catch (_) { _r9mNote("ui-051", _); } return false; }
 cards.forEach(c => { Store.addHistory(c); archiveDataUrlCard(c).catch(() => {}); }); /* IMPL-152：逐卡后台转存（+512 缩略图），dataURL 不再永驻 LS */
 const ids = cards.map(c => c.id);
 if (typeof UI !== "undefined" && UI.state && UI.state.openFolderId) UI._folderAddMulti(UI.state.openFolderId, ids); else if (typeof UI !== "undefined") UI._folderCreateWithMulti(ids); /* Z10：整组入夹（有展开夹入展开夹，否则新建一夹收纳） */
 if (typeof UI !== "undefined") UI._renderResultStrip();
-try { Toast.success("已保存 " + cards.length + " 张到结果区（同组入夹）"); } catch (_) {}
+try { Toast.success("已保存 " + cards.length + " 张到结果区（同组入夹）"); } catch (_) { _r9mNote("ui-052", _); }
 close();
 return true;
 }
@@ -16878,7 +16891,7 @@ if (keep) close();
 return true; /* 已接管 → 编辑器不再走浏览器下载 */
 } catch (e) {
 console.error("[StudioEditor] 应用到节点失败:", e);
-try { Toast.error("导出失败: " + _errText(e)); } catch (_) {}
+try { Toast.error("导出失败: " + _errText(e)); } catch (_) { _r9mNote("ui-053", _); }
 return false;
 }
 }
@@ -16974,7 +16987,7 @@ img.src = dataUrl;
 } catch (e) { resolve(dataUrl); }
 });
 }
-try { if (typeof navigator !== "undefined" && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function() {}); } catch (_) {} /* IMPL-152（用户工单⑤）：申请持久化存储（best-effort）——降低 UA 磁盘紧张时清理本站数据的概率；被拒无副作用 */
+try { if (typeof navigator !== "undefined" && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function() {}); } catch (_) { _r9mNote("misc-069", _); } /* IMPL-152（用户工单⑤）：申请持久化存储（best-effort）——降低 UA 磁盘紧张时清理本站数据的概率；被拒无副作用 */
 async function archiveDataUrlCard(card) { /* IMPL-152（用户工单⑤）：编辑器产物 dataURL 落 R2——三处 onSave 全尺寸 dataURL 内联写 history 是「网页缓存易满」根因（2K 图 base64 5-15MB vs LS 配额 5-10MB，且 _archiveResult 对 data: 门控直返永不转存）：原图上传换 R2 URL + 长边 512 缩略图双写，双表回写照 applyArchived 范式；失败静默保留 dataURL（本地可用性优先）。「无限扩容」由 R2 承担（本地只留 URL 指针）；LRU 淘汰与 IDB Blob 迁移为二期 */
 try {
 const url = card && card.result && card.result.url;
@@ -16995,14 +17008,14 @@ const r = await fetch(w + "/upload?token=" + encodeURIComponent(token) + "&dir=r
 const d2 = await r.json().catch(function() { return null; });
 if (r.ok && d2 && d2.url && /^https?:\/\//i.test(d2.url)) card.result.thumbUrl = d2.url;
 }
-} catch (_) {}
+} catch (_) { _r9mNote("parse-006", _); }
 const tasks = Store.getTasks();
 const t = tasks.find(function(x) { return x.id === card.id; });
 if (t) { t.result = card.result; Store.saveTasks(tasks); }
 const hist = Store.getHistory();
 const h = hist.find(function(x) { return x.id === card.id; });
 if (h) { h.result = card.result; Store.saveHistory(hist); }
-if (typeof UI !== "undefined" && UI._renderResultStrip) { try { UI._renderResultStrip(); } catch (_) {} }
+if (typeof UI !== "undefined" && UI._renderResultStrip) { try { UI._renderResultStrip(); } catch (_) { _r9mNote("misc-070", _); } }
 return true;
 } catch (e) { console.warn("[IMPL-152] 编辑器产物转存失败（保留 dataURL 本地可用）:", (e && e.message) || e); return false; }
 }
@@ -17364,18 +17377,18 @@ const inp = bar.querySelector("#studioInlineInput");
 let done = false;
 const finish = v => { if (done) return; done = true; if (bar.parentNode) bar.remove(); resolve(v); };
 const grow = function() { /* Z16：自动增高 1→6 行（122px=行高 18×6+上下 padding 12+边框 2 封顶，超出滚动；border-box 下 +2 边框补偿）。空值恒 32px 定标——30ms 首测时布局/字体未稳，长 placeholder 会于窄态换行撑大 scrollHeight 造成锁高（e2e149 B1 实证），非空输入时布局已稳定走实测 */
-try { if (!inp.value) { inp.style.height = "32px"; return; } inp.style.height = "auto"; inp.style.height = Math.min(inp.scrollHeight + 2, 122) + "px"; } catch (_) {}
+try { if (!inp.value) { inp.style.height = "32px"; return; } inp.style.height = "auto"; inp.style.height = Math.min(inp.scrollHeight + 2, 122) + "px"; } catch (_) { _r9mNote("ui-054", _); }
 };
 bar._resolve = v => finish(String(v || "").trim());
 bar.querySelector("#studioInlineOk").addEventListener("click", () => finish(String(inp.value || "").trim()));
 bar.querySelector("#studioInlineNo").addEventListener("click", () => finish(""));
 inp.addEventListener("input", grow);
 inp.addEventListener("keydown", ev => { if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); finish(String(inp.value || "").trim()); } /* Z16：Shift+Enter=换行走默认行为不拦截 */ });
-setTimeout(function() { try { inp.focus(); grow(); } catch (e) {} }, 30);
+setTimeout(function() { try { inp.focus(); grow(); } catch (e) { _r9mNote("misc-071", e); } }, 30);
 });
 }
 async function studioAliMatting(imgData) { /* IMPL-143 P0：remove-background → 阿里抠图专用通道（stageImage→probeSize→pickAction→_call；凭据=IMAGESEG_AK/SK，缺=Toast 通道未配置不静默回退） */
-if (!(Store.getSegAk() && Store.getSegSk())) { try { Toast.warning("抠出主体的服务通道未配置：请先在设置页解锁阿里云密钥（IMAGESEG_AK/SK）"); } catch (_) {} return false; }
+if (!(Store.getSegAk() && Store.getSegSk())) { try { Toast.warning("抠出主体的服务通道未配置：请先在设置页解锁阿里云密钥（IMAGESEG_AK/SK）"); } catch (_) { _r9mNote("ui-055", _); } return false; }
 const staged = await SegStudio.stageImage(imgData, null, {});
 const size = await SegStudio.probeSize(staged);
 const action = SegStudio.pickAction("SegmentCommonImage", size) || "SegmentCommonImage";
@@ -17383,7 +17396,7 @@ const params = {};
 params[action === "SegmentHDCommonImage" ? "ImageUrl" : action === "SegmentSkin" ? "URL" : "ImageURL"] = staged;
 const res = await SegStudio._call(action, params);
 if (!res || !res.ok) {
-if (res && res.code === "MissingCredential") { try { Toast.warning("抠出主体的服务通道未配置：请先在设置页解锁阿里云密钥（IMAGESEG_AK/SK）"); } catch (_) {} return false; }
+if (res && res.code === "MissingCredential") { try { Toast.warning("抠出主体的服务通道未配置：请先在设置页解锁阿里云密钥（IMAGESEG_AK/SK）"); } catch (_) { _r9mNote("ui-056", _); } return false; }
 throw new Error((res && res.message) || "阿里抠图通道调用失败");
 }
 const outUrl = SegStudio.resultUrlOf(res.data);
@@ -17441,13 +17454,13 @@ const _n = (Number(_i) || 0) + (Number(_ot) || 0);
 _txt = " · " + (_n >= 1000 ? (Math.round(_n / 100) / 10) + "k" : String(_n)) + " tokens";
 }
 if (_txt) {
-try { Toast.success("提示词反推 完成" + _txt); } catch (_) {}
-try { console.info("[W5-route]", JSON.stringify({ phase: "reverse-cost", model: _pr19m, inTokens: _i, outTokens: _ot, label: _txt, ts: Date.now() })); } catch (_) {}
+try { Toast.success("提示词反推 完成" + _txt); } catch (_) { _r9mNote("ui-057", _); }
+try { console.info("[W5-route]", JSON.stringify({ phase: "reverse-cost", model: _pr19m, inTokens: _i, outTokens: _ot, label: _txt, ts: Date.now() })); } catch (_) { _r9mNote("ui-058", _); }
 }
-} catch (_e) {}
+} catch (_e) { _r9mNote("ui-059", _e); }
 return out;
 }
-if (typeof window !== "undefined") { try { window.__studioPromptReverse = promptReverseForStudio; } catch (_) {} } /* 调试可达（同 archiveDataUrlCard 先例） */
+if (typeof window !== "undefined") { try { window.__studioPromptReverse = promptReverseForStudio; } catch (_) { _r9mNote("misc-072", _); } } /* 调试可达（同 archiveDataUrlCard 先例） */
 
 /* ══════════════════════════════════════════════════════════════════════════════════
    R15（2026-09-30）：「技能 + 大模型」通道 —— 把宿主**早已有**的技能系统开放给 W5 编辑器
@@ -17510,7 +17523,7 @@ temperature: (typeof o.temperature === "number") ? o.temperature : undefined,
 maxTokens: mt,
 thinking: (typeof o.thinking === "boolean") ? o.thinking : undefined,
 signal: o.signal,
-onDelta: function(d) { _out += String(d == null ? "" : d); if (_userDelta) { try { _userDelta(d); } catch (_) {} } },
+onDelta: function(d) { _out += String(d == null ? "" : d); if (_userDelta) { try { _userDelta(d); } catch (_) { _r9mNote("misc-073", _); } } },
 onUsage: function(u, meta) { _r19u = u; _r19m = (meta && meta.model) ? String(meta.model) : ""; },
 tag: o.tag ? String(o.tag) : "studio-skill"
 });
@@ -17535,8 +17548,8 @@ const _n = (Number(_i) || 0) + (Number(_ot) || 0);
 _txt = " · " + (_n >= 1000 ? (Math.round(_n / 100) / 10) + "k" : String(_n)) + " tokens";
 }
 if (_txt) {
-try { Toast.success((skill ? skill.name : "技能") + " 完成" + _txt); } catch (_) {}
-try { console.info("[W5-route]", JSON.stringify({ phase: "skill-cost", model: _r19m, inTokens: _i, outTokens: _ot, label: _txt, ts: Date.now() })); } catch (_) {}
+try { Toast.success((skill ? skill.name : "技能") + " 完成" + _txt); } catch (_) { _r9mNote("ui-060", _); }
+try { console.info("[W5-route]", JSON.stringify({ phase: "skill-cost", model: _r19m, inTokens: _i, outTokens: _ot, label: _txt, ts: Date.now() })); } catch (_) { _r9mNote("ui-061", _); }
 }
 } catch (_e) { /* 计费失败绝不影响主流程（同 _noteUsage 的静默口径） */ }
 return _out;
@@ -17565,7 +17578,7 @@ return SKILL_MODEL_PRESETS.map(function(m) {
 return { id: m.id, label: m.label, desc: m.desc || "", vision: !!isVisionModelName(m.id), think: !!_modelThinkCapable(m.id) };
 });
 }
-if (typeof window !== "undefined") { try { window.__studioSkillChat = studioSkillChat; window.__studioSkills = studioSkills; window.__studioModels = studioModels; } catch (_) {} } /* 调试可达（同 __studioPromptReverse 先例） */
+if (typeof window !== "undefined") { try { window.__studioSkillChat = studioSkillChat; window.__studioSkills = studioSkills; window.__studioModels = studioModels; } catch (_) { _r9mNote("misc-074", _); } } /* 调试可达（同 __studioPromptReverse 先例） */
 
 async function bitmapHandler(e) {
 try {
@@ -17578,10 +17591,10 @@ if (maskData && maskMode === "luma-white") maskData = await invertMaskToAlpha(ma
 let userData = hostPrompt() || ((e.options && typeof e.options === "object" && e.options.prompt) ? String(e.options.prompt) : ""); /* R8（2026-09-29）：**先认编辑器面板那一份** —— 面板写的提示词走 e.options.prompt，而旧版只读宿主自己的输入框 ⇒ 面板里写过了宿主也不知道 ⇒ 判空 ⇒ 弹就地输入条 = 逼用户写第二遍（修 09-28 第 3 条）。⚠ 这里**不能引 op13**：op13 在本行之后（16410 行）才 const 定义，提前引用会踩 TDZ 直接抛 ReferenceError ⇒ 必须直接读 e.options */
 if ((e.action === "inpaint" || e.action === "edit-text") && !userData) { /* Z6（第六批）：宿主输入框为空 → 编辑器内就地输入条（官方案定：prompt 由嵌入方传入，替掉工作台硬门禁） */
 userData = await studioInlinePrompt(e.action === "inpaint" ? "重绘" : "编辑文字"); /* 第十三批 H4：标签同步「重绘」 */
-if (!userData) { try { Toast.info("已取消：未填写提示词"); } catch (_) {} return false; }
+if (!userData) { try { Toast.info("已取消：未填写提示词"); } catch (_) { _r9mNote("ui-062", _); } return false; }
 }
 const needPrompt = e.action === "inpaint" || e.action === "edit-text"; /* H1b（十三批）：重绘无选区=整层改图——maskData=null 时 studioEdits 不传 mask 字段天然支持，不报错不二次确认（修拍板） */
-if (e.action === "erase" && !maskData) { try { Toast.warning("擦除动作需要先用选区工具框选区域，再执行"); } catch (_) {} return false; } /* IMPL-129③：擦除语义依赖选区，无选区整图重绘必错；文案 IMPL-162 消除→擦除（正常路径由编辑器 R6 选区门禁先拦，本条保留为宿主自保） */
+if (e.action === "erase" && !maskData) { try { Toast.warning("擦除动作需要先用选区工具框选区域，再执行"); } catch (_) { _r9mNote("ui-063", _); } return false; } /* IMPL-129③：擦除语义依赖选区，无选区整图重绘必错；文案 IMPL-162 消除→擦除（正常路径由编辑器 R6 选区门禁先拦，本条保留为宿主自保） */
 const req = e.buildRequest(needPrompt ? { prompt: userData } : {});
 let finalPrompt = (req && req.fields && req.fields.prompt) || userData || ""; /* W5：let——mask 动作需追加保真约束句 */
 const op13 = (e.options && typeof e.options === "object") ? e.options : null; /* 第十三批 H1：统一参数透传通道（全位图动作）——{model,aspectRatio,resolution,quality,background,prompt,num} */
@@ -17602,7 +17615,7 @@ const apiDef = (op13 && op13.model) ? apiModelById(op13.model)
             : (mm && mm.channel === "apiyi" && mm.model) ? apiModelById(mm.model) : null;
 if (apiDef) {
 const wA = (typeof Store !== "undefined" && Store.getR2WorkerUrl && Store.getR2WorkerUrl());
-if (!wA) { try { Toast.warning(mm ? mm.label : actName(e.action)) + "：APIYI 通道未配置（设置页填 R2 Worker 地址与 Token）"; } catch (_) {} return false; }
+if (!wA) { try { Toast.warning(mm ? mm.label : actName(e.action)) + "：APIYI 通道未配置（设置页填 R2 Worker 地址与 Token）"; } catch (_) { _r9mNote("ui-064", _); } return false; }
 const exA = {};
 if (op13 && op13.quality) exA.quality = String(op13.quality);
 /* ★★ R93：编辑器算好的「与源图同几何的合法输出尺寸」（apiyiEdits 在 size 为空且有 mask 时采用） */
@@ -17645,7 +17658,7 @@ _costTxt = " · " + _est.label;
 console.info("[W5-route]", JSON.stringify({ phase: "apiyi-cost", model: apiDef.modelId, inTokens: _u.inTokens != null ? _u.inTokens : _u.input_tokens, outTokens: _u.outTokens != null ? _u.outTokens : _u.output_tokens, cny: Math.round(_est.amount * 100) / 100, ts: Date.now() }));
 }
 } catch (_e) { /* 计费失败绝不影响主流程（同 _noteUsage 的静默口径） */ }
-try { Toast.success((mm ? mm.label : actName(e.action)) + " 完成" + _costTxt); } catch (_) {}
+try { Toast.success((mm ? mm.label : actName(e.action)) + " 完成" + _costTxt); } catch (_) { _r9mNote("ui-065", _); }
 return rA;
 } catch (err) {
 console.error("[StudioEditor] APIYI 位图动作失败:", err);
@@ -17662,13 +17675,13 @@ throw new Error("APIYI · " + apiDef.modelId + "：" + _raw + _hint);
 }
 } /* APIYI 分流结束 */
 studioBusy((mm ? mm.label : actName(e.action)) + " 处理中… · " + (mm ? (mm.channel === "ali" ? "阿里抠图专用通道" : "模型 " + mm.model) : (canI2I && m ? "宿主选中模型" : "SF 编辑模型")));
-if (mm && mm.channel === "ali") { const r3 = await studioAliMatting(imgData); if (!r3) return false; r3.name = actName(e.action); try { Toast.success("抠出主体完成"); } catch (_) {} return r3; } /* IMPL-143：返回 { assetUrl, name } → 编辑器自动注册资产（IMPL-129③ 契约） */
+if (mm && mm.channel === "ali") { const r3 = await studioAliMatting(imgData); if (!r3) return false; r3.name = actName(e.action); try { Toast.success("抠出主体完成"); } catch (_) { _r9mNote("ui-066", _); } return r3; } /* IMPL-143：返回 { assetUrl, name } → 编辑器自动注册资产（IMPL-129③ 契约） */
 /* ★ R20：用户**显式选了速创档** ⇒ 仍走这条支路（备份服务的底线语义）。
    判定用 wyModelPath 作闸门：它只认 gpt-image-2.5 系裸 id，带 apiyi: 前缀的档一律 "" ⇒ 不误入。 */
 const _wyPick = !!(op13 && op13.model && wyModelPath(op13.model));
 if (mm && (mm.channel === "wy" || _wyPick)) { /* IMPL-150：channel 语义更名 sf→wy（速创通道），BITMAP_MODEL_MAP 已同步；R20：+显式选速创档第二入口 */
 const sfOk = (typeof KeyVault !== "undefined" && KeyVault.keys && KeyVault.keys().API_KEY) || (typeof Store !== "undefined" && Store.getR2WorkerUrl && Store.getR2WorkerUrl());
-if (!sfOk) { try { Toast.warning(mm.label + "的服务通道未配置：缺少图像服务凭据（设置页可配置）"); } catch (_) {} return false; } /* 通道不通不静默 fallback */
+if (!sfOk) { try { Toast.warning(mm.label + "的服务通道未配置：缺少图像服务凭据（设置页可配置）"); } catch (_) { _r9mNote("ui-067", _); } return false; } /* 通道不通不静默 fallback */
 /* W5 路由决策（变更单第四节）：quality 策略 + mask 保真约束句 + 省流自动路由 + 每次实际路由进日志 */
 const ooRatio = (oo13 && oo13.aspectRatio) || "";
 const ooRes = (oo13 && oo13.resolution) || "";
@@ -17713,7 +17726,7 @@ if (ap13) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + ap13; /* H4.1
 console.info("[W5-route]", JSON.stringify({ phase: "route", action: e.action, channel: "wy", model: routedModel, economized: economized, quality: ex.quality || null, aspectRatio: ex.aspectRatio || null, resolution: ex.resolution || null, mask: !!maskData, operation: ang13 ? ang13.operation : null, angles: ang13 ? [ang13.horizontal_angle, ang13.vertical_angle, ang13.zoom] : null, ts: Date.now() })); /* Z21：+phase 区分路由决策/提交/完成三段日志；H4.1：angle-adjust 回显收到的 operation 与三角度（对拍 W5 面板实传值） */
 studioBusy(mm.label + " 处理中… · 模型 " + routedModel + (economized ? "（标准生成型·省流）" : "") + (ex.quality ? " · quality=" + ex.quality : "") + (ex.aspectRatio ? " · " + ex.aspectRatio + "/" + ex.resolution : ""));
 const r1 = await studioEdits(imgData, maskData, finalPrompt, routedModel, ex); r1.name = actName(e.action);
-try { Toast.success(mm.label + " 完成 · 模型 " + routedModel + (economized ? "（省流）" : "")); } catch (_) {}
+try { Toast.success(mm.label + " 完成 · 模型 " + routedModel + (economized ? "（省流）" : "")); } catch (_) { _r9mNote("ui-068", _); }
 return r1;
 }
 if (maskData) { const r1 = await studioEdits(imgData, maskData, finalPrompt); r1.name = actName(e.action); return r1; } /* IMPL-129③ 契约保持 */
@@ -17738,15 +17751,15 @@ const _r17Hint = /没有扣费|已经计费/.test(rawMsg) ? ""
                : _r17Timeout ? "（这次已经计费，先别急着重试）" : "";
 const m9 = /HTTP\s+(\d{3})/.exec(rawMsg); const st = (err && err.status) || (m9 ? parseInt(m9[1], 10) : 0); /* Z9（第六批）：Api.request 抛错 Object.assign 附着 err.status */
 const mmL = (typeof BITMAP_MODEL_MAP !== "undefined" && BITMAP_MODEL_MAP[e.action] || {}).label || "位图动作";
-if (st === 401) { try { Toast.error(mmL + "的服务未授权（HTTP 401）：Worker 令牌无效或未配置——请到设置页检查 R2 Worker 地址与 Token（不静默回退）"); } catch (_) {} }
-else if (st === 404) { try { Toast.error(mmL + "的服务通道未部署（HTTP 404）：Worker 的 wy / apiyi 代理路由未上线、或该端点不在 APIYI 白名单内、或模型名不在本令牌分组里——已按规约不静默回退"); } catch (_) {} }
-else if (st >= 400 && st < 500) { try { Toast.error(mmL + "的服务通道未配置或上游不可用（HTTP " + st + "）——已按规约不静默回退"); } catch (_) {} }
-else if (/HTTP\s+4\d\d/i.test(rawMsg)) { try { Toast.error(mmL + "的服务通道未配置或上游不可用（" + rawMsg.slice(0, 90) + "）——已按规约不静默回退"); } catch (_) {} }
-else { try { Toast.error("位图动作失败: " + rawMsg + _r17Hint); } catch (_) {} }
+if (st === 401) { try { Toast.error(mmL + "的服务未授权（HTTP 401）：Worker 令牌无效或未配置——请到设置页检查 R2 Worker 地址与 Token（不静默回退）"); } catch (_) { _r9mNote("ui-069", _); } }
+else if (st === 404) { try { Toast.error(mmL + "的服务通道未部署（HTTP 404）：Worker 的 wy / apiyi 代理路由未上线、或该端点不在 APIYI 白名单内、或模型名不在本令牌分组里——已按规约不静默回退"); } catch (_) { _r9mNote("ui-070", _); } }
+else if (st >= 400 && st < 500) { try { Toast.error(mmL + "的服务通道未配置或上游不可用（HTTP " + st + "）——已按规约不静默回退"); } catch (_) { _r9mNote("ui-071", _); } }
+else if (/HTTP\s+4\d\d/i.test(rawMsg)) { try { Toast.error(mmL + "的服务通道未配置或上游不可用（" + rawMsg.slice(0, 90) + "）——已按规约不静默回退"); } catch (_) { _r9mNote("ui-072", _); } }
+else { try { Toast.error("位图动作失败: " + rawMsg + _r17Hint); } catch (_) { _r9mNote("ui-073", _); } }
 return false;
 } finally { studioBusy(""); } /* IMPL-143 P2：无论成败收反馈条 */
 }
-if (typeof window !== "undefined") { try { window.__studioBitmap = bitmapHandler; } catch (_) {} } /* R20-2：调试可达（同 __studioPromptReverse 先例） */
+if (typeof window !== "undefined") { try { window.__studioBitmap = bitmapHandler; } catch (_) { _r9mNote("ui-074", _); } } /* R20-2：调试可达（同 __studioPromptReverse 先例） */
 function open(opts) {
 opts = opts || {};
 close();
@@ -17764,7 +17777,7 @@ ov.querySelector(".studioClose").addEventListener("click", close);
 escHandler = function(e) { /* Z22 B案（IMPL-151 修拍板）：输入条在场=Esc 只收口输入（走输入条自身取消路径，Toast「已取消」保留），编辑器保留——再按一次 Esc 才退编辑器；无输入条=原语义不变（回归 A3） */
 if (e.key !== "Escape") return;
 const ip = document.getElementById("studioInlinePrompt");
-if (ip && ip._resolve) { e.stopPropagation(); try { ip._resolve(""); } catch (_) {} return; }
+if (ip && ip._resolve) { e.stopPropagation(); try { ip._resolve(""); } catch (_) { _r9mNote("ui-075", _); } return; }
 e.stopPropagation();
 /* 第十二批 T12-2（修拍板「只去掉『关弹窗』这一句」）：Esc 不再关闭整个画板 —— 关闭入口只保留顶栏 ✕。
    这里仍保留 stopPropagation：编辑器内部场景（选区/文字/扩图面板）各自消费完再放行，宿主不必也不应抢。 */
@@ -17777,7 +17790,7 @@ if (ov !== myOv) return;
 const loadingEl = myOv.querySelector(".studioLoading");
 if (loadingEl) loadingEl.remove();
 api = ImageStudio.mount(host, {
-theme: (function() { try { var _dt = document.documentElement.getAttribute("data-theme"); if (_dt === "dark" || _dt === "light") return _dt; } catch (_) {} try { return localStorage.getItem("sc_studio_theme") || "dark"; } catch (_) { return "dark"; } })(), /* R45-5：内核主题跟随宿主 data-theme（避免「暗外壳+亮内核」）；宿主未定主题才回退缓存，缺省由浅改暗 */ /* Z12（第七批）：读缓存缺省浅色——首次打开=浅色；用户在编辑器内切换经 onThemeChange 写回缓存，下次打开沿用（getTheme 可作宿主查询兑底，本处缓存空时缺省与契约一致无需用） */
+theme: (function() { try { var _dt = document.documentElement.getAttribute("data-theme"); if (_dt === "dark" || _dt === "light") return _dt; } catch (_) { _r9mNote("cleanup-010", _); } try { return localStorage.getItem("sc_studio_theme") || "dark"; } catch (_) { return "dark"; } })(), /* R45-5：内核主题跟随宿主 data-theme（避免「暗外壳+亮内核」）；宿主未定主题才回退缓存，缺省由浅改暗 */ /* Z12（第七批）：读缓存缺省浅色——首次打开=浅色；用户在编辑器内切换经 onThemeChange 写回缓存，下次打开沿用（getTheme 可作宿主查询兑底，本处缓存空时缺省与契约一致无需用） */
 layout: "fill", /* ★ 嵌入形态：填满卡片内部，不盖整页 */
 adapter: {
 applyToNode: function(p) { return handleApply(p); },
@@ -17801,7 +17814,7 @@ skills: studioSkills(),
 models: studioModels()
 },                                  /* tools 结束 */
 },
-on: { onError: function(err) { try { Toast.error(String((err && err.message) || err)); } catch (_) {} }, close: close, onThemeChange: function(t) { try { if (t === "light" || t === "dark") { localStorage.setItem("sc_studio_theme", t); const b = document.getElementById("studioInlinePrompt"); if (b) b.setAttribute("data-studio-theme", t); } } catch (_) {} } /* Z16（第七批）：+回写打开中输入条主题 */ } /* IMPL-129②：编辑器内点 ✕ → 调用宿主 close 关闭弹窗；旧版嵌入包忽略未知键无副作用。Z12（第七批）：+onThemeChange 编辑器内置主题开关回告写缓存（附录 A 契约，向后兼容；挂载初值不回告防回环——白名单校验仅收 light/dark） */
+on: { onError: function(err) { try { Toast.error(String((err && err.message) || err)); } catch (_) { _r9mNote("ui-076", _); } }, close: close, onThemeChange: function(t) { try { if (t === "light" || t === "dark") { localStorage.setItem("sc_studio_theme", t); const b = document.getElementById("studioInlinePrompt"); if (b) b.setAttribute("data-studio-theme", t); } } catch (_) { _r9mNote("store-039", _); } } /* Z16（第七批）：+回写打开中输入条主题 */ } /* IMPL-129②：编辑器内点 ✕ → 调用宿主 close 关闭弹窗；旧版嵌入包忽略未知键无副作用。Z12（第七批）：+onThemeChange 编辑器内置主题开关回告写缓存（附录 A 契约，向后兼容；挂载初值不回告防回环——白名单校验仅收 light/dark） */
 ,
 /* ★★ V2 视频通道（R33 建 · R35 修正位置）：**挂 mount 顶层** —— 编辑器 embed 读的是
    options.videoHandlers（顶层优先）/ adapter.videoActions（兼容位）。
@@ -17840,13 +17853,13 @@ if (u.indexOf("https://images.weserv.nl/") === 0) {
 const m = /[?&]url=([^&]+)/.exec(u);
 if (m) { const _dv = decodeURIComponent(m[1]); /* ★ R76-B：**无 CORS 的域**（*.r2.dev）解包后直连必失败（img 能显示但 fetch 抛 Failed to fetch）⇒ 保持 weserv 代理 */ if (/(^|\.)r2\.dev$/i.test(String(_dv).replace(/^[a-z][a-z0-9+.-]*:\/\//i, "").split("/")[0])) return u; return /^[a-z][a-z0-9+.-]*:/i.test(_dv) ? _dv : "https://" + _dv; }
 }
-} catch (_) {}
+} catch (_) { _r9mNote("parse-007", _); }
 return u;
 };
 const fetchTO = function(u, ms) { /* Z15（第七批）：单图 fetch 10s 超时（AbortController），防 weserv 慢批次 20s+ 卡死「加载不进图片」 */
 const c = (typeof AbortController === "function") ? new AbortController() : null;
 if (!c) return fetch(u);
-const t = setTimeout(function() { try { c.abort(); } catch (_) {} }, ms);
+const t = setTimeout(function() { try { c.abort(); } catch (_) { _r9mNote("net-009", _); } }, ms);
 return fetch(u, { signal: c.signal }).finally(function() { clearTimeout(t); });
 };
 if (imgList.length) {
@@ -17866,7 +17879,7 @@ files.push(new File([blob], "reference" + (i + 1) + ".png", { type: blob.type ||
 }
 await api.loadFiles(files);
 } catch (err) {
-try { Toast.error("图片加载失败：" + ((err && err.message) || err)); } catch (_) {}
+try { Toast.error("图片加载失败：" + ((err && err.message) || err)); } catch (_) { _r9mNote("net-010", _); }
 }
 })();
 }
@@ -17878,7 +17891,7 @@ root.innerHTML = '<div class="studioLoadFail" role="alert">编辑器加载失败
 const retry = root.querySelector(".studioRetry");
 if (retry) retry.addEventListener("click", function() { open(opts); });
 }
-try { Toast.error("编辑器加载失败，请检查网络后重试"); } catch (_) {}
+try { Toast.error("编辑器加载失败，请检查网络后重试"); } catch (_) { _r9mNote("ui-077", _); }
 });
 }
 /* ★★★ R44：把视频链路需要的宿主助手**显式暴露到全局**。
@@ -18086,7 +18099,7 @@ return { open: open, close: close };
     for (var p = el.parentElement; p; p = p.parentElement) {
       if (p.nodeType !== 1) continue;
       var oy = "";
-      try { oy = getComputedStyle(p).overflowY; } catch (e) {}
+      try { oy = getComputedStyle(p).overflowY; } catch (e) { _r9mNote("misc-075", e); }
       if (oy === "auto" || oy === "scroll") return p;
     }
     return null;
@@ -18407,7 +18420,7 @@ return { open: open, close: close };
     /* IMPL-87：宿主标记=网格基底明暗——深色网格下白玻璃按钮/设置面板自动切深色
        （CSS 侧 [data-svfloor="dark"]），亮暗判定复用影色自适应的基底解析 */
     var _bc = rgbOfBase(baseFill), _bl = _bc ? _bc[0] * .299 + _bc[1] * .587 + _bc[2] * .114 : 255;
-    try { document.documentElement.setAttribute("data-svfloor", _bl < 128 ? "dark" : "light"); } catch (_e) {}
+    try { document.documentElement.setAttribute("data-svfloor", _bl < 128 ? "dark" : "light"); } catch (_e) { _r9mNote("misc-076", _e); }
     /* 基底后置（IMPL-83）：先画线→聚光衰减→destination-over 垫底，
        地台不受聚光影响（页面 margins 连续白）；无聚光时顺序与先垫底等价 */
 
@@ -18810,14 +18823,14 @@ return { open: open, close: close };
     sync(true);
     if (window.ResizeObserver && list) {
       ro = new ResizeObserver(function () { sync(false); });
-      try { ro.observe(list); } catch (e) {}
+      try { ro.observe(list); } catch (e) { _r9mNote("misc-077", e); }
     }
     list.addEventListener("load", onMedia, true);
     list.addEventListener("loadedmetadata", onMedia, true);
     try {
       moTheme = new MutationObserver(function () { sync(true); });
       moTheme.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-    } catch (e) {}
+    } catch (e) { _r9mNote("misc-078", e); }
     window.addEventListener("resize", function () { sync(false); }, { passive: true });
     /* 内容滚动（IMPL-81）：网格锚固定=背景语义不随内容滚动，落影经 rectOf 实时贴卡。
        IMPL-89③：scroll 事件内同步 applyHole()（仅写 4 个 CSS 变量，成本极低）——
@@ -18845,7 +18858,7 @@ return { open: open, close: close };
           if (typeof RMQ.addEventListener === "function") RMQ.addEventListener("change", onRmq);
           else if (typeof RMQ.addListener === "function") RMQ.addListener(onRmq);
         }
-      } catch (e) {}
+      } catch (e) { _r9mNote("misc-079", e); }
     }
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
@@ -18858,7 +18871,7 @@ return { open: open, close: close };
       if (typeof MOB_Q.addEventListener === "function") MOB_Q.addEventListener("change", onMobQ);
       else if (typeof MOB_Q.addListener === "function") MOB_Q.addListener(onMobQ);
     }
-  } catch (e) {}
+  } catch (e) { _r9mNote("misc-080", e); }
 
   /* ---------- 对外 API：原有三键 { sync, redraw, config } 不变 ----------
      config = S 活引用（设置面板直写后调 SvFloor.sync() 即重画；签名键覆盖全部参数）。
@@ -19085,7 +19098,7 @@ return { open: open, close: close };
         dump._v = 2; /* IMPL-90②：imgw 语义 v2 标记（新档 40-160 缩放%），旧档（≤90 无标记）启动时一次性迁移 */
         dump._inkv = 2; /* IMPL-109⑥：主题默认迁移标记（防旧默认对被反复迁移、覆盖用户显式选择） */
         localStorage.setItem(LS_KEY, JSON.stringify(dump));
-      } catch (e) {}
+      } catch (e) { _r9mNote("store-040", e); }
     }, 240);
   }
   /* 滑杆输入 → 徽标 + config + 重画 + 持久化；IMPL-89⑦：双击=回默认（快捷精确复位） */
@@ -19164,7 +19177,7 @@ return { open: open, close: close };
       var F = floorObj();
       if (F) F[c[2]] = c[3] === "int" ? parseInt(chipDef[c[0]], 10) : chipDef[c[0]];
     });
-    try { localStorage.removeItem(LS_KEY); } catch (e) {}
+    try { localStorage.removeItem(LS_KEY); } catch (e) { _r9mNote("store-041", e); }
     /* IMPL-86/109⑥：重置=出厂默认（石墨主题 ink 122,130,144 / base #1b1e24，IMPL-109⑥ 改）——
        主题按值回点，不再依赖 chips DOM 的初始 .on 位置 */
     var FC2 = floorObj();
@@ -19291,7 +19304,7 @@ return { open: open, close: close };
        时改写为石墨并落 _inkv 标记；标记存在后用户显式选回素白不会被再次迁移 */
     if (data._inkv !== 2 && data.ink === "182,188,198" && data.base === "#ffffff") {
       data.ink = "122,130,144"; data.base = "#1b1e24"; data._inkv = 2;
-      try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch (e) {}
+      try { localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch (e) { _r9mNote("store-042", e); }
     }
     Object.keys(sliders).forEach(function (suf) {
       var key = MAP[suf];
@@ -19302,7 +19315,7 @@ return { open: open, close: close };
          回 100% 基准并重写存档；新档带 _v:2 不再触发 */
       if (suf === "imgw" && data._v !== 2 && v <= 90) {
         v = 100;
-        try { data.imgW = 100; data._v = 2; localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch (e) {}
+        try { data.imgW = 100; data._v = 2; localStorage.setItem(LS_KEY, JSON.stringify(data)); } catch (e) { _r9mNote("store-043", e); }
       }
       sliders[suf].value = clamp(v, suf);
       setBadge(suf);
