@@ -6342,6 +6342,74 @@ function swallow(tag, fn) {
      · 其余（**公网明文 http://**）⇒ 直接拒绝并把目标域名写进错误，让使用者一眼看到问题
      · 地址解析不出（含 file:// 下的相对路径）⇒ 拒绝（无法确认安全性时不发密钥）
    ⚠ 该函数的抛错会进各调用点既有的 diags 数组 ⇒ 使用者看得到原因，不会静默失败（铁 95）。 */
+/* ★★ R9L-SEC-P1-2：抠图的**服务端分支**（配合 R9J 的 Worker 端点）。
+   为什么需要主动探测：R9G 的懒探测挂在"首个 /media 请求"上，而抠图完全可能更早发生
+   ⇒ 这里提供一个**带缓存的主动探测**（`__r9gCaps` 有值就直接用，一次页面加载最多打一次 /health）。
+   返回 null 的语义 = **本环境没有服务端抠图能力** ⇒ 调用方回退旧路径，绝不报错。 */
+async function _r9lCaps() {
+if (__r9gCaps) return __r9gCaps;
+var w = "";
+try { w = (Store.getR2WorkerUrl() || "").trim().replace(/\/$/, ""); } catch (_e) { w = ""; }
+if (!w) return null;
+try {
+var r = await fetch(w + "/health");
+var j = await r.json();
+if (j && j.caps) {
+__r9gCaps = j.caps;
+__r9gProbed = true;
+if (j.caps.bearerAuth === true) __r9gBearer = true;
+}
+return __r9gCaps;
+} catch (_e) { return null; }
+}
+/* 只有 `caps.segProxy === true`（= Worker 侧配好了 IMAGESEG_AK/SK）才走服务端。 */
+async function _r9lSegOn() {
+var caps = await _r9lCaps();
+return !!(caps && caps.segProxy === true);
+}
+/* ⚠ 这条路径**只用 Authorization 头**传 token，URL 上不带 —— 能返回 caps 的 Worker 必然支持头鉴权
+   （R9G/R9J 同版），所以不需要"探测一次才知道要不要带头"那一层。 */
+function _r9lSegTarget(path) {
+var w = "";
+try { w = (Store.getR2WorkerUrl() || "").trim().replace(/\/$/, ""); } catch (_e) { w = ""; }
+if (!w) return null;
+var token = "";
+try { token = Store.getR2AuthToken() || ""; } catch (_e) { token = ""; }
+if (!token) return null;
+return { url: w + "/media/seg" + path, headers: { Authorization: "Bearer " + token } };
+}
+/* 暂存：把图片字节交给 Worker，由它换临时凭证并传暂存桶 ⇒ 返回可读 URL。
+   返回 null = 不走服务端（调用方回退）。 */
+async function _r9lStageProxy(blob, ext) {
+if (!(await _r9lSegOn())) return null;
+var t = _r9lSegTarget("/stage?ext=" + encodeURIComponent(ext || "png"));
+if (!t) return null;
+var resp = await fetch(t.url, {
+method: "POST",
+headers: Object.assign({ "Content-Type": blob.type || ("image/" + (ext === "jpg" ? "jpeg" : ext)) }, t.headers),
+body: blob,
+});
+var d = await resp.json().catch(function () { return null; });
+if (!d || !d.ok || !d.url) {
+throw Object.assign(new Error((d && d.error) || "服务端暂存失败"), { code: "StageFailed", raw: (d && d.code) || ("HTTP" + resp.status) });
+}
+return d.url;
+}
+/* 抠图调用：前端只发业务参数，签名与出网都在 Worker。返回 null = 不走服务端。 */
+async function _r9lSegCall(action, bizParams) {
+if (!(await _r9lSegOn())) return null;
+var t = _r9lSegTarget("/imageseg");
+if (!t) return null;
+var resp = await fetch(t.url, {
+method: "POST",
+headers: Object.assign({ "Content-Type": "application/json" }, t.headers),
+body: JSON.stringify({ action: action, params: bizParams }),
+});
+var d = await resp.json().catch(function () { return null; });
+if (!d) throw new Error("服务端返回非 JSON（HTTP " + resp.status + "）");
+if (!d.ok) return { ok: false, code: d.code || "SegFailed", message: d.message || "服务端抠图失败", requestId: d.requestId || "" };
+return { ok: true, data: d.data };
+}
 function _r9hSegCredHeaders(ak, sk, target) {
 let u = null;
 try { u = new URL(String(target), location.href); } catch (_e) { u = null; }
@@ -6357,6 +6425,9 @@ throw Object.assign(new Error("抠图代理必须是 https://（或本机/局域
 return { "X-AK": ak, "X-SK": sk };
 }
 var __r9gBearer = false, __r9gProbed = false;
+/* ★ R9L：留住**整个 caps** —— R9G 当时只存了 bearerAuth 一个布尔，
+   而后续能力（segProxy 等）需要按名查询，逐个加变量会越来越散。 */
+var __r9gCaps = null;
 function _r9gBearerOn() { return __r9gBearer === true; }
 /* ⚠ 本函数刻意**不新增空 catch**（R9E 立的天花板只许降）：用已有的 swallow() 收口，两个点都留痕。 */
 function _r9gProbeCaps() {
@@ -6364,7 +6435,8 @@ function _r9gProbeCaps() {
   var w = swallow("r9g-caps-url", function () { return (Store.getR2WorkerUrl() || "").trim().replace(/\/$/, ""); });
   if (!w) return;
   fetch(w + "/health").then(function (r) { return r.json(); }).then(function (j) {
-    if (j && j.caps && j.caps.bearerAuth === true) {
+    if (j && j.caps) __r9gCaps = j.caps;
+      if (j && j.caps && j.caps.bearerAuth === true) {
       __r9gBearer = true;
       swallow("r9g-caps-log", function () { console.log("[R9G] Worker caps.bearerAuth=true ⇒ token 改为 Authorization 头传递（不再进 URL）"); });
     }
@@ -8894,6 +8966,14 @@ diag.push(`适配:${String(eFit && eFit.message || eFit).slice(0, 32)}`);
 }
 if (blob) {
 let putErr = null;
+/* ★ R9L：先试**服务端暂存**（Worker 换临时凭证 + 传桶，前端不碰密钥）。
+   返回 null = 本环境没有该能力 ⇒ 直接落到下面的原路径（零行为变化）。 */
+try {
+const _segUrl = await _r9lStageProxy(blob, ext);
+if (_segUrl) return _segUrl;
+} catch (eSeg) {
+diag.push(`服务端:${String(eSeg && (eSeg.raw || eSeg.code || eSeg.message) || "未知").slice(0, 40)}`);
+}
 try {
 return await this.ossStagePut(await this.viapiSts(), blob, ext);
 } catch (pe) {
@@ -8926,6 +9006,13 @@ raw: diag.join("；").slice(0, 80)
 },
 async _transport(action, bizParams) {
 const diags = [];
+/* ★ R9L：先试**服务端抠图**（Worker 持密钥签名并出网）。返回 null = 没这能力 ⇒ 走原路径。 */
+try {
+const _segRes = await _r9lSegCall(action, bizParams);
+if (_segRes) return _segRes;
+} catch (eSeg) {
+diags.push(`服务端:${String(eSeg && eSeg.message || eSeg).slice(0, 48)}`);
+}
 const ak = Store.getSegAk();
 const sk = Store.getSegSk();
 if (ak && sk) {
