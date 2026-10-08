@@ -14482,6 +14482,35 @@ async _downloadMany() {
   await Promise.all(Array.from({ length: Math.min(POOL, items.length) }, worker));
   Toast[bad ? "warning" : "success"](`批量下载完成：成功 ${ok}${bad ? ` · 失败 ${bad}` : ""}`, 4200);
 },
+/* ★ R9O：降级开窗**前**探活。为什么用元素探测而不是 fetch —— 这两个域里 scapi.net / r2.dev
+   **都没有 CORS 头**，fetch 必失败（那本就是"打不开"的成因之一，用它判定等于循环论证）；
+   而 img / video 元素的加载**不受 CORS 约束**，能真实区分"对象在"与"对象已过期"。
+   ⚠ 超时返回 true（未知 ⇒ 放行）：慢网下把正常大图判死，比偶尔多开一个标签更糟。 */
+_downloadAlive(url) {
+return new Promise(resolve => {
+let done = false;
+const fin = ok => { if (!done) { done = true; resolve(ok); } };
+const u = String(url || "");
+const ext = (u.match(/\.([a-z0-9]{2,5})(?:[?#]|$)/i) || [, ""])[1].toLowerCase();
+const isV = ["mp4", "webm", "mov", "m4v"].indexOf(ext) >= 0;
+try {
+if (isV) {
+const el = document.createElement("video");
+el.preload = "metadata";
+el.muted = true;
+el.onloadedmetadata = () => fin(true);
+el.onerror = () => fin(false);
+el.src = u;
+} else {
+const im = new Image();
+im.onload = () => fin(true);
+im.onerror = () => fin(false);
+im.src = u;
+}
+} catch (_r9oE0) { fin(true); return; }
+setTimeout(() => fin(true), isV ? 4e3 : 2500);
+});
+},
 async _downloadFile(url, name, _r9nOpts) {
 /* ★ R9N：`{auto:true}` = 由**程序**发起（抢救兜底 / 批量）。那种场景失败**绝不代用户开标签** ——
    实证：无 CORS 的临时直链（如 scapi.net）浏览器 fetch 必失败，旧兜底 window.open 会在
@@ -14511,6 +14540,11 @@ setTimeout(() => URL.revokeObjectURL(objUrl), 1e3);
 } catch (e) {
 /* ★ R9N：自动模式不代用户开标签（见 _r9nOpts 注释）；手动点击保留降级打开 —— 用户要的是「看原图」。 */
 if (_r9nOpts && _r9nOpts.auto) { _r9mNote("r9n", e); return; }
+/* ★ R9O：手动点击同样先探活 —— 过期链接就别再把人丢到 404 页上，就地给一句人话。 */
+try {
+const _r9oOk = await this._downloadAlive(url);
+if (!_r9oOk) { Toast.warning("这个链接已经失效了（多半是临时地址过期），没法下载原图", 6e3); return; }
+} catch (_r9oPe) { _r9mNote("r9o", _r9oPe); }
 window.open(safeUrl(url), "_blank"); /* IMPL-158-d：降级打开同样过协议白名单（防 javascript: 一键 XSS） */
 }
 },
@@ -15558,7 +15592,9 @@ const n = t === "all" ? all.length : all.filter(h => h.model?.type === t).length
 el.textContent = n > 0 ? String(n) : "";
 });
 const st = $("#historyStats");
-if (st) st.textContent = all.length ? `共 ${all.length} 条 · ★ ${favs}` : "暂无记录";
+/* ★ R9O（报告 04 UX-P2-2）：`saveHistory` 超 600 条会静默丢最旧的，用户此前只看到「共 N 条」。
+   ⚠ 上限 600 就地写死，与 saveHistory 里的常量同源 —— 改那处记得回来改这里。 */
+if (st) st.textContent = all.length ? `共 ${all.length} / 600 条 · ★ ${favs}` : "暂无记录";
 },
 _showHistoryDetail(h) {
 const statusText = h.status === "succeeded" ? "成功" : h.status === "failed" ? "失败" : "超时";
