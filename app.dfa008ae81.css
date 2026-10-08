@@ -2969,3 +2969,5 @@ html[data-theme="light"] .icon-btn-text{color:#6e6e6e}
       --lh-tight/--lh-base/--lh-loose · --space-1..6 · --ctrl-h-sm/md/lg
       --z-base/--z-sticky/--z-drawer/--z-modal/--z-toast/--z-lightbox
    ⚠ 本批**刻意不改任何现有值**（清单第八节：只增不改）—— 全量替换有视觉回归风险，另立批次。 */
+/* ★ R9C-UX-P1-4a：模型清单顶部的徽标图例（常态可见，补 title 的盲区） */
+.sm-legend{margin:0 0 6px;padding:0 2px;font-size:11px;line-height:1.55;color:var(--text-muted)}

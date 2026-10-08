@@ -2886,6 +2886,27 @@ function _modelThinkCapable(model) {
   return /qwen3/i.test(mPart) && !/vl|omni|qvq|audio|mt|asr|tts|realtime/i.test(mPart);
 }
 
+/* ★ R9C-UX-P1-4a（报告 04）：思考徽标的**精确说明**。
+   报告指出「思考×」把**通道限制**误读成**模型能力** —— 实测确认这个误读成立：
+   Worker 只给 dashscope / siliconflow-qwen3 / siliconflow-GLM / deepseek-flash|v4 注入思考参数，
+   apiyi 全系与 SiliconFlow 的 Kimi 系**没有任何注入**（开关是 no-op），
+   但这些模型本身是具备推理能力的（gpt-6.1-sol 官方支持 reasoning_effort）。 */
+function _thinkHint(model) {
+  const id = String(model || "");
+  if (_modelThinkCapable(id)) return "思考开关对本模型生效";
+  if (/^apiyi:/i.test(id)) return "本通道暂不支持一键思考（APIYI 分支不注入思考参数）；模型自身具备推理能力";
+  if (/^siliconflow:.*kimi/i.test(id)) return "本通道暂不支持一键思考（SiliconFlow 分支无注入）；Kimi 自身是长链推理模型";
+  return "该模型不支持深度思考开关";
+}
+/* 徽标渲染单处收口 —— 说明走 title（悬浮可见），零版面成本 */
+function _thinkChip(model) {
+  const ok = _modelThinkCapable(model);
+  const t = String(_thinkHint(model)).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  return ok
+    ? '<i class="sm-chip think" title="' + t + '">思考</i>'
+    : '<i class="sm-chip think-off" title="' + t + '">思考×</i>';
+}
+
 /* ── 79-c(a)：视觉能力判定单处收口——原 llmChatStream（自动切视觉守卫）/ SkillSession._docTargetVision /
    renderSkillModels（自定义模型「视觉」chip）三处各自维护的模型名正则（/vl|vision|omni|qvq|-4v|glm-4\.5v|deepseek-flash/i，
    renderSkillModels 版少 deepseek-flash）合并为一个共享判定，与 _modelThinkCapable（思考能力守卫）对偶。
@@ -6520,6 +6541,10 @@ try { if (typeof onUsage === "function") onUsage(usage, { model: model || "auto"
 try {
 for (let i = 0; i < endpoints.length; i++) {
 try {
+/* ★ R9C-APIYI-P1-4（报告 01）**实测证伪后刻意不改**：报告称 gpt-5.x/6.x 家族要求 temperature 固定 1、
+   须改用 max_completion_tokens（否则 400）。实测（经生产 Worker /llm/chat）gpt-6.1-sol 与 gpt-5.6-luna
+   携带 temperature 0.5 + max_tokens 均返回 HTTP 200 ⇒ 此网关不做族校验。**改反而有害**（会丢技能链既定温度）。
+   证据落盘：studio/验收/R9C-APIYI-P1-4实测.txt。 */
 const reqBody = { messages, stream: true, max_tokens: mt, temperature };
 if (think) reqBody.thinking = true;
 if (model && model !== "auto") reqBody.model = model;
@@ -15762,14 +15787,14 @@ const cur = Store.getSkillModel();
 const presetRow = m => {
 const sel = cur === m.id;
 const thinkOk = _modelThinkCapable(m.id);
-return `<button type="button" class="skill-model-row${sel ? " sel" : ""}" role="radio" aria-checked="${sel}" data-mid="${esc(m.id)}"><span class="sm-name">${esc(m.label)}</span><span class="sm-chips">${m.vision ? '<i class="sm-chip vision">视觉</i>' : ""}${thinkOk ? '<i class="sm-chip think">思考</i>' : '<i class="sm-chip think-off">思考×</i>'}</span><span class="sm-desc">${esc(m.desc)}</span></button>`;
+return `<button type="button" class="skill-model-row${sel ? " sel" : ""}" role="radio" aria-checked="${sel}" data-mid="${esc(m.id)}"><span class="sm-name">${esc(m.label)}</span><span class="sm-chips">${m.vision ? '<i class="sm-chip vision">视觉</i>' : ""}${_thinkChip(m.id)}</span><span class="sm-desc">${esc(m.desc)}</span></button>`;
 };
 const rows = SKILL_MODEL_PRESETS.map(presetRow);
 if (cur && cur !== "auto" && !SKILL_MODEL_PRESETS.some(m => m.id === cur)) {
 /* 79-c(a)：判定收口 isVisionModelName——旧内联正则少 deepseek-flash（自定义目录模型「视觉」标签显示修正，仅 UI 展示层） */
 const isV = isVisionModelName(cur);
 const thinkOk = _modelThinkCapable(cur);
-rows.push(`<button type="button" class="skill-model-row sel" role="radio" aria-checked="true" data-mid="${esc(cur)}"><span class="sm-name">${esc(cur)}</span><span class="sm-chips"><i class="sm-chip">自定义</i>${isV ? '<i class="sm-chip vision">视觉</i>' : ""}${thinkOk ? '<i class="sm-chip think">思考</i>' : '<i class="sm-chip think-off">思考×</i>'}</span><span class="sm-desc">来自模型清单</span></button>`);
+rows.push(`<button type="button" class="skill-model-row sel" role="radio" aria-checked="true" data-mid="${esc(cur)}"><span class="sm-name">${esc(cur)}</span><span class="sm-chips"><i class="sm-chip">自定义</i>${isV ? '<i class="sm-chip vision">视觉</i>' : ""}${_thinkChip(cur)}</span><span class="sm-desc">来自模型清单</span></button>`);
 }
 list.innerHTML = rows.join("");
 $$("#skillModelList .skill-model-row").forEach(b => b.addEventListener("click", () => {
