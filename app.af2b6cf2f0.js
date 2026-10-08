@@ -5043,6 +5043,11 @@ try { el.focus({ preventScroll: true }); } catch (e) { try { el.focus(); } catch
 }
 window.addEventListener("beforeunload", function (e) {
 try {
+/* ★ R9P（报告 04 UX-P2-9）：**进行中的任务**也要拦 —— 同步 APIYI 请求中途关页＝结果丢了、钱也扣了。
+   必须放在「提示词」判断**之前**：旧写法 if (!el) return 在没有提示词框时会提前返回，等于不拦。 */
+var _r9pBusy = false;
+try { _r9pBusy = (Store.getTasks() || []).some(function (t) { return t.status === "processing"; }); } catch (_r9pB) { _r9mNote("r9p", _r9pB); }
+if (_r9pBusy) { e.preventDefault(); e.returnValue = ""; return; }
 var el = document.querySelector(PROMPT_SEL);
 if (!el) return;
 var v = el.value != null ? el.value : el.textContent;
@@ -5109,7 +5114,8 @@ try {
 localStorage.setItem(key, value);
 return true;
 } catch (e) {
-Toast.error("本地存储已满，请清理历史记录");
+/* ★ R9P（报告 02 FE-P3-2）：节流 30s —— 批量写历史时每次失败都弹 ⇒ Toast 风暴。 */
+if (!window.__r9pQuotaAt || Date.now() - window.__r9pQuotaAt > 3e4) { window.__r9pQuotaAt = Date.now(); Toast.error("本地存储已满，请清理历史记录"); }
 return false;
 }
 }
@@ -5625,7 +5631,7 @@ const opened = await this._openBlob(blob, password);
 const obj = opened.obj;
 this._keys = obj.keys;
 this._pw = password;
-this._healSegKeys();
+/* ★ R9P（报告 02 FE-P3-5）：原处调用 _healSegKeys() —— 它已是空函数，删除。 */
 this._apply();
 this._persistPw(password);
 /* 旧格式（ZipCrypto）⇒ 后台升级成 AES-GCM。**不 await**：迁移失败与本次解锁无关。 */
@@ -5637,9 +5643,6 @@ total: Object.keys(this._keys).length,
 filled: names.length,
 names: names
 };
-},
-_healSegKeys() {
-return;
 },
 /* ★ R9K：随 `unlock` 一起 async 化。调用方（`UI.init`）**不 await**（初始化不能阻塞），
    改为 `.then(ok => ok && UI._updateVaultStatus())`。 */
@@ -16791,7 +16794,9 @@ $("#generateBtn").disabled = true;
 });
 window.addEventListener("online", () => {
 Toast.success("网络已恢复");
-$("#generateBtn").disabled = false;
+/* ★ R9P（报告 02 FE-P3-1）：按生成状态恢复 —— 原写法无条件 disabled = false，
+   生成中网络闪断再恢复会把按钮提前解锁（有 _generating 守卫兜底，但状态显示不一致）。 */
+$("#generateBtn").disabled = !!this._generating;
 poller.resumeAll();
 });
 window.addEventListener("storage", e => {
