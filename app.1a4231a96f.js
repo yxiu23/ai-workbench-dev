@@ -6258,6 +6258,28 @@ function swallow(tag, fn) {
    为真 ⇒ 之后把 token 从 URL 挪到 Authorization: Bearer（不进边缘/代理日志）；
    旧 Worker 不返该字段 ⇒ 保持现状。**没有上线顺序约束**（先部署 Worker 或先更新前端都安全）。
    ⚠ 代价：每个页面加载后的**第一个** /media 请求仍带 ?token=（探测还没回来）—— 可接受。 */
+/* ★★ R9H-SEC-P1-2b（报告 03）：抠图「自定义代理」可被用户填成任意域名，而旧代码
+   无条件把 **X-AK / X-SK 明文**发过去 ⇒ 填错域名（或被钓鱼）＝长效阿里云密钥直接外泄。
+   守卫口径（**硬门槛，不是可点掉的提示**）：
+     · https://  ⇒ 允许（传输加密，且用户显式填过这个域名）
+     · 本机 / 局域网（localhost · 127.0.0.1 · ::1 · 10.x · 192.168.x · 172.16~31.x）⇒ 允许（本地中继场景）
+     · 其余（**公网明文 http://**）⇒ 直接拒绝并把目标域名写进错误，让使用者一眼看到问题
+     · 地址解析不出（含 file:// 下的相对路径）⇒ 拒绝（无法确认安全性时不发密钥）
+   ⚠ 该函数的抛错会进各调用点既有的 diags 数组 ⇒ 使用者看得到原因，不会静默失败（铁 95）。 */
+function _r9hSegCredHeaders(ak, sk, target) {
+let u = null;
+try { u = new URL(String(target), location.href); } catch (_e) { u = null; }
+if (!u || !u.hostname) {
+throw Object.assign(new Error("抠图代理地址无法解析为安全目标：" + String(target).slice(0, 80)), { code: "InsecureSegProxy" });
+}
+const _h = String(u.hostname || "").toLowerCase().replace(/^\[|\]$/g, "");
+const _priv = _h === "localhost" || _h === "127.0.0.1" || _h === "::1" || _h === "0.0.0.0"
+|| /^10\./.test(_h) || /^192\.168\./.test(_h) || /^172\.(1[6-9]|2[0-9]|3[01])\./.test(_h);
+if (u.protocol !== "https:" && !_priv) {
+throw Object.assign(new Error("抠图代理必须是 https://（或本机/局域网地址）：明文 http:// 会把阿里云 SK 暴露给网络。当前 " + _h), { code: "InsecureSegProxy" });
+}
+return { "X-AK": ak, "X-SK": sk };
+}
 var __r9gBearer = false, __r9gProbed = false;
 function _r9gBearerOn() { return __r9gBearer === true; }
 /* ⚠ 本函数刻意**不新增空 catch**（R9E 立的天花板只许降）：用已有的 swallow() 收口，两个点都留痕。 */
@@ -8531,12 +8553,16 @@ return this._sts;
 },
 async ossStagePut(sts, blob, ext) {
 const ctype = blob.type && blob.type.startsWith("image/") ? blob.type : `image/${ext === "jpg" ? "jpeg" : ext}`;
-const object = `${Store.getSegAk()}/${(crypto.randomUUID ? crypto.randomUUID() : String(Math.random())).replace(/-/g, "")}src.${ext}`;
+/* ★ R9H-SEC-P1-2a（报告 03）：原来前缀写 `${Store.getSegAk()}` ⇒ AK 随结果图 URL 进历史/云端/日志。
+   改为每次上传独立的随机前缀（policy 的 starts-with 配对改，见下行）。
+   桶本身是「临时暂存桶」、对象名唯一即可，前缀无需承担隔离职责。 */
+const _r9hPrefix = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random())).replace(/-/g, "");
+const object = `${_r9hPrefix}/${(crypto.randomUUID ? crypto.randomUUID() : String(Math.random())).replace(/-/g, "")}src.${ext}`;
 const policy = btoa(JSON.stringify({
 expiration: new Date(Date.now() + 10 * 60 * 1e3).toISOString(),
 conditions: [ {
 bucket: "viapi-customer-temp"
-}, [ "starts-with", "$key", Store.getSegAk() + "/" ], [ "content-length-range", 1, 30 * 1024 * 1024 ], {
+}, [ "starts-with", "$key", _r9hPrefix + "/" ], [ "content-length-range", 1, 30 * 1024 * 1024 ], {
 "x-oss-security-token": sts.token
 } ]
 }));
@@ -8573,8 +8599,7 @@ try {
 const resp = await fetch(url, {
 method: "POST",
 headers: {
-"X-AK": ak,
-"X-SK": sk,
+..._r9hSegCredHeaders(ak, sk, url),
 "Content-Type": blob.type || `image/${ext === "jpg" ? "jpeg" : ext}`
 },
 body: blob
@@ -8701,8 +8726,7 @@ try {
 const resp = await fetch(epUrl, {
 method: "POST",
 headers: {
-"X-AK": ak,
-"X-SK": sk,
+..._r9hSegCredHeaders(ak, sk, epUrl),
 "Content-Type": "application/json"
 },
 body: JSON.stringify({
@@ -8859,8 +8883,7 @@ const resp = await fetch(Store.segEndpoint("/imageseg"), {
 method: "POST",
 headers: {
 "Content-Type": "application/json",
-"X-AK": ak,
-"X-SK": sk
+..._r9hSegCredHeaders(ak, sk, Store.segEndpoint("/imageseg"))
 },
 body: JSON.stringify({
 action: action,
@@ -16564,7 +16587,7 @@ document.addEventListener("DOMContentLoaded", () => { UI.init(); /* ★ R76-J：
    ============================================================ */
 window.StudioEditor = (function() {
 let api = null, ov = null, onSaveCb = null, escHandler = null, scriptP = null;
-const STUDIO_SRC = "image-studio.adce381a46.js";
+const STUDIO_SRC = "image-studio.5d6d5bc681.js";
 /* IMPL-144 W5（2026-09-26 修拍板）：位图动作全换 GPT-Image-2.5 系——覆盖 IMPL-143 版映射（变更单第一节）
    sunburst=最强档（精细编辑/参考保真，Arena 文生图 1420.7/编辑 1520.4 双第一）→扩图/局部重绘；flare=快车道（比 GPT-Image-2 快 50%）→擦除/图像拆解/编辑文字；抠出主体维持阿里抠图专用通道
    裸名审计落账：GPT-Image-2.5 裸名非 OpenAI 正式 model id（正式 id 仅 gpt-image-2.5-flare / gpt-image-2.5-sunburst，快照 -2026-09-08）；
