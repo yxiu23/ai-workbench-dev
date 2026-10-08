@@ -18,15 +18,15 @@ POLL_TIMEOUT: 30 * 60 * 1e3,
 POLL_FAIL_LIMIT: 5,
 REQUEST_TIMEOUT: 45e3,
 POLL_PHASES: [ {
-name: "冷启动",
+name: "排队中",
 until: 3e4,
 interval: 3e3
 }, {
-name: "黄金窗口",
+name: "生成中",
 until: 18e4,
 interval: 1500
 }, {
-name: "长尾",
+name: "收尾中",
 until: 6e5,
 interval: 2e3
 } ],
@@ -7177,7 +7177,7 @@ getPhaseName(elapsed) {
 for (const p of CONFIG.POLL_PHASES) {
 if (elapsed < p.until) return p.name;
 }
-return "长尾";
+return CONFIG.POLL_PHASES[CONFIG.POLL_PHASES.length - 1].name; /* ★ R96-3-3：与 getPhaseInterval 同款兜底 */
 }
 start(task) {
 this.stop(task.id);
@@ -7795,7 +7795,7 @@ const u = pickUrl(task.body?.[frameLast.key]);
 if (u) refs.last = u;
 }
 const lines = [];
-lines.push("# 速创工作台 · 工作流 V32");
+lines.push("# 修的媒体工作台 · 工作流 V32");
 lines.push("【任务】");
 lines.push(typeName(tab));
 lines.push("【模型】");
@@ -7828,7 +7828,7 @@ return lines.join("\n");
 },
 parse(text) {
 if (!text || typeof text !== "string") return null;
-if (!/^#\s*速创工作台\s*[·-]\s*工作流\s+V32/i.test(text.trim())) return null;
+if (!/^#\s*(速创工作台|修的媒体工作台)\s*[·-]\s*工作流\s+V32/i.test(text.trim())) return null;
 const result = {
 type: null,
 modelName: null,
@@ -19532,7 +19532,7 @@ async function wyVideo(prompt, def, ex) {
 }
 
 /* ══════════ 轮询器：节奏与状态语义**逐字照 PollManager**（不另立一套）══════════
- *  · 节奏：CONFIG.POLL_PHASES（冷启动 3s → 黄金窗口 1.5s → 长尾 2s），上限 CONFIG.POLL_TIMEOUT（30min）
+ *  · 节奏：CONFIG.POLL_PHASES（排队中 3s → 生成中 1.5s → 收尾中 2s），上限 CONFIG.POLL_TIMEOUT（30min）
  *  · 成功：`Number(status) === 2` 或 succeeded / success / completed
  *  · 失败：`Number(status) === 3` 或 failed / error
  *  ⚠ 超时**不撒谎**：如实说"任务可能仍在跑，稍后可在任务详情查看"（与宿主文案同向）。 */
