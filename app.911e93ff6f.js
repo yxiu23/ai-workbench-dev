@@ -7315,7 +7315,7 @@ error: t.error,
 cost: t.cost
 });
 };
-let expired = 0;
+let expired = 0, _r9bZombie = 0;
 tasks.forEach(t => {
 if (t.status !== "processing") { addOnce(t); return; }
 if (now - (t.createdAt || 0) > CONFIG.POLL_TIMEOUT) {
@@ -7332,8 +7332,17 @@ TaskCenter.reattach(t);
 return;
 }
 if (t.apiId) this.start(t);
+else {
+  /* ★ R9B-UX-P2-6：既非任务中心、又没有 apiId ⇒ 这条 processing 是"同步请求途中被关页"留下的，
+     本地没有任何东西能推进它 ⇒ 原实现让它**永远转圈**（钱可能已计费）。判 failed 并给可操作说明。 */
+  t.status = "failed";
+  t.error = "任务在等待结果时被中断（页面关闭或刷新）—— 上游可能已计费，结果可能仍在：可按需重新生成，或用历史记录核对";
+  t.completedAt = now;
+  _r9bZombie++;
+  addOnce(t);
+}
 });
-if (expired) Store.saveTasks(tasks.filter(t => t.status === "processing"));
+if (expired || _r9bZombie) Store.saveTasks(tasks.filter(t => t.status === "processing"));
 }
 }
 
@@ -9617,6 +9626,24 @@ document.addEventListener("change", function(e) { try { if (e.target && e.target
 /* ★ R26-G（2026-10-02）：window.UI 此前**从未赋值** ⇒ 'window.UI && UI._refreshGenerateBtn' 恒短路，
    生成按钮金额从未刷新过（R22 上线即假绿）。此处补引用 + 切模型（#modelSelect）也触发刷新。 */
 window.UI = this;
+/* ★ R9B-FE-P1-2（报告 02）/ SEC-P1-5（报告 03）：全站此前**无任何全局兜底**（unhandledrejection / error 各 0 处）。
+   未捕获的 Promise 拒绝只进 devtools ⇒ 用户侧「点了没反应」且无痕迹。这里只**报告**、不改行为。
+   ⚠ 节流：10s 内最多一条 Toast（避免软键盘/网络抖动刷屏）。⚠ error 用 capture=false ⇒ **不会**捕获资源加载错误（CF 探针那种）。 */
+try {
+  if (!window.__r9bGlobalHooked) {
+    window.__r9bGlobalHooked = true;
+    var _r9bLastAt = 0;
+    var _r9bReport = function (kind, msg) {
+      try { console.warn("[R9B-global] " + kind + ": " + msg); } catch (_) {}
+      var _now = Date.now();
+      if (_now - _r9bLastAt < 1e4) return;
+      _r9bLastAt = _now;
+      try { Toast.error("页面出现未处理异常（" + kind + "）：功能可能未完成，详情已记录到控制台", 6e3); } catch (_) {}
+    };
+    window.addEventListener("unhandledrejection", function (e) { try { var r = e && e.reason; _r9bReport("promise", String((r && (r.message || r)) || "").slice(0, 160)); } catch (_) {} });
+    window.addEventListener("error", function (e) { try { _r9bReport("error", String((e && e.message) || "").slice(0, 200)); } catch (_) {} });
+  }
+} catch (_) {}
 $("#generateBtn").addEventListener("click", () => this.handleGenerate());
 $("#copyWorkflowBtn").addEventListener("click", () => {
 const task = this._buildCurrentTask();
@@ -13000,6 +13027,24 @@ if (Store.getSync() && (typeof TaskCenter !== "undefined" && TaskCenter.isAvaila
 this._archiveResult(task).catch(() => {});
 }
 },
+/* ★ R9B-UX-P0-1（报告 04 · P0）：转存失败＝付费产物**可能永久丢失**，必须让用户**当场知道并抢救**。
+   ⚠ 幂等：同一 task 只出声一次（失败路径有多条，会重复调用）。
+   报告口径：不要只 console.warn —— 要把"永久丢失"与"瞬时故障"说清楚，并给可操作出口。 */
+_r9bLocalOnly(task, why) {
+  try {
+    if (!task || task.localOnly) return;
+    task.localOnly = true;
+    task.localOnlyReason = String(why || "");
+    try {
+      const arr = Store.getTasks();
+      const i = arr.findIndex(t => t.id === task.id);
+      if (i >= 0) { arr[i].localOnly = true; arr[i].localOnlyReason = task.localOnlyReason; Store.saveTasks(arr); }
+    } catch (_) {}
+    try { this._renderTaskList(); } catch (_) {}
+    try { Toast.warning("结果未能转存到云端：仅在本页有效，关闭/刷新后会丢失 —— 已为你触发一次下载", 9e3); } catch (_) {}
+    try { if (task.result && task.result.url) this._downloadFile(task.result.url, (task.model && task.model.id ? task.model.id : "workbench") + "_" + task.id); } catch (_) {}
+  } catch (_) {}
+},
 async _archiveResult(task) {
 if (!Store.getSync()) return;
 const url = task.result?.url;
@@ -13169,7 +13214,7 @@ console.warn("[archive] 前端上传返回无 url:", data.error || "unknown");
 console.warn("[archive] 前端转存失败，回退 Worker /archive:", e.message);
 }
 /* ★ R74-3：blob:/data: 无可回退 —— Worker 在远端，拿不到本页的 blob/data（这一跳必然失败） */
-if (/^(blob:|data:)/.test(url)) return;
+if (/^(blob:|data:)/.test(url)) { this._r9bLocalOnly(task, "blob/data 无法回退到 Worker 转存"); return; }
 try {
 const res = await fetch(workerUrl + "/archive?url=" + encodeURIComponent(url) + "&ext=" + finalExt + "&token=" + encodeURIComponent(token), {
 method: "POST"
@@ -13180,8 +13225,9 @@ applyArchived(data.url);
 console.log("[archive] Worker 转存成功:", url, "→", data.url);
 } else {
 console.warn("[archive] Worker 转存失败:", data.error || "unknown");
+this._r9bLocalOnly(task, "Worker /archive 也失败：" + (data.error || "unknown"));
 }
-} catch (e2) {}
+} catch (e2) { this._r9bLocalOnly(task, "Worker /archive 异常：" + ((e2 && e2.message) || e2)); }
 },
 onTaskResult(taskId, result) {
 const tasks = Store.getTasks();
@@ -13578,6 +13624,8 @@ const idx = this.state.singleIdx >= 0 ? this.state.singleIdx : 0;
 const isPlain = status === "succeeded" && !!url && (type === "image" || type === "video");
 el.className = "sv-wrap" + (isPlain ? " sv-plain" : "") + (task.status === "processing" ? " status-processing" : "");
 let mediaHtml = "";
+/* ★ R9B-UX-P0-1e：转存失败的结果在卡片上**常驻**标出（刷新后仍在）—— 光有 Toast 不够。 */
+const _r9bBanner = task.localOnly ? '<div role="alert" style="width:100%;box-sizing:border-box;margin:0 0 8px;padding:6px 10px;border-radius:8px;background:rgba(204,58,58,.12);color:var(--danger);font-size:12px;line-height:1.5;text-align:left">⚠ 此结果<strong>未能转存到云端</strong>，仅在本页有效 —— 关闭或刷新页面后会丢失，请立即「下载」保存。</div>' : "";
 if (status === "processing") {
 /* 81-b：等待卡片——细线圆环+微光带（样式见 .sv-waiting-*），.sv-media.is-loading 外壳类名保留（JS 无查询点，纯语义标记） */
 mediaHtml = `<div class="sv-media is-loading"><div class="sv-waiting" role="status" aria-label="生成中，请稍候"><svg class="sv-waiting-ring" viewBox="0 0 30 30" aria-hidden="true"><circle class="wr-track" cx="15" cy="15" r="12.5"></circle><circle class="wr-arc" cx="15" cy="15" r="12.5"></circle></svg><span class="sv-waiting-bar" aria-hidden="true"></span></div></div>`;
@@ -13630,7 +13678,7 @@ const bCmp = `<button class="sv-hb-btn${inCompare ? " on" : ""}" data-act="compa
 const bRegen = `<button class="sv-hb-btn" data-act="regen" title="重新生成" aria-label="重新生成"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg></button>`;
 const bVFull = `<button class="sv-hb-btn" data-act="vfull" title="全屏播放" aria-label="全屏播放"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9"/><path d="M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9"/><path d="M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15"/><path d="M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"/></svg></button>`;
 const hbBtns = selBatch + [(selN ? "" : bDown) + bWf, type === "image" ? bRegen + bRef + bEdit + bCmp : type === "video" ? bRegen + bRef + bVFull : bRegen + bRef].join(sep) + sep + bDel;/* IMPL-107①：视频追加全屏；IMPL-142：头部批量操作组；IMPL-143 反馈①：选中态 bDown/bEdit 隐藏（批量组覆盖，重复图标合并）、W5 反馈②：抠图此图/复制链接移除，排序=批量组|多选/生成/素材|工作流|删除(danger) */
-el.innerHTML = `\n      <figure class="sv-stage is-plain">\n        ${navHtml}\n        <div class="sv-caption"><span class="sv-cap-model">${esc(task.model?.name || "未命名")}</span><span class="sv-cap-time">${fmtTime(task.createdAt)}${task.batchTotal > 1 && task.batchIndex ? ` · #${task.batchIndex}/${task.batchTotal}` : ""}</span>${task.prompt ? `<span class="sv-cap-prompt" title="${esc(task.prompt)}">${esc(task.prompt)}</span>` : ""}${headMeta.length ? `<span class="sv-hb-tags">${headMeta.join("")}</span>` : ""}</div>\n        ${mediaHtml}\n        <div class="sv-floatbar" role="toolbar" aria-label="结果操作">${hbBtns}</div>\n      </figure>`;
+el.innerHTML = `\n      <figure class="sv-stage is-plain">\n        ${navHtml}\n        <div class="sv-caption"><span class="sv-cap-model">${esc(task.model?.name || "未命名")}</span><span class="sv-cap-time">${fmtTime(task.createdAt)}${task.batchTotal > 1 && task.batchIndex ? ` · #${task.batchIndex}/${task.batchTotal}` : ""}</span>${task.prompt ? `<span class="sv-cap-prompt" title="${esc(task.prompt)}">${esc(task.prompt)}</span>` : ""}${headMeta.length ? `<span class="sv-hb-tags">${headMeta.join("")}</span>` : ""}</div>\n        ${_r9bBanner}${mediaHtml}\n        <div class="sv-floatbar" role="toolbar" aria-label="结果操作">${hbBtns}</div>\n      </figure>`;
 } else {
 const stActs = [];
 if (status === "processing") stActs.push(`<button class="sv-hb-btn" data-act="refresh" title="手动刷新" aria-label="手动刷新"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></button>`, `<button class="sv-hb-btn" data-act="stop" title="停止任务" aria-label="停止任务"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button>`);
@@ -13638,7 +13686,7 @@ if (status === "failed" || status === "timeout") stActs.push(`<button class="sv-
 if (status === "succeeded" && url) stActs.push(bDown);
 stActs.push(bWf);
 if (status === "failed" || status === "timeout" || status === "succeeded") stActs.push(bDel);/* IMPL-105⑤：成功态补下载+删除（音频此前仅剩工作流一钮） */
-el.innerHTML = `\n      <figure class="sv-stage">\n        ${navHtml}\n        <div class="sv-head">\n          <span class="sv-model">${esc(task.model?.name || "未命名")}</span>\n          ${status !== "succeeded" ? `<span class="status-pill ${status}">${statusText}</span>` : ""}\n          <span class="sv-time">${fmtTime(task.createdAt)}${task.batchTotal > 1 && task.batchIndex ? ` · #${task.batchIndex}/${task.batchTotal}` : ""}</span>\n        </div>\n        ${mediaHtml}\n        ${progressRowHtml}\n        <div class="sv-floatbar" role="toolbar" aria-label="任务操作">${stActs.join(sep)}</div>\n        ${task.prompt ? `<div class="sv-prompt" title="${esc(task.prompt)}">${esc(task.prompt)}</div>` : ""}\n        ${headMeta.length ? `<div class="sv-foot">${headMeta.join("")}</div>` : ""}\n      </figure>`;
+el.innerHTML = `\n      <figure class="sv-stage">\n        ${navHtml}\n        <div class="sv-head">\n          <span class="sv-model">${esc(task.model?.name || "未命名")}</span>\n          ${status !== "succeeded" ? `<span class="status-pill ${status}">${statusText}</span>` : ""}\n          <span class="sv-time">${fmtTime(task.createdAt)}${task.batchTotal > 1 && task.batchIndex ? ` · #${task.batchIndex}/${task.batchTotal}` : ""}</span>\n        </div>\n        ${_r9bBanner}${mediaHtml}\n        ${progressRowHtml}\n        <div class="sv-floatbar" role="toolbar" aria-label="任务操作">${stActs.join(sep)}</div>\n        ${task.prompt ? `<div class="sv-prompt" title="${esc(task.prompt)}">${esc(task.prompt)}</div>` : ""}\n        ${headMeta.length ? `<div class="sv-foot">${headMeta.join("")}</div>` : ""}\n      </figure>`;
 }
 this._bindSingleView(el, task);
 this._wireMediaPill(el);
