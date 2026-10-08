@@ -19,10 +19,17 @@
   Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=()
   Strict-Transport-Security: max-age=31536000; includeSubDomains
 
+# ③ 已做的（R98-2-3）：7 个 CDN 资源（jsdelivr）已加 `integrity="sha384-…"` + `crossorigin="anonymous"`
+#    （hash 由 curl 实拉同一 URL 计算；真机验证 dexie/filepond/sortable 均正常挂载、未被拒载）。
+#    原 `document.write` 的 unpkg 兜底已在 R96 删除（反模式），故 CDN 现阶段仅 jsdelivr 一个来源。
+
 # ⚠ 刻意**不加**的两个头（写了理由，不是漏做）：
-#   · Content-Security-Policy —— 本站有 3 大块**内联 script** + 大量内联 style + 6 个 CDN + 多个上游 API 域
-#     （api.apiyi.com / Worker media.gaze23.work / 速创 / dashscope …）。CSP 一旦漏列一个域就是**白屏**，
-#     而白屏对使用者是最坏体验。⇒ 必须先在一次**真机全流程**里把域逐个抓全（Network 面板）再收紧；
-#     **照抄报告示例会白屏**（报告自己也提示了）。留作独立批次。
+#   · Content-Security-Policy —— 本站有 3 大块**内联 script** + 大量内联 style ⇒ script-src/style-src
+#     **必须**含 'unsafe-inline'（否则整页白屏），该指令的防注入收益因此大打折扣；
+#     而 `connect-src` 若要真正收紧，必须一次列全所有上游域（实测/源码扫描到的有：
+#     cdn.jsdelivr.net · images.weserv.nl · api.qrserver.com · api.apiyi.com · media.gaze23.work(Worker) ·
+#     api.wuyinkeji.com · api.siliconflow.cn · dashscope.aliyuncs.com · imageseg/viapiutils/viapi-customer-temp
+#     .cn-shanghai.aliyuncs.com · raw.githubusercontent.com）—— 漏一个就是某功能静默失败。
+#     ⇒ 结论：**先不 enforcing**。等有一次「真机全流程抓域」的机会再收紧（届时用上面的清单做起点）。
 #   · X-Frame-Options —— 使用者常在 **WorkBuddy 预览面板（iframe）** 里打开本站，
 #     DENY/SAMEORIGIN 都会把它挡掉 ⇒ 直接打断主用法。除非确认预览面板不受影响，否则不加。
