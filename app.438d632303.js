@@ -9876,7 +9876,10 @@ pBase = r2Url;
 }
 const hist = Store.getHistory();
 const isCloud = u => u.startsWith(pBase) || /\.r2\.dev\//.test(u);
-const pending = hist.filter(h => h.status === "succeeded" && h.result?.url && !isCloud(h.result.url) && !h.result.originalUrl && (/^https?:/.test(h.result.url) || String(h.result.url).indexOf("blob:") === 0)); /* ★ R74-4：blob: 也补转存 */
+/* ★ R9N：失败过的条目 **6 小时内不再自动重试** —— 无 CORS 的直链（scapi.net 这类）永远转不成，
+   旧行为＝每次打开网站都重跑一遍 fetch、再弹一次失败提示。手动下载路径不受影响。 */
+const _r9nCool = 216e5;
+const pending = hist.filter(h => h.status === "succeeded" && h.result?.url && !isCloud(h.result.url) && !h.result.originalUrl && (!h.result.archiveFailedAt || Date.now() - h.result.archiveFailedAt > _r9nCool) && (/^https?:/.test(h.result.url) || String(h.result.url).indexOf("blob:") === 0)); /* ★ R74-4：blob: 也补转存 · R9N：加失败退避 */
 pending.slice(0, 3).forEach(h => {
 this._archiveResult(h).catch(() => {});
 });
@@ -13390,9 +13393,22 @@ _r9bLocalOnly(task, why) {
       if (i >= 0) { arr[i].localOnly = true; arr[i].localOnlyReason = task.localOnlyReason; Store.saveTasks(arr); }
     } catch (_) { _r9mNote("misc-054", _); }
     try { this._renderTaskList(); } catch (_) { _r9mNote("misc-055", _); }
-    try { Toast.warning("结果未能转存到云端：仅在本页有效，关闭/刷新后会丢失 —— 已为你触发一次下载", 9e3); } catch (_) { _r9mNote("ui-035", _); }
-    try { if (task.result && task.result.url) this._downloadFile(task.result.url, (task.model && task.model.id ? task.model.id : "workbench") + "_" + task.id); } catch (_) { _r9mNote("ui-036", _); }
-  } catch (_) { _r9mNote("ui-037", _); }
+    /* ★ R9N：这两行原本是**自动**调 _downloadFile，而它的失败兜底是 window.open ⇒
+       打开网站时的自动重试流程会凭空弹出一个标签（链接已过期 ⇒ 弹出的正是一张 404 页）。
+       改成：Toast 上给一个「立即下载」按钮 —— 用户点了才下（手动路径允许降级打开）。 */
+    try {
+      const _r9nU = task.result && task.result.url;
+      const _r9nN = (task.model && task.model.id ? task.model.id : "workbench") + "_" + task.id;
+      Toast.warning("结果未能转存到云端：仅在本页有效，关闭/刷新后会丢失", 12e3,
+        _r9nU ? { label: "立即下载", fn: () => { try { this._downloadFile(_r9nU, _r9nN); } catch (_r9nD) { _r9mNote("r9n", _r9nD); } } } : null);
+    } catch (_r9nE) { _r9mNote("r9n", _r9nE); }
+    /* ★ R9N：给 history 打失败退避标记 —— _archivePendingHistory 据此 6h 内不再自动重试同一条。 */
+    try {
+      const _r9nH = Store.getHistory();
+      const _r9nI = _r9nH.findIndex(x => x.id === task.id);
+      if (_r9nI >= 0) { _r9nH[_r9nI].result = Object.assign({}, _r9nH[_r9nI].result, { archiveFailedAt: Date.now(), archiveFailedWhy: task.localOnlyReason }); Store.saveHistory(_r9nH); }
+    } catch (_r9nE2) { _r9mNote("r9n", _r9nE2); }
+  } catch (_) { _r9mNote("misc-056", _); }
 },
 async _archiveResult(task) {
 if (!Store.getSync()) return;
@@ -13417,8 +13433,8 @@ try {
 if (!window.__r92Arch) window.__r92Arch = {};
 if (window.__r92Arch[_r92key]) return;
 window.__r92Arch[_r92key] = 1;
-setTimeout(function () { try { delete window.__r92Arch[_r92key]; } catch (e) { _r9mNote("misc-056", e); } }, 30000);
-} catch (e) { _r9mNote("misc-057", e); }
+setTimeout(function () { try { delete window.__r92Arch[_r92key]; } catch (e) { _r9mNote("misc-057", e); } }, 30000);
+} catch (e) { _r9mNote("misc-058", e); }
 const modelName = (task.model?.name || "unknown").replace(/[^a-zA-Z0-9_-]/g, "_");
 const time = new Date(task.completedAt || task.createdAt || Date.now()).toISOString().slice(0, 19).replace(/[:T]/g, "-");
 const ratio = task.body?.aspectRatio || task.body?.ratio || "auto";
@@ -13471,7 +13487,7 @@ this._renderTaskList();
 if ($("#historySidebar")?.classList.contains("show")) this.renderHistory();
 this._scheduleHistorySync();
 /* ★ R86：转存完成 ⇒ 通知调度器（结果条上的「转存中」要变回常态） */
-try { window.__r86Archive.notify(); } catch (_e86) { _r9mNote("ui-038", _e86); }
+try { window.__r86Archive.notify(); } catch (_e86) { _r9mNote("ui-035", _e86); }
 };
 try {
 /* ★ R86-⑦：**先复用预载缓存** —— `_preloadResult` 刚为同一 URL 拉过一份 blob（图片路径必然如此），
@@ -13495,14 +13511,14 @@ blob = await res.blob();
    写入点后移 + 文件名统一取 nameOf(data.url)，两条一起解决。 */
 if (blob && /^text\/html/i.test(blob.type || "")) throw new Error("HTML 错误页而非媒体文件"); /* IMPL-104 */
 /* ★ R91-A：预载没跑（视频走的就是这条）或预载失败时，在这里补定一次会话显示地址。 */
-try { this._r91SessionUrl(task.id, blob); } catch (_e91b) { _r9mNote("misc-058", _e91b); }
+try { this._r91SessionUrl(task.id, blob); } catch (_e91b) { _r9mNote("misc-059", _e91b); }
 /* ★ R74-2：blob: 的 URL 里没有扩展名 ⇒ 上面按 URL 推断一律得 png；MIME 以 blob.type 为准纠正回来 */
 let _upName = fileName;
 try {
 const _mt = { "image/jpeg": "jpg", "image/jpg": "jpg", "image/webp": "webp", "image/gif": "gif", "image/png": "png", "video/mp4": "mp4", "video/webm": "mp4", "audio/mpeg": "mp3", "audio/wav": "wav", "audio/x-wav": "wav" };
 const _me = _mt[String((blob && blob.type) || "").toLowerCase()];
 if (_me) _upName = String(fileName).replace(/\.[a-z0-9]+$/i, "." + _me);
-} catch (_) { _r9mNote("misc-059", _); }
+} catch (_) { _r9mNote("misc-060", _); }
 const formData = new FormData;
 formData.append("file", blob, _upName);
 const uploadUrl = workerUrl + "/upload?token=" + encodeURIComponent(token) + "&dir=results";
@@ -13524,7 +13540,7 @@ const _r92ext = (String(data.url).match(/\.([a-z0-9]+)(?:\?|$)/i) || [ , "png" ]
 const _r92ln = (this._r92LocalName && this._r92LocalName(task, _r92ext)) || _r92alias;
 if (_r92ln) window.__r84Local.save(_r92ln, blob, _r92alias);
 }
-} catch (_e91b2) { _r9mNote("misc-060", _e91b2); }
+} catch (_e91b2) { _r9mNote("misc-061", _e91b2); }
 console.log("[archive] 前端转存成功:", url, "→", data.url, "(", fileName, ")");
 /* ★ R76-A2：顺手出缩略图 —— blob 已在手上（同源），_r76ThumbFromBlob 不经过 URL ⇒ 不受 CORS 约束。
    生成后把 thumbUrl 写回 tasks/history，列表/历史自此加载缩略图（~40 KB）而非原图（1~4 MB）。
@@ -13823,7 +13839,7 @@ const ci = this.state.singleIdx || 0;
 const t = vi[off];
 if (t && t.result && t.result.url) this._preloadResult(t);
 });
-} catch (e) { _r9mNote("misc-061", e); }
+} catch (e) { _r9mNote("misc-062", e); }
 },
 _singleNav(dir) {
 const arr = this.state.singleList || [];
@@ -13890,7 +13906,7 @@ const fo = e.target.closest(".rf-folder");
 if (fo && fo.dataset.fid) {
 lpTimer = setTimeout(() => {
 lpTimer = null;
-try { navigator.vibrate && navigator.vibrate(30); } catch (err) { _r9mNote("misc-062", err); }
+try { navigator.vibrate && navigator.vibrate(30); } catch (err) { _r9mNote("misc-063", err); }
 this._openFolderMenu(fo.dataset.fid, fo);
 }, 480);
 return;
@@ -13902,7 +13918,7 @@ lpTimer = setTimeout(() => {
 lpTimer = null;
 this._lpSel = th.dataset.tid; this._lpSelAt = Date.now(); /* IMPL-139：登记长按已消费（抑制松手合成 click 翻转） */
 const task = [...Store.getTasks(), ...Store.getHistory()].find(t => t.id === th.dataset.tid);
-try { navigator.vibrate && navigator.vibrate(30); } catch (err) { _r9mNote("misc-063", err); }
+try { navigator.vibrate && navigator.vibrate(30); } catch (err) { _r9mNote("misc-064", err); }
 if (this.state.selMode) {
 /* IMPL-142b：已处多选模式时长按=打开该卡查看器——sv-floatbar 批量组即触屏批量操作入口（sel-bar 移除后的闭环） */
 if (task) this._showSingleTask(task);
@@ -14144,14 +14160,14 @@ el.querySelectorAll(".sv-hb-btn[data-act]").forEach(btn => {
 btn.addEventListener("click", e => {
 e.stopPropagation();
 const act = btn.dataset.act;
-if (act === "zoom") this._openLightboxForTask(task); else if (act === "download") this._downloadFile(task.result.url, `${task.model?.id || "workbench"}_${task.id}`); else if (act === "compare") this._toggleCompare(task); else if (act === "delete") this._deleteTask(task.id); else if (act === "ref") this._useAsReference(task.result.url, task.model?.type); else if (act === "edit") this._openEditor(task.result.url); else if (act === "vfull") VideoFS.openFromTask(task);/* IMPL-107① */ else if (act === "wf") Workflow.copy(task); else if (act === "regen") this._regen(task); else if (act === "refresh") poller.manualRefresh(task.id); else if (act === "stop") poller.manualStop(task.id); else if (act === "retry") this._retryTask(task); else if (act === "copyErr") { const _t9 = String(task.error || "未知错误"); (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(_t9) : Promise.reject()).then(() => { try { Toast.success("错误信息已复制"); } catch (_) { _r9mNote("ui-039", _); } }, () => { try { this._showManualCopy(_t9); } catch (_) { _r9mNote("ui-040", _); } }); }
+if (act === "zoom") this._openLightboxForTask(task); else if (act === "download") this._downloadFile(task.result.url, `${task.model?.id || "workbench"}_${task.id}`); else if (act === "compare") this._toggleCompare(task); else if (act === "delete") this._deleteTask(task.id); else if (act === "ref") this._useAsReference(task.result.url, task.model?.type); else if (act === "edit") this._openEditor(task.result.url); else if (act === "vfull") VideoFS.openFromTask(task);/* IMPL-107① */ else if (act === "wf") Workflow.copy(task); else if (act === "regen") this._regen(task); else if (act === "refresh") poller.manualRefresh(task.id); else if (act === "stop") poller.manualStop(task.id); else if (act === "retry") this._retryTask(task); else if (act === "copyErr") { const _t9 = String(task.error || "未知错误"); (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(_t9) : Promise.reject()).then(() => { try { Toast.success("错误信息已复制"); } catch (_) { _r9mNote("ui-036", _); } }, () => { try { this._showManualCopy(_t9); } catch (_) { _r9mNote("ui-037", _); } }); }
 });
 });
 el.querySelectorAll(".sv-hb-btn[data-batchact], .sv-sel-tag[data-batchact]").forEach(btn => { /* IMPL-142：批量操作组（sv-floatbar 复用，反馈1）；Z4（第六批）：sel-tag 徽标纳入委托=点击取消全部多选 */
 btn.addEventListener("click", e => {
 e.stopPropagation();
 const act = btn.dataset.batchact;
-if (act === "clearsel") { this._clearSelection(); try { Toast.info("已取消全部选择"); } catch (_) { _r9mNote("ui-041", _); } return; } else if (act === "folder") this._openMoveToMenu(btn); else if (act === "compare") this._showCompareGrid(); else if (act === "download") this._downloadSelected(); else if (act === "edit") this._editSelected();/* W5 反馈②：批量导出/清除多选图标移除（减选出口=再点选中卡片/点徽标，归零自动退多选模式） */
+if (act === "clearsel") { this._clearSelection(); try { Toast.info("已取消全部选择"); } catch (_) { _r9mNote("ui-038", _); } return; } else if (act === "folder") this._openMoveToMenu(btn); else if (act === "compare") this._showCompareGrid(); else if (act === "download") this._downloadSelected(); else if (act === "edit") this._editSelected();/* W5 反馈②：批量导出/清除多选图标移除（减选出口=再点选中卡片/点徽标，归零自动退多选模式） */
 });
 });
 const hbPrompt = el.querySelector(".sv-cap-prompt");
@@ -14165,7 +14181,7 @@ const tasks = Store.getTasks().filter(t => t.result?.url && t.model?.type !== "a
 tasks.slice(0, 10).forEach(t => {
 ThumbService.ensureThumb(t).catch(() => {});
 });
-} catch (e) { _r9mNote("ui-042", e); }
+} catch (e) { _r9mNote("ui-039", e); }
 },
 _bulkDeleteByFilter() {
 const tasks = Store.getTasks();
@@ -14325,7 +14341,7 @@ const _aSt = window.__r86Archive.stateOf(task);
 if (_aSt === "running") _archBadge = '<span class="strip-arch-badge is-running" aria-hidden="true">转存中</span>';
 else if (_aSt === "queued") _archBadge = '<span class="strip-arch-badge is-queued" aria-hidden="true">待转存</span>';
 else if (_aSt === "idle") _archBadge = '<span class="strip-arch-badge is-idle" aria-hidden="true">未转存</span>';
-} catch (_e86) { _r9mNote("misc-064", _e86); }
+} catch (_e86) { _r9mNote("misc-065", _e86); }
 mediaHtml = (thumbUrl ? `<img src="${esc(thumbUrl)}" loading="lazy" decoding="async" referrerpolicy="no-referrer">` : `<video src="${esc(_r91u)}" muted preload="metadata" playsinline></video>`) + badge(bPlay) + _archBadge;
 } else if (type === "audio") {
 mediaHtml = `<div class="strip-icon-only is-audio"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect class="eqb e1" x="2.2" y="8.6" width="2.5" height="6.8" rx="1.25"/><rect class="eqb e2" x="6.5" y="5.2" width="2.5" height="13.6" rx="1.25"/><rect class="eqb e3" x="10.8" y="3.4" width="2.5" height="17.2" rx="1.25"/><rect class="eqb e4" x="15.1" y="6.4" width="2.5" height="11.2" rx="1.25"/><rect class="eqb e5" x="19.4" y="9.4" width="2.5" height="5.2" rx="1.25"/></svg></div>` + badge(bWave);
@@ -14353,7 +14369,7 @@ e.dataTransfer.setData("application/x-wb-task", task.id); e.dataTransfer.setData
 const inSel = this.state.compareList.some(t => t.id === task.id); /* Z2（第六批）：uri-list 载荷（T2 契约，拖进画板即通）——多选拖拽=选中集整组 url（\n 多值标准形式），单拖=本卡 url */
 const dragUrls = (inSel && this.state.compareList.length > 1 ? this.state.compareList : [task]).map(t => t.result && t.result.url).filter(Boolean).join("\n");
 if (dragUrls) e.dataTransfer.setData("text/uri-list", dragUrls);
-e.dataTransfer.effectAllowed = "copy"; } catch (err) { _r9mNote("misc-065", err); }
+e.dataTransfer.effectAllowed = "copy"; } catch (err) { _r9mNote("misc-066", err); }
 th.classList.add("dragging");
 this._showStripGhost();
 });
@@ -14457,7 +14473,7 @@ async _downloadMany() {
     while (idx < items.length) {
       const it = items[idx++];
       try {
-        await this._downloadFile(it.result.url, `${it.model?.id || "workbench"}_${it.id}`);
+        await this._downloadFile(it.result.url, `${it.model?.id || "workbench"}_${it.id}`, { auto: true });
         ok++;
       } catch (e) { bad++; }
       await new Promise(r => setTimeout(r, 350));
@@ -14466,7 +14482,10 @@ async _downloadMany() {
   await Promise.all(Array.from({ length: Math.min(POOL, items.length) }, worker));
   Toast[bad ? "warning" : "success"](`批量下载完成：成功 ${ok}${bad ? ` · 失败 ${bad}` : ""}`, 4200);
 },
-async _downloadFile(url, name) {
+async _downloadFile(url, name, _r9nOpts) {
+/* ★ R9N：`{auto:true}` = 由**程序**发起（抢救兜底 / 批量）。那种场景失败**绝不代用户开标签** ——
+   实证：无 CORS 的临时直链（如 scapi.net）浏览器 fetch 必失败，旧兜底 window.open 会在
+   「打开网站」这类自动流程里凭空弹出标签，而链接多半已过期 ⇒ 弹出的正好是 404 页。 */
 if (!url) return;
 try {
 let blob = null;
@@ -14490,6 +14509,8 @@ a.click();
 a.remove();
 setTimeout(() => URL.revokeObjectURL(objUrl), 1e3);
 } catch (e) {
+/* ★ R9N：自动模式不代用户开标签（见 _r9nOpts 注释）；手动点击保留降级打开 —— 用户要的是「看原图」。 */
+if (_r9nOpts && _r9nOpts.auto) { _r9mNote("r9n", e); return; }
 window.open(safeUrl(url), "_blank"); /* IMPL-158-d：降级打开同样过协议白名单（防 javascript: 一键 XSS） */
 }
 },
@@ -14593,7 +14614,7 @@ let ok = 0, bad = 0, idx = 0;
 const worker = async () => {
 while (idx < items.length) {
 const it = items[idx++];
-try { await this._downloadFile(it.result.url, `${it.model?.id || "workbench"}_${it.id}`); ok++; } catch (e) { bad++; }
+try { await this._downloadFile(it.result.url, `${it.model?.id || "workbench"}_${it.id}`, { auto: true }); ok++; } catch (e) { bad++; }
 await new Promise(r => setTimeout(r, 350));
 }
 };
@@ -14916,7 +14937,7 @@ slider.addEventListener("pointerdown", e => {
 dragging = true;
 try {
 slider.setPointerCapture(e.pointerId);
-} catch (err) { _r9mNote("ui-043", err); }
+} catch (err) { _r9mNote("ui-040", err); }
 setPct(posFromEvent(e));
 });
 slider.addEventListener("pointermove", e => {
@@ -14947,7 +14968,7 @@ if (card) {
 card.classList.add("fresh-reveal");
 setTimeout(() => card.classList.remove("fresh-reveal"), 1500);
 }
-} catch (e) { _r9mNote("ui-044", e); }
+} catch (e) { _r9mNote("ui-041", e); }
 AmbientFX.successPulse();
 AmbientFX.illuminate(task.result?.thumbUrl || task.result?.url, task.model?.type);
 },
@@ -14976,7 +14997,7 @@ const prevWrap = $("#lbContent .lb-img-wrap");
 if (prevWrap && prevWrap._lbCleanup) {
 try {
 prevWrap._lbCleanup();
-} catch (e) { _r9mNote("ui-045", e); }
+} catch (e) { _r9mNote("ui-042", e); }
 }
 const isVideo = this.state.lightboxIsVideo;
 const isAudio = this.state.lightboxIsAudio;
@@ -15263,7 +15284,7 @@ const wrap = c && c.querySelector(".lb-img-wrap");
 if (wrap && wrap._lbCleanup) {
 try {
 wrap._lbCleanup();
-} catch (e) { _r9mNote("ui-046", e); }
+} catch (e) { _r9mNote("ui-043", e); }
 }
 c.innerHTML = "";
 const tb = $("#lbToolbar");
@@ -16316,7 +16337,7 @@ const _esc88 = (v) => String(v == null ? "" : v).replace(/[&<>]/g, (c) => ({ "&"
 this._showModal("手动复制", '<div style="font-size:12px;opacity:.72;margin-bottom:8px">浏览器拦下了自动复制。下面已全选，按 <b>Ctrl/⌘ + C</b> 即可拿走。</div><textarea readonly id="manualCopyArea" style="width:100%;height:280px;font:12px/1.55 ui-monospace,Menlo,Consolas,monospace;resize:vertical;white-space:pre">' + _esc88(text) + "</textarea>", [ { label: "关闭", primary: true, fn: () => this._closeModal() } ]);
 setTimeout(() => {
 const ta = document.getElementById("manualCopyArea");
-if (ta) { try { ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length); } catch (_e88) { _r9mNote("misc-066", _e88); } }
+if (ta) { try { ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length); } catch (_e88) { _r9mNote("misc-067", _e88); } }
 }, 60);
 },
 _saveFormToCache() {
@@ -16652,11 +16673,11 @@ if (!window.__wbVvBound) { window.__wbVvBound = true; vv.addEventListener("resiz
 } else if (document.body.style.height) {
 document.body.style.removeProperty("height"); /* 环境支持 dvh/跨断点回桌面：还权 CSS */
 }
-} catch (e) { _r9mNote("ui-047", e); }
-} catch (e) { _r9mNote("ui-048", e); }
+} catch (e) { _r9mNote("ui-044", e); }
+} catch (e) { _r9mNote("ui-045", e); }
 };
 window.addEventListener("resize", function () { if (window.__wbSyncThemeColor) window.__wbSyncThemeColor(); }, { passive: true });/* IMPL-115③：跨断点旋转/缩放即时回落，防深色内联残留到桌面态 */
-try { window.__wbSyncThemeColor(); } catch (e) { _r9mNote("ui-049", e); }/* IMPL-121①：首屏自调一次——dvh 失效环境不等首次 resize/切视图即修正 body 高 */
+try { window.__wbSyncThemeColor(); } catch (e) { _r9mNote("ui-046", e); }/* IMPL-121①：首屏自调一次——dvh 失效环境不等首次 resize/切视图即修正 body 高 */
 }
 const sw = $("#mobileViewSwitch");
 if (sw) {
@@ -16752,7 +16773,7 @@ try {
   const _bl91 = document.querySelector(".brand-logo");
   const _fl91 = document.querySelector("#faviconLink");
   if (_bl91 && _fl91 && _bl91.getAttribute("src")) _fl91.href = _bl91.getAttribute("src");
-} catch (e) { _r9mNote("ui-050", e); }
+} catch (e) { _r9mNote("ui-047", e); }
 /* IMPL-91② Store.getHistory 内存缓存：跨标签页写入 / 其他键清空时失效（本 tab 写路径已全部经 _hwrite 收口） */
 window.addEventListener("storage", e => {
   try {
@@ -16810,7 +16831,7 @@ if (!m) return;
 cat.models[id] = { name: String(m.name || "").replace(/（[易创连]）[ 　]*$/, "").trim(), price: m.price || "", desc: m.desc || "", icon: modelLogoOf(id) || "", channel: m.channel === "apiyi" ? "apiyi" : (m.direct ? "direct" : "wy"), modelId: m.modelId || id, billing: m.billing || null, params: (m.params || []).map(function(p) { return { key: p.key, label: p.label, type: p.type, required: !!p.required, default: p.default != null ? p.default : "", options: p.options || null, max: p.max != null ? p.max : null, output: p.output || "", placeholder: p.placeholder || "" }; }) }; /* 2026-10-01：+channel/modelId（编辑器据此在模型键上标通道）；R21-2：+billing（编辑器价格列按它算纯人民币）；旧嵌入包忽略未知键无副作用 */
 });
 }
-} catch (_) { _r9mNote("misc-067", _); }
+} catch (_) { _r9mNote("misc-068", _); }
 /* ★★ R42：视频档投影（与编辑器 videoModelsOf 的 type:"video" 判据配对）。
    排除表见上方注释：包装类 / 工具类 / 直连重复档**故意不下发**（修拍板）。
    图像档保持无 type —— 编辑器 normalizeModels 遇 type:"video" 会跳过，不污染位图面板。 */
@@ -16823,7 +16844,7 @@ var ch = String(m.channel || "") === "apiyi" ? "apiyi" : (ep.indexOf("/api/async
 cat.models[m.id] = { type: "video", name: String(m.name || "").replace(/（[易创连]）[ 　]*$/, "").trim(), price: m.price || "", desc: m.desc || "", icon: modelLogoOf(m.id) || "", channel: ch, modelId: m.modelId || m.id, endpoint: ep, billing: m.billing || null, refGroups: m.refGroups || null, params: (m.params || []).map(function(p) { return { key: p.key, label: p.label, type: p.type, required: !!p.required, default: p.default != null ? p.default : "", options: p.options || null, max: p.max != null ? p.max : null, min: p.min != null ? p.min : null, step: p.step != null ? p.step : null, unit: p.unit || "", output: p.output || "", placeholder: p.placeholder || "", hint: p.hint || "" }; }) };
 });
 }
-} catch (_) { _r9mNote("misc-068", _); }
+} catch (_) { _r9mNote("misc-069", _); }
 return cat;
 }
 function loadStudio() {
@@ -16876,12 +16897,12 @@ createdAt: Date.now(),
 completedAt: Date.now()
 });
 }
-if (!cards.length) { try { Toast.warning("未收到可落位的多图产物"); } catch (_) { _r9mNote("ui-051", _); } return false; }
+if (!cards.length) { try { Toast.warning("未收到可落位的多图产物"); } catch (_) { _r9mNote("ui-048", _); } return false; }
 cards.forEach(c => { Store.addHistory(c); archiveDataUrlCard(c).catch(() => {}); }); /* IMPL-152：逐卡后台转存（+512 缩略图），dataURL 不再永驻 LS */
 const ids = cards.map(c => c.id);
 if (typeof UI !== "undefined" && UI.state && UI.state.openFolderId) UI._folderAddMulti(UI.state.openFolderId, ids); else if (typeof UI !== "undefined") UI._folderCreateWithMulti(ids); /* Z10：整组入夹（有展开夹入展开夹，否则新建一夹收纳） */
 if (typeof UI !== "undefined") UI._renderResultStrip();
-try { Toast.success("已保存 " + cards.length + " 张到结果区（同组入夹）"); } catch (_) { _r9mNote("ui-052", _); }
+try { Toast.success("已保存 " + cards.length + " 张到结果区（同组入夹）"); } catch (_) { _r9mNote("ui-049", _); }
 close();
 return true;
 }
@@ -16891,7 +16912,7 @@ if (keep) close();
 return true; /* 已接管 → 编辑器不再走浏览器下载 */
 } catch (e) {
 console.error("[StudioEditor] 应用到节点失败:", e);
-try { Toast.error("导出失败: " + _errText(e)); } catch (_) { _r9mNote("ui-053", _); }
+try { Toast.error("导出失败: " + _errText(e)); } catch (_) { _r9mNote("ui-050", _); }
 return false;
 }
 }
@@ -16987,7 +17008,7 @@ img.src = dataUrl;
 } catch (e) { resolve(dataUrl); }
 });
 }
-try { if (typeof navigator !== "undefined" && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function() {}); } catch (_) { _r9mNote("misc-069", _); } /* IMPL-152（用户工单⑤）：申请持久化存储（best-effort）——降低 UA 磁盘紧张时清理本站数据的概率；被拒无副作用 */
+try { if (typeof navigator !== "undefined" && navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(function() {}); } catch (_) { _r9mNote("misc-070", _); } /* IMPL-152（用户工单⑤）：申请持久化存储（best-effort）——降低 UA 磁盘紧张时清理本站数据的概率；被拒无副作用 */
 async function archiveDataUrlCard(card) { /* IMPL-152（用户工单⑤）：编辑器产物 dataURL 落 R2——三处 onSave 全尺寸 dataURL 内联写 history 是「网页缓存易满」根因（2K 图 base64 5-15MB vs LS 配额 5-10MB，且 _archiveResult 对 data: 门控直返永不转存）：原图上传换 R2 URL + 长边 512 缩略图双写，双表回写照 applyArchived 范式；失败静默保留 dataURL（本地可用性优先）。「无限扩容」由 R2 承担（本地只留 URL 指针）；LRU 淘汰与 IDB Blob 迁移为二期 */
 try {
 const url = card && card.result && card.result.url;
@@ -17015,7 +17036,7 @@ if (t) { t.result = card.result; Store.saveTasks(tasks); }
 const hist = Store.getHistory();
 const h = hist.find(function(x) { return x.id === card.id; });
 if (h) { h.result = card.result; Store.saveHistory(hist); }
-if (typeof UI !== "undefined" && UI._renderResultStrip) { try { UI._renderResultStrip(); } catch (_) { _r9mNote("misc-070", _); } }
+if (typeof UI !== "undefined" && UI._renderResultStrip) { try { UI._renderResultStrip(); } catch (_) { _r9mNote("misc-071", _); } }
 return true;
 } catch (e) { console.warn("[IMPL-152] 编辑器产物转存失败（保留 dataURL 本地可用）:", (e && e.message) || e); return false; }
 }
@@ -17377,18 +17398,18 @@ const inp = bar.querySelector("#studioInlineInput");
 let done = false;
 const finish = v => { if (done) return; done = true; if (bar.parentNode) bar.remove(); resolve(v); };
 const grow = function() { /* Z16：自动增高 1→6 行（122px=行高 18×6+上下 padding 12+边框 2 封顶，超出滚动；border-box 下 +2 边框补偿）。空值恒 32px 定标——30ms 首测时布局/字体未稳，长 placeholder 会于窄态换行撑大 scrollHeight 造成锁高（e2e149 B1 实证），非空输入时布局已稳定走实测 */
-try { if (!inp.value) { inp.style.height = "32px"; return; } inp.style.height = "auto"; inp.style.height = Math.min(inp.scrollHeight + 2, 122) + "px"; } catch (_) { _r9mNote("ui-054", _); }
+try { if (!inp.value) { inp.style.height = "32px"; return; } inp.style.height = "auto"; inp.style.height = Math.min(inp.scrollHeight + 2, 122) + "px"; } catch (_) { _r9mNote("ui-051", _); }
 };
 bar._resolve = v => finish(String(v || "").trim());
 bar.querySelector("#studioInlineOk").addEventListener("click", () => finish(String(inp.value || "").trim()));
 bar.querySelector("#studioInlineNo").addEventListener("click", () => finish(""));
 inp.addEventListener("input", grow);
 inp.addEventListener("keydown", ev => { if (ev.key === "Enter" && !ev.shiftKey) { ev.preventDefault(); finish(String(inp.value || "").trim()); } /* Z16：Shift+Enter=换行走默认行为不拦截 */ });
-setTimeout(function() { try { inp.focus(); grow(); } catch (e) { _r9mNote("misc-071", e); } }, 30);
+setTimeout(function() { try { inp.focus(); grow(); } catch (e) { _r9mNote("misc-072", e); } }, 30);
 });
 }
 async function studioAliMatting(imgData) { /* IMPL-143 P0：remove-background → 阿里抠图专用通道（stageImage→probeSize→pickAction→_call；凭据=IMAGESEG_AK/SK，缺=Toast 通道未配置不静默回退） */
-if (!(Store.getSegAk() && Store.getSegSk())) { try { Toast.warning("抠出主体的服务通道未配置：请先在设置页解锁阿里云密钥（IMAGESEG_AK/SK）"); } catch (_) { _r9mNote("ui-055", _); } return false; }
+if (!(Store.getSegAk() && Store.getSegSk())) { try { Toast.warning("抠出主体的服务通道未配置：请先在设置页解锁阿里云密钥（IMAGESEG_AK/SK）"); } catch (_) { _r9mNote("ui-052", _); } return false; }
 const staged = await SegStudio.stageImage(imgData, null, {});
 const size = await SegStudio.probeSize(staged);
 const action = SegStudio.pickAction("SegmentCommonImage", size) || "SegmentCommonImage";
@@ -17396,7 +17417,7 @@ const params = {};
 params[action === "SegmentHDCommonImage" ? "ImageUrl" : action === "SegmentSkin" ? "URL" : "ImageURL"] = staged;
 const res = await SegStudio._call(action, params);
 if (!res || !res.ok) {
-if (res && res.code === "MissingCredential") { try { Toast.warning("抠出主体的服务通道未配置：请先在设置页解锁阿里云密钥（IMAGESEG_AK/SK）"); } catch (_) { _r9mNote("ui-056", _); } return false; }
+if (res && res.code === "MissingCredential") { try { Toast.warning("抠出主体的服务通道未配置：请先在设置页解锁阿里云密钥（IMAGESEG_AK/SK）"); } catch (_) { _r9mNote("ui-053", _); } return false; }
 throw new Error((res && res.message) || "阿里抠图通道调用失败");
 }
 const outUrl = SegStudio.resultUrlOf(res.data);
@@ -17454,13 +17475,13 @@ const _n = (Number(_i) || 0) + (Number(_ot) || 0);
 _txt = " · " + (_n >= 1000 ? (Math.round(_n / 100) / 10) + "k" : String(_n)) + " tokens";
 }
 if (_txt) {
-try { Toast.success("提示词反推 完成" + _txt); } catch (_) { _r9mNote("ui-057", _); }
-try { console.info("[W5-route]", JSON.stringify({ phase: "reverse-cost", model: _pr19m, inTokens: _i, outTokens: _ot, label: _txt, ts: Date.now() })); } catch (_) { _r9mNote("ui-058", _); }
+try { Toast.success("提示词反推 完成" + _txt); } catch (_) { _r9mNote("ui-054", _); }
+try { console.info("[W5-route]", JSON.stringify({ phase: "reverse-cost", model: _pr19m, inTokens: _i, outTokens: _ot, label: _txt, ts: Date.now() })); } catch (_) { _r9mNote("ui-055", _); }
 }
-} catch (_e) { _r9mNote("ui-059", _e); }
+} catch (_e) { _r9mNote("ui-056", _e); }
 return out;
 }
-if (typeof window !== "undefined") { try { window.__studioPromptReverse = promptReverseForStudio; } catch (_) { _r9mNote("misc-072", _); } } /* 调试可达（同 archiveDataUrlCard 先例） */
+if (typeof window !== "undefined") { try { window.__studioPromptReverse = promptReverseForStudio; } catch (_) { _r9mNote("misc-073", _); } } /* 调试可达（同 archiveDataUrlCard 先例） */
 
 /* ══════════════════════════════════════════════════════════════════════════════════
    R15（2026-09-30）：「技能 + 大模型」通道 —— 把宿主**早已有**的技能系统开放给 W5 编辑器
@@ -17523,7 +17544,7 @@ temperature: (typeof o.temperature === "number") ? o.temperature : undefined,
 maxTokens: mt,
 thinking: (typeof o.thinking === "boolean") ? o.thinking : undefined,
 signal: o.signal,
-onDelta: function(d) { _out += String(d == null ? "" : d); if (_userDelta) { try { _userDelta(d); } catch (_) { _r9mNote("misc-073", _); } } },
+onDelta: function(d) { _out += String(d == null ? "" : d); if (_userDelta) { try { _userDelta(d); } catch (_) { _r9mNote("misc-074", _); } } },
 onUsage: function(u, meta) { _r19u = u; _r19m = (meta && meta.model) ? String(meta.model) : ""; },
 tag: o.tag ? String(o.tag) : "studio-skill"
 });
@@ -17548,8 +17569,8 @@ const _n = (Number(_i) || 0) + (Number(_ot) || 0);
 _txt = " · " + (_n >= 1000 ? (Math.round(_n / 100) / 10) + "k" : String(_n)) + " tokens";
 }
 if (_txt) {
-try { Toast.success((skill ? skill.name : "技能") + " 完成" + _txt); } catch (_) { _r9mNote("ui-060", _); }
-try { console.info("[W5-route]", JSON.stringify({ phase: "skill-cost", model: _r19m, inTokens: _i, outTokens: _ot, label: _txt, ts: Date.now() })); } catch (_) { _r9mNote("ui-061", _); }
+try { Toast.success((skill ? skill.name : "技能") + " 完成" + _txt); } catch (_) { _r9mNote("ui-057", _); }
+try { console.info("[W5-route]", JSON.stringify({ phase: "skill-cost", model: _r19m, inTokens: _i, outTokens: _ot, label: _txt, ts: Date.now() })); } catch (_) { _r9mNote("ui-058", _); }
 }
 } catch (_e) { /* 计费失败绝不影响主流程（同 _noteUsage 的静默口径） */ }
 return _out;
@@ -17578,7 +17599,7 @@ return SKILL_MODEL_PRESETS.map(function(m) {
 return { id: m.id, label: m.label, desc: m.desc || "", vision: !!isVisionModelName(m.id), think: !!_modelThinkCapable(m.id) };
 });
 }
-if (typeof window !== "undefined") { try { window.__studioSkillChat = studioSkillChat; window.__studioSkills = studioSkills; window.__studioModels = studioModels; } catch (_) { _r9mNote("misc-074", _); } } /* 调试可达（同 __studioPromptReverse 先例） */
+if (typeof window !== "undefined") { try { window.__studioSkillChat = studioSkillChat; window.__studioSkills = studioSkills; window.__studioModels = studioModels; } catch (_) { _r9mNote("misc-075", _); } } /* 调试可达（同 __studioPromptReverse 先例） */
 
 async function bitmapHandler(e) {
 try {
@@ -17591,10 +17612,10 @@ if (maskData && maskMode === "luma-white") maskData = await invertMaskToAlpha(ma
 let userData = hostPrompt() || ((e.options && typeof e.options === "object" && e.options.prompt) ? String(e.options.prompt) : ""); /* R8（2026-09-29）：**先认编辑器面板那一份** —— 面板写的提示词走 e.options.prompt，而旧版只读宿主自己的输入框 ⇒ 面板里写过了宿主也不知道 ⇒ 判空 ⇒ 弹就地输入条 = 逼用户写第二遍（修 09-28 第 3 条）。⚠ 这里**不能引 op13**：op13 在本行之后（16410 行）才 const 定义，提前引用会踩 TDZ 直接抛 ReferenceError ⇒ 必须直接读 e.options */
 if ((e.action === "inpaint" || e.action === "edit-text") && !userData) { /* Z6（第六批）：宿主输入框为空 → 编辑器内就地输入条（官方案定：prompt 由嵌入方传入，替掉工作台硬门禁） */
 userData = await studioInlinePrompt(e.action === "inpaint" ? "重绘" : "编辑文字"); /* 第十三批 H4：标签同步「重绘」 */
-if (!userData) { try { Toast.info("已取消：未填写提示词"); } catch (_) { _r9mNote("ui-062", _); } return false; }
+if (!userData) { try { Toast.info("已取消：未填写提示词"); } catch (_) { _r9mNote("ui-059", _); } return false; }
 }
 const needPrompt = e.action === "inpaint" || e.action === "edit-text"; /* H1b（十三批）：重绘无选区=整层改图——maskData=null 时 studioEdits 不传 mask 字段天然支持，不报错不二次确认（修拍板） */
-if (e.action === "erase" && !maskData) { try { Toast.warning("擦除动作需要先用选区工具框选区域，再执行"); } catch (_) { _r9mNote("ui-063", _); } return false; } /* IMPL-129③：擦除语义依赖选区，无选区整图重绘必错；文案 IMPL-162 消除→擦除（正常路径由编辑器 R6 选区门禁先拦，本条保留为宿主自保） */
+if (e.action === "erase" && !maskData) { try { Toast.warning("擦除动作需要先用选区工具框选区域，再执行"); } catch (_) { _r9mNote("ui-060", _); } return false; } /* IMPL-129③：擦除语义依赖选区，无选区整图重绘必错；文案 IMPL-162 消除→擦除（正常路径由编辑器 R6 选区门禁先拦，本条保留为宿主自保） */
 const req = e.buildRequest(needPrompt ? { prompt: userData } : {});
 let finalPrompt = (req && req.fields && req.fields.prompt) || userData || ""; /* W5：let——mask 动作需追加保真约束句 */
 const op13 = (e.options && typeof e.options === "object") ? e.options : null; /* 第十三批 H1：统一参数透传通道（全位图动作）——{model,aspectRatio,resolution,quality,background,prompt,num} */
@@ -17615,7 +17636,7 @@ const apiDef = (op13 && op13.model) ? apiModelById(op13.model)
             : (mm && mm.channel === "apiyi" && mm.model) ? apiModelById(mm.model) : null;
 if (apiDef) {
 const wA = (typeof Store !== "undefined" && Store.getR2WorkerUrl && Store.getR2WorkerUrl());
-if (!wA) { try { Toast.warning(mm ? mm.label : actName(e.action)) + "：APIYI 通道未配置（设置页填 R2 Worker 地址与 Token）"; } catch (_) { _r9mNote("ui-064", _); } return false; }
+if (!wA) { try { Toast.warning(mm ? mm.label : actName(e.action)) + "：APIYI 通道未配置（设置页填 R2 Worker 地址与 Token）"; } catch (_) { _r9mNote("ui-061", _); } return false; }
 const exA = {};
 if (op13 && op13.quality) exA.quality = String(op13.quality);
 /* ★★ R93：编辑器算好的「与源图同几何的合法输出尺寸」（apiyiEdits 在 size 为空且有 mask 时采用） */
@@ -17658,7 +17679,7 @@ _costTxt = " · " + _est.label;
 console.info("[W5-route]", JSON.stringify({ phase: "apiyi-cost", model: apiDef.modelId, inTokens: _u.inTokens != null ? _u.inTokens : _u.input_tokens, outTokens: _u.outTokens != null ? _u.outTokens : _u.output_tokens, cny: Math.round(_est.amount * 100) / 100, ts: Date.now() }));
 }
 } catch (_e) { /* 计费失败绝不影响主流程（同 _noteUsage 的静默口径） */ }
-try { Toast.success((mm ? mm.label : actName(e.action)) + " 完成" + _costTxt); } catch (_) { _r9mNote("ui-065", _); }
+try { Toast.success((mm ? mm.label : actName(e.action)) + " 完成" + _costTxt); } catch (_) { _r9mNote("ui-062", _); }
 return rA;
 } catch (err) {
 console.error("[StudioEditor] APIYI 位图动作失败:", err);
@@ -17675,13 +17696,13 @@ throw new Error("APIYI · " + apiDef.modelId + "：" + _raw + _hint);
 }
 } /* APIYI 分流结束 */
 studioBusy((mm ? mm.label : actName(e.action)) + " 处理中… · " + (mm ? (mm.channel === "ali" ? "阿里抠图专用通道" : "模型 " + mm.model) : (canI2I && m ? "宿主选中模型" : "SF 编辑模型")));
-if (mm && mm.channel === "ali") { const r3 = await studioAliMatting(imgData); if (!r3) return false; r3.name = actName(e.action); try { Toast.success("抠出主体完成"); } catch (_) { _r9mNote("ui-066", _); } return r3; } /* IMPL-143：返回 { assetUrl, name } → 编辑器自动注册资产（IMPL-129③ 契约） */
+if (mm && mm.channel === "ali") { const r3 = await studioAliMatting(imgData); if (!r3) return false; r3.name = actName(e.action); try { Toast.success("抠出主体完成"); } catch (_) { _r9mNote("ui-063", _); } return r3; } /* IMPL-143：返回 { assetUrl, name } → 编辑器自动注册资产（IMPL-129③ 契约） */
 /* ★ R20：用户**显式选了速创档** ⇒ 仍走这条支路（备份服务的底线语义）。
    判定用 wyModelPath 作闸门：它只认 gpt-image-2.5 系裸 id，带 apiyi: 前缀的档一律 "" ⇒ 不误入。 */
 const _wyPick = !!(op13 && op13.model && wyModelPath(op13.model));
 if (mm && (mm.channel === "wy" || _wyPick)) { /* IMPL-150：channel 语义更名 sf→wy（速创通道），BITMAP_MODEL_MAP 已同步；R20：+显式选速创档第二入口 */
 const sfOk = (typeof KeyVault !== "undefined" && KeyVault.keys && KeyVault.keys().API_KEY) || (typeof Store !== "undefined" && Store.getR2WorkerUrl && Store.getR2WorkerUrl());
-if (!sfOk) { try { Toast.warning(mm.label + "的服务通道未配置：缺少图像服务凭据（设置页可配置）"); } catch (_) { _r9mNote("ui-067", _); } return false; } /* 通道不通不静默 fallback */
+if (!sfOk) { try { Toast.warning(mm.label + "的服务通道未配置：缺少图像服务凭据（设置页可配置）"); } catch (_) { _r9mNote("ui-064", _); } return false; } /* 通道不通不静默 fallback */
 /* W5 路由决策（变更单第四节）：quality 策略 + mask 保真约束句 + 省流自动路由 + 每次实际路由进日志 */
 const ooRatio = (oo13 && oo13.aspectRatio) || "";
 const ooRes = (oo13 && oo13.resolution) || "";
@@ -17726,7 +17747,7 @@ if (ap13) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + ap13; /* H4.1
 console.info("[W5-route]", JSON.stringify({ phase: "route", action: e.action, channel: "wy", model: routedModel, economized: economized, quality: ex.quality || null, aspectRatio: ex.aspectRatio || null, resolution: ex.resolution || null, mask: !!maskData, operation: ang13 ? ang13.operation : null, angles: ang13 ? [ang13.horizontal_angle, ang13.vertical_angle, ang13.zoom] : null, ts: Date.now() })); /* Z21：+phase 区分路由决策/提交/完成三段日志；H4.1：angle-adjust 回显收到的 operation 与三角度（对拍 W5 面板实传值） */
 studioBusy(mm.label + " 处理中… · 模型 " + routedModel + (economized ? "（标准生成型·省流）" : "") + (ex.quality ? " · quality=" + ex.quality : "") + (ex.aspectRatio ? " · " + ex.aspectRatio + "/" + ex.resolution : ""));
 const r1 = await studioEdits(imgData, maskData, finalPrompt, routedModel, ex); r1.name = actName(e.action);
-try { Toast.success(mm.label + " 完成 · 模型 " + routedModel + (economized ? "（省流）" : "")); } catch (_) { _r9mNote("ui-068", _); }
+try { Toast.success(mm.label + " 完成 · 模型 " + routedModel + (economized ? "（省流）" : "")); } catch (_) { _r9mNote("ui-065", _); }
 return r1;
 }
 if (maskData) { const r1 = await studioEdits(imgData, maskData, finalPrompt); r1.name = actName(e.action); return r1; } /* IMPL-129③ 契约保持 */
@@ -17751,15 +17772,15 @@ const _r17Hint = /没有扣费|已经计费/.test(rawMsg) ? ""
                : _r17Timeout ? "（这次已经计费，先别急着重试）" : "";
 const m9 = /HTTP\s+(\d{3})/.exec(rawMsg); const st = (err && err.status) || (m9 ? parseInt(m9[1], 10) : 0); /* Z9（第六批）：Api.request 抛错 Object.assign 附着 err.status */
 const mmL = (typeof BITMAP_MODEL_MAP !== "undefined" && BITMAP_MODEL_MAP[e.action] || {}).label || "位图动作";
-if (st === 401) { try { Toast.error(mmL + "的服务未授权（HTTP 401）：Worker 令牌无效或未配置——请到设置页检查 R2 Worker 地址与 Token（不静默回退）"); } catch (_) { _r9mNote("ui-069", _); } }
-else if (st === 404) { try { Toast.error(mmL + "的服务通道未部署（HTTP 404）：Worker 的 wy / apiyi 代理路由未上线、或该端点不在 APIYI 白名单内、或模型名不在本令牌分组里——已按规约不静默回退"); } catch (_) { _r9mNote("ui-070", _); } }
-else if (st >= 400 && st < 500) { try { Toast.error(mmL + "的服务通道未配置或上游不可用（HTTP " + st + "）——已按规约不静默回退"); } catch (_) { _r9mNote("ui-071", _); } }
-else if (/HTTP\s+4\d\d/i.test(rawMsg)) { try { Toast.error(mmL + "的服务通道未配置或上游不可用（" + rawMsg.slice(0, 90) + "）——已按规约不静默回退"); } catch (_) { _r9mNote("ui-072", _); } }
-else { try { Toast.error("位图动作失败: " + rawMsg + _r17Hint); } catch (_) { _r9mNote("ui-073", _); } }
+if (st === 401) { try { Toast.error(mmL + "的服务未授权（HTTP 401）：Worker 令牌无效或未配置——请到设置页检查 R2 Worker 地址与 Token（不静默回退）"); } catch (_) { _r9mNote("ui-066", _); } }
+else if (st === 404) { try { Toast.error(mmL + "的服务通道未部署（HTTP 404）：Worker 的 wy / apiyi 代理路由未上线、或该端点不在 APIYI 白名单内、或模型名不在本令牌分组里——已按规约不静默回退"); } catch (_) { _r9mNote("ui-067", _); } }
+else if (st >= 400 && st < 500) { try { Toast.error(mmL + "的服务通道未配置或上游不可用（HTTP " + st + "）——已按规约不静默回退"); } catch (_) { _r9mNote("ui-068", _); } }
+else if (/HTTP\s+4\d\d/i.test(rawMsg)) { try { Toast.error(mmL + "的服务通道未配置或上游不可用（" + rawMsg.slice(0, 90) + "）——已按规约不静默回退"); } catch (_) { _r9mNote("ui-069", _); } }
+else { try { Toast.error("位图动作失败: " + rawMsg + _r17Hint); } catch (_) { _r9mNote("ui-070", _); } }
 return false;
 } finally { studioBusy(""); } /* IMPL-143 P2：无论成败收反馈条 */
 }
-if (typeof window !== "undefined") { try { window.__studioBitmap = bitmapHandler; } catch (_) { _r9mNote("ui-074", _); } } /* R20-2：调试可达（同 __studioPromptReverse 先例） */
+if (typeof window !== "undefined") { try { window.__studioBitmap = bitmapHandler; } catch (_) { _r9mNote("ui-071", _); } } /* R20-2：调试可达（同 __studioPromptReverse 先例） */
 function open(opts) {
 opts = opts || {};
 close();
@@ -17777,7 +17798,7 @@ ov.querySelector(".studioClose").addEventListener("click", close);
 escHandler = function(e) { /* Z22 B案（IMPL-151 修拍板）：输入条在场=Esc 只收口输入（走输入条自身取消路径，Toast「已取消」保留），编辑器保留——再按一次 Esc 才退编辑器；无输入条=原语义不变（回归 A3） */
 if (e.key !== "Escape") return;
 const ip = document.getElementById("studioInlinePrompt");
-if (ip && ip._resolve) { e.stopPropagation(); try { ip._resolve(""); } catch (_) { _r9mNote("ui-075", _); } return; }
+if (ip && ip._resolve) { e.stopPropagation(); try { ip._resolve(""); } catch (_) { _r9mNote("ui-072", _); } return; }
 e.stopPropagation();
 /* 第十二批 T12-2（修拍板「只去掉『关弹窗』这一句」）：Esc 不再关闭整个画板 —— 关闭入口只保留顶栏 ✕。
    这里仍保留 stopPropagation：编辑器内部场景（选区/文字/扩图面板）各自消费完再放行，宿主不必也不应抢。 */
@@ -17814,7 +17835,7 @@ skills: studioSkills(),
 models: studioModels()
 },                                  /* tools 结束 */
 },
-on: { onError: function(err) { try { Toast.error(String((err && err.message) || err)); } catch (_) { _r9mNote("ui-076", _); } }, close: close, onThemeChange: function(t) { try { if (t === "light" || t === "dark") { localStorage.setItem("sc_studio_theme", t); const b = document.getElementById("studioInlinePrompt"); if (b) b.setAttribute("data-studio-theme", t); } } catch (_) { _r9mNote("store-039", _); } } /* Z16（第七批）：+回写打开中输入条主题 */ } /* IMPL-129②：编辑器内点 ✕ → 调用宿主 close 关闭弹窗；旧版嵌入包忽略未知键无副作用。Z12（第七批）：+onThemeChange 编辑器内置主题开关回告写缓存（附录 A 契约，向后兼容；挂载初值不回告防回环——白名单校验仅收 light/dark） */
+on: { onError: function(err) { try { Toast.error(String((err && err.message) || err)); } catch (_) { _r9mNote("ui-073", _); } }, close: close, onThemeChange: function(t) { try { if (t === "light" || t === "dark") { localStorage.setItem("sc_studio_theme", t); const b = document.getElementById("studioInlinePrompt"); if (b) b.setAttribute("data-studio-theme", t); } } catch (_) { _r9mNote("store-039", _); } } /* Z16（第七批）：+回写打开中输入条主题 */ } /* IMPL-129②：编辑器内点 ✕ → 调用宿主 close 关闭弹窗；旧版嵌入包忽略未知键无副作用。Z12（第七批）：+onThemeChange 编辑器内置主题开关回告写缓存（附录 A 契约，向后兼容；挂载初值不回告防回环——白名单校验仅收 light/dark） */
 ,
 /* ★★ V2 视频通道（R33 建 · R35 修正位置）：**挂 mount 顶层** —— 编辑器 embed 读的是
    options.videoHandlers（顶层优先）/ adapter.videoActions（兼容位）。
@@ -17891,7 +17912,7 @@ root.innerHTML = '<div class="studioLoadFail" role="alert">编辑器加载失败
 const retry = root.querySelector(".studioRetry");
 if (retry) retry.addEventListener("click", function() { open(opts); });
 }
-try { Toast.error("编辑器加载失败，请检查网络后重试"); } catch (_) { _r9mNote("ui-077", _); }
+try { Toast.error("编辑器加载失败，请检查网络后重试"); } catch (_) { _r9mNote("ui-074", _); }
 });
 }
 /* ★★★ R44：把视频链路需要的宿主助手**显式暴露到全局**。
@@ -18099,7 +18120,7 @@ return { open: open, close: close };
     for (var p = el.parentElement; p; p = p.parentElement) {
       if (p.nodeType !== 1) continue;
       var oy = "";
-      try { oy = getComputedStyle(p).overflowY; } catch (e) { _r9mNote("misc-075", e); }
+      try { oy = getComputedStyle(p).overflowY; } catch (e) { _r9mNote("misc-076", e); }
       if (oy === "auto" || oy === "scroll") return p;
     }
     return null;
@@ -18420,7 +18441,7 @@ return { open: open, close: close };
     /* IMPL-87：宿主标记=网格基底明暗——深色网格下白玻璃按钮/设置面板自动切深色
        （CSS 侧 [data-svfloor="dark"]），亮暗判定复用影色自适应的基底解析 */
     var _bc = rgbOfBase(baseFill), _bl = _bc ? _bc[0] * .299 + _bc[1] * .587 + _bc[2] * .114 : 255;
-    try { document.documentElement.setAttribute("data-svfloor", _bl < 128 ? "dark" : "light"); } catch (_e) { _r9mNote("misc-076", _e); }
+    try { document.documentElement.setAttribute("data-svfloor", _bl < 128 ? "dark" : "light"); } catch (_e) { _r9mNote("misc-077", _e); }
     /* 基底后置（IMPL-83）：先画线→聚光衰减→destination-over 垫底，
        地台不受聚光影响（页面 margins 连续白）；无聚光时顺序与先垫底等价 */
 
@@ -18823,14 +18844,14 @@ return { open: open, close: close };
     sync(true);
     if (window.ResizeObserver && list) {
       ro = new ResizeObserver(function () { sync(false); });
-      try { ro.observe(list); } catch (e) { _r9mNote("misc-077", e); }
+      try { ro.observe(list); } catch (e) { _r9mNote("misc-078", e); }
     }
     list.addEventListener("load", onMedia, true);
     list.addEventListener("loadedmetadata", onMedia, true);
     try {
       moTheme = new MutationObserver(function () { sync(true); });
       moTheme.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-    } catch (e) { _r9mNote("misc-078", e); }
+    } catch (e) { _r9mNote("misc-079", e); }
     window.addEventListener("resize", function () { sync(false); }, { passive: true });
     /* 内容滚动（IMPL-81）：网格锚固定=背景语义不随内容滚动，落影经 rectOf 实时贴卡。
        IMPL-89③：scroll 事件内同步 applyHole()（仅写 4 个 CSS 变量，成本极低）——
@@ -18858,7 +18879,7 @@ return { open: open, close: close };
           if (typeof RMQ.addEventListener === "function") RMQ.addEventListener("change", onRmq);
           else if (typeof RMQ.addListener === "function") RMQ.addListener(onRmq);
         }
-      } catch (e) { _r9mNote("misc-079", e); }
+      } catch (e) { _r9mNote("misc-080", e); }
     }
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
@@ -18871,7 +18892,7 @@ return { open: open, close: close };
       if (typeof MOB_Q.addEventListener === "function") MOB_Q.addEventListener("change", onMobQ);
       else if (typeof MOB_Q.addListener === "function") MOB_Q.addListener(onMobQ);
     }
-  } catch (e) { _r9mNote("misc-080", e); }
+  } catch (e) { _r9mNote("misc-081", e); }
 
   /* ---------- 对外 API：原有三键 { sync, redraw, config } 不变 ----------
      config = S 活引用（设置面板直写后调 SvFloor.sync() 即重画；签名键覆盖全部参数）。
