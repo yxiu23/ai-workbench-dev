@@ -13358,7 +13358,11 @@ const navLayer = $("#svNavLayer");
 if (navLayer) navLayer.innerHTML = "";
 const capLayer0 = $("#svCapLayer");
 if (capLayer0) capLayer0.innerHTML = "";
-list.innerHTML = "";
+/* ★ R97-3-2：区分两种空 —— ① 真·无数据（tasks+history 皆空）⇒ 首次引导；② 仅被筛选/隐藏滤空 ⇒ 提示改筛选。 */
+const _noData97 = (Store.getTasks().length + Store.getHistory().length) === 0;
+list.innerHTML = _noData97
+? '<div class="empty-state" data-type="image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L7 20"/></svg><div style="font-size:14px;color:var(--text);font-weight:500;margin-bottom:6px">还没有结果</div><div class="empty-sub">在左侧选模型、写提示词，点「生成」</div><div class="empty-sub" style="margin-top:8px">想改现有图？用上方「图像编辑器」上传后框选编辑</div></div>'
+: '<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><div style="font-size:14px;color:var(--text);font-weight:500;margin-bottom:6px">没有匹配的结果</div><div class="empty-sub">试试清除筛选或搜索词</div></div>';
 this.state.singleTaskId = null;
 if (window.SvFloor) SvFloor.sync();
 this._renderResultStrip();
@@ -13578,8 +13582,9 @@ if (status === "processing") {
 /* 81-b：等待卡片——细线圆环+微光带（样式见 .sv-waiting-*），.sv-media.is-loading 外壳类名保留（JS 无查询点，纯语义标记） */
 mediaHtml = `<div class="sv-media is-loading"><div class="sv-waiting" role="status" aria-label="生成中，请稍候"><svg class="sv-waiting-ring" viewBox="0 0 30 30" aria-hidden="true"><circle class="wr-track" cx="15" cy="15" r="12.5"></circle><circle class="wr-arc" cx="15" cy="15" r="12.5"></circle></svg><span class="sv-waiting-bar" aria-hidden="true"></span></div></div>`;
 } else if (status === "failed" || status === "timeout") {
-const err = classifyErr(task.error || "未知错误");
-mediaHtml = `<div class="sv-error" role="alert"><div class="sv-error-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg></div><div class="sv-err-category">${esc(err.category)}错误</div><div class="sv-err-hint">${esc(err.hint)}</div></div>`;
+const _rawErr = String(task.error || "未知错误"); /* ★ R97-3-4：原始错误原样保留给"技术详情" */
+const err = classifyErr(_rawErr);
+mediaHtml = `<div class="sv-error" role="alert"><div class="sv-error-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg></div><div class="sv-err-category">${esc(err.category)}错误</div><div class="sv-err-hint">${esc(err.hint)}</div><details class="sv-err-raw" style="margin-top:10px;max-width:100%;width:100%"><summary style="cursor:pointer;font-size:12px;color:var(--text-muted)">技术详情</summary><div style="margin-top:6px;max-width:420px;max-height:120px;overflow:auto;text-align:left;font-family:var(--font-mono);font-size:11px;line-height:1.5;color:var(--text-dim);background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;word-break:break-all;white-space:pre-wrap">${esc(_rawErr)}</div><button type="button" class="sv-hb-btn" data-act="copyErr" title="复制错误信息" style="margin-top:6px;width:auto;height:auto;padding:4px 12px;border-radius:999px;font-size:12px;line-height:1.6;background:var(--surface-2);border:1px solid var(--border)">复制</button></details></div>`;
 } else if (isPlain && type === "video") {
 mediaHtml = `<div class="sv-media is-plain is-video" title="单击播放/暂停"><video src="${esc(_r91u)}" playsinline preload="metadata"></video></div>`;/* IMPL-107①：裸播——单击播放/单击暂停，控制面板移除（全屏走浮动菜单栏按钮） */
 } else if (type === "audio") {
@@ -13742,7 +13747,7 @@ el.querySelectorAll(".sv-hb-btn[data-act]").forEach(btn => {
 btn.addEventListener("click", e => {
 e.stopPropagation();
 const act = btn.dataset.act;
-if (act === "zoom") this._openLightboxForTask(task); else if (act === "download") this._downloadFile(task.result.url, `${task.model?.id || "workbench"}_${task.id}`); else if (act === "compare") this._toggleCompare(task); else if (act === "delete") this._deleteTask(task.id); else if (act === "ref") this._useAsReference(task.result.url, task.model?.type); else if (act === "edit") this._openEditor(task.result.url); else if (act === "vfull") VideoFS.openFromTask(task);/* IMPL-107① */ else if (act === "wf") Workflow.copy(task); else if (act === "regen") this._regen(task); else if (act === "refresh") poller.manualRefresh(task.id); else if (act === "stop") poller.manualStop(task.id); else if (act === "retry") this._retryTask(task);
+if (act === "zoom") this._openLightboxForTask(task); else if (act === "download") this._downloadFile(task.result.url, `${task.model?.id || "workbench"}_${task.id}`); else if (act === "compare") this._toggleCompare(task); else if (act === "delete") this._deleteTask(task.id); else if (act === "ref") this._useAsReference(task.result.url, task.model?.type); else if (act === "edit") this._openEditor(task.result.url); else if (act === "vfull") VideoFS.openFromTask(task);/* IMPL-107① */ else if (act === "wf") Workflow.copy(task); else if (act === "regen") this._regen(task); else if (act === "refresh") poller.manualRefresh(task.id); else if (act === "stop") poller.manualStop(task.id); else if (act === "retry") this._retryTask(task); else if (act === "copyErr") { const _t9 = String(task.error || "未知错误"); (navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(_t9) : Promise.reject()).then(() => { try { Toast.success("错误信息已复制"); } catch (_) {} }, () => { try { this._showManualCopy(_t9); } catch (_) {} }); }
 });
 });
 el.querySelectorAll(".sv-hb-btn[data-batchact], .sv-sel-tag[data-batchact]").forEach(btn => { /* IMPL-142：批量操作组（sv-floatbar 复用，反馈1）；Z4（第六批）：sel-tag 徽标纳入委托=点击取消全部多选 */
@@ -13985,7 +13990,10 @@ if (!strip) return;
 const cur = this.state.singleTaskId;
 strip.querySelectorAll(".strip-thumb").forEach(el => el.classList.toggle("active", !!cur && el.dataset.tid === cur));
 },
-_deleteTask(taskId) {
+_deleteTask(taskId, opts) {
+/* ★ R97-3-1：单删也可撤销 —— 与历史批量删（_historyBatchDelete）同款 Toast+撤销。
+   ⚠ 文件夹/批量删也走本函数（ids.forEach(...)）⇒ 传 opts.silent 抑制成串 Toast。 */
+const _removedHist = Store.getHistory().find(h => h.id === taskId) || null;
 let tasks = Store.getTasks().filter(t => t.id !== taskId);
 Store.saveTasks(tasks);
 let history = Store.getHistory().filter(h => h.id !== taskId);
@@ -13996,6 +14004,16 @@ if (this.state.singleTaskId === taskId) this.state.singleTaskId = null;
 this._renderTaskList();
 this._renderActiveTasks();
 this.renderHistoryBadge();
+if (!(opts && opts.silent) && _removedHist) {
+Toast.success("已删除 1 个结果", 8e3, {
+label: "撤销",
+fn: async () => {
+const _n97 = await Store.restoreHistory([_removedHist]);
+if (_n97 > 0) { this._syncHistoryToCloudNow(); this._renderTaskList(); this._renderActiveTasks(); this.renderHistoryBadge(); Toast.success("已恢复"); }
+else Toast.info("无需恢复（记录已存在）");
+}
+});
+}
 },
 _clearScreen() {
 const tasks = Store.getTasks();
@@ -14418,7 +14436,7 @@ this.state.folders = this.state.folders.filter(x => x.id !== fid);
 if (this.state.openFolderId === fid) this.state.openFolderId = null;
 this._closeFolderMenu();
 this._saveFolders();
-ids.forEach(id => this._deleteTask(id)); /* 本地+云同步（_syncHistoryToCloudNow 在 _deleteTask 内） */
+ids.forEach(id => this._deleteTask(id, { silent: true })); /* 本地+云同步（_syncHistoryToCloudNow 在 _deleteTask 内）；R97-3-1：静默避免 N 个 Toast */
 this._renderResultStrip();
 this._closeModal();
 Toast.success(`文件夹及 ${ids.length} 项结果已删除`);
