@@ -6253,6 +6253,26 @@ function swallow(tag, fn) {
   }
 }
 
+/* ★★ R9G-SEC-P1-1 / SEC-P1-3：**Worker 能力协商**。
+   懒探测：首次 /media 请求时发一次 GET /health，读 caps.bearerAuth；
+   为真 ⇒ 之后把 token 从 URL 挪到 Authorization: Bearer（不进边缘/代理日志）；
+   旧 Worker 不返该字段 ⇒ 保持现状。**没有上线顺序约束**（先部署 Worker 或先更新前端都安全）。
+   ⚠ 代价：每个页面加载后的**第一个** /media 请求仍带 ?token=（探测还没回来）—— 可接受。 */
+var __r9gBearer = false, __r9gProbed = false;
+function _r9gBearerOn() { return __r9gBearer === true; }
+/* ⚠ 本函数刻意**不新增空 catch**（R9E 立的天花板只许降）：用已有的 swallow() 收口，两个点都留痕。 */
+function _r9gProbeCaps() {
+  if (__r9gProbed) return; __r9gProbed = true;
+  var w = swallow("r9g-caps-url", function () { return (Store.getR2WorkerUrl() || "").trim().replace(/\/$/, ""); });
+  if (!w) return;
+  fetch(w + "/health").then(function (r) { return r.json(); }).then(function (j) {
+    if (j && j.caps && j.caps.bearerAuth === true) {
+      __r9gBearer = true;
+      swallow("r9g-caps-log", function () { console.log("[R9G] Worker caps.bearerAuth=true ⇒ token 改为 Authorization 头传递（不再进 URL）"); });
+    }
+  }).catch(function () { /* 探测失败＝保持现状，绝不因此影响功能（这是设计，不是吞错） */ });
+}
+
 const Api = {
 _uploadCache: new Map,
 async request(method, path, body, opts = {}) {
@@ -6375,8 +6395,15 @@ _directReq(method, path, body, opts = {}) {
   const w = (Store.getR2WorkerUrl() || "").trim().replace(/\/$/, "");
   if (!w) throw new Error("no_worker_url: 未配置 R2 Worker 地址——直连模型的密钥已收敛到 Worker 变量（前端零密钥），请在 设置→编辑密钥 填入 R2 Worker 地址与 Token");
   const token = Store.getR2AuthToken() || "";
-  const url = w + "/media/" + chan + (path.charAt(0) === "/" ? path : "/" + path) + (path.indexOf("?") >= 0 ? "&" : "?") + "token=" + encodeURIComponent(token);
-  return this.request(method, url, body, { skipAuth: true, noAuth: true, ...opts }); /* ★ R9E-APIYI-P1-6：上游密钥由 Worker 注入，前端不发自己的凭据 */
+  /* ★ R9G-SEC-P1-1：能力协商为真 ⇒ token 走 Authorization 头（不进 URL 日志）；否则维持 ?token= */
+  if (!__r9gProbed) _r9gProbeCaps();
+  const _r9gHdr = _r9gBearerOn();
+  const url = w + "/media/" + chan + (path.charAt(0) === "/" ? path : "/" + path)
+    + (_r9gHdr ? "" : (path.indexOf("?") >= 0 ? "&" : "?") + "token=" + encodeURIComponent(token));
+  /* ★ R9E-APIYI-P1-6：上游密钥由 Worker 注入，前端不发自己的凭据 */
+  return _r9gHdr
+    ? this.request(method, url, body, { skipAuth: true, authorization: "Bearer " + token, ...opts })
+    : this.request(method, url, body, { skipAuth: true, noAuth: true, ...opts });
 },
 async _sfImage(model, body) {
   const payload = { model: model.modelId, prompt: body.prompt || "", image_size: body.image_size || "1024x1024" };
@@ -6585,7 +6612,9 @@ try {
 const reqBody = { messages, stream: true, max_tokens: mt, temperature };
 if (think) reqBody.thinking = true;
 if (model && model !== "auto") reqBody.model = model;
-const res = await fetch(endpoints[i] + (endpoints[i].includes("?") ? "&" : "?") + "token=" + encodeURIComponent(token), {
+/* ★ R9G-SEC-P1-1：这条本来就**同时**带 Authorization 头与 ?token=（双重传递）——
+   能力协商为真时去掉 URL 那份（旧 Worker 保持原样，仍是双份但功能不变）。 */
+const res = await fetch(endpoints[i] + (_r9gBearerOn() ? "" : (endpoints[i].includes("?") ? "&" : "?") + "token=" + encodeURIComponent(token)), {
 method: "POST",
 headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
 body: JSON.stringify(reqBody),
