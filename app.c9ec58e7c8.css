@@ -55,7 +55,7 @@ textarea{resize:vertical;min-height:80px}
 .model-pick-btn .mp-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .model-pick-btn .mp-caret{position:absolute;right:10px;top:50%;width:12px;height:12px;transform:translateY(-50%);transition:transform var(--transition);color:var(--text-muted);flex:0 0 auto}
 .model-pick-btn[aria-expanded="true"] .mp-caret{transform:translateY(-50%) rotate(180deg)}
-.model-pick-list{display:none;position:fixed;z-index:70;padding:6px;overflow-y:auto;max-height:46vh;border-radius:var(--radius-md);overscroll-behavior:contain;background:var(--lg-gloss),var(--surface-glass-pop);border:1px solid var(--lg-edge);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--lg-slab),0 18px 44px -18px rgba(9,14,30,.38)}
+.model-pick-list{display:none;position:fixed;z-index:var(--z-lightbox);padding:6px;overflow-y:auto;max-height:46vh;border-radius:var(--radius-md);overscroll-behavior:contain;background:var(--lg-gloss),var(--surface-glass-pop);border:1px solid var(--lg-edge);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--lg-slab),0 18px 44px -18px rgba(9,14,30,.38)}
 .model-pick-list.show{display:block}
 .model-pick-opt{width:100%;display:flex;align-items:center;gap:9px;min-height:40px;padding:8px 10px;border:none;background:none;border-radius:var(--radius-sm);cursor:pointer;font-size:12px;font-weight:500;color:var(--text);text-align:left;transition:background var(--transition-fast)}
 .model-pick-opt:hover{background:var(--surface-2)}
@@ -323,7 +323,7 @@ textarea{resize:vertical;min-height:80px}
 @media (pointer:coarse){.atp-card .atp-cancel{position:relative}.atp-card .atp-cancel::after{content:"";position:absolute;inset:-11px}.sv-hb-btn{position:relative}.sv-hb-btn::after{content:"";position:absolute;inset:-4px}}
 /* IMPL-74：reduced-motion 补漏（对齐 pp-item 先例） */
 @media (prefers-reduced-motion:reduce){.skill-panel,.skill-bubbles{animation:none}.sp-chip:hover{transform:none}}
-.prompt-history-list{position:absolute;z-index:50;max-height:240px;overflow-y:auto;min-width:200px;background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);display:none}
+.prompt-history-list{position:absolute;z-index:var(--z-float);max-height:240px;overflow-y:auto;min-width:200px;background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);display:none}
 .prompt-history-list.show{display:block}
 .prompt-history-list .ph-item{padding:8px 12px;font-size:12px;color:var(--text-muted);cursor:pointer;border-bottom:1px solid var(--border-soft);transition:all var(--transition)}
 .prompt-history-list .ph-item:hover{background:var(--surface-2);color:var(--text)}
@@ -510,7 +510,7 @@ to{transform:rotate(360deg)}}
 .count-chip svg{width:15px;height:15px;flex-shrink:0}
 .count-chip:active{transform:scale(.97)}
 .count-chip[aria-expanded="true"]{color:var(--brand);border-color:var(--brand)}
-.count-pop{position:fixed;z-index:66;display:none;padding:6px;gap:4px;border-radius:22px; /* IMPL-88：大圆角，与 44px cp-opt pill 同心（22=22） */border:1px solid var(--lg-edge);background:var(--lg-gloss),var(--surface-glass-pop);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--lg-slab),0 18px 44px -18px rgba(9,14,30,.38);transform:translateY(8px) scale(.97);opacity:0;transform-origin:50% 100%;transition:transform 220ms cubic-bezier(.32,1.08,.44,1),opacity 180ms ease}
+.count-pop{position:fixed;z-index:var(--z-count);display:none;padding:6px;gap:4px;border-radius:22px; /* IMPL-88：大圆角，与 44px cp-opt pill 同心（22=22） */border:1px solid var(--lg-edge);background:var(--lg-gloss),var(--surface-glass-pop);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--lg-slab),0 18px 44px -18px rgba(9,14,30,.38);transform:translateY(8px) scale(.97);opacity:0;transform-origin:50% 100%;transition:transform 220ms cubic-bezier(.32,1.08,.44,1),opacity 180ms ease}
 .count-pop.displayed{display:flex}
 .count-pop.show{transform:none;opacity:1}
 .count-pop:not(.show){pointer-events:none}
@@ -521,7 +521,7 @@ to{transform:rotate(360deg)}}
 .count-pop .cp-opt.active small{color:rgba(var(--glass-rgb),.78)}
 @media (prefers-reduced-motion: reduce){
 .count-pop{transition:none}}
-.param-quick-panel{display:none;position:fixed;z-index:65;overflow-y:auto;overscroll-behavior:contain;padding:14px 16px 16px;border-radius:var(--radius-lg);background:var(--lg-gloss),var(--surface-glass-pop);border:1px solid var(--lg-edge);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--lg-slab),0 18px 44px -18px rgba(9,14,30,.38);transform:translateY(12px) scale(.985);opacity:0;transform-origin:50% 100%;transition:transform 260ms cubic-bezier(.32,1.08,.44,1),opacity 200ms ease}
+.param-quick-panel{display:none;position:fixed;z-index:var(--z-modal);overflow-y:auto;overscroll-behavior:contain;padding:14px 16px 16px;border-radius:var(--radius-lg);background:var(--lg-gloss),var(--surface-glass-pop);border:1px solid var(--lg-edge);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);box-shadow:var(--lg-slab),0 18px 44px -18px rgba(9,14,30,.38);transform:translateY(12px) scale(.985);opacity:0;transform-origin:50% 100%;transition:transform 260ms cubic-bezier(.32,1.08,.44,1),opacity 200ms ease}
 .param-quick-panel.displayed{display:block}
 .param-quick-panel.show{transform:none;opacity:1}
 #paramQuickBody[data-mode] .param-group{display:none}#paramQuickBody[data-mode="ratio"] .pq-grp-ratio,#paramQuickBody[data-mode="resolution"] .pq-grp-resolution,#paramQuickBody[data-mode="quality"] .pq-grp-quality{display:block}
@@ -886,7 +886,7 @@ body[data-mview="result"] #themeCycleBtn{display:flex}
 
 /* ═══ IMPL-107①：视频全屏浮层 VideoFS——背景沿用原图预览方案（变暗+模糊，非全黑），
    底部控制条复用 .sv-vctl 玻璃 token，深色地台用 [data-svfloor=dark] 同款深玻璃 ═══ */
-.vfs-overlay{position:fixed;inset:0;z-index:68;display:none;align-items:center;justify-content:center;background:rgba(22,20,28,.34);-webkit-backdrop-filter:blur(16px) saturate(.85) brightness(.68);backdrop-filter:blur(16px) saturate(.85) brightness(.68);padding:20px}
+.vfs-overlay{position:fixed;inset:0;z-index:var(--z-picker);display:none;align-items:center;justify-content:center;background:rgba(22,20,28,.34);-webkit-backdrop-filter:blur(16px) saturate(.85) brightness(.68);backdrop-filter:blur(16px) saturate(.85) brightness(.68);padding:20px}
 .vfs-overlay.show{display:flex}
 .vfs-stage{display:flex;flex-direction:column;align-items:center;gap:16px;max-width:min(96vw,1700px);animation:fade-in .3s ease}
 .vfs-stage video{display:block;max-width:min(96vw,1600px);max-height:74vh;width:auto;height:auto;border-radius:var(--radius-lg);background:#0c0d12;box-shadow:0 32px 90px -36px rgba(9,14,30,.62);cursor:pointer}
@@ -1087,7 +1087,7 @@ body.svf-open>.sv-fpanel{opacity:1;visibility:visible;pointer-events:auto;transf
 .rf-ghost.drag-over{transform:scale(1.07);background:rgba(var(--brand-rgb),.16);animation:none}
 @keyframes rfGhostPulse{0%,100%{opacity:.5}50%{opacity:1}}
 /* ── IMPL-142 反馈5：文件夹抽屉与命名移除——右键/长按菜单（挂 .context-menu 类：宿主 escHandler 的 Esc 关闭清单自动覆盖，零自管） ── */
-.rf-menu{position:fixed;z-index:950;display:none;flex-direction:column;min-width:172px;padding:5px;border-radius:12px;background:var(--bg-elev);border:1px solid var(--border);box-shadow:var(--shadow-lg)}
+.rf-menu{position:fixed;z-index:var(--z-menu);display:none;flex-direction:column;min-width:172px;padding:5px;border-radius:12px;background:var(--bg-elev);border:1px solid var(--border);box-shadow:var(--shadow-lg)}
 .rf-menu.show{display:flex}
 .rf-menu button{padding:9px 12px;border:0;border-radius:8px;background:transparent;color:var(--text);font-size:13px;text-align:left;cursor:pointer;white-space:nowrap}
 .rf-menu button:hover{background:var(--surface-3);color:var(--brand)}
@@ -1099,7 +1099,7 @@ body.svf-open>.sv-fpanel{opacity:1;visibility:visible;pointer-events:auto;transf
 .rf-mv-n{margin-left:auto;font-size:11px;opacity:.6}
 .rf-mv-new{color:var(--brand);font-weight:600;border-top:1px solid var(--border);margin-top:3px;padding-top:7px;border-radius:0}
 .rf-mv-empty{padding:8px 10px;font-size:12px;opacity:.6}
-.compare-grid{position:fixed;inset:0;z-index:60;background:var(--overlay);display:none;align-items:center;justify-content:center;padding:40px;backdrop-filter:blur(8px)}
+.compare-grid{position:fixed;inset:0;z-index:var(--z-compare);background:var(--overlay);display:none;align-items:center;justify-content:center;padding:40px;backdrop-filter:blur(8px)}
 .compare-grid.show{display:flex}
 .compare-grid-inner{display:flex;gap:12px;max-width:100%;max-height:100%}
 .compare-close{position:absolute;bottom:max(20px, calc(var(--safe-bottom, 0px) + 14px));left:50%;transform:translateX(-50%);width:48px;height:48px;border-radius:50%;z-index:30;display:flex;align-items:center;justify-content:center;color:#151a26;background:linear-gradient(135deg,rgba(255,255,255,.52),rgba(255,255,255,.3));border:1px solid rgba(255,255,255,.5);-webkit-backdrop-filter:blur(18px) saturate(175%);backdrop-filter:blur(18px) saturate(175%);box-shadow:0 12px 30px -12px rgba(9,14,30,.5),inset 0 1px 0 rgba(255,255,255,.55);transition:transform .22s var(--spring),box-shadow .22s ease,background .22s ease}
@@ -1107,7 +1107,7 @@ body.svf-open>.sv-fpanel{opacity:1;visibility:visible;pointer-events:auto;transf
 .compare-close:active{transform:translateX(-50%) scale(.93)}
 .compare-close svg{width:20px;height:20px;display:block}
 .compare-close::after{content:'';position:absolute;inset:-7px;border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.14),transparent 70%);pointer-events:none}
-.history-sidebar{position:fixed;top:0;right:0;bottom:0;width:360px;max-width:90vw;background:var(--lg-gloss),var(--surface-glass-2);border-left:1px solid var(--lg-edge);z-index:70;transform:translateX(100%);transition:transform 280ms cubic-bezier(.32,1.08,.44,1),visibility 0s 280ms;visibility:hidden;display:flex;flex-direction:column;box-shadow:var(--lg-slab);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
+.history-sidebar{position:fixed;top:0;right:0;bottom:0;width:360px;max-width:90vw;background:var(--lg-gloss),var(--surface-glass-2);border-left:1px solid var(--lg-edge);z-index:var(--z-lightbox);transform:translateX(100%);transition:transform 280ms cubic-bezier(.32,1.08,.44,1),visibility 0s 280ms;visibility:hidden;display:flex;flex-direction:column;box-shadow:var(--lg-slab);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
 .history-sidebar.show{transform:translateX(0);visibility:visible;transition:transform 280ms cubic-bezier(.32,1.08,.44,1)}
 .history-header{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
 .history-header h3{font-size:16px;font-weight:600;flex:1}
@@ -1170,7 +1170,7 @@ to{opacity:1;transform:none}}
 .history-batchbar button{padding:5px 10px;border-radius:var(--radius-sm);font-size:11px;background:var(--surface-2);color:var(--text-muted);transition:all var(--transition);white-space:nowrap}
 .history-batchbar button:hover{color:var(--brand)}
 .history-batchbar button.danger:hover{color:var(--danger);background:var(--danger-soft)}
-.lightbox{position:fixed;inset:0;z-index:70;background:rgba(var(--ink-rgb),.9);display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);overflow-y:auto;padding:40px 20px}
+.lightbox{position:fixed;inset:0;z-index:var(--z-lightbox);background:rgba(var(--ink-rgb),.9);display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);overflow-y:auto;padding:40px 20px}
 .lightbox.show{display:flex}
 .lightbox img,.lightbox video{max-width:92vw;max-height:92vh;border-radius:var(--radius-md)}
 .lb-close{position:absolute;bottom:max(20px, calc(var(--safe-bottom, 0px) + 14px));left:50%;transform:translateX(-50%);width:48px;height:48px;border-radius:50%;z-index:30;display:flex;align-items:center;justify-content:center;color:#151a26;background:linear-gradient(135deg,rgba(255,255,255,.52),rgba(255,255,255,.3));border:1px solid rgba(255,255,255,.5);-webkit-backdrop-filter:blur(18px) saturate(175%);backdrop-filter:blur(18px) saturate(175%);box-shadow:0 12px 30px -12px rgba(9,14,30,.5),inset 0 1px 0 rgba(255,255,255,.55);transition:transform .22s var(--spring),box-shadow .22s ease,background .22s ease}
@@ -1184,7 +1184,7 @@ to{opacity:1;transform:none}}
 .lb-nav svg{width:20px;height:20px;display:block}
 .lb-prev{left:16px}
 .lb-next{right:16px}
-.modal-overlay{position:fixed;inset:0;z-index:65;background:rgba(var(--ink-rgb),.25);display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay{position:fixed;inset:0;z-index:var(--z-modal);background:rgba(var(--ink-rgb),.25);display:none;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.show{display:flex;animation:fade-in 200ms ease}
 @keyframes fade-in{
 from{opacity:0}
@@ -1207,7 +1207,7 @@ to{opacity:1;transform:scale(1) translateY(0)}}
 .kv-row{display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-soft);font-size:13px}
 .kv-row .k{color:var(--text-dim);min-width:80px}
 .kv-row .v{flex:1;word-break:break-all}
-.settings-drawer{position:fixed;top:0;right:0;bottom:0;width:380px;max-width:90vw;background:var(--lg-gloss),var(--surface-glass-2);border-left:1px solid var(--lg-edge);z-index:72;transform:translateX(100%) /* IMPL-95⑦：2.1 并回（原文末补丁带 z:72） */;transition:transform 280ms cubic-bezier(.32,1.08,.44,1),visibility 0s 280ms;visibility:hidden;display:flex;flex-direction:column;box-shadow:var(--lg-slab);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
+.settings-drawer{position:fixed;top:0;right:0;bottom:0;width:380px;max-width:90vw;background:var(--lg-gloss),var(--surface-glass-2);border-left:1px solid var(--lg-edge);z-index:var(--z-drawer);transform:translateX(100%) /* IMPL-95⑦：2.1 并回（原文末补丁带 z:72） */;transition:transform 280ms cubic-bezier(.32,1.08,.44,1),visibility 0s 280ms;visibility:hidden;display:flex;flex-direction:column;box-shadow:var(--lg-slab);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur)}
 .settings-drawer.show{transform:translateX(0);visibility:visible;transition:transform 280ms cubic-bezier(.32,1.08,.44,1)}
 .settings-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
 .settings-header h3{font-size:16px;font-weight:600;flex:1}
@@ -1456,7 +1456,7 @@ from{opacity:0}}
 .stats-mtab{flex:1;text-align:center;padding:6px 0}}
 @media (prefers-reduced-motion: reduce){
 .trend-area,.donut-seg,.au-bar i{animation:none}}
-.toast-container{position:fixed;top:70px;right:16px;z-index:100001;display:flex;flex-direction:column;gap:8px;pointer-events:none}/* IMPL-138①：90→100001 盖过 .studioOverlay(99999)——编辑器打开时宿主 Toast 可见（修侧实测⑤ P0；Z13 后遮罩已无 blur/变暗） */
+.toast-container{position:fixed;top:70px;right:16px;z-index:var(--z-toast);display:flex;flex-direction:column;gap:8px;pointer-events:none}/* IMPL-138①：90→100001 盖过 .studioOverlay(99999)——编辑器打开时宿主 Toast 可见（修侧实测⑤ P0；Z13 后遮罩已无 blur/变暗） */
 .toast{padding:10px 14px;border-radius:var(--radius-md);background:var(--bg-elev);border:1px solid var(--border);box-shadow:var(--shadow-lg);font-size:13px;max-width:320px;pointer-events:auto;display:flex;align-items:center;gap:8px;animation:toast-in 280ms cubic-bezier(.32,.72,0,1)}
 .toast.success{border-color:var(--success);border-color:color-mix(in srgb, var(--success) 55%, var(--border))}
 .toast.error{border-color:var(--danger);border-color:color-mix(in srgb, var(--danger) 55%, var(--border))}
@@ -1476,10 +1476,10 @@ to{transform:translateX(20px);opacity:0}}
 .toast-action{margin-left:4px;padding:3px 10px;border-radius:var(--radius-sm);background:var(--brand-soft);color:var(--brand);border:1px solid color-mix(in srgb, var(--brand) 30%, transparent);font-size:12px;font-weight:600;cursor:pointer;flex-shrink:0;transition:all var(--transition)}
 .toast-action:hover{background:var(--brand);color:#fff}
 .toast-action:focus-visible{outline:2px solid var(--brand);outline-offset:1px}
-.undo-btn{position:fixed;bottom:20px;right:20px;z-index:50;padding:8px 16px;border-radius:999px;background:var(--warning);color:#fff;font-size:13px;box-shadow:var(--shadow-lg);display:none;align-items:center;gap:6px;animation:toast-in 200ms ease}
+.undo-btn{position:fixed;bottom:20px;right:20px;z-index:var(--z-float);padding:8px 16px;border-radius:999px;background:var(--warning);color:#fff;font-size:13px;box-shadow:var(--shadow-lg);display:none;align-items:center;gap:6px;animation:toast-in 200ms ease}
 .undo-btn.show{display:flex}
 .undo-btn:hover{opacity:.9}
-.paste-picker{position:fixed;inset:0;z-index:68;background:var(--overlay);display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.paste-picker{position:fixed;inset:0;z-index:var(--z-picker);background:var(--overlay);display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
 .paste-picker.show{display:flex}
 .paste-picker-content{background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;max-width:320px;width:90%;box-shadow:var(--shadow-lg)}
 .paste-picker-content h4{font-size:14px;font-weight:600;margin-bottom:12px;text-align:center}
@@ -1513,7 +1513,7 @@ to{transform:translateX(20px);opacity:0}}
 .col-results{flex:1;min-height:0;display:none}
 .col-results.mobile-active{display:flex}
 .result-scroll{padding:12px 12px 20px}
-.mobile-view-switch{display:none;position:fixed;left:max(10px, var(--safe-left));top:calc(var(--safe-top) + 19.5px);transform:translateZ(0);will-change:transform;gap:0;margin:0;padding:0;border:none;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;z-index:40}/* IMPL-108①：下移收回一半（24→19.5=24-9/2）；IMPL-121②：translateZ(0) 强制独立合成层原生分辨率光栅化——iOS 大面积画布上 fixed 元素的降档模糊保险 */
+.mobile-view-switch{display:none;position:fixed;left:max(10px, var(--safe-left));top:calc(var(--safe-top) + 19.5px);transform:translateZ(0);will-change:transform;gap:0;margin:0;padding:0;border:none;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;z-index:var(--z-sticky)}/* IMPL-108①：下移收回一半（24→19.5=24-9/2）；IMPL-121②：translateZ(0) 强制独立合成层原生分辨率光栅化——iOS 大面积画布上 fixed 元素的降档模糊保险 */
 body[data-mview="result"] .mobile-view-switch:not(.is-right){display:flex}
 /* IMPL-109③：手机结果页=纯网格空间——面板白蒙版/边线隐藏，媒体直接浮在网格上；
      顶栏改「悬浮菜单条」：与结果/编辑钮同语言（nested 底+渐变描边胶囊）、同水平
@@ -1521,7 +1521,7 @@ body[data-mview="result"] .mobile-view-switch:not(.is-right){display:flex}
 .col-results::after{background:none}
 .col-results{border-bottom:none}
 body[data-mview="result"] .col-results::before{content:none}
-body[data-mview="result"] .result-header{position:fixed;top:calc(var(--safe-top) + 19.5px);right:max(10px,var(--safe-right));left:auto;width:auto;max-width:calc(100vw - 78px);height:36px;padding:0 4px;gap:1px;border-radius:999px;background:linear-gradient(var(--surface-nested),var(--surface-nested)) padding-box,var(--edge-border-grad) border-box;border:1px solid transparent;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;overflow-x:auto;scrollbar-width:none;align-items:center;z-index:40;transform:translateZ(0);will-change:transform}/* IMPL-121②：同 translateZ(0) 光栅化保险 */
+body[data-mview="result"] .result-header{position:fixed;top:calc(var(--safe-top) + 19.5px);right:max(10px,var(--safe-right));left:auto;width:auto;max-width:calc(100vw - 78px);height:36px;padding:0 4px;gap:1px;border-radius:999px;background:linear-gradient(var(--surface-nested),var(--surface-nested)) padding-box,var(--edge-border-grad) border-box;border:1px solid transparent;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;overflow-x:auto;scrollbar-width:none;align-items:center;z-index:var(--z-sticky);transform:translateZ(0);will-change:transform}/* IMPL-121②：同 translateZ(0) 光栅化保险 */
 body[data-mview="result"] .result-header::before{content:none}
 body[data-mview="result"] .result-header::-webkit-scrollbar{display:none}
 body[data-mview="result"] .result-header .icon-btn{width:30px;height:30px;flex-shrink:0;border-radius:999px;padding:0;justify-content:center}/* IMPL-110②：纯图标钮图标居中（基类 flex-start 且 padding 归零后图标偏左） */
@@ -1768,7 +1768,7 @@ to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion: reduce){
 .icon-btn,.filter-tab{transition:none} /* IMPL-95⑦：删死成员 qs-chip（高 specificity 恒胜）/preset-recent-chip（0 DOM） */
 .icon-btn:active{transform:none}}
-.glass-select-pop{position:fixed;z-index:96;min-width:148px;max-height:264px;overflow-y:auto;padding:5px;border-radius:var(--radius-md);background:var(--lg-gloss),var(--surface-glass-2);border:1px solid var(--lg-edge);box-shadow:var(--lg-slab);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);transform-origin:top center;animation:gselIn .22s var(--spring)}
+.glass-select-pop{position:fixed;z-index:var(--z-dropdown);min-width:148px;max-height:264px;overflow-y:auto;padding:5px;border-radius:var(--radius-md);background:var(--lg-gloss),var(--surface-glass-2);border:1px solid var(--lg-edge);box-shadow:var(--lg-slab);-webkit-backdrop-filter:var(--glass-blur);backdrop-filter:var(--glass-blur);transform-origin:top center;animation:gselIn .22s var(--spring)}
 .glass-select-pop.up{transform-origin:bottom center;animation-name:gselInUp}
 .glass-select-pop::before{content:'';position:absolute;top:0;left:9%;right:9%;height:1px;pointer-events:none;border-radius:1px;background:linear-gradient(90deg, transparent, rgba(var(--glass-rgb),.48) 42%, transparent)}
 [data-theme="light"] .glass-select-pop::before{background:linear-gradient(90deg, transparent, rgba(var(--glass-rgb),1) 42%, transparent)}
@@ -1792,7 +1792,7 @@ from{opacity:0;transform:translateY(6px) scale(.94)}}
 .sv-docklayer .sv-floatbar,.sv-caplayer .sv-caption,.sv-wrap,.lb-stage,.file-mode-hint,.toast,.undo-btn,.modal-overlay.show,.modal-content,.ping-dot,.lb-progress::before{animation:none}}
 
 /* ==================== IMPL-126：图片工作台弹框壳样式（内核已外链 image-studio.js，Shadow DOM 自带样式） ==================== */
-.studioOverlay{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px;animation:studioFade .18s ease}/* Z13（第七批）：删变暗+模糊三属性（原 background:rgba(10,12,18,.60) 与 -webkit-backdrop-filter/backdrop-filter blur(10px)）——背后工作台亮度与清晰度和打开前完全一致，编辑器「浮」于页面上；遮罩层保留负责居中；Z1 已删点外关闭监听，透明遮罩无误关风险 */
+.studioOverlay{position:fixed;inset:0;z-index:var(--z-studio);display:flex;align-items:center;justify-content:center;padding:12px;animation:studioFade .18s ease}/* Z13（第七批）：删变暗+模糊三属性（原 background:rgba(10,12,18,.60) 与 -webkit-backdrop-filter/backdrop-filter blur(10px)）——背后工作台亮度与清晰度和打开前完全一致，编辑器「浮」于页面上；遮罩层保留负责居中；Z1 已删点外关闭监听，透明遮罩无误关风险 */
 .studioOverlay[hidden]{display:none}
 @keyframes studioFade{from{opacity:0}to{opacity:1}}
 .studioModal{position:relative;width:min(1720px,96vw);height:min(1080px,95vh) /* IMPL-129①：官方期望上限 min(95vw,1720px)×min(92vh,1080px)，旧值砍掉 542px 宽 */;border-radius:16px;overflow:hidden;box-shadow:0 2px 6px rgba(9,14,30,.10),0 16px 40px rgba(9,14,30,.14) /* IMPL-152（用户工单③）：微小平滑真实浅阴影——贴地接触层+极淡环境层双层结构（Z13 删遮罩变暗后阴影是唯一浮起线索，保留接触层防「浮不起来」） */;background:#101112;display:flex;flex-direction:column;animation:studioPop .24s cubic-bezier(.32,1.08,.44,1)}
@@ -2282,7 +2282,7 @@ input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;bac
 .skill-pick-btn .mp-caret{position:absolute;right:10px;top:50%;width:12px;height:12px;transform:translateY(-50%);transition:transform .18s;color:var(--text-muted)}
 .skill-pick-btn[aria-expanded="true"] .mp-caret{transform:translateY(-50%) rotate(180deg)}
 .skill-head-wrap .skill-col-2 .sm-select{flex:1 1 auto;min-width:0}
-.skill-pop{position:absolute;left:0;right:0;top:calc(100% - 2px);z-index:46;background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);padding:12px 12px 6px;max-height:min(430px,62vh);overflow:auto}
+.skill-pop{position:absolute;left:0;right:0;top:calc(100% - 2px);z-index:var(--z-popover);background:var(--bg-elev);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);padding:12px 12px 6px;max-height:min(430px,62vh);overflow:auto}
 .skill-pop[hidden]{display:none}
 
 /* ── R52：技能区三模式按钮（提示词工具行的原按钮**原样**搬入）──
@@ -2971,3 +2971,16 @@ html[data-theme="light"] .icon-btn-text{color:#6e6e6e}
    ⚠ 本批**刻意不改任何现有值**（清单第八节：只增不改）—— 全量替换有视觉回归风险，另立批次。 */
 /* ★ R9C-UX-P1-4a：模型清单顶部的徽标图例（常态可见，补 title 的盲区） */
 .sm-legend{margin:0 0 6px;padding:0 2px;font-size:11px;line-height:1.55;color:var(--text-muted)}
+/* ★ R9F-UI-P1-6（报告 05）：全局浮层 z-index token —— 值与本批替换前**逐字相同** ⇒ 计算值不变。
+   0~33 的值是**组件内部**层叠，刻意不 token（避免制造跨组件可比的假层级）；
+   编辑器 image-studio.js 有独立 stacking context，另成体系。 */
+:root{--z-sticky:40;--z-popover:46;--z-float:50;--z-compare:60;--z-modal:65;--z-count:66;--z-picker:68;--z-lightbox:70;--z-drawer:72;--z-dropdown:96;--z-menu:950;--z-studio:99999;--z-toast:100001}
+
+/* ═══ R9F-UI-P1-5 · 主题 token 真值表（**运行时实测生成**，非手写）═══
+   共 77 个 token；下表只列**双主题取值不同**的 41 个，其余 36 个两主题同值。
+   重新生成：python studio/验收/_r9f_tokens.py（→ 重写 payload/theme-tokens.json → 重跑生成器）
+   校验：studio/验收/check_r9f.py（headless 重新实测、逐值比对 ⇒ 改过颜色就会红）
+   dark  : --bg:#101112 · --bg-elev:#191a1d · --border:#292b2f · --border-soft:#232529 · --brand:#f28a73 · --brand-hover:#ff9b83 · --brand-press:rgba(242,138,115,.28) · --brand-rgb:242,138,115 · --brand-soft:rgba(242,138,115,.16) · --danger:#f19a89 · --danger-soft:rgba(241,154,137,.16) · --edge-border-grad:linear-gradient(168deg, rgba(255,255,255,.07) 0%, rgba(255,255,255,.07) 100%) · --glass-rgb:23,25,28 · --gold:#ffc96f · --ink-badge:#9c9c9c · --ink-rgb:255,255,255 · --lg-edge:rgba(255,255,255,.08) · --lg-rim:rgba(255,255,255,.07) · --lg-slab:0 0 0 1px rgba(255,255,255,.07),0 1px 2px rgba(0,0,0,.30),0 10px 28px -18px rgba(0,0,0,.50) · --lift-card:0 1px 2px rgba(0,0,0,.30) · --lift-ctrl:inset 0 1px 0 rgba(255,255,255,.04) · --overlay:rgba(0,0,0,.68) · --sh-inset:rgba(255,255,255,.02) · --shadow-lg:0 20px 58px rgba(0,0,0,.42),0 3px 12px rgba(0,0,0,.30) · --shadow-md:0 4px 14px rgba(0,0,0,.34) · --success:#4dbd94 · --success-soft:rgba(77,189,148,.14) · --surface:#141517 · --surface-2:#1d1f22 · --surface-3:#2b2d31 · --surface-glass:rgb(20 21 23/.96) · --surface-glass-2:#191a1d · --surface-glass-card:#191a1d · --surface-glass-pop:#191a1d · --surface-nested:#16181a · --text:#f5f5f5 · --text-dim:#8f8f8f · --text-muted:#ababab · --warning:#e0a95c · --warning-ink:#e0a95c · --warning-soft:rgba(224,169,92,.14)
+   light : --bg:#fafafa · --bg-elev:#ffffff · --border:rgba(0,0,0,.10) · --border-soft:rgba(0,0,0,.06) · --brand:#f07860 · --brand-hover:#dc6853 · --brand-press:rgba(240,120,96,.22) · --brand-rgb:240,120,96 · --brand-soft:rgba(240,120,96,.12) · --danger:#b44735 · --danger-soft:rgba(180,71,53,.10) · --edge-border-grad:linear-gradient(168deg, rgba(0,0,0,.10) 0%, rgba(0,0,0,.10) 100%) · --glass-rgb:255,255,255 · --gold:#a97e22 · --ink-badge:#6b6b6b · --ink-rgb:0,0,0 · --lg-edge:rgba(0,0,0,.10) · --lg-rim:rgba(0,0,0,.07) · --lg-slab:0 0 0 1px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.05),0 10px 28px -18px rgba(0,0,0,.14) · --lift-card:0 1px 2px rgba(0,0,0,.05) · --lift-ctrl:inset 0 1px 0 rgba(255,255,255,.70) · --overlay:rgba(0,0,0,.22) · --sh-inset:rgba(0,0,0,.03) · --shadow-lg:0 20px 54px rgba(0,0,0,.12),0 3px 10px rgba(0,0,0,.06) · --shadow-md:0 2px 8px rgba(0,0,0,.07) · --success:#0f7a55 · --success-soft:rgba(15,122,85,.10) · --surface:#ffffff · --surface-2:rgba(0,0,0,.05) · --surface-3:rgba(0,0,0,.08) · --surface-glass:rgb(255 255 255/.96) · --surface-glass-2:#ffffff · --surface-glass-card:#ffffff · --surface-glass-pop:#ffffff · --surface-nested:#f7f7f7 · --text:#171717 · --text-dim:#8a8a8a · --text-muted:#5e5e5e · --warning:#8a5608 · --warning-ink:#8a5608 · --warning-soft:rgba(138,86,8,.10)
+   ⚠ 「级联收敛（删中间层）」本批**不做**，理由见生成器同名注释：锚点都打在 CSS 原文上，
+     自写死声明判定无法逐处验证、CSSOM 往返会让锚点全失效 ⇒ 须单独立批 + 像素级对拍护栏。 */
