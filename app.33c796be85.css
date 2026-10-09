@@ -292,6 +292,16 @@ textarea{resize:vertical;min-height:80px}
 .md-a{color:var(--brand);text-decoration:underline}
 .md-hr{margin:7px 0;border:0;border-top:1px solid var(--border)}
 .md-img{color:var(--text-dim)}
+/* ★ R9Y：技能「配方卡」样式（只新增规则） */
+.sp-cards{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.sp-card{padding:9px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2)}
+.sp-card-h{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.sp-card-n{flex:0 0 auto;width:18px;height:18px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;background:var(--brand-soft);color:var(--brand)}
+.sp-card-name{flex:1;min-width:0;font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sp-card-use{flex:0 0 auto;height:24px;padding:0 10px;border:none;border-radius:999px;font-size:11px;font-weight:600;color:#fff;background:var(--brand);cursor:pointer;transition:background var(--transition-fast)}
+.sp-card-use:hover{background:var(--brand-hover)}
+.sp-card-row{display:flex;gap:6px;font-size:11px;line-height:1.6;color:var(--text-muted)}
+.sp-card-row b{flex:0 0 auto;font-weight:600;color:var(--text-dim)}
 .disc-card.final[data-jump]{cursor:pointer}
 .vis-card{background:color-mix(in srgb, var(--warning) 7%, transparent);border:1px solid color-mix(in srgb, var(--warning) 26%, transparent);border-left:3px solid var(--warning);border-radius:var(--radius-sm);padding:8px 10px;font-size:12px}
 .vis-head{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;color:var(--warning-ink);font-weight:600;font-size:12px;min-width:0}
@@ -492,12 +502,15 @@ to{opacity:1;transform:none}}
 .generate-btn svg{width:19px;height:19px;transform-origin:center}
 .generate-btn:hover:not(:disabled) svg{animation:genIconPop .72s var(--spring)}
 @keyframes genIconPop{
-0%{transform:rotate(0deg) scale(1)}
-52%{transform:rotate(16deg) scale(1.24)}
-100%{transform:rotate(0deg) scale(1.07)}}
-.generate-btn:disabled svg{animation:genIconSpin 1.5s linear infinite}
-@keyframes genIconSpin{
-to{transform:rotate(360deg)}}
+0%{transform:scale(1)}
+52%{transform:scale(1.22)}
+100%{transform:scale(1.07)}}
+/* ★ R9Y：**生成中不再转圈** —— 星光图标转起来像"加载失败"，也和"正在生成"的语义不搭。
+   改成呼吸/闪烁（缩放 + 透明度一轻一重）：读作"它在工作"，不会让人以为按钮坏了。 */
+.generate-btn:disabled svg{animation:genIconBreath 1.6s ease-in-out infinite}
+@keyframes genIconBreath{
+0%,100%{transform:scale(1);opacity:.72}
+50%{transform:scale(1.14);opacity:1}}
 .generate-btn .gen-cost{display:none;align-items:center;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:700;font-family:var(--font-mono);letter-spacing:0;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);color:#fff}
 .generate-btn .gen-cost.show{display:inline-flex}
 @media (prefers-reduced-motion: reduce){

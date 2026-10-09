@@ -3964,6 +3964,68 @@ const SkillSession = {
       }
     }
   },
+  /* ★ R9Y：技能「配方卡」结构化落地 —— 把固定标签格式的配方卡解析出来，渲染成卡片 + 一键选用。
+     格式真值来自 SKILL_PROMPTS["video-style-mixer"]（模型被告知按这四行输出）：
+       - 风格名：4~8 字
+       - 风格头（40~70 字）：…
+       - 运镜与节奏（20~40 字）：…
+       - 声音气质（10~20 字）：…
+     解析**只认标签**，不依赖编号/加粗/缩进（模型每次写法会飘）；组名除 `风格名：` 外，
+     也接受 `### 1. 雨夜霓虹` / `1. **雨夜霓虹**` 这类标题式写法。 */
+  _cards(t) {
+    const src = String(t == null ? "" : t).split("\n");
+    const out = [];
+    let cur = null;
+    const clean = (s) => String(s || "").replace(/\*\*/g, "").replace(/^\s*[-*+•]\s*/, "").trim();
+    const close = () => { if (cur && (cur.head || cur.move || cur.sound)) out.push(cur); cur = null; };
+    for (let i = 0; i < src.length; i++) {
+      const s = clean(src[i]);
+      if (!s) continue;
+      const nameL = /^风格名\s*[：:]\s*(.+)$/.exec(s);
+      const headL = /^风格头(?:\s*[（(][^）)]*[）)])?\s*[：:]\s*(.*)$/.exec(s);
+      const moveL = /^运镜与节奏(?:\s*[（(][^）)]*[）)])?\s*[：:]\s*(.*)$/.exec(s);
+      const sndL = /^声音气质(?:\s*[（(][^）)]*[）)])?\s*[：:]\s*(.*)$/.exec(s);
+      if (nameL) { close(); cur = { name: nameL[1].trim(), head: "", move: "", sound: "" }; continue; }
+      if (headL) { if (!cur) cur = { name: "", head: "", move: "", sound: "" }; cur.head = headL[1].trim(); continue; }
+      if (moveL) { if (!cur) cur = { name: "", head: "", move: "", sound: "" }; cur.move = moveL[1].trim(); continue; }
+      if (sndL) { if (!cur) cur = { name: "", head: "", move: "", sound: "" }; cur.sound = sndL[1].trim(); continue; }
+      /* 标题式组名：`### 1. 雨夜霓虹` / `1. 雨夜霓虹` / `第 2 组 胶片日光` */
+      const hd = /^#{1,6}\s*(?:第\s*)?\d{0,2}\s*[.、)）]?\s*(.{2,14})$/.exec(s)
+        || /^(?:第\s*)?(\d{1,2})\s*[.、)）]\s*(.{2,14})$/.exec(s)
+        || /^第\s*(\d{1,2})\s*组\s*[·:：]?\s*(.{2,14})$/.exec(s);
+      if (hd) {
+        const nm = (hd[2] || hd[1] || "").trim();
+        if (nm && !/^(风格头|运镜|声音)/.test(nm)) { close(); cur = { name: nm, head: "", move: "", sound: "" }; continue; }
+      }
+    }
+    close();
+    return out.length >= 2 ? out : [];
+  },
+  _cardsBody(cs) {
+    const esc2 = (s) => esc(String(s == null ? "" : s));
+    return '<div class="sp-cards" data-sp-cards="' + cs.length + '">' + cs.map((c, i) => {
+      const n = i + 1;
+      return '<div class="sp-card" data-sp-card="' + n + '">'
+        + '<div class="sp-card-h"><span class="sp-card-n">' + n + "</span>"
+        + '<span class="sp-card-name">' + esc2(c.name || ("配方 " + n)) + "</span>"
+        + '<button type="button" class="sp-card-use" data-sp-card-use="' + n + '" title="直接按这组配方继续（会自动带上提示词框里已写的内容）">用第 ' + n + " 组</button></div>"
+        + (c.head ? '<div class="sp-card-row"><b>风格头</b><span>' + esc2(c.head) + "</span></div>" : "")
+        + (c.move ? '<div class="sp-card-row"><b>运镜与节奏</b><span>' + esc2(c.move) + "</span></div>" : "")
+        + (c.sound ? '<div class="sp-card-row"><b>声音气质</b><span>' + esc2(c.sound) + "</span></div>" : "")
+        + "</div>";
+    }).join("") + "</div>";
+  },
+  /* 点「用第 N 组」= 直接按技能契约发下一轮；把提示词框里已写好的画面描述一并带上（有才带）。 */
+  _useCard(n) {
+    const ses = this.ses;
+    if (!ses || ses.streaming) return;
+    const pf = document.querySelector('[data-key="prompt"], [data-key="text"]');
+    const seed = pf && pf.value ? String(pf.value).trim() : "";
+    const msg = "用第 " + n + " 组" + (seed ? "：" + seed : "");
+    const inp = this.wrap && this.wrap.querySelector("[data-sp-input]");
+    if (inp) inp.value = "";
+    this.panelSend(msg);
+  },
   panelSend(text) {
     const ses = this.ses;
     if (!ses || ses.streaming) return;
@@ -4116,8 +4178,11 @@ const SkillSession = {
       const pages = this._pageList(ses);
       if (pages) body = (ver.note ? `<div class="sp-note">${esc(ver.note)}</div>` : "") + this._pagesBody(ses, ver, pages);
       if (!pages) {
+      /* ★ R9Y：技能输出结构化落地 —— 若终稿是「配方卡」格式（video-style-mixer 等），
+         渲染成卡片 + 一键「用第 N 组」；识别不到就维持原来的 Markdown 围栏。 */
+      const _rcs = this._cards(ver.text);
       body = (ver.note ? `<div class="sp-note">${esc(ver.note)}</div>` : "")
-        + '<div class="sp-bubble fenced md-host">' + this._mdHtml(ver.text) + "</div>";
+        + (_rcs.length ? this._cardsBody(_rcs) : ('<div class="sp-bubble fenced md-host">' + this._mdHtml(ver.text) + "</div>"));
       if (ses.showDiff && ses.verIdx > 0) {
         const parts = this._diffWords(ses.versions[ses.verIdx - 1].text, ver.text);
         body += `<div class="sp-bubble sp-diff">` + parts.map(p =>
@@ -4269,6 +4334,10 @@ const SkillSession = {
       });
       if (ses.lastTurn === "ask" && !ses.collapsed && !ses.streaming) setTimeout(() => inp.focus(), 80);
     }
+    box.querySelectorAll("[data-sp-card-use]").forEach(b => b.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this._useCard(Number(b.dataset.spCardUse) || 1);
+    }));
     box.querySelector("[data-sp-send]")?.addEventListener("click", () => {
       if (!inp) return;
       if (this.ses && this.ses.streaming) return; /* IMPL-104：流式中守卫在清空之前 */
@@ -8169,7 +8238,8 @@ image: [],
 video: [],
 audio: [],
 first: null,
-last: null
+last: null,
+mask: null
 };
 const settings = [];
 const isHttp = u => typeof u === "string" && /^https?:\/\//.test(u);
@@ -8188,6 +8258,9 @@ const u = pickUrl(val);
 if (u) {
 if (String(p.key).includes("last")) refs.last = u; else refs.first = u;
 }
+} else if (/mask|遮罩/i.test(String(p.key) + String(p.label || ""))) {
+/* ★ R9Y：遮罩是**独立槽位**，旧实现把它当普通参考图导出 ⇒ 导入后遮罩位空着、参考图凭空多一张 */
+refs.mask = pickUrl(val) || refs.mask;
 } else {
 const arr = Array.isArray(val) ? val : typeof val === "string" ? val.split(",").map(s => s.trim()).filter(Boolean) : [];
 refs.image.push(...arr.filter(isHttp));
@@ -8236,8 +8309,14 @@ lines.push("参考音频：");
 if (refs.audio.length) refs.audio.forEach((u, i) => lines.push(`${i + 1}. ${u}`)); else lines.push("无");
 lines.push(`首帧：${refs.first || "无"}`);
 lines.push(`尾帧：${refs.last || "无"}`);
+lines.push(`遮罩：${refs.mask || "无"}`);
 lines.push("");
 lines.push("【生成设置】");
+/* ★ R9Y：张数（界面底部的 countChip，不在 model.params 里 ⇒ 旧导出整条丢掉） */
+try {
+const _cnt = Number(($('[data-key="__count"]') || {}).value || 0);
+if (_cnt > 1) settings.unshift("张数: " + _cnt);
+} catch (_e) { _r9mNote("wf-01", _e); }
 if (settings.length) settings.forEach(s => lines.push(s)); else lines.push("默认");
 lines.push("");
 lines.push("【AI 优化指令】");
@@ -8262,7 +8341,8 @@ image: [],
 video: [],
 audio: [],
 first: null,
-last: null
+last: null,
+mask: null
 },
 fields: {}
 };
@@ -8303,6 +8383,10 @@ if (u) result.refs.audio.push(u);
 } else if (/^首帧[：:]/.test(trimmed)) {
 const u = extractUrl(trimmed.replace(/^首帧[：:]\s*/, ""));
 if (u) result.refs.first = u;
+refTarget = null;
+} else if (/^遮罩[：:]/.test(trimmed)) {
+const u = extractUrl(trimmed.slice(trimmed.search(/[：:]/) + 1));
+if (u) result.refs.mask = u;
 refTarget = null;
 } else if (/^尾帧[：:]/.test(trimmed)) {
 const u = extractUrl(trimmed.replace(/^尾帧[：:]\s*/, ""));
@@ -8374,6 +8458,13 @@ UI._onFieldChange(p.key, el);
 }
 }
 }
+try {
+const _cv = Number(parsed.fields["张数"]);
+if (_cv > 1) {
+const _cl = document.querySelector('[data-key="__count"]');
+if (_cl) { _cl.value = String(_cv); _cl.dispatchEvent(new Event("change", { bubbles: true })); UI._syncCountChip(); }
+}
+} catch (_e) { _r9mNote("wf-02", _e); }
 UI._showUndoBtn(snapshot);
 Toast.success("工作流已导入");
 }, 50);
@@ -13214,10 +13305,14 @@ if (_apiDef67) {
        Seedance/Wan/VEO 三家的 body 形状、端点、轮询全在 apiyiVideo 内（本处零重复定义）。 */
     const _rg67 = { byKey: {} };
     const _byKey67 = _rg67.byKey;
-    ["first_frame", "last_frame", "images", "videos", "audios"].forEach(function (k) {
-      const raw = v.body[k];
+    /* ★ R9Y：**按模型自己声明的 ref-* 参数逐个收**，不再硬编码五个键 ——
+       apiyi:seedance-2-5-260628 除了 first_frame/last_frame/images 还声明了一个 `urls`(ref-image)
+       ⇒ 旧清单里没有它 ⇒ 那一槽参考图被**静默丢弃**（"丢参数"体检抓到的实例）。 */
+    (_apiDef67.params || []).forEach(function (pp) {
+      if (!pp || String(pp.type || "").indexOf("ref-") !== 0) return;
+      const raw = v.body[pp.key];
       if (raw == null || raw === "") return;
-      _byKey67[k] = String(raw).split(",").map(function (x) { return x.trim(); }).filter(function (x) { return /^https?:\/\//.test(x); });
+      _byKey67[pp.key] = String(raw).split(",").map(function (x) { return x.trim(); }).filter(function (x) { return /^https?:\/\//.test(x); });
     });
     const _F67 = _H67.w5vShape({ model: _apiDef67, modelId: _apiDef67.id, prompt: _prompt67, refs: _rg67, extra: v.body });
     _F67.ex.__opts = {
@@ -16764,8 +16859,32 @@ name: "frame",
 uploaded: true,
 remote: url
 } ] : [];
+} else if (/mask|遮罩/i.test(String(p.key) + String(p.label || ""))) {
+/* ★ R9Y：**遮罩槽单独还原**。旧实现把所有非帧 ref-image 参数都灌 refs.image
+   ⇒ apiyi gpt-image-2.5（同时有 urls + mask）导入后：遮罩位被塞进参考图、参考图位正常
+   ⇒ 一发就是"拿参考图当遮罩"的错行为。 */
+const _mu = String((refs.mask == null ? "" : refs.mask) || "");
+this.state.refState[this.state.modelKey][p.key] = _mu ? [ {
+id: genId(),
+kind: "url",
+src: _mu,
+name: "mask",
+uploaded: true,
+remote: _mu
+} ] : [];
+} else if (p.output === "single") {
+/* 单图位（非帧非遮罩）⇒ 只放第一张，别把整个参考图数组塞进一个单图槽 */
+const _u0 = (refs.image || [])[0] || "";
+this.state.refState[this.state.modelKey][p.key] = _u0 ? [ {
+id: genId(),
+kind: "url",
+src: _u0,
+name: _u0.split("/").pop(),
+uploaded: true,
+remote: _u0
+} ] : [];
 } else {
-this.state.refState[this.state.modelKey][p.key] = refs.image.map(u => ({
+this.state.refState[this.state.modelKey][p.key] = (refs.image || []).map(u => ({
 id: genId(),
 kind: "url",
 src: u,
@@ -17104,7 +17223,7 @@ document.addEventListener("DOMContentLoaded", () => { UI.init(); /* ★ R76-J：
    ============================================================ */
 window.StudioEditor = (function() {
 let api = null, ov = null, onSaveCb = null, escHandler = null, scriptP = null;
-const STUDIO_SRC = "image-studio.fc331d31d4.js";
+const STUDIO_SRC = "image-studio.387c542ef6.js";
 /* IMPL-144 W5（2026-09-26 修拍板）：位图动作全换 GPT-Image-2.5 系——覆盖 IMPL-143 版映射（变更单第一节）
    sunburst=最强档（精细编辑/参考保真，Arena 文生图 1420.7/编辑 1520.4 双第一）→扩图/局部重绘；flare=快车道（比 GPT-Image-2 快 50%）→擦除/图像拆解/编辑文字；抠出主体维持阿里抠图专用通道
    裸名审计落账：GPT-Image-2.5 裸名非 OpenAI 正式 model id（正式 id 仅 gpt-image-2.5-flare / gpt-image-2.5-sunburst，快照 -2026-09-08）；
