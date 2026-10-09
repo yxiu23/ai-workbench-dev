@@ -8707,7 +8707,11 @@ return null;
 for (const p of model.params) {
 const val = task.body?.[p.key];
 if (val == null || val === "") continue;
-if (p.type === "textarea") continue;
+/* ★★ R9ZH：**只跳过"已作为【提示词】单独导出"的那一条**。原写法跳过**所有** textarea
+   ⇒ 声明了第二个 textarea 的模型（反向提示词）**导出即丢**、导入回不来
+   （同一缺陷的另一半：renderParamForm 那半是"设不了"，这半是"导不出"）。
+   判据用**值同一性**而非按 key 猜：提示词那条的值 === 已导出的 prompt。 */
+if (p.type === "textarea" && String(val) === String(prompt)) continue;
 if (p.type === "ref-image") {
 if (isFrameKey(p.key)) {
 const u = pickUrl(val);
@@ -8896,7 +8900,14 @@ UI._onPromptInput(promptEl);
 }
 UI._replaceRefs(parsed.refs);
 for (const p of hit.model.params) {
-if (p.type === "textarea" || p.type === "ref-image" || p.type === "ref-video" || p.type === "ref-audio") continue;
+/* ★★ R9ZH：**只跳过"提示词框"那一个 textarea** —— 原写法跳过**所有** textarea
+   ⇒ 反向提示词即使已经被导出成「反向提示词: …」那一行，**导入时也被无视**（回灌值恒空）。
+   判据用"它是不是上面 promptEl 填的那一个元素"（同一性），不是按 key 猜 ——
+   与渲染侧 R9ZH-1 同一套判据，三处（渲染 / 导出 / 回填）口径一致。 */
+if (p.type === "textarea") {
+const _r9zhE0 = $(`[data-key="${p.key}"]`);
+if (!_r9zhE0 || _r9zhE0 === promptEl) continue;
+} else if (p.type === "ref-image" || p.type === "ref-video" || p.type === "ref-audio") continue;
 const val = parsed.fields[p.label];
 if (val != null) {
 const el = $(`[data-key="${p.key}"]`);
@@ -12184,7 +12195,12 @@ model.refGroups.modes.forEach(m => m.params.forEach(k => refGroupParamKeys.add(k
 const simpleParams = [];
 const complexParams = [];
 for (const p of model.params) {
-if (p.type === "textarea") continue;
+/* ★★ R9ZH：**只跳过被选为提示词框的那一个 textarea**。原写法 `p.type === "textarea"` 会把
+   **所有** textarea 都 continue 掉，而 `hasPrompt` 只取第一个 ⇒ 声明了第二个 textarea 的模型
+   （z_image_turbo / qwen_image_30_pro / kolors 的「反向提示词」）**在表单里根本没有控件**
+   ⇒ `_collectParamsAsync` 读不到元素只能取 default("") ⇒ 该参数**永远发不出去**。
+   —— 这是 R9ZG「全模型零费用虚拟跑」抓到的真缺陷（模型声明了、UI 隐藏了、请求里没有）。 */
+if (p.type === "textarea" && p === hasPrompt) continue;
 if (refGroupParamKeys.has(p.key)) continue;
 if (p.type === "ref-image" || p.type === "ref-video" || p.type === "ref-audio") {
 complexParams.push({
@@ -12665,6 +12681,10 @@ inner += `<select data-key="${esc(p.key)}" aria-label="${esc(p.label)}">${p.opti
 inner += `<div class="url-input-row"><input type="text" data-key="${esc(p.key)}" value="${esc(defVal)}" placeholder="${esc(p.placeholder || "https://...")}"><button data-add-url="${esc(p.key)}">添加</button></div>`;
 } else if (p.type === "url-list") {
 inner += `<div class="url-input-row"><input type="text" data-url-input="${esc(p.key)}" placeholder="https://..."><button data-add-url-list="${esc(p.key)}">添加</button></div><div data-url-list="${esc(p.key)}" class="ref-grid" style="margin-top:6px"></div>`;
+} else if (p.type === "textarea") {
+/* ★ R9ZH：多行参数（如「反向提示词」）渲染成 textarea —— 兜底那条只给单行 input，
+   长文本输入体验太差。两行起、可纵向拉伸；`data-key` 与其他字段同形 ⇒ 采集/缓存/摘要全链路零改动。 */
+inner += `<textarea data-key="${esc(p.key)}" rows="2" style="resize:vertical" placeholder="${esc(p.placeholder || "")}">${esc(defVal)}</textarea>`;
 } else {
 inner += `<input type="text" data-key="${esc(p.key)}" value="${esc(defVal)}" placeholder="${esc(p.placeholder || "")}">`;
 }
