@@ -17683,7 +17683,7 @@ document.addEventListener("DOMContentLoaded", () => { UI.init(); /* ★ R76-J：
    ============================================================ */
 window.StudioEditor = (function() {
 let api = null, ov = null, onSaveCb = null, escHandler = null, scriptP = null;
-const STUDIO_SRC = "image-studio.719d4b9d39.js";
+const STUDIO_SRC = "image-studio.59d4127d1c.js";
 /* IMPL-144 W5（2026-09-26 修拍板）：位图动作全换 GPT-Image-2.5 系——覆盖 IMPL-143 版映射（变更单第一节）
    sunburst=最强档（精细编辑/参考保真，Arena 文生图 1420.7/编辑 1520.4 双第一）→扩图/局部重绘；flare=快车道（比 GPT-Image-2 快 50%）→擦除/图像拆解/编辑文字；抠出主体维持阿里抠图专用通道
    裸名审计落账：GPT-Image-2.5 裸名非 OpenAI 正式 model id（正式 id 仅 gpt-image-2.5-flare / gpt-image-2.5-sunburst，快照 -2026-09-08）；
@@ -18263,6 +18263,21 @@ throw new Error("速创任务轮询超时（30 分钟, id=" + taskId + ", 最后
    ⇒ 只存 url ⇒ 下次打开 404 ⇒ **空图层**（修 2026-10-09 报障）。
    转成 dataURL 后字节自包含，编辑器落 IDB 的是 blob 本体，重开必恢复。
    ⚠ 走 Worker 取图路由（自家 R2 无 ACAO，浏览器直 fetch 必失败 —— 铁 136）；拿不到就**保持原样不阻断**。 */
+/* ★★ R9ZD：**每次请求各自独立的预算**（关键修正）。
+   首版把同一个 AbortController 复用给两次 fetch —— 第一次超时 abort 后，signal 已经 aborted，
+   第二次 fetch 会**立刻失败**（真实 fetch 语义），等于"兜底那一跳从来没跑过"。
+   现在：Worker 路由 5s、直连 3s，各自 controller，总耗时 ≤ 8s。 */
+async function r9zcFetchT(u, opt, ms) {
+  let ctl = null, timer = null;
+  try {
+    if (typeof AbortController !== "undefined") {
+      ctl = new AbortController();
+      timer = setTimeout(function () { try { ctl.abort(); } catch (e0) { _r9mNote("r9zd-01", e0); } }, ms);
+    }
+  } catch (e1) { _r9mNote("r9zd-02", e1); }
+  try { return await fetch(u, ctl ? Object.assign({}, opt || {}, { signal: ctl.signal }) : (opt || undefined)); }
+  finally { if (timer) clearTimeout(timer); }
+}
 async function r9zcToDataUrl(url) {
   try {
     const u = String(url || "");
@@ -18272,11 +18287,11 @@ async function r9zcToDataUrl(url) {
       const w = (Store.getR2WorkerUrl && Store.getR2WorkerUrl()) || "";
       if (w) {
         const t = (Store.getR2AuthToken && Store.getR2AuthToken()) || "";
-        const rq = await fetch(w.replace(/[/]$/, "") + "/media/img?url=" + encodeURIComponent(u), t ? { headers: { Authorization: "Bearer " + t } } : undefined);
+        const rq = await r9zcFetchT(w.replace(/[/]$/, "") + "/media/img?url=" + encodeURIComponent(u), t ? { headers: { Authorization: "Bearer " + t } } : {}, 5000);
         if (rq && rq.ok) { const b = await rq.blob(); if (b && b.size > 0) buf = b; }
       }
-    } catch (e1) { _r9mNote("r9zc-01", e1); }
-    if (!buf) { try { const rb = await fetch(u); if (rb && rb.ok) buf = await rb.blob(); } catch (e2) { _r9mNote("r9zc-02", e2); } }
+    } catch (e2) { _r9mNote("r9zc-01", e2); }
+    if (!buf) { try { const rb = await r9zcFetchT(u, {}, 3000); if (rb && rb.ok) buf = await rb.blob(); } catch (e3) { _r9mNote("r9zc-02", e3); } }
     if (!buf) return url;
     return await new Promise(function (res) {
       const fr = new FileReader();
