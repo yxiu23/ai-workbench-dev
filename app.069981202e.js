@@ -7036,7 +7036,12 @@ return { url: w + "/media/seg" + path, headers: { Authorization: "Bearer " + tok
 }
 /* 暂存：把图片字节交给 Worker，由它换临时凭证并传暂存桶 ⇒ 返回可读 URL。
    返回 null = 不走服务端（调用方回退）。 */
+/* ★★ R9ZF：Worker 暂存若是**结构性失败**（对象前缀不合规 ⇒ OSS AccessDenied / 凭证类错误），
+   那不是偶发 —— 每次抠图都白跑一趟 Worker。这里记**会话级**标记，后续直接跳过、走本机直传。
+   ⚠ 只对"明确的配置/权限类错误"置标记；网络类瞬时不置（否则一次抖动就永久降级）。 */
+let __r9fStageDead = false;
 async function _r9lStageProxy(blob, ext) {
+if (__r9fStageDead) return null;
 if (!(await _r9lSegOn())) return null;
 var t = _r9lSegTarget("/stage?ext=" + encodeURIComponent(ext || "png"));
 if (!t) return null;
@@ -7047,7 +7052,9 @@ body: blob,
 });
 var d = await resp.json().catch(function () { return null; });
 if (!d || !d.ok || !d.url) {
-throw Object.assign(new Error((d && d.error) || "服务端暂存失败"), { code: "StageFailed", raw: (d && d.code) || ("HTTP" + resp.status) });
+const _r9fCode = String((d && d.code) || "");
+if (/AccessDenied|InvalidAccessKeyId|SecurityToken|SignatureDoesNotMatch|Forbidden|NoCredential/i.test(_r9fCode)) __r9fStageDead = true;
+throw Object.assign(new Error((d && d.error) || "服务端暂存失败"), { code: "StageFailed", raw: _r9fCode || ("HTTP" + resp.status) });
 }
 return d.url;
 }
@@ -9369,26 +9376,42 @@ const j = await resp.json().catch(() => ({}));
 if (j.Code || !j.Data?.AccessKeyId) throw Object.assign(new Error(j.Message || "GetOssStsToken 失败"), {
 code: j.Code || "StsFailed"
 });
+/* ★★ R9ZF：有效期**不再写死 30 分钟**。官方只说 STS 票"建议一次业务一次性使用"，未保证时长；
+   写死偏大 ⇒ 超时后复用一张过期票 ⇒ OSS 报 SecurityTokenExpired / AccessDenied（与本次报障同表象）。
+   现在：响应里有 Expiration 就用它（提前 3 分钟作废）；没有就保守取 10 分钟。 */
+let _r9fExpAt = Date.now() + 10 * 60 * 1e3;
+try {
+const _r9fExp = j.Data.Expiration || j.Data.expiration;
+const _r9fT = _r9fExp ? Date.parse(String(_r9fExp)) : NaN;
+if (isFinite(_r9fT) && _r9fT > Date.now() + 6e4) _r9fExpAt = _r9fT - 3 * 60 * 1e3;
+} catch (_r9fE) { _r9mNote("seg-006", _r9fE); }
 this._sts = {
 akId: j.Data.AccessKeyId,
 akSecret: j.Data.AccessKeySecret,
 token: j.Data.SecurityToken,
-expireAt: Date.now() + 30 * 60 * 1e3
+expireAt: _r9fExpAt
 };
 return this._sts;
 },
 async ossStagePut(sts, blob, ext) {
 const ctype = blob.type && blob.type.startsWith("image/") ? blob.type : `image/${ext === "jpg" ? "jpeg" : ext}`;
-/* ★ R9H-SEC-P1-2a（报告 03）：原来前缀写 `${Store.getSegAk()}` ⇒ AK 随结果图 URL 进历史/云端/日志。
-   改为每次上传独立的随机前缀（policy 的 starts-with 配对改，见下行）。
-   桶本身是「临时暂存桶」、对象名唯一即可，前缀无需承担隔离职责。 */
-const _r9hPrefix = (crypto.randomUUID ? crypto.randomUUID() : String(Math.random())).replace(/-/g, "");
-const object = `${_r9hPrefix}/${(crypto.randomUUID ? crypto.randomUUID() : String(Math.random())).replace(/-/g, "")}src.${ext}`;
+/* ★★ R9ZF（2026-10-10）**回退 R9H-SEC-P1-2a —— 那次"安全优化"把功能改坏了**。
+   阿里云官方明文（视觉智能开放平台《文件URL处理》第 2 步）：
+     「上传的路径前缀**必须是**您在步骤1中调用接口时所使用的 AccessKeyId」
+     例：AccessKeyId 为 LTAxxxxxxxabc ⇒ 路径形如 LTAxxxxxxxabc/<uuid>/test.jpg
+   R9H 把前缀换成随机 UUID ⇒ 该 STS 票**只被授权写自己 AK 前缀下的对象** ⇒
+   OSS 直接拒写 **AccessDenied** ⇒ 抠图整条链路死在"暂存"这一步（修 2026-10-10 报障：
+   诊断串里 `服务端:AccessDenied` + `直传:AccessDenied` 两处同时命中，正是这条）。
+   ⚠ 该约束**无法规避**：AK **ID** 只是标识符（不是机密），官方要求它出现在对象路径里；
+     真正的机密是 AK Secret —— 它只用来算"换 STS 票"那次请求的签名，**从不进入任何 URL**。
+   ⇒ 前缀恢复为**调用 STS 用的那个 AK id**；UUID 只用于同一 AK 下的对象去重。 */
+const _r9fPrefix = String(Store.getSegAk() || "");
+const object = `${_r9fPrefix}/${(crypto.randomUUID ? crypto.randomUUID() : String(Math.random())).replace(/-/g, "")}src.${ext}`;
 const policy = btoa(JSON.stringify({
 expiration: new Date(Date.now() + 10 * 60 * 1e3).toISOString(),
 conditions: [ {
 bucket: "viapi-customer-temp"
-}, [ "starts-with", "$key", _r9hPrefix + "/" ], [ "content-length-range", 1, 30 * 1024 * 1024 ], {
+}, [ "starts-with", "$key", _r9fPrefix + "/" ], [ "content-length-range", 1, 30 * 1024 * 1024 ], {
 "x-oss-security-token": sts.token
 } ]
 }));
@@ -9707,18 +9730,27 @@ return await this.stageViaProxyRaw(ak, sk, blob, ext);
 } catch (e3) {
 diag.push(`代理直传:${String(e3 && (e3.code || e3.message) || "未知").slice(0, 40)}`);
 }
-throw Object.assign(new Error(`图片预处理失败：转存通道均被拒（${diag.join("；").slice(0, 90)}）`), {
+/* ★★ R9ZF：把"被拒"翻译成**可执行的下一步** —— 修这次报障里五段诊断没有一句告诉他该干什么。 */
+{
+const _r9fAll = diag.join("；");
+const _r9fHint = /AccessDenied/i.test(_r9fAll) ? "：暂存桶**拒绝写入** —— 阿里云要求对象路径必须以 AccessKeyId 开头（本站已按官方要求改回）；若已合规仍失败，请确认这个 AK 有 AliyunVIAPIFullAccess 权限" : "";
+throw Object.assign(new Error(`图片预处理失败：转存通道均被拒（${_r9fAll.slice(0, 90)}）${_r9fHint}`), {
 code: "StageFailed",
-raw: diag.join("；").slice(0, 80)
+raw: _r9fAll.slice(0, 80)
 });
+}
 }
 if (isLocal && /^blob:/i.test(src)) throw Object.assign(new Error("本地图源已失效（页面刷新后临时地址失效），请重新选择图片"), {
 code: "BlobExpired"
 });
-throw Object.assign(new Error(`图片预处理失败：代理与浏览器均无法读取图源（${diag.join("；").slice(0, 90)}）`), {
+{
+const _r9fAll2 = diag.join("；");
+const _r9fHint2 = /AccessDenied/i.test(_r9fAll2) ? "：暂存桶**拒绝写入** —— 阿里云要求对象路径必须以 AccessKeyId 开头（本站已按官方要求改回）；若已合规仍失败，请确认这个 AK 有 AliyunVIAPIFullAccess 权限" : "";
+throw Object.assign(new Error(`图片预处理失败：代理与浏览器均无法读取图源（${_r9fAll2.slice(0, 90)}）${_r9fHint2}`), {
 code: "StageFailed",
-raw: diag.join("；").slice(0, 80)
+raw: _r9fAll2.slice(0, 80)
 });
+}
 },
 async _transport(action, bizParams) {
 const diags = [];
