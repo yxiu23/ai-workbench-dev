@@ -9459,7 +9459,11 @@ if (!d || !d.ok || !d.url) throw Object.assign(new Error(d && (d.error || d.mess
 code: "RelayArchiveFailed"
 });
 let r = null, readErr = null;
-for (const readUrl of [ d.url, workerUrl + (d.url || "").replace(/^https?:\/\/[^/]+/, "") + "?token=" + encodeURIComponent(token) ]) {
+/* ★★ R9ZE：**读回也要走 Worker 取图路由** —— 原实现第一跳就 fetch `d.url`（r2.dev 公网域
+   **无 ACAO**）⇒ 必被 CORS 拦 ⇒ `RelayReadFailed`（修报障里的第三路诊断）。
+   改：**首选** `GET /media/img?url=`（Worker 按 key 直读自家桶、带 ACAO、不出网）；两条老路留作兜底，
+   一条也不删 —— 它们在某些环境（自定义代理已配 / 对象本来就是同源）仍是有效路径。 */
+for (const readUrl of [ workerUrl + "/media/img?url=" + encodeURIComponent(d.url) + "&token=" + encodeURIComponent(token), d.url, workerUrl + (d.url || "").replace(/^https?:\/\/[^/]+/, "") + "?token=" + encodeURIComponent(token) ]) {
 try {
 r = await fetch(readUrl);
 if (!r.ok) throw new Error("HTTP " + r.status);
@@ -9477,6 +9481,25 @@ if (!blob || !blob.size) throw Object.assign(new Error("R2 读回内容为空"),
 code: "RelayReadEmpty"
 });
 return blob;
+},
+/* ★★ R9ZE：**服务端取图** —— 源图是跨域直链（R2 公网域 / scapi.net 之类**没有 ACAO**）时，
+   浏览器侧 `fetch` 必失败、`no-cors` 只拿到空 blob（R9X 已实测 ⇒ 铁 136「跨域字节浏览器侧无解」）。
+   正解只有一个：让持凭据的 Worker 去取 —— 它读自家 R2 是**按 key 直读**，连出网都省。
+   ⇒ 返回 { blob, ext }；无 Worker / 无令牌 / 非 http 源 ⇒ 返回 null（调用方继续走原兜底，零行为变化）。 */
+async _segViaWorker(src) {
+const u = String(src || "");
+if (!/^https?:/i.test(u)) return null;
+let w = "";
+try { w = (Store.getR2WorkerUrl() || "").trim().replace(/[/]$/, ""); } catch (e0) { w = ""; }
+if (!w) return null;
+let t = "";
+try { t = Store.getR2AuthToken() || ""; } catch (e1) { t = ""; }
+const r = await fetch(w + "/media/img?url=" + encodeURIComponent(u), t ? { headers: { Authorization: "Bearer " + t } } : undefined);
+if (!r.ok) throw new Error("HTTP " + r.status);
+const b = await r.blob();
+if (!b || !b.size) throw new Error("空内容");
+const m = String(b.type || "").toLowerCase();
+return { blob: b, ext: { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/gif": "gif", "image/bmp": "bmp" }[m] || "png" };
 },
 async _fitSegBlob(blob, opts) {
 const o = opts || {};
@@ -9601,6 +9624,21 @@ if (!blob || !blob.size) blob = null; else ext = {
 } catch (e) {
 blob = null;
 diag.push(`备源:${String(e && e.message || e).slice(0, 32)}`);
+}
+}
+/* ★★ R9ZE：拿不到字节时的**第二出口 = 服务端取图**（插在「备源直连」之后、「R2 中继」之前）。
+   为什么放中继前面：中继要**两跳**（先 POST /archive 再读回），服务端取图只有**一跳**；
+   而那一跳的读回最容易被 r2.dev 的无 ACAO 卡住 —— 修这次报障里的 `R2中继:RelayReadFailed` 正是它。 */
+if (!blob && !isLocal) {
+try {
+const _sw = await this._segViaWorker(src);
+if (_sw) { blob = _sw.blob; ext = _sw.ext; }
+} catch (eW) { diag.push("服务端取图:" + String(eW && eW.message || eW).slice(0, 32)); }
+if (!blob && fallbackSrc && fallbackSrc !== src && /^https?:/i.test(fallbackSrc)) {
+try {
+const _sw2 = await this._segViaWorker(fallbackSrc);
+if (_sw2) { blob = _sw2.blob; ext = _sw2.ext; }
+} catch (eW2) { diag.push("备源服务端取图:" + String(eW2 && eW2.message || eW2).slice(0, 32)); }
 }
 }
 if (!blob && !isLocal) {
@@ -18622,7 +18660,7 @@ const rA = _isVideo
   ? await apiyiVideo(finalPrompt, apiDef, exA, imgData, exA.refDataUrls)
   : (apiDef.gemini
   ? await apiyiGemini(finalPrompt, apiDef, exA, imgData, exA.refDataUrls)
-  : ((maskData || ((exA.refDataUrls && exA.refDataUrls.length) && imgData)) ? await apiyiEdits(imgData, maskData, finalPrompt, apiDef, exA) : await apiyiImages(imgData, finalPrompt, apiDef, exA)));   /* R82：有参考图也走 edits —— 否则 apiyiImages 会把参考图整个丢掉 */
+  : (imgData ? await apiyiEdits(imgData, maskData, finalPrompt, apiDef, exA) : await apiyiImages(null, finalPrompt, apiDef, exA)));   /* ★★ R9ZE-1：判据 = **有没有源图**（与宿主主流程那支 else if (_img67) 逐字同口径）。R82 那条只把「有 mask / 有参考图」当 edits 条件 ⇒ 角度调整 · 无选区重绘 · 扩图(无蒙版) · 图像拆解(无选区) 四个动作的**源图被整个丢掉**（apiyiImages 的第一参从不使用）⇒ 结果与原图无关。⚠ 这个调用形状（edits + image[] + 无 mask）主流程的图生图早就在跑，不是新路径。 */
 rA.name = actName(e.action);
 /* ★ R5：把上游回的用量交给**既有的** calcEstimate（不另写算钱的代码），结果只取一个「≈¥x.xx」。
    ⚠ calcEstimate 对"没有用量 / 费率未知"会返回 amount:null —— 那时**什么都不加**（不显示 0 元、不编数）。 */
