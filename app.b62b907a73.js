@@ -12358,7 +12358,36 @@ if (/^blob:/i.test(cand)) return window.__w5Host.blobUrlToDataURL(cand);
 }
 }
 } catch (e) { _r9mNote("r9w-01", e); }
-return window.__w5Host.blobUrlToDataURL(s);
+if (!/^https?:/i.test(s)) throw new Error("参考图地址不支持：" + s.slice(0, 80));
+/* ★★ R9X-1：**R2 公网域 / 第三方图床不返回 ACAO** ⇒ 浏览器 fetch 必失败
+   （实测 mode:"no-cors" 只拿到 size=0 的空 blob）⇒ 只能让 Worker 去取。
+   走 Worker 的 /media/img?url=（服务端取字节 + 自带 CORS）。 */
+const _w = (Store.getR2WorkerUrl && Store.getR2WorkerUrl()) || "";
+if (_w) {
+let _rq = null;
+try {
+const _t = (Store.getR2AuthToken && Store.getR2AuthToken()) || "";
+_rq = await fetch(_w.replace(/[/]$/, "") + "/media/img?url=" + encodeURIComponent(s), _t ? { headers: { Authorization: "Bearer " + _t } } : undefined);
+} catch (e) { _r9mNote("r9x-01", e); }
+if (_rq) {
+if (!_rq.ok) {
+if (_rq.status === 404) throw new Error("当前 Worker 还没有「服务端取图」路由（HTTP 404）—— 请在 Cloudflare 粘贴最新版 Worker 后重试");
+throw new Error("Worker 取图失败：HTTP " + _rq.status + ((_rq.status === 401 || _rq.status === 403) ? "（令牌不对？核对 设置 → 编辑密钥 里的 Worker Token）" : ""));
+}
+const _rb = await _rq.blob();
+if (!_rb || !_rb.size) throw new Error("Worker 取图返回空内容");
+const _mime = String(_rq.headers.get("content-type") || _rb.type || "image/png").split(";")[0].trim() || "image/png";
+return await new Promise(function (res, rej) {
+const fr = new FileReader();
+fr.onload = function () { res(String(fr.result)); };
+fr.onerror = function () { rej(new Error("参考图编码失败")); };
+fr.readAsDataURL(_rb.slice(0, _rb.size, _mime));
+});
+}
+}
+/* 回落：老出口（跨域必失败）—— **失败就抛**，交给上层出声中止，绝不静默丢图 */
+try { return await window.__w5Host.blobUrlToDataURL(s); }
+catch (e2) { throw new Error("参考图取不到（该域名不返回 CORS 头）：" + String((e2 && e2.message) || e2).slice(0, 90)); }
 },
 _getRefs(key) {
 if (!this.state.refState[this.state.modelKey]) this.state.refState[this.state.modelKey] = {};
@@ -13145,16 +13174,34 @@ if (_apiDef67) {
   if (v.body.background) _ex67.background = String(v.body.background);
   /* 参考图：body.urls 是 "url1,url2"（output:"csv"）—— 下载成 dataURL 交上游（官转 edits 只吃 binary） */
   const _uAll67 = String(v.body.urls || "").split(",").map(function (x) { return x.trim(); }).filter(function (x) { return /^https?:\/\//.test(x); });
+  let _r9wRefErr = "";
   if (_uAll67.length) {
     const _ds = [];
-    for (const _u of _uAll67.slice(1, 4)) {   /* R82：第 1 张已作源图 image.png 发过，参考图从第 2 张起（原 slice(0,3) 会让图 1 重复发送） */ try { _ds.push(await this._refDataURL(_u)); } catch (e) { console.info("[W5-route]", JSON.stringify({ phase: "apiyi-ref-fail", url: String(_u).slice(0, 80), ts: Date.now() })); } }
+    for (const _u of _uAll67.slice(1, 4)) {   /* R82：第 1 张已作源图 image.png 发过，参考图从第 2 张起（原 slice(0,3) 会让图 1 重复发送） */ try { _ds.push(await this._refDataURL(_u)); } catch (e) { _r9wRefErr = String((e && e.message) || e); console.info("[W5-route]", JSON.stringify({ phase: "apiyi-ref-fail", url: String(_u).slice(0, 80), msg: _r9wRefErr.slice(0, 180), ts: Date.now() })); } }
     if (_ds.length) { _ex67.refDataUrls = _ds; if (_uAll67.length > 4) console.info("[W5-route]", JSON.stringify({ phase: "ref-cap", got: _uAll67.length, send: 3, ts: Date.now() })); }
   }
   /* 源图 / 遮罩：body.urls 首张即源图（csv 序 = 用户添加序），body.mask 为单图 URL（output:"single"） */
   const _maskUrl67 = String(v.body.mask || "").trim();
   let _img67 = null, _mask67 = null;
-  try { if (_uAll67[0]) _img67 = await this._refDataURL(_uAll67[0]); } catch (e) { _r9mNote("misc-044", e); }
+  try { if (_uAll67[0]) _img67 = await this._refDataURL(_uAll67[0]); } catch (e) { _r9wRefErr = _r9wRefErr || String((e && e.message) || e); _r9mNote("misc-044", e); }
   try { if (_maskUrl67 && /^https?:\/\//.test(_maskUrl67)) _mask67 = await this._refDataURL(_maskUrl67); } catch (e) { _r9mNote("misc-045", e); }
+  /* ★★ R9X-2：**参考图读不到就必须出声并中止这一张**。
+     旧行为 = 异常被吞 ⇒ 图静默丢弃 ⇒ 照常调 apiyiImages 出图 + 照常扣费
+     ⇒ 用户拿到"和参考图没关系"的图，还以为模型不听话（修连报两次的真因）。
+     ⚠ 这里**不靠 throw** —— 本段在 R9Q 的批次 IIFE 里，throw 会被 .catch(_r9mNote("r9q")) 吞掉
+       （铁 95：「点了没反应」与「弹一句报错」只差一层 try/catch）。所以走 Toast + 摘占位卡 + return。 */
+  if (_uAll67.length && !_img67) {
+    const _why = _r9wRefErr || "参考图字节读取失败";
+    console.error("[W5-route]", JSON.stringify({ phase: "apiyi-ref-abort", n: _uAll67.length, why: String(_why).slice(0, 200), ts: Date.now() }));
+    Toast.error("参考图读取失败，已中止这一张（不会白花钱出无关的图）：" + _why, 12e3);
+    try {
+      if (this._r76Ticks && this._r76Ticks[task.id]) { clearInterval(this._r76Ticks[task.id]); delete this._r76Ticks[task.id]; }
+      const _ts4 = Store.getTasks().filter(t => t.id !== task.id);
+      Store.saveTasks(_ts4);
+      this._renderActiveTasks();
+    } catch (_e) { _r9mNote("r9x-02", _e); }
+    return;
+  }
   let _prompt67 = String(v.body.prompt || v.body.text || "");
   /* R82：参考图存在时补一句事实声明（与编辑器侧同口径）。
      有蒙版 ⇒ 说清「只改第 1 张蒙版区域」；无蒙版 ⇒ 不能说蒙版（会指向不存在的区域）。 */
