@@ -7182,7 +7182,7 @@ retryAfter: retryAfter
 }
 /* ★★ R9ZI：524 单独给可执行文案 —— 这是 **Cloudflare 网关**断的，不是上游超时，两者对策完全不同：
    上游超时 ⇒ 只能等或换小图；网关 524 ⇒ 部署带「慢请求保活」的 Worker（R9ZI+）即可从根上消除。 */
-if (r9ziSt === 524) throw Object.assign(new Error("网关超时（Cloudflare 524）：等待上游超过网关 125 秒读取上限，被网关先行断开。⚠ 上游任务可能仍在生成并**照常计费**，稍后可在 APIYI 后台查看产物。可执行：① 换更快的模型档（如 SeeDream 5.0 Flash / FLUX）或调低清晰度档；② 到 Cloudflare Dashboard 重新部署 R9ZI 起的最新 Worker（含慢请求保活，从根本上消除 125 秒限制）——文件在 studio/W5-给修-Worker完整代码-R9ZI-20261010.js"), {
+if (r9ziSt === 524) throw Object.assign(new Error("网关超时（Cloudflare 524）：等待上游超过网关 125 秒读取上限，被网关先行断开。⚠ 上游任务可能仍在生成并**照常计费**，稍后可在 APIYI 后台查看产物。可执行：① 换更快的模型档（如 SeeDream 5.0 Flash / FLUX）或调低清晰度档；② 到 Cloudflare 控制台重新部署**最新一版** Worker（R9ZI 起已含慢请求保活，可从根上消除 125 秒限制）——交付件是 studio/ 下的《W5-给修-Worker完整代码-*.js》（⚠ 文件名随批次走，别用旧名字；贴完用 curl 看 /health 的 version 确认）"), {
 status: 524,
 data: data
 });
@@ -7195,7 +7195,28 @@ return data;
 } catch (e) {
 clearTimeout(timer);
 if (e.name === "AbortError") throw new Error("timeout: 请求超时");
-if (e.message === "Failed to fetch") { if (String(path || "").includes("/media/")) { let probe = false, ver = ""; try { const pr = await fetch(url, { method: "OPTIONS", signal: AbortSignal.timeout(8000) }); probe = pr.ok; ver = (pr.headers.get("X-Media-Proxy-Version") || "").trim(); } catch (_) { _r9mNote("net-001", _); } if (probe && ver) throw new Error("Worker 媒体代理预检探测通过（部署版本 " + ver + " 在位）但请求仍失败——可能为瞬时网络抖动或 Worker 运行时异常，请重试一次；持续失败请到 Cloudflare Dashboard 查看 Worker 实时日志（IMPL-113③ 自诊断）"); if (probe) throw new Error("Worker 媒体代理可达但响应缺版本特征——线上仍为旧版部署（旧版预检白名单缺 X-Enable-Watermark，水印关闭时必被拒，IMPL-113 真根因）。请到 Cloudflare Dashboard 重新部署 upload/worker-ai-media-proxy-merged.js（IMPL-113 版）：Workers & Pages → 选中 Worker → Edit code → 全选粘贴该文件全文 → Deploy，完成后硬刷新本页（IMPL-113③ 自诊断）"); throw new Error("Worker 媒体代理不通（网络不可达或未部署）——请先核对 设置→R2 Worker 地址 域名是否正确；如域名无误请到 Cloudflare Dashboard 重新部署 upload/worker-ai-media-proxy-merged.js（IMPL-113 版已修正预检真根因）：Workers & Pages → 选中 Worker → Edit code → 全选粘贴该文件全文 → Deploy，完成后硬刷新本页（IMPL-113③ 自诊断）"); } throw new Error("网络请求失败，可能是跨域(CORS)或网络问题"); }
+if (e.message === "Failed to fetch") { if (String(path || "").includes("/media/")) {
+/* ★★ R9ZM：这三条自诊断文案是 **IMPL-113 时期**写的（几个月前），里面点名要贴的文件是
+   `upload/worker-ai-media-proxy-merged.js（IMPL-113 版）` —— 那个文件**早就不是交付件了**
+   （现在的交付件是 studio/ 下的《W5-给修-Worker完整代码-*.js》，基线已经到 R9ZW）。
+   真实后果：**只要网络抖一下，用户就会被指去贴一个不存在的旧文件** —— 比"没有提示"更糟。
+   【怎么发现的】R9ZL 的「计费口径全扫」虚拟跑用例②：把唯一出网跳换成 `Failed to fetch`，
+   真业务代码走到这里 ⇒ 弹出来的正是这段 IMPL-113 文案（不是推测，是打出来的）。
+   本次改三处：① 文件名不再写死具体版本（旧文件已不存在，写死就会再次过期）；
+              ② 预检探测**也失败**时不再一口咬定"未部署" —— 那多半是网络/代理/跨域，
+                 先把网络侧排查顺序给出，把"到底部署没部署"交给 `/health` 单独确认；
+              ③ 探测通过时顺带回显 `x-aiwork-proxy` 版本头（贴没贴对，一眼可见）。 */
+let probe = false, ver = "", ver2 = "";
+try {
+const pr = await fetch(url, { method: "OPTIONS", signal: AbortSignal.timeout(8000) });
+probe = pr.ok;
+ver = (pr.headers.get("X-Media-Proxy-Version") || "").trim();
+ver2 = (pr.headers.get("X-Aiwork-Proxy") || "").trim();
+} catch (_) { _r9mNote("net-001", _); }
+if (probe && ver) throw new Error("Worker 媒体代理预检探测通过（部署版本 " + ver + (ver2 ? " · " + ver2 : "") + " 在位）但请求仍失败——可能为瞬时网络抖动或 Worker 运行时异常，请重试一次；持续失败请到 Cloudflare 控制台查看该 Worker 的实时日志");
+if (probe) throw new Error("Worker 媒体代理可达但响应缺版本特征——线上是很旧的部署（预检不回 x-media-proxy-version）。请到 Cloudflare 控制台 → 计算（Workers）→ Workers 和 Pages → 选中该 Worker → 编辑代码 → 全选粘贴 studio/ 下**最新一版**《W5-给修-Worker完整代码-*.js》全文 → 部署，完成后硬刷新本页");
+throw new Error("Worker 媒体代理连不上（预检探测同样失败）—— ⚠ 这一步**不能断定**是「没部署」：网络故障、系统代理、跨域都会是这个表现。请按序排查：① 设置页里「R2 Worker 地址」域名是否写对；② 浏览器直接打开「该地址 + /health」——能看到 version 字段 ⇒ 已部署，问题在网络链路（查代理/网络后重试）；打不开 ⇒ 才是未部署；③ 若确认未部署，到 Cloudflare 控制台 → 计算（Workers）→ Workers 和 Pages → 选中该 Worker → 编辑代码 → 全选粘贴 studio/ 下**最新一版**《W5-给修-Worker完整代码-*.js》全文 → 部署");
+} throw new Error("网络请求失败，可能是跨域(CORS)或网络问题"); }
 throw e;
 }
 },
@@ -18789,9 +18810,19 @@ console.error("[StudioEditor] APIYI 位图动作失败:", err);
    超时/断连则是我们这侧或链路的错 —— **那种上游照样计费**。 */
 const _raw = String((err && err.message) || err);
 const _isSafety = /IMAGE_SAFETY|审核|safety|content[_ ]?policy|被拒绝/i.test(_raw);
-const _isTimeout = /timeout|超时|AbortError|network|网络|Failed to fetch/i.test(_raw);
+/* ★★ R9ZL：**「没送到」必须从「超时」里拆出来** —— 这两者的计费口径相反，而原判据把它们混在一起：
+   · 超时 / 我们主动掐断 = 请求**已经发出去了**，官方明文「客户端断开不取消上游、照常计费」⇒ 先别急着重试
+   · Failed to fetch / 网络请求失败 / 跨域 = 浏览器**连都没连上**（DNS / TLS / 预检被拦）⇒ 上游根本收不到
+   混在一起的后果：**最常见的那种失败（跨域、网络抖动）反而被告知「已经计费，先别急着重试」** ——
+   既谎报了钱，又正好劝人别做唯一正确的事（重试）。这与 R9ZJ 是同一类问题（那次是本地读图没出网，
+   这次是链路层压根没送到），**「已计费」这三个字只能出现在确实发出去过的路径上**。 */
+const _isNotDelivered = /Failed to fetch|网络请求失败|跨域|CORS|net::|ERR_/i.test(_raw);
+const _isTimeout = !_isNotDelivered && /timeout|超时|AbortError/i.test(_raw);
+const _alreadySaid = /计费|扣费/.test(_raw);   /* ★ R9ZI 的 524 文案自带计费说明 ⇒ 不再叠第二句（同一个意思说两遍同样让人困惑） */
 const _hint = _isSafety ? " · 这次**没有扣费**，可以直接重试"
-            : _isTimeout ? " · 这次**已经计费**（上游照样收费），先别急着重试"
+            : _alreadySaid ? ""
+            : _isNotDelivered ? " · 请求没能拿到结果（网络或跨域）—— 是否已计费**浏览器端判断不了**：稳妥起见先去 APIYI 后台核对一次再重试，避免重复计费"
+            : _isTimeout ? " · 这次**已经计费**（官方口径：客户端断开不取消上游、照常收费），先别急着重试"
             : "";
 throw new Error("APIYI · " + apiDef.modelId + "：" + _raw + _hint);
 }
@@ -18867,9 +18898,12 @@ const rawMsg = String((err && err.message) || err);
 /* ★ R17②：与 APIYI 分支同一判据 —— 让**所有通道**的失败都讲清"扣没扣钱"。
    （已有 _hint 的错（APIYI 分支抛的）**不重复追加**。） */
 const _r17Safety = /IMAGE_SAFETY|审核|content[_ ]?policy|被拒绝/i.test(rawMsg);
-const _r17Timeout = /timeout|超时|AbortError|Failed to fetch|网络/i.test(rawMsg);
+/* ★★ R9ZL：与 APIYI 分支同一套修正 —— 「没送到」不再被当成「已计费」（口径见上面那段长注释）。 */
+const _r17NotDelivered = /Failed to fetch|网络请求失败|跨域|CORS|net::|ERR_/i.test(rawMsg);
+const _r17Timeout = !_r17NotDelivered && /timeout|超时|AbortError/i.test(rawMsg);
 const _r17Hint = /没有扣费|已经计费/.test(rawMsg) ? ""
                : _r17Safety ? "（这次没有扣费，可直接重试）"
+               : _r17NotDelivered ? "（请求没能拿到结果：网络或跨域 —— 是否已计费浏览器端判断不了，稳妥起见先核对一次再重试）"
                : _r17Timeout ? "（这次已经计费，先别急着重试）" : "";
 const m9 = /HTTP\s+(\d{3})/.exec(rawMsg); const st = (err && err.status) || (m9 ? parseInt(m9[1], 10) : 0); /* Z9（第六批）：Api.request 抛错 Object.assign 附着 err.status */
 const mmL = (typeof BITMAP_MODEL_MAP !== "undefined" && BITMAP_MODEL_MAP[e.action] || {}).label || "位图动作";
