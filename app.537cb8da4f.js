@@ -18444,7 +18444,10 @@ async function r9zcToDataUrl(url) {
       }
     } catch (e2) { _r9mNote("r9zc-01", e2); }
     if (!buf) { try { const rb = await r9zcFetchT(u, {}, 3000); if (rb && rb.ok) buf = await rb.blob(); } catch (e3) { _r9mNote("r9zc-02", e3); } }
-    if (!buf) return url;
+    /* ★★ R9ZO：降级**必须留痕** —— 走到这里等价于"结果没能转成本地数据"，而它的后果是
+       **用户过一阵子重开这张图会看到一个空图层**（R9ZC 报的原始症状）。
+       静默降级 = 用户只看到果、查不到因。留痕只进 console（_r9mNote 的既有口径），不弹窗。 */
+    if (!buf) { _r9mNote("r9zc-06", new Error("结果转 dataURL 失败，已降级保留原链（重开时该图可能失效）：" + u.slice(0, 120))); return url; }
     return await new Promise(function (res) {
       const fr = new FileReader();
       fr.onload = function () { res(String(fr.result)); };
@@ -21200,6 +21203,36 @@ const _w5vToPublic = async function (u, name) {
   });
   return await up(dataUrl, name, "tmp");
 };
+/* ★★ R9ZN：**反向**转换 —— 把任意形态的素材转成 dataURL。
+   用途：VEO 这类「只吃文件/Base64、官方不收远程 URL」的档。
+   为什么必须有：下游那个「dataURL → File」的转换上来就 `atob`，喂一个 https 串进去抛的是浏览器原生
+   `Failed to execute 'atob' … not correctly encoded` —— 用户看不懂、也不知道该怎么办。
+   现在统一收口在这里：`data:` 原样、`blob:`/`http(s)` 取回后转；取不回来给一句能照做的错。 */
+const _w5vToDataUrl = async function (u, name) {
+  const s = _w5vStr(u);
+  if (!s) return "";
+  if (/^data:/i.test(s)) return s;
+  let blob;
+  try {
+    const resp = await fetch(s);
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    blob = await resp.blob();
+  } catch (e) {
+    throw new Error("素材「" + name + "」读不到（VEO 只接受**上传的文件或 Base64**，官方不接受远程链接）—— 请把这一格重新上传一次。原始原因：" + String((e && e.message) || e));
+  }
+  return await new Promise(function (ok, no) {
+    const fr = new FileReader();
+    fr.onload = function () { ok(String(fr.result || "")); };
+    fr.onerror = function () { no(new Error("素材「" + name + "」转 Base64 失败 —— 请重新上传")); };
+    fr.readAsDataURL(blob);
+  });
+};
+const _w5vMapDataUrl = async function (arr, prefix) {
+  const out = [];
+  const list = Array.isArray(arr) ? arr : [];
+  for (let i = 0; i < list.length; i++) out.push(await _w5vToDataUrl(list[i], prefix + "-" + (i + 1)));
+  return out.filter(Boolean);
+};
 const _w5vMapPublic = async function (arr, prefix) {
   const out = [];
   const list = Array.isArray(arr) ? arr : [];
@@ -21446,7 +21479,17 @@ function makeVideoHandler() {
         videoUrls = await _w5vMapPublic(videoUrls, "ref-video");
         audioUrls = await _w5vMapPublic(audioUrls, "ref-audio");
         byKey = {};   /* Wan 分支不读 byKey ⇒ 避免带着未上传的本地数据往下走（防误用） */
-      } else if (!isVeo) {
+      } else if (isVeo) {
+        /* ★★ R9ZN：VEO 只吃「文件 / Base64」，官方**不收远程 URL** ⇒ 这里把素材**统一转成 dataURL**。
+           改前是"一律不传"（把编辑器给的形态原样丢给下游）⇒ 只要那一格不是 `data:`（例如画布上
+           已是 R2 公网链的素材、或用户手填的 https），下游那个「dataURL → File」的转换就会对一个 https 串
+           执行 `atob()`，抛浏览器原生 `Failed to execute 'atob' … not correctly encoded` ——
+           **不可读、也没告诉你该怎么办**。R9ZM 的视频入口虚拟跑（veo [frame] 用例）实录。
+           现在：`data:` 原样、`blob:`/`http(s)` 取回后转 Base64；取不回来就给一句能照做的错。 */
+        firstFrameUrl = firstFrameUrl ? await _w5vToDataUrl(firstFrameUrl, "首帧") : "";
+        lastFrameUrl = lastFrameUrl ? await _w5vToDataUrl(lastFrameUrl, "尾帧") : "";
+        imageUrls = await _w5vMapDataUrl(imageUrls, "参考图");
+      } else {
         videoUrls = await _w5vMapPublic(videoUrls, "ref-video");
         audioUrls = await _w5vMapPublic(audioUrls, "ref-audio");
       }
