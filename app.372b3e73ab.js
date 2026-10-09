@@ -6337,9 +6337,37 @@ function _r9eParseSse(payload) {
    为什么不开 Toast、不上报：这些 catch 绝大多数是**合法最佳努力**（隐私模式下的 localStorage、
    清理型 revoke、可选的解析），弹窗会刷屏、上报涉隐私 ⇒ 只进 devtools，按 tag 去重 + 节流。 */
 var _r9mSeen = {};
+/* ★ R9V（报告 03 ARCH-P2-4）：**本地诊断快照** —— 纯本地、不上报、不弹窗、不新增任何请求。 */
+var __w5DiagLog = [];
+var __w5DiagPush = function (tag, e) {
+  try {
+    var m = e && (e.message || e);
+    __w5DiagLog.push({ t: Date.now(), tag: String(tag || ""), msg: String(m || "").slice(0, 200) });
+    while (__w5DiagLog.length > 40) __w5DiagLog.shift();
+  } catch (_d) { void 0; }
+};
+window.__w5Diag = function () {
+  var pick = function (fn, d) { try { return fn(); } catch (e) { return d; } };
+  var out = {
+    at: new Date().toISOString(),
+    ua: navigator.userAgent,
+    theme: document.documentElement.dataset.theme || "",
+    url: location.href,
+    tasks: pick(function () { return (Store.getTasks() || []).length; }, -1),
+    history: pick(function () { return (Store.getHistory() || []).length; }, -1),
+    syncAt: pick(function () { return localStorage.getItem("sc_hist_sync_at"); }, null),
+    caps: pick(function () { return window.__w5Caps || null; }, null),
+    errSeen: pick(function () { return JSON.parse(JSON.stringify(_r9mSeen)); }, null),
+    errRecent: __w5DiagLog.slice(-40)
+  };
+  var txt = pick(function () { return JSON.stringify(out, null, 2); }, "diag-stringify-failed");
+  try { console.log("[W5-diag]\n" + txt); } catch (_p) { void 0; }
+  return txt;
+};
 function _r9mNote(tag, e) {
 try {
 var n = (_r9mSeen[tag] = (_r9mSeen[tag] || 0) + 1);
+    __w5DiagPush(tag, e);
 if (n <= 3) {
 var m = e && (e.message || e);
 console.debug("[quiet:" + tag + "]" + (n > 1 ? " (x" + n + ")" : ""), m || e);
