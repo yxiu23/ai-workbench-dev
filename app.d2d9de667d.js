@@ -17683,7 +17683,7 @@ document.addEventListener("DOMContentLoaded", () => { UI.init(); /* ★ R76-J：
    ============================================================ */
 window.StudioEditor = (function() {
 let api = null, ov = null, onSaveCb = null, escHandler = null, scriptP = null;
-const STUDIO_SRC = "image-studio.387c542ef6.js";
+const STUDIO_SRC = "image-studio.719d4b9d39.js";
 /* IMPL-144 W5（2026-09-26 修拍板）：位图动作全换 GPT-Image-2.5 系——覆盖 IMPL-143 版映射（变更单第一节）
    sunburst=最强档（精细编辑/参考保真，Arena 文生图 1420.7/编辑 1520.4 双第一）→扩图/局部重绘；flare=快车道（比 GPT-Image-2 快 50%）→擦除/图像拆解/编辑文字；抠出主体维持阿里抠图专用通道
    裸名审计落账：GPT-Image-2.5 裸名非 OpenAI 正式 model id（正式 id 仅 gpt-image-2.5-flare / gpt-image-2.5-sunburst，快照 -2026-09-08）；
@@ -18258,6 +18258,52 @@ if (lastSt !== 0) throw new Error("速创任务失败 (id=" + taskId + " status=
 }
 throw new Error("速创任务轮询超时（30 分钟, id=" + taskId + ", 最后状态=" + lastSt + (pollErr ? ", 最近查询错误=" + ((pollErr && pollErr.message) || pollErr) : "") + "）");
 }
+/* ★ R9ZC-2：把远程图抓成 dataURL —— 编辑器把 `assetUrl` 当**持久资源**注册，
+   而宿主返回的可能是**会失效的链**（速创 OSS 临时链 / 会被生命周期清理的 R2 对象）
+   ⇒ 只存 url ⇒ 下次打开 404 ⇒ **空图层**（修 2026-10-09 报障）。
+   转成 dataURL 后字节自包含，编辑器落 IDB 的是 blob 本体，重开必恢复。
+   ⚠ 走 Worker 取图路由（自家 R2 无 ACAO，浏览器直 fetch 必失败 —— 铁 136）；拿不到就**保持原样不阻断**。 */
+async function r9zcToDataUrl(url) {
+  try {
+    const u = String(url || "");
+    if (!u || /^data:/i.test(u)) return url;
+    let buf = null;
+    try {
+      const w = (Store.getR2WorkerUrl && Store.getR2WorkerUrl()) || "";
+      if (w) {
+        const t = (Store.getR2AuthToken && Store.getR2AuthToken()) || "";
+        const rq = await fetch(w.replace(/[/]$/, "") + "/media/img?url=" + encodeURIComponent(u), t ? { headers: { Authorization: "Bearer " + t } } : undefined);
+        if (rq && rq.ok) { const b = await rq.blob(); if (b && b.size > 0) buf = b; }
+      }
+    } catch (e1) { _r9mNote("r9zc-01", e1); }
+    if (!buf) { try { const rb = await fetch(u); if (rb && rb.ok) buf = await rb.blob(); } catch (e2) { _r9mNote("r9zc-02", e2); } }
+    if (!buf) return url;
+    return await new Promise(function (res) {
+      const fr = new FileReader();
+      fr.onload = function () { res(String(fr.result)); };
+      fr.onerror = function () { res(url); };
+      fr.readAsDataURL(buf);
+    });
+  } catch (e) { _r9mNote("r9zc-03", e); return url; }
+}
+function r9zcWrap(fn) {
+  return async function (e, node, opts) {
+    const res = await fn(e, node, opts);
+    try {
+      if (res && typeof res === "object") {
+        if (res.assetUrl) res.assetUrl = await r9zcToDataUrl(res.assetUrl);
+        if (Array.isArray(res.items)) {
+          for (let i = 0; i < res.items.length; i++) {
+            const it = res.items[i];
+            if (it && it.assetUrl) it.assetUrl = await r9zcToDataUrl(it.assetUrl);
+          }
+        }
+      }
+    } catch (e3) { _r9mNote("r9zc-04", e3); }
+    return res;
+  };
+}
+try { if (typeof window !== "undefined") window.__studioToDataUrl = r9zcToDataUrl; } catch (e) { _r9mNote("r9zc-05", e); } /* R9ZC 调试口（同 __studioBitmap 先例） */
 function studioBusy(text) { /* IMPL-143 P2：位图动作执行期反馈条（宿主级——编辑器动作条属嵌入包，红线⑦不改 js；开始显示/finally 隐藏） */
 const b = document.getElementById("studioBusy");
 if (!b) return;
@@ -18536,6 +18582,16 @@ if (rds.length) { exA.refDataUrls = rds.slice(0, 3); if (rds.length > 3) console
 if (maskData) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + "仅修改蒙版区域内的内容，蒙版外严格保持原样";
 /* R82：无蒙版时不能说「只修改蒙版区域」—— 那是把模型指向一个不存在的区域 */
 if (exA.refDataUrls && exA.refDataUrls.length) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + (maskData ? "第 1 张为待修改的原图，其余为参考图，只修改第 1 张上蒙版圈出的区域" : "第 1 张为主图，其余为参考图，请综合参考其内容与风格");
+/* ★ R9ZC-1：角度调整的**文本折句也要并进来** —— 速创分支早就有（H4.1），apiyi 分支一直缺。
+   APIYI 的 /v1/images/edits **prompt 必填**，只调角度不写提示词 ⇒ 空 prompt ⇒ 上游 400
+   "prompt is required"（修 2026-10-09 报障）。 */
+if (e.action === "angle-adjust" && op13 && op13.operation === "multiangle" && op13.params && typeof op13.params === "object") {
+  const _ap13a = String(op13.anglePrompt || "").trim();
+  if (_ap13a) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + _ap13a;
+}
+/* ★ R9ZC-1b：终极兜底 —— 三轴全默认时 anglePromptOf 返回空串，仍然会撞"prompt 必填"。
+   给一个**最小语义非空**的描述（只说事实、不写风格），保证任何动作都不会因空 prompt 挂掉。 */
+if (!finalPrompt) finalPrompt = "保持画面内容、光线与风格不变，仅按给定的水平/垂直角度与缩放重新生成同一主体的视角";
 /* ★ R17①（修采纳）：等急了再点一次 = **双倍钱**（官方：断连不取消上游、照样计费）⇒ 明确劝阻。 */
 studioBusy((mm ? mm.label : "处理") + " 进行中… 已提交，别重复点击");
 try {
@@ -18701,13 +18757,13 @@ layout: "fill", /* ★ 嵌入形态：填满卡片内部，不盖整页 */
 adapter: {
 applyToNode: function(p) { return handleApply(p); },
 bitmapActions: {
-erase: bitmapHandler,
-outpaint: bitmapHandler,
-inpaint: bitmapHandler,
-"angle-adjust": bitmapHandler, /* 第十三批 H4：角度调整注册（W5 工具菜单→宿主路由；2026-09-28 拍板定名） */
-"remove-background": bitmapHandler,
-"layer-decompose": bitmapHandler,
-"edit-text": bitmapHandler
+erase: r9zcWrap(bitmapHandler),
+outpaint: r9zcWrap(bitmapHandler),
+inpaint: r9zcWrap(bitmapHandler),
+"angle-adjust": r9zcWrap(bitmapHandler), /* 第十三批 H4：角度调整注册；★ R9ZC-3：统一套"结果转 dataURL"（防重开空图层） */
+"remove-background": r9zcWrap(bitmapHandler),
+"layer-decompose": r9zcWrap(bitmapHandler),
+"edit-text": r9zcWrap(bitmapHandler)
 },
 tools: {
 promptReverse: function(png) { return promptReverseForStudio(png); }, /* 第十三批 H9：提示词反推 handler——契约 adapter.tools.promptReverse(pngDataUrl)→Promise<string>（纯文本，编辑器落参数条提示词框） */
