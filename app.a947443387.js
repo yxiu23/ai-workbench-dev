@@ -7132,14 +7132,38 @@ Authorization: opts.authorization
 } : opts.noAuth ? {} : key ? {
 Authorization: key
 } : {}),
+/* ★★ R9ZI：对 APIYI 的 POST **主动声明**「我认慢请求保活流」——
+   Worker 只对带这个头的请求启用保活（旧 Worker 不认识该头，忽略即可，零影响）。
+   为什么必须由前端显式声明、而不是 Worker 一律保活：保活会把**真状态码挪进响应体**，
+   不会解包的旧前端会直接报错 ⇒ 必须由"能解包的那个前端"主动开启，否则那才是回归。 */
+...((/\/media\/apiyi\//.test(url) && method === "POST") ? {
+"X-Aiwork-Slow-Ok": "1"
+} : {}),
 ...opts.headers || {}
 },
 body: !isGetHead && body !== undefined && body !== null ? (isForm ? body : JSON.stringify(body)) : undefined,
 signal: controller.signal
 });
 clearTimeout(timer);
+/* ★★ R9ZI：慢请求保活响应解包 —— Worker 侧回 `X-Aiwork-Keepalive: 1` 时，体的形态是
+   `<若干保活换行>` + `\u0000R9ZI\u0000` + `<真状态码>` + `\u0000` + `<真 body>`。
+   ① 按**最后一个**魔数切分（保活换行里不可能出现该序列，取最后一个最稳）；
+   ② 未带该头 ⇒ 一个字符都不走，行为与原实现**逐字节相同**；
+   ③ 头部（Content-Type 等）在保活模式下不再是上游的，所以**只信体里的状态码**。 */
+let r9ziSt = res.status;
+let r9ziOk = res.ok;
+let r9ziTxt = null;
+if (res.headers.get("X-Aiwork-Keepalive") === "1") {
+const raw = await res.text();
+const i = raw.lastIndexOf("\u0000R9ZI\u0000");
+const tail = i >= 0 ? raw.slice(i + 6) : "";   /* 魔数 = NUL + "R9ZI" + NUL = 6 字符 */
+const j = tail.indexOf("\u0000");
+r9ziSt = parseInt(tail.slice(0, j), 10) || 502;
+r9ziTxt = j >= 0 ? tail.slice(j + 1) : "";
+r9ziOk = r9ziSt >= 200 && r9ziSt < 300;
+}
 let data;
-const text = await res.text();
+const text = r9ziTxt !== null ? r9ziTxt : await res.text();
 try {
 data = text ? JSON.parse(text) : {};
 } catch {
@@ -7147,17 +7171,23 @@ data = {
 raw: text
 };
 }
-if (!res.ok) {
-const errMsg = _errText(data.error) || _errText(data.message) || _errText(data.msg) || `HTTP ${res.status}`;
-if (res.status === 429) {
+if (!r9ziOk) {
+const errMsg = _errText(data.error) || _errText(data.message) || _errText(data.msg) || `HTTP ${r9ziSt}`;
+if (r9ziSt === 429) {
 const retryAfter = parseInt(res.headers.get("Retry-After") || "0");
 throw Object.assign(new Error(`429: ${errMsg}`), {
 status: 429,
 retryAfter: retryAfter
 });
 }
+/* ★★ R9ZI：524 单独给可执行文案 —— 这是 **Cloudflare 网关**断的，不是上游超时，两者对策完全不同：
+   上游超时 ⇒ 只能等或换小图；网关 524 ⇒ 部署带「慢请求保活」的 Worker（R9ZI+）即可从根上消除。 */
+if (r9ziSt === 524) throw Object.assign(new Error("网关超时（Cloudflare 524）：等待上游超过网关 125 秒读取上限，被网关先行断开。⚠ 上游任务可能仍在生成并**照常计费**，稍后可在 APIYI 后台查看产物。可执行：① 换更快的模型档（如 SeeDream 5.0 Flash / FLUX）或调低清晰度档；② 到 Cloudflare Dashboard 重新部署 R9ZI 起的最新 Worker（含慢请求保活，从根本上消除 125 秒限制）——文件在 studio/W5-给修-Worker完整代码-R9ZI-20261010.js"), {
+status: 524,
+data: data
+});
 throw Object.assign(new Error(`${errMsg}`), {
-status: res.status,
+status: r9ziSt,
 data: data
 });
 }
@@ -14077,7 +14107,18 @@ params[action === "SegmentHDCommonImage" ? "ImageUrl" : action === "SegmentSkin"
 if (params.ReplaceImageURL) params.ReplaceImageURL = await SegStudio.stageImage(params.ReplaceImageURL, null, {});
 if (params.MaskImageURL) params.MaskImageURL = await SegStudio.stageImage(params.MaskImageURL, null, { png: true });
 this.updateTaskCardPhase(task.id, action !== capId ? "高清处理中" : "抠图中");
-const __imgParam = params.ImageUrl || params.ImageURL || "";
+/* ★★ R9ZK：**这里必须把 `URL` 也列进来。**
+   写键名的那两处是按动作分流的（`SegmentHDCommonImage → ImageUrl` / **`SegmentSkin → URL`** /
+   其余 → `ImageURL`），而这个"写完之后取回来做前置校验"的地方只认前两个
+   ⇒ `SegmentSkin` 走到这里时 `params.ImageUrl` 与 `params.ImageURL` **都是 undefined**
+   ⇒ `__imgParam` 恒为 `""` ⇒ 恒判 `!^https?://` ⇒ **恒抛「图片预处理结果异常」、请求被前置拦截、
+   `_call` 一次都不会被调用** —— 也就是说「皮肤分割」这个能力是**100% 死的**，
+   而且弹的还是一句会把人带偏的"请重新添加图片后重试"（图片明明没问题）。
+   【怎么发现的】R9ZI 的抠图全能力虚拟跑（`验收/check_r9zj_seg.py`）逐个跑 14 个能力，
+   **只有 `SegmentSkin` 一个走不到 `_call`** —— 不是推测，是打出来的。
+   ⚠ 修法取最小：只补读取侧一个 `||`。三处键名表达式仍是各自写的（改判据要同时动两个函数、
+   跨函数提常量属于结构变更），但下面的自检会把"读写三处必须一致"钉住，防止再漂。 */
+const __imgParam = params.ImageUrl || params.ImageURL || params.URL || "";
 if (!/^https?:\/\//i.test(__imgParam)) {
 throw Object.assign(new Error(`图片预处理结果异常（${String(__imgParam || "空").slice(0, 40)}），已拦截本次请求`), {
 code: "StageInvalid"
@@ -18658,7 +18699,21 @@ const op13 = (e.options && typeof e.options === "object") ? e.options : null; /*
 const oo13 = op13 || e.outpaintOptions || null; /* 十二批 outpaintOptions 保留兼容（已上线件在用），options 优先 */
 const ooPrompt13 = (oo13 && oo13.prompt) || "";
 if (ooPrompt13 && finalPrompt.indexOf(ooPrompt13) < 0) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + ooPrompt13; /* H3（十三批）：面板/参数条描述追加并入（全动作，追加非替换；空着一字不加）——T12-4 语义保持并推广；R8（2026-09-29）：**去重** —— 改判据为「**该句已经出现在 finalPrompt 里就不再加**」而不是「与 userData 比字符串相等」：因为 buildRequest 会加工提示词（edit-text 套模板「把遮罩区域内的文字内容改为「X」…」、layer-decompose 前置内置提示词、inpaint 原样返回）⇒ userData 与 req.fields.prompt 在多数动作下**并不相等**，按相等判据会重复拼接。用 indexOf 判"已包含"对全部动作都成立：inpaint 时 finalPrompt 就是它本身、edit-text/拆解时它已在模板内、扩图/擦除时 finalPrompt 是内置 spec 词不含它 ⇒ 照旧追加（H3 语义不变） */
-const imgData = await blobUrlToDataURL(e.url);
+/* ★★ R9ZJ：**本地读源图失败**必须单独兜住 —— 这一句是 `fetch(blob:/https:)` 取画布上的源图，
+   纯本地/取字节的**第一跳**：它失败时**一个字节都没发出去 ⇒ 绝对不能说"已经计费"**。
+   原来的形态是让它冒泡到下面那个 catch，而那里的 `_isTimeout` 判据含 `/Failed to fetch/i`
+   ⇒ 被误判成"链路超时" ⇒ 弹「位图动作失败: Failed to fetch（**这次已经计费，先别急着重试**）」。
+   后果是**最坏的一种文案**：既谎报了计费，又正好劝用户**不要**重试（而这时重试恰恰是唯一正确动作）。
+   【怎么发现的】R9ZI 的编辑器位图动作虚拟跑（`验收/check_r9zi_editor.py` 用例⑫）传一个失效
+   `blob:` URL，Toast 实录就是那句 —— 不是推测，是打出来的。 */
+let imgData;
+try {
+imgData = await blobUrlToDataURL(e.url);
+} catch (_r9zjE) {
+console.info("[W5-route]", JSON.stringify({ phase: "bitmap-source-read-fail", action: e.action, msg: String((_r9zjE && _r9zjE.message) || _r9zjE).slice(0, 120), ts: Date.now() }));
+try { Toast.error("位图动作失败：读不到画布上的源图（" + String((_r9zjE && _r9zjE.message) || _r9zjE) + "）——本次**没有**向任何服务发出请求、**没有**计费，可直接重试"); } catch (_) { _r9mNote("ui-075", _); }
+return false;
+}
 const m = (typeof UI !== "undefined" && UI.state && UI.state.model) ? UI.state.model : null;
 const canI2I = !maskData && m && (m.direct === "sf-image" || m.direct === "ds-image");
 /* IMPL-143 P0：模型一律按 BITMAP_MODEL_MAP（160 指令书清单）——e.model 仅编辑器建议值不透传；
