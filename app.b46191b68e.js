@@ -2969,6 +2969,118 @@ const SKILL_PROMPTS = {
   "video-style-mixer": "你是视频视觉风格顾问，帮用户在动手写提示词之前先定风格方向。用户给出主题（产品、人物、场景、情绪皆可），你输出 3~5 组「风格配方卡」供挑选——每组是一套可直接复用的提示词构件。\n【配方卡格式】每组按固定四行输出：\n- 风格名：4~8 字的易记命名（如「雨夜霓虹」「胶片日光」「晨雾青灰」）\n- 风格头（40~70 字）：媒介（胶片/CG/动画/实拍）+ 色调（具体色名与明度关系）+ 光线（方向与软硬）+ 质感关键词——这段将被放进最终视频提示词，必须自洽成句\n- 运镜与节奏（20~40 字）：适配该风格的运镜与节奏建议（如「固定机位微晃+缓推，呼吸感节奏」）\n- 声音气质（10~20 字）：环境音底与点睛音效方向（模型不支持声音时可忽略此行）\n【差异化纪律】组与组之间必须在媒介、色调、运镜至少一个维度有实质差异，不输出同质变体；配方贴合主题的商业或表达目的（电商主图视频 ≠ 情绪短片头）。\n【收束】卡片之后用一句话提醒：选定某组后直接回复「用第 N 组 + 你的画面描述」，会按该配方把画面描述续写成完整视频提示词（此时再按运镜提示词工坊的标准产出围栏块终稿）。\n【关键约束】\n- 每组配方是「构件」不是完整提示词——不替用户编画面内容，只给风格骨架\n- 用户已指定风格要素时，围绕它给邻近变体（同方向不同执行），不跑题\n- 主题过泛（如「随便来点高级感」）时按契约追问用途与载体（电商/社媒/短片头）"
 };
 
+/* ═══ R9ZB · 自定义技能 + 技能统计 ═══
+   · SkillCustom：用户自己写的技能（存本机），与 15 个内置技能**同权**参与选择/执行
+   · SkillStats：本地使用统计（**不上报**）——回答"哪个技能在用、哪一步老失败"
+   ★ 纪律：一律**只增不改** —— 内置 `SKILLS` 数组一个字节不动，合并只发生在读取出口 `skillList()` */
+const SkillCustom = {
+  LS: "sc_skill_custom",
+  MAX: 50,
+  _cache: null,
+  all() {
+    if (this._cache) return this._cache;
+    let v = [];
+    try { v = JSON.parse(storageGet(this.LS, "[]")); } catch (e) { _r9mNote("csk-01", e); }
+    this._cache = (Array.isArray(v) ? v : []).filter(x => x && x.skillId && x.name && x.prompt).map(x => ({
+      skillId: String(x.skillId),
+      name: String(x.name).slice(0, 24),
+      description: String(x.description || "").slice(0, 60),
+      prompt: String(x.prompt),
+      tab: x.tab === "video" ? "video" : "image",
+      group: "自定义",
+      custom: true,
+      allowedTools: [],
+      requiredCapabilities: x.needImage ? ["image_input"] : [],
+      fallback: null,
+      allowEmpty: true
+    }));
+    return this._cache;
+  },
+  _raw() {
+    return this.all().map(x => ({
+      skillId: x.skillId, name: x.name, description: x.description, prompt: x.prompt,
+      tab: x.tab, needImage: (x.requiredCapabilities || []).indexOf("image_input") >= 0
+    }));
+  },
+  _flush() { this._cache = null; },
+  get(id) { return this.all().find(x => x.skillId === id) || null; },
+  promptOf(id) { const c = this.get(id); return c ? c.prompt : null; },
+  newId() { return "csk-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); },
+  save(rec) {
+    try {
+      const list = this._raw();
+      const clean = {
+        skillId: rec.skillId || this.newId(),
+        name: String(rec.name || "未命名技能").slice(0, 24),
+        description: String(rec.description || "").slice(0, 60),
+        prompt: String(rec.prompt || ""),
+        tab: rec.tab === "video" ? "video" : "image",
+        needImage: !!rec.needImage
+      };
+      const i = list.findIndex(x => x.skillId === clean.skillId);
+      if (i >= 0) list[i] = clean; else list.push(clean);
+      if (list.length > this.MAX) list.splice(0, list.length - this.MAX);
+      storageSet(this.LS, JSON.stringify(list));
+      this._flush();
+      return clean.skillId;
+    } catch (e) { _r9mNote("csk-02", e); return null; }
+  },
+  remove(id) {
+    try {
+      storageSet(this.LS, JSON.stringify(this._raw().filter(x => x.skillId !== id)));
+      this._flush();
+      try {
+        if ((SkillSession.active || []).indexOf(id) >= 0) {
+          SkillSession.active = SkillSession.active.filter(a => a !== id);
+          SkillSession.save();
+        }
+      } catch (e2) { _r9mNote("csk-03", e2); }
+      return true;
+    } catch (e) { _r9mNote("csk-04", e); return false; }
+  }
+};
+/* **唯一**取技能清单的出口：内置 + 自定义。⚠ 内置数组本身永不改（只增不改） */
+function skillList(tab) {
+  return SKILLS.concat(SkillCustom.all()).filter(s => !tab || s.tab === tab);
+}
+/* 本地技能统计（不上报；随"清理本地数据"一起清） */
+const SkillStats = {
+  LS: "sc_skill_stats",
+  _cache: null,
+  all() {
+    if (this._cache) return this._cache;
+    let v = {};
+    try { v = JSON.parse(storageGet(this.LS, "{}")); } catch (e) { _r9mNote("sks-01", e); }
+    this._cache = (v && typeof v === "object" && !Array.isArray(v)) ? v : {};
+    return this._cache;
+  },
+  _save() { try { storageSet(this.LS, JSON.stringify(this._cache || {})); } catch (e) { _r9mNote("sks-02", e); } },
+  bump(id, field, ms) {
+    if (!id) return;
+    try {
+      const m = this.all();
+      const r = m[id] || (m[id] = { runs: 0, ok: 0, err: 0, ask: 0, at: 0, ms: 0 });
+      r[field] = (r[field] || 0) + 1;
+      if (field === "runs") r.at = Date.now();
+      if (ms) r.ms = (r.ms || 0) + ms;
+      this._save();
+    } catch (e) { _r9mNote("sks-03", e); }
+  },
+  text() {
+    try {
+      const m = this.all();
+      const ids = Object.keys(m).sort((a, b) => (m[b].runs || 0) - (m[a].runs || 0));
+      if (!ids.length) return "（还没有技能使用记录）";
+      return ids.map(id => {
+        const r = m[id];
+        const nm = (typeof SkillSession !== "undefined" && SkillSession._skillLabel) ? SkillSession._skillLabel(id) : id;
+        const avg = r.runs ? Math.round((r.ms || 0) / r.runs / 100) / 10 : 0;
+        return nm + "（" + id + "）\n    用 " + (r.runs || 0) + " 次 · 成功 " + (r.ok || 0) + " · 失败 " + (r.err || 0)
+          + " · 追问 " + (r.ask || 0) + " · 平均 " + avg + "s · 最后 " + (r.at ? new Date(r.at).toLocaleString() : "-");
+      }).join("\n");
+    } catch (e) { return "（读取失败）"; }
+  }
+};
 const SkillSession = {
   LS_ACTIVE: "sc_skills_active",
   MAX_ROUNDS: 0, // 0 = 无上限（IMPL-68：对话轮数不再受限）
@@ -2980,7 +3092,7 @@ const SkillSession = {
   init() {
     try {
       const v = JSON.parse(storageGet(this.LS_ACTIVE, "[]"));
-      if (Array.isArray(v)) this.active = v.filter(id => SKILLS.some(s => s.skillId === id));
+      if (Array.isArray(v)) this.active = v.filter(id => skillList().some(s => s.skillId === id));
     } catch (e) { _r9mNote("store-003", e); }
     try { this.actions(); } catch (e) { _r9mNote("act-07", e); }
   },
@@ -2988,7 +3100,7 @@ const SkillSession = {
     try { storageSet(this.LS_ACTIVE, JSON.stringify(this.active)); } catch (e) { _r9mNote("store-004", e); }
   },
   get(id) {
-    return SKILLS.find(s => s.skillId === id) || null;
+    return skillList().find(s => s.skillId === id) || null;
   },
   listForTab(tab) {
     return this.active.map(id => this.get(id)).filter(s => s && s.tab === tab);
@@ -3078,25 +3190,18 @@ const SkillSession = {
       return;
     }
     const main = list[0];
-    let sys = SKILL_PROMPTS[main.skillId] || "";
+    let sys = SkillCustom.promptOf(main.skillId) || SKILL_PROMPTS[main.skillId] || "";
     const aux = list.slice(1);
     if (aux.length) {
       const parts = aux.map(s => {
-        const p = SKILL_PROMPTS[s.skillId] || "";
+        const p = SkillCustom.promptOf(s.skillId) || SKILL_PROMPTS[s.skillId] || "";
         const m = p.match(/【关键约束】[\s\S]*$/);
         return "【辅助技能 · " + s.name + "】\n" + (m ? m[0] : s.description);
       });
       sys += "\n\n" + parts.join("\n\n") + "\n\n【合并规则】存在多个技能时，以第一个技能为主风格锚点，辅助技能仅补充其关键约束；指令冲突时以主技能为准。";
     }
     sys += "\n" + SKILL_CONTRACT + "\n" + HOST_ACTIONS_DOC;
-    const _r9zRatioQ = (function () {
-  try {
-    const _p = (UI.state.model?.params || []).find(x => x.key === "aspectRatio");
-    const _o = _p && Array.isArray(_p.options) ? _p.options.filter(v => /^\d{1,2}:\d{1,2}$/.test(v)) : [];
-    return _o.length ? "\n当前模型可选比例：" + _o.join(" / ") + "\n（需要改比例时，只输出像素尺寸即可，例如【动作】比例 1920x1080，由前端换算成上表中最近的一档）" : "";
-  } catch (e) { _r9mNote("act-05", e); return ""; }
-})();
-const userParts = [{ type: "text", text: "我的想法：" + (text || (this.pendingDocs.length && !urls.length ? "（请分析我附加的文档）" : "（以参考图为准）")) + "\n当前模型：" + (UI.state.model?.name || "") + _r9zRatioQ }];
+    const userParts = [{ type: "text", text: "我的想法：" + (text || (this.pendingDocs.length && !urls.length ? "（请分析我附加的文档）" : "（以参考图为准）")) + this._ctxBrief() }];
     urls.forEach(u => userParts.push({ type: "image_url", image_url: { url: u } }));
     this._drainDocs(userParts, "首轮");
     this.ses = {
@@ -3254,6 +3359,7 @@ const userParts = [{ type: "text", text: "我的想法：" + (text || (this.pend
     const ses = this.ses;
     if (!ses || ses.streaming) return;
     ses.streaming = true;
+    try { SkillStats.bump((ses.skillIds || [])[0], "runs"); } catch (e) { _r9mNote("sks-04", e); }
     ses.lastTemp = temp == null ? 0.5 : temp;
     /* IMPL-74：上一轮讨论卡存档（仅成功完成的轮；错误轮随重试丢弃与既有行为一致）。浅拷贝数组即可——条目在轮结束后只读 */
     if (ses.discussion && ses.discussion.length && !ses.error) {
@@ -3434,6 +3540,7 @@ const userParts = [{ type: "text", text: "我的想法：" + (text || (this.pend
     });
   },
   _skillLabel(id) {
+    try { const _cs = SkillCustom.get(id); if (_cs && _cs.name) return _cs.name; } catch (e) { _r9mNote("csk-05", e); }
     const hit = SKILL_MODEL_PRESETS.find(m => m.id === id)
       || (typeof SKILL_DISCUSS_MODEL_OPTIONS !== "undefined" ? SKILL_DISCUSS_MODEL_OPTIONS.find(m => m.id === id) : null)
       || (typeof SKILL_VISION_MODEL_OPTIONS !== "undefined" ? SKILL_VISION_MODEL_OPTIONS.find(m => m.id === id) : null);
@@ -3763,6 +3870,7 @@ const userParts = [{ type: "text", text: "我的想法：" + (text || (this.pend
   _classify(full) {
     const ses = this.ses;
     if (/^【追问】/.test(full.trim())) {
+      try { SkillStats.bump((ses.skillIds || [])[0], "ask"); } catch (e) { _r9mNote("sks-05", e); }
       ses.lastTurn = "ask";
       ses.pendingAsk = this._parseAsk(full);
       ses.pendingAsk.raw = full;
@@ -3776,6 +3884,7 @@ const userParts = [{ type: "text", text: "我的想法：" + (text || (this.pend
       const note = this._noteOf(full);
       ses.versions.push({ text: block.trim(), note: note.slice(0, 80) });
       ses.verIdx = ses.versions.length - 1;
+      try { SkillStats.bump((ses.skillIds || [])[0], "ok"); } catch (e) { _r9mNote("sks-06", e); }
       ses.lastTurn = "result";
       ses.pendingAsk = null;
       ses.askAnswers = null;
@@ -4258,6 +4367,103 @@ const userParts = [{ type: "text", text: "我的想法：" + (text || (this.pend
     try { window.__w5Actions = api; } catch (e) { _r9mNote("act-08", e); }
     return api;
   },
+  /* ═══ R9ZB · 上下文注入 / 技能接力 / 自定义技能编辑器 / 统计入口 ═══ */
+  /* 让技能知道"工作台现在是什么配置"——原来只给一个模型名，它无从判断可用档位 */
+  _ctxBrief() {
+    try {
+      const ctx = this._readContext();
+      const out = [];
+      out.push("当前工作台：" + (ctx.tab === "video" ? "视频" : ctx.tab === "audio" ? "音频" : "图片") + " · " + (ctx.model || "未选模型"));
+      const g = (sel) => { const el = document.querySelector(sel); return el ? String(el.value) : ""; };
+      const kv = [];
+      if (ctx.aspectRatio && ctx.aspectRatio !== "auto") kv.push("比例 " + ctx.aspectRatio);
+      if (ctx.count && ctx.count !== "1") kv.push("出 " + ctx.count + " 张");
+      const rv = g('[data-key="resolution"]'); if (rv && rv !== "auto") kv.push("清晰度 " + rv);
+      const qv = g('[data-key="quality"]'); if (qv && qv !== "auto") kv.push("质量 " + qv);
+      if (kv.length) out.push("已选参数：" + kv.join(" · "));
+      const refs = Object.keys(ctx.refs || {}).map(k => k + " " + ctx.refs[k] + " 张");
+      out.push(refs.length ? ("参考素材：" + refs.join("、")) : "参考素材：无");
+      if (ctx.ratios && ctx.ratios.length) out.push("可选比例：" + ctx.ratios.join(" / "));
+      out.push("（需要改比例或参数时，只输出像素尺寸或键值即可，例如【动作】比例 1920x1080，由前端换算成上表最近一档并落到界面上）");
+      return "\n" + out.join("\n");
+    } catch (e) { _r9mNote("ctx-01", e); return ""; }
+  },
+  /* 技能接力：把当前终稿直接交给另一个技能继续 */
+  _relayBody() {
+    const ses = this.ses;
+    if (!ses || !ses.versions || !ses.versions.length) return "";
+    const cur = (ses.skillIds || [])[0] || "";
+    const list = skillList(UI.state.tab).filter(s => s.skillId !== cur).slice(0, 6);
+    if (!list.length) return "";
+    return '<div class="sp-relay"><span class="sp-relay-lb">接着用</span>'
+      + list.map(s => '<button type="button" class="sp-relay-btn" data-sp-relay="' + esc(s.skillId) + '" title="' + esc(s.description || "") + '">' + esc(s.name) + "</button>").join("")
+      + '<span class="sp-relay-hint">把这一版结果直接交给它继续</span></div>';
+  },
+  _relayTo(id) {
+    const ses = this.ses;
+    if (!ses || ses.streaming) return;
+    const v = ses.versions[ses.verIdx];
+    const s = skillList().find(x => x.skillId === id);
+    if (!v || !s) return;
+    if (!this.configReady()) { Toast.warning("配置 Worker URL 与 Token 后可用技能（设置 → R2 图床）", 3600); return; }
+    const ta = document.querySelector('[data-key="prompt"], [data-key="text"]');
+    if (!ta) { Toast.warning("没找到提示词框"); return; }
+    ta.value = v.text;
+    try { ta.dispatchEvent(new Event("input", { bubbles: true })); } catch (e) { _r9mNote("rly-01", e); }
+    this.end();
+    this.active = [id];
+    this.save();
+    this.render();
+    this.onWandClick();
+    Toast.success("已把上一版交给「" + s.name + "」继续");
+  },
+  /* 自定义技能：新建 / 编辑 / 删除（一个弹窗复用） */
+  _openCustomSkillEditor(id) {
+    const rec = id ? SkillCustom.get(id) : null;
+    const rv = (k) => esc(rec ? String(rec[k] == null ? "" : rec[k]) : "");
+    const rneed = !!(rec && (rec.requiredCapabilities || []).indexOf("image_input") >= 0);
+    const html = ''
+      + '<div class="csk-form">'
+      + '<label>名称<input type="text" data-csk="name" maxlength="24" value="' + rv("name") + '" placeholder="例如：我的产品图风格"></label>'
+      + '<label>一句话说明<input type="text" data-csk="desc" maxlength="60" value="' + rv("description") + '" placeholder="它做什么用"></label>'
+      + '<label>适用分类<select data-csk="tab">'
+      + '<option value="image"' + (!rec || rec.tab === "image" ? " selected" : "") + '>图片</option>'
+      + '<option value="video"' + (rec && rec.tab === "video" ? " selected" : "") + '>视频</option>'
+      + '</select></label>'
+      + '<label class="csk-chk"><input type="checkbox" data-csk="needImage"' + (rneed ? " checked" : "") + '> 需要参考图（没图就不启动）</label>'
+      + '<label>系统提示词（你写规则，它就按规则干活）<textarea data-csk="prompt" rows="10" placeholder="例如：你是电商静物摄影指导…（写清 角色 + 输出什么 + 硬约束，越具体越稳）">' + rv("prompt") + '</textarea></label>'
+      + '<div class="csk-hint">技能会自动带上你当前的模型与参数；要它改参数就让它输出「【动作】比例 1920x1080」这类指令。</div>'
+      + '</div>';
+    const self = this;
+    const btns = [{ label: "取消", fn: () => UI._closeModal() }];
+    if (rec) btns.push({
+      label: "删除", fn: () => {
+        SkillCustom.remove(rec.skillId);
+        UI._closeModal();
+        Toast.success("自定义技能已删除");
+      }
+    });
+    btns.push({
+      label: rec ? "保存修改" : "创建", primary: true, fn: () => {
+        const box = document.querySelector("#modalBody");
+        const q = (k) => { const el = box && box.querySelector('[data-csk="' + k + '"]'); return el ? el.value : ""; };
+        const ck = (k) => { const el = box && box.querySelector('[data-csk="' + k + '"]'); return !!(el && el.checked); };
+        const name = String(q("name") || "").trim();
+        const prompt = String(q("prompt") || "").trim();
+        if (!name) { Toast.warning("先给它起个名字"); return; }
+        if (prompt.length < 10) { Toast.warning("系统提示词太短了（至少 10 个字）"); return; }
+        SkillCustom.save({ skillId: rec ? rec.skillId : "", name: name, description: String(q("desc") || "").trim(), prompt: prompt, tab: q("tab"), needImage: ck("needImage") });
+        UI._closeModal();
+        Toast.success(rec ? "已保存" : "已创建——在技能中心里勾选它即可启用");
+      }
+    });
+    UI._showModal(rec ? "编辑自定义技能" : "新建自定义技能", html, btns);
+  },
+  _openSkillStats() {
+    UI._showModal("技能使用统计", '<pre class="sks-pre">' + esc(SkillStats.text()) + "</pre>"
+      + '<div class="csk-hint">纯本地计数、不上报任何数据；随「清理本地数据」一起清空。</div>',
+      [{ label: "完成", primary: true, fn: () => UI._closeModal() }]);
+  },
   panelSend(text) {
     const ses = this.ses;
     if (!ses || ses.streaming) return;
@@ -4416,7 +4622,8 @@ const userParts = [{ type: "text", text: "我的想法：" + (text || (this.pend
       const _acts = this._acts(ver.text);
       body = (ver.note ? `<div class="sp-note">${esc(ver.note)}</div>` : "")
         + (_rcs.length ? this._cardsBody(_rcs) : ('<div class="sp-bubble fenced md-host">' + this._mdHtml(_acts.length ? this._stripActs(ver.text) : ver.text) + "</div>"))
-        + (_acts.length ? this._actsBody(_acts) : "");
+        + (_acts.length ? this._actsBody(_acts) : "")
+        + this._relayBody();
       if (ses.showDiff && ses.verIdx > 0) {
         const parts = this._diffWords(ses.versions[ses.verIdx - 1].text, ver.text);
         body += `<div class="sp-bubble sp-diff">` + parts.map(p =>
@@ -4568,6 +4775,10 @@ const userParts = [{ type: "text", text: "我的想法：" + (text || (this.pend
       });
       if (ses.lastTurn === "ask" && !ses.collapsed && !ses.streaming) setTimeout(() => inp.focus(), 80);
     }
+    box.querySelectorAll("[data-sp-relay]").forEach(b => b.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this._relayTo(b.dataset.spRelay);
+    }));
     box.querySelectorAll("[data-sp-act]").forEach(b => b.addEventListener("click", (e) => {
       e.stopPropagation();
       this._runAct(b);
@@ -12504,7 +12715,7 @@ let html = "";
 /* IMPL-57：技能=5 栏图标竖卡（77-d 与预设/模板统一）；预设/模板=5 栏纯名称卡（无图标）—— 无分组小标题（技能/预设）、无分类 chips（模板）
    搜索框即全量过滤，空间零浪费 */
 if (activeTab === "skills") {
-const skills = SKILLS.filter(s => s.tab === tab);
+const skills = skillList(tab);
 const filtered = filter ? skills.filter(s => s.name.toLowerCase().includes(f) || s.description.toLowerCase().includes(f) || (s.group || "").toLowerCase().includes(f)) : skills;
 if (tab !== "image" && tab !== "video") {
 html += '<div class="pp-empty">当前分类暂无技能<br>技能已随「图片 / 视频」分类上线，切过去试试</div>';
@@ -12512,7 +12723,7 @@ html += '<div class="pp-empty">当前分类暂无技能<br>技能已随「图片
 html += '<div class="pp-grid cols5">' + filtered.map(s => {
 const on = SkillSession.has(s.skillId);
 const need = (s.requiredCapabilities || []).includes("image_input") ? '<i class="pp-need">需图</i>' : "";
-return `<button type="button" class="pp-item${on ? " active" : ""}" data-skill="${esc(s.skillId)}" aria-pressed="${on}" title="${esc(s.description)}"><span class="pp-ico">${svg(SKILL_ICONS[s.skillId] || "sparkles")}</span><span class="pp-name">${esc(s.name)}</span>${need}${on ? `<span class="pp-check">${svg("check")}</span>` : ""}</button>`;
+return `<button type="button" class="pp-item${on ? " active" : ""}${s.custom ? " pp-custom" : ""}" data-skill="${esc(s.skillId)}" aria-pressed="${on}" title="${esc(s.description)}${s.custom ? " · 自定义" : ""}"><span class="pp-ico">${svg(SKILL_ICONS[s.skillId] || "sparkles")}</span><span class="pp-name">${esc(s.name)}</span>${need}${s.custom ? '<span class="pp-edit" data-sp-editskill="1" title="编辑这个自定义技能">改</span>' : ""}${on ? `<span class="pp-check">${svg("check")}</span>` : ""}</button>`;
 }).join("") + "</div>";
 if (!filtered.length) html += '<div class="pp-empty">无匹配技能</div>';
 }
@@ -12538,9 +12749,16 @@ this._applyPreset(el.dataset.preset);
 this._closeModal();
 });
 });
+$("#modalBody [data-sp-newskill]")?.addEventListener("click", () => SkillSession._openCustomSkillEditor());
+$("#modalBody [data-sp-skillstats]")?.addEventListener("click", () => SkillSession._openSkillStats());
 $$("#modalBody [data-skill]").forEach(el => {
-el.addEventListener("click", () => {
-const s = SKILLS.find(x => x.skillId === el.dataset.skill);
+el.addEventListener("click", (e) => {
+if (e.target.closest("[data-sp-editskill]")) {
+e.stopPropagation();
+SkillSession._openCustomSkillEditor(el.dataset.skill);
+return;
+}
+const s = skillList().find(x => x.skillId === el.dataset.skill);
 if (!s) return;
 if (!SkillSession.configReady()) {
 if (s.fallback) {
@@ -12564,9 +12782,13 @@ Toast.success("预设已删除");
 });
 });
 };
-const tabBtns = `<div class="pp-tabs"><button type="button" class="pp-tab${activeTab === "skills" ? " active" : ""}" data-ptab="skills">${svg("sparkles")}<span class="pp-tab-t">技能</span></button><button type="button" class="pp-tab${activeTab === "builtin" ? " active" : ""}" data-ptab="builtin">${svg("sliders")}<span class="pp-tab-t">预设</span></button><button type="button" class="pp-tab${activeTab === "templates" ? " active" : ""}" data-ptab="templates">${svg("tpl")}<span class="pp-tab-t">模板 <span class="pp-tab-n">${templates.length}</span></span></button></div>`;
+const _skFoot = '<div class="pp-foot">'
+    + '<button type="button" class="pp-foot-btn" data-sp-newskill>＋ 新建自定义技能</button>'
+    + '<button type="button" class="pp-foot-btn" data-sp-skillstats>使用统计</button>'
+    + '</div>';
+  const tabBtns = `<div class="pp-tabs"><button type="button" class="pp-tab${activeTab === "skills" ? " active" : ""}" data-ptab="skills">${svg("sparkles")}<span class="pp-tab-t">技能</span></button><button type="button" class="pp-tab${activeTab === "builtin" ? " active" : ""}" data-ptab="builtin">${svg("sliders")}<span class="pp-tab-t">预设</span></button><button type="button" class="pp-tab${activeTab === "templates" ? " active" : ""}" data-ptab="templates">${svg("tpl")}<span class="pp-tab-t">模板 <span class="pp-tab-n">${templates.length}</span></span></button></div>`;
 const searchHtml = `${tabBtns}<div class="history-search" style="padding:8px 10px;border-bottom:1px solid var(--border-soft)"><input type="text" id="presetSearchInput" aria-label="搜索技能预设" placeholder="搜索技能 / 预设 / 模板..." style="font-size:13px"></div><div class="preset-list pp-list"></div>`;
-this._showModal(`技能中心`, searchHtml, [{
+this._showModal(`技能中心`, searchHtml + _skFoot, [{
 label: "完成",
 primary: true,
 fn: () => this._closeModal()

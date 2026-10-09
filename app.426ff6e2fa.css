@@ -309,6 +309,25 @@ textarea{resize:vertical;min-height:80px}
 .sp-act-main{font-size:12px;font-weight:600;line-height:1.3}
 .sp-act-sub{font-size:10px;opacity:.75;line-height:1.3}
 .sp-acts-hint{font-size:10px;color:var(--text-dim)}
+/* ★ R9ZB：技能接力 + 自定义技能 + 统计（只新增规则） */
+.sp-relay{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)}
+.sp-relay-lb{font-size:11px;color:var(--text-dim)}
+.sp-relay-btn{height:24px;padding:0 10px;border:1px solid var(--border);border-radius:999px;background:var(--surface-2);color:var(--text-muted);font-size:11px;cursor:pointer;transition:border-color var(--transition-fast),color var(--transition-fast)}
+.sp-relay-btn:hover{border-color:var(--brand);color:var(--brand)}
+.sp-relay-hint{font-size:10px;color:var(--text-dim)}
+.pp-custom{outline:1px dashed var(--brand);outline-offset:-2px}
+.pp-edit{position:absolute;top:4px;right:4px;z-index:2;width:18px;height:18px;border-radius:5px;background:var(--brand-soft);color:var(--brand);font-size:11px;line-height:18px;text-align:center;cursor:pointer}
+.pp-edit:hover{background:var(--brand);color:#fff}
+.pp-foot{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--border-soft)}
+.pp-foot-btn{height:30px;padding:0 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text-muted);font-size:12px;cursor:pointer}
+.pp-foot-btn:hover{border-color:var(--brand);color:var(--brand)}
+.csk-form{display:flex;flex-direction:column;gap:10px;padding:4px 2px}
+.csk-form label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text-muted)}
+.csk-form input[type=text],.csk-form select,.csk-form textarea{border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);color:var(--text);padding:7px 9px;font-size:12px;font-family:inherit}
+.csk-form textarea{resize:vertical;line-height:1.6}
+.csk-chk{flex-direction:row!important;align-items:center;gap:6px!important}
+.csk-hint{font-size:11px;color:var(--text-dim);line-height:1.6}
+.sks-pre{margin:0;padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-2);font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-all;max-height:50vh;overflow:auto}
 .disc-card.final[data-jump]{cursor:pointer}
 .vis-card{background:color-mix(in srgb, var(--warning) 7%, transparent);border:1px solid color-mix(in srgb, var(--warning) 26%, transparent);border-left:3px solid var(--warning);border-radius:var(--radius-sm);padding:8px 10px;font-size:12px}
 .vis-head{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;color:var(--warning-ink);font-weight:600;font-size:12px;min-width:0}
