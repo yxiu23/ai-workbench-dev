@@ -3431,13 +3431,99 @@ const SkillSession = {
     return id && id.includes(":") ? id.slice(id.indexOf(":") + 1) : (id || "auto");
   },
   /* ── IMPL-74（74-b）：发言卡轻结构化——仅分段+列表符号悬挂缩进，不做 markdown 解析（esc 已保证安全；流式期不用此渲染防行高跳变） ── */
+  _mdHtml(src) {
+    /* ★ R9W：轻量 Markdown → HTML（零依赖 · 先整体转义、再只对白名单语法做包裹 ⇒ 模型输出不可能注入 HTML）。
+       支持：围栏代码块 · 标题 #~###### · 分隔线 · 引用 · 无序/有序列表 · 表格 · 行内 粗/斜/删除线/高亮/行内码/链接/上下标。
+       刻意不支持（都要外部库，单文件不引）：mermaid 图实际渲染、LaTeX 数学排版 ⇒ 原样保留文本，不假装渲染。 */
+    const BQ = String.fromCharCode(96);
+    const FENCE = BQ + BQ + BQ;
+    const raw = String(src == null ? "" : src).replace(/\r\n?/g, "\n");
+    if (!raw.trim()) return "";
+    const lines = raw.split("\n");
+    const PROT = [];
+    const keep = (html) => "\u0001" + (PROT.push(html) - 1) + "\u0001";
+    const ONE = (s) => {
+      let x = esc(s);
+      /* ① 行内代码先扣保护，免得里面的 ** _ 等被后面的行内规则二次加工 */
+      x = x.replace(new RegExp(BQ + "([^" + BQ + "\\n]+)" + BQ, "g"), (m, code) => keep('<code class="md-code">' + code + "</code>"));
+      x = x.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (m, alt, u) => keep('<span class="md-img">[图] ' + alt + "</span>"));
+      x = x.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (m, txt, u) => (/^(?:https?:\/\/|mailto:|#|\/)/i.test(u) ? keep('<a class="md-a" href="' + u + '" target="_blank" rel="noopener noreferrer">' + txt + "</a>") : txt));
+      x = x.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      x = x.replace(/(^|[^*\w])\*([^*\n]+)\*(?!\*)/g, "$1<em>$2</em>");
+      x = x.replace(/(^|[\s(])__([^_\n]+)__(?!\w)/g, "$1<strong>$2</strong>");
+      x = x.replace(/(^|[\s(])_([^_\n]+)_(?!\w)/g, "$1<em>$2</em>");
+      x = x.replace(/~~([^~]+)~~/g, "<del>$1</del>");
+      x = x.replace(/==([^=]+)==/g, (m, k) => keep('<mark class="md-mark">' + k + "</mark>"));
+      x = x.replace(/(^|[^\s~])~([^\s~]+)~(?![\s~])/g, "$1<sub>$2</sub>");
+      x = x.replace(/\^([^\s^]+)\^/g, "<sup>$1</sup>");
+      return x;
+    };
+    const cells = (s) => s.trim().replace(/^\|/, "").replace(/\|$/, "").split("|").map((c) => c.trim());
+    const isLi = (s) => /^\s*(?:[-*+•])\s+/.test(s) || /^\s*\d{1,3}[.)、]\s+/.test(s);
+    const stripLi = (s) => s.trim().replace(/^\s*(?:[-*+•])\s+/, "").replace(/^\s*\d{1,3}[.)、]\s+/, "");
+    const out = [];
+    let i = 0;
+    while (i < lines.length) {
+      const t = lines[i].trim();
+      if (t.indexOf(FENCE) === 0) {
+        const lang = t.slice(3).trim();
+        i += 1;
+        const buf = [];
+        while (i < lines.length && lines[i].trim().indexOf(FENCE) !== 0) { buf.push(lines[i]); i += 1; }
+        i += 1;
+        out.push('<pre class="md-pre"' + (lang ? ' data-lang="' + esc(lang) + '"' : "") + "><code>" + esc(buf.join("\n")) + "</code></pre>");
+        continue;
+      }
+      const h = /^(#{1,6})\s+(.*)$/.exec(t);
+      if (h) {
+        const n = h[1].length;
+        out.push("<h" + n + ' class="md-h md-h' + n + '">' + ONE(h[2]) + "</h" + n + ">");
+        i += 1;
+        continue;
+      }
+      if (/^(?:-{3,}|\*{3,}|_{3,})$/.test(t)) { out.push('<hr class="md-hr">'); i += 1; continue; }
+      if (t.indexOf(">") === 0) {
+        const buf = [];
+        while (i < lines.length && lines[i].trim().indexOf(">") === 0) { buf.push(lines[i].trim().replace(/^>\s?/, "")); i += 1; }
+        out.push('<blockquote class="md-quote">' + buf.map(ONE).join("<br>") + "</blockquote>");
+        continue;
+      }
+      const sep = (lines[i + 1] || "").trim();
+      if (t.indexOf("|") >= 0 && /^[\s|:-]+$/.test(sep) && sep.indexOf("-") >= 0 && sep.indexOf("|") >= 0) {
+        const head = cells(t);
+        i += 2;
+        const rows = [];
+        while (i < lines.length && lines[i].trim().indexOf("|") >= 0) { rows.push(cells(lines[i])); i += 1; }
+        out.push('<table class="md-table"><thead><tr>' + head.map((c) => "<th>" + ONE(c) + "</th>").join("") + "</tr></thead><tbody>"
+          + rows.map((r) => "<tr>" + r.map((c) => "<td>" + ONE(c) + "</td>").join("") + "</tr>").join("") + "</tbody></table>");
+        continue;
+      }
+      if (isLi(t)) {
+        const ordered = /^\s*\d{1,3}[.)、]\s+/.test(t);
+        const buf = [];
+        while (i < lines.length && isLi(lines[i].trim())) { buf.push(stripLi(lines[i])); i += 1; }
+        const tag = ordered ? "ol" : "ul";
+        out.push("<" + tag + ' class="md-list">' + buf.map((x) => "<li>" + ONE(x) + "</li>").join("") + "</" + tag + ">");
+        continue;
+      }
+      if (!t) { out.push('<div class="md-gap" aria-hidden="true"></div>'); i += 1; continue; }
+      const buf2 = [];
+      while (i < lines.length) {
+        const c = lines[i].trim();
+        if (!c) break;
+        if (/^(#{1,6}\s|>|\||-{3,}$|\*{3,}$|_{3,}$)/.test(c) || isLi(c)) break;
+        buf2.push(c);
+        i += 1;
+      }
+      out.push('<p class="md-p">' + buf2.map(ONE).join("<br>") + "</p>");
+    }
+    return ('<div class="md-root">' + out.join("") + "</div>").replace(/\u0001(\d+)\u0001/g, (m, n) => PROT[Number(n)] || "");
+  },
+
   _fmtDisc(t) {
-    return String(t || "").split("\n").map(line => {
-      if (!line.trim()) return '<div class="disc-gap" aria-hidden="true"></div>';
-      const li = /^\s*(?:[①②③④⑤⑥⑦⑧⑨⑩]|[-•·]|\d{1,2}[.、)])\s*/.test(line);
-      return li ? '<div class="disc-li">' + esc(line) + '</div>'
-                : '<div class="disc-p">' + esc(line) + '</div>';
-    }).join("");
+    /* ★ R9W-5：原实现只按行分「段落/列表」⇒ 模型给的表格/代码块/标题全成了裸文本。
+       改为统一走 _mdHtml（白名单语法，先转义后包裹）。 */
+    return this._mdHtml(t);
   },
   /* ── IMPL-103：讨论存档导出——历史轮+识图报告+当轮发言+终稿聚合为 Markdown（纯前端，零上游流量）── */
   _discMarkdown() {
@@ -3953,7 +4039,7 @@ const SkillSession = {
     const visCard = (ses.visionReport === null && !ses.visionLive) ? "" : `
       <div class="vis-card" data-vis-card data-open="${ses.visionOpen ? "1" : "0"}">
         <div class="vis-head" data-vis-head role="button" tabindex="0" aria-expanded="${ses.visionOpen ? "true" : "false"}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg><span>识图报告 · ${esc(this._skillLabel(Store.getSkillVisionModel()))}</span>${ses.visionLive ? '<span class="vis-live">解析中…</span>' : (ses.visionReport ? `<span class="vis-len">约 ${ses.visionReport.length} 字</span>` : "")}</div>
-        <div class="vis-body" ${ses.visionOpen ? "" : "hidden"}>${ses.visionLive ? `<span data-vsp-live>${esc(ses.visionReport || "")}</span><span class="sp-caret" aria-hidden="true"></span>` : esc(ses.visionReport || "")}</div>
+        <div class="vis-body" ${ses.visionOpen ? "" : "hidden"}>${ses.visionLive ? `<span data-vsp-live>${esc(ses.visionReport || "")}</span>` : this._mdHtml(ses.visionReport || "")}</div>
       </div>`;
     /* IMPL-74（74-a）：讨论卡模板抽取（当轮/历史轮共用）；isUser=用户补充卡；hist=true 时不渲染「收拢」注释与 data-jump（历史轮下方无对应结果气泡）
        IMPL-103：当轮非流式卡支持单卡折叠（idx 传入时启用）——head 可点+键盘可达，折叠态存 d.folded 随对象持久，流式卡/历史轮卡不参与 */
@@ -3965,7 +4051,7 @@ const SkillSession = {
     const _discCard = (d, num, hist, idx) => `
         <div class="disc-card${d.isFinal ? " final" : ""}"${d.isFinal && !d.streaming && !hist ? ' data-jump title="点击正文跳至下方最终结果"' : ""} data-prov="${esc(d.isUser ? "user" : _provOf(d.model))}"${_foldCardAttr(d, hist, idx)}>
           <div class="disc-head"${_foldHeadAttr(d, hist, idx)}><span class="disc-dot"></span><span class="disc-tag${d.isFinal ? " final" : d.isUser ? " user" : ""}">${d.isUser ? "你的补充" : d.isFinal ? "结论" : "发言 " + num}</span>${d.thought ? '<i class="disc-think" title="本段走了深度思考">深度</i>' : ""}${d.isUser ? "" : `<span class="disc-model">${esc(d.name)}</span>`}${d.streaming ? '<span class="vis-live">生成中…</span>' : ""}${_foldChev(d, hist, idx)}</div>
-          <div class="disc-text"${_foldTextAttr(d, hist, idx)}>${d.isFinal && !d.streaming && !hist ? '<div class="disc-final-note">已按技能契约收拢为下方最终结果</div>' : d.streaming ? `<span data-dsp-live>${esc(d.text)}</span><span class="sp-caret" aria-hidden="true"></span>` : `<div class="disc-fmt">${this._fmtDisc(d.text)}</div>`}</div>
+          <div class="disc-text"${_foldTextAttr(d, hist, idx)}>${d.isFinal && !d.streaming && !hist ? '<div class="disc-final-note">已按技能契约收拢为下方最终结果</div>' : d.streaming ? `<span data-dsp-live>${esc(d.text)}</span>` : `<div class="disc-fmt">${this._mdHtml(d.text)}</div>`}</div>
         </div>`;
     const _spkNums = cards => { let k = 0; return new Map(cards.map(d => [d, d.isUser ? 0 : ++k])); };
     const nums = _spkNums(ses.discussion || []);
@@ -3977,7 +4063,7 @@ const SkillSession = {
       ? ses.discHistory.map(h => {
           const hn = _spkNums(h.cards);
           const open = ses.histOpen && ses.histOpen[h.round] ? " open" : "";
-          return `<details class="disc-hist" data-round="${h.round}"${open}><summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>第 ${h.round} 轮讨论 · ${h.cards.length} 条${h.vision ? " · 含识图报告" : ""}</span></summary>${h.vision ? `<div class="disc-hist-vis">${esc(h.vision)}</div>` : ""}<div class="dsp-list">${h.cards.map(d => _discCard(d, hn.get(d) || 1, true)).join("")}</div></details>`;
+          return `<details class="disc-hist" data-round="${h.round}"${open}><summary><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg><span>第 ${h.round} 轮讨论 · ${h.cards.length} 条${h.vision ? " · 含识图报告" : ""}</span></summary>${h.vision ? `<div class="disc-hist-vis">${this._mdHtml(h.vision)}</div>` : ""}<div class="dsp-list">${h.cards.map(d => _discCard(d, hn.get(d) || 1, true)).join("")}</div></details>`;
         }).join("")
       : "";
     /* IMPL-103：讨论工具行——当轮发言全部收起/展开 + 讨论存档复制/导出；streaming 中不渲染（防半程导出、折叠无意义） */
@@ -4003,7 +4089,7 @@ const SkillSession = {
     if (ses.streaming) {
       /* 阶段化流式（识图/讨论/终结者）正文写入各自卡片；直连/接棒思考段仍走主气泡 */
       const stagedLive = ses.visionLive || (ses.discussion || []).some(d => d.streaming);
-      body = stagedLive ? "" : `<div class="sp-bubble fenced sp-streaming"><span data-sp-stream>${esc(ses.streamText)}</span><span class="sp-caret" aria-hidden="true"></span></div>`;
+      body = stagedLive ? "" : `<div class="sp-bubble fenced sp-streaming"><span data-sp-stream>${esc(ses.streamText)}</span></div>`;
     } else if (ses.error) {
       body = `<div class="sp-bubble err">${esc(ses.error)}</div>`
         + (ses.partial ? `<div class="sp-bubble sys">${esc(trunc(ses.partial, 400))}</div>` : "")
@@ -4031,7 +4117,7 @@ const SkillSession = {
       if (pages) body = (ver.note ? `<div class="sp-note">${esc(ver.note)}</div>` : "") + this._pagesBody(ses, ver, pages);
       if (!pages) {
       body = (ver.note ? `<div class="sp-note">${esc(ver.note)}</div>` : "")
-        + `<div class="sp-bubble fenced">${esc(ver.text)}</div>`;
+        + '<div class="sp-bubble fenced md-host">' + this._mdHtml(ver.text) + "</div>";
       if (ses.showDiff && ses.verIdx > 0) {
         const parts = this._diffWords(ses.versions[ses.verIdx - 1].text, ver.text);
         body += `<div class="sp-bubble sp-diff">` + parts.map(p =>
@@ -12253,6 +12339,27 @@ Store.savePreset(name, this.state.tab, this.state.model.id, prompt);
 $("#presetOverlay").classList.remove("show");
 Toast.success("预设已保存");
 },
+/* ★ R9W-1：把「参考图 URL」取回 dataURL —— **优先用本机已有的那份，不走网络**。
+   病根：本地参考图的 remote 是 R2 公网域（**不返回 ACAO**）⇒ 浏览器 fetch 必失败 ⇒
+   旧写法把异常吞在 try/catch 里 ⇒ 参考图（甚至源图）被静默丢弃 ⇒ APIYI 档退化成纯文生图
+   ⇒ 用户看到的正是「生图结果和参考图没关系」。编辑器侧不受影响（它本来就传 dataURL）。 */
+async _refDataURL(url) {
+const s = String(url || "");
+if (/^data:/i.test(s)) return s;
+if (/^blob:/i.test(s)) return window.__w5Host.blobUrlToDataURL(s);
+try {
+const map = (this.state.refState && this.state.refState[this.state.modelKey]) || {};
+for (const k of Object.keys(map)) {
+const hit = (map[k] || []).find(r => r && (r.remote === s || r.src === s));
+if (hit) {
+const cand = String(hit.src || "");
+if (/^data:/i.test(cand)) return cand;
+if (/^blob:/i.test(cand)) return window.__w5Host.blobUrlToDataURL(cand);
+}
+}
+} catch (e) { _r9mNote("r9w-01", e); }
+return window.__w5Host.blobUrlToDataURL(s);
+},
 _getRefs(key) {
 if (!this.state.refState[this.state.modelKey]) this.state.refState[this.state.modelKey] = {};
 if (!this.state.refState[this.state.modelKey][key]) this.state.refState[this.state.modelKey][key] = [];
@@ -13040,14 +13147,14 @@ if (_apiDef67) {
   const _uAll67 = String(v.body.urls || "").split(",").map(function (x) { return x.trim(); }).filter(function (x) { return /^https?:\/\//.test(x); });
   if (_uAll67.length) {
     const _ds = [];
-    for (const _u of _uAll67.slice(1, 4)) {   /* R82：第 1 张已作源图 image.png 发过，参考图从第 2 张起（原 slice(0,3) 会让图 1 重复发送） */ try { _ds.push(await _H67.blobUrlToDataURL(_u)); } catch (e) { console.info("[W5-route]", JSON.stringify({ phase: "apiyi-ref-fail", url: String(_u).slice(0, 80), ts: Date.now() })); } }
+    for (const _u of _uAll67.slice(1, 4)) {   /* R82：第 1 张已作源图 image.png 发过，参考图从第 2 张起（原 slice(0,3) 会让图 1 重复发送） */ try { _ds.push(await this._refDataURL(_u)); } catch (e) { console.info("[W5-route]", JSON.stringify({ phase: "apiyi-ref-fail", url: String(_u).slice(0, 80), ts: Date.now() })); } }
     if (_ds.length) { _ex67.refDataUrls = _ds; if (_uAll67.length > 4) console.info("[W5-route]", JSON.stringify({ phase: "ref-cap", got: _uAll67.length, send: 3, ts: Date.now() })); }
   }
   /* 源图 / 遮罩：body.urls 首张即源图（csv 序 = 用户添加序），body.mask 为单图 URL（output:"single"） */
   const _maskUrl67 = String(v.body.mask || "").trim();
   let _img67 = null, _mask67 = null;
-  try { if (_uAll67[0]) _img67 = await _H67.blobUrlToDataURL(_uAll67[0]); } catch (e) { _r9mNote("misc-044", e); }
-  try { if (_maskUrl67 && /^https?:\/\//.test(_maskUrl67)) _mask67 = await _H67.blobUrlToDataURL(_maskUrl67); } catch (e) { _r9mNote("misc-045", e); }
+  try { if (_uAll67[0]) _img67 = await this._refDataURL(_uAll67[0]); } catch (e) { _r9mNote("misc-044", e); }
+  try { if (_maskUrl67 && /^https?:\/\//.test(_maskUrl67)) _mask67 = await this._refDataURL(_maskUrl67); } catch (e) { _r9mNote("misc-045", e); }
   let _prompt67 = String(v.body.prompt || v.body.text || "");
   /* R82：参考图存在时补一句事实声明（与编辑器侧同口径）。
      有蒙版 ⇒ 说清「只改第 1 张蒙版区域」；无蒙版 ⇒ 不能说蒙版（会指向不存在的区域）。 */
@@ -13395,11 +13502,11 @@ return Object.assign({}, m, { params: [] });
 },
 /* ★ R92-C：可读的本地文件名 —— 时间_模型_比例_清晰度_任务短id（Windows 合法，模块侧还会再消毒一次）。
    同一个任务重复写 ⇒ 同名 ⇒ 覆盖 ⇒ **不会再出现"一张图两份文件"**。 */
-_r92LocalName(task, ext) {
+_r92LocalName(task, ext, dims) {
 try {
 const d = new Date(task.completedAt || task.createdAt || Date.now());
 const p2 = n => String(n).padStart(2, "0");
-const ts = String(d.getFullYear()) + p2(d.getMonth() + 1) + p2(d.getDate()) + "-" + p2(d.getHours()) + p2(d.getMinutes());
+const ts = String(d.getFullYear()).slice(-2) + p2(d.getMonth() + 1)   /* ★ R9W-3：年份两位 */ + p2(d.getDate()) + "-" + p2(d.getHours()) + p2(d.getMinutes());
 const raw = String((task.model && (task.model.shortName || task.model.name || task.model.id)) || "model");
 const name = (raw.replace(/[^0-9a-zA-Z\u4e00-\u9fa5._-]+/g, "").replace(/^\.+/, "").slice(0, 40)) || "model";
 const body = task.body || {};
@@ -13407,8 +13514,14 @@ const ratio = String(body.aspectRatio || body.ratio || "").replace(/[:/]/g, "x")
 const res = String(body.size || body.resolution || "").replace(/[^0-9a-zA-Z]/g, "");
 const short = String(task.id || "").replace(/[^a-zA-Z0-9]/g, "").slice(-6);
 const parts = [ ts, name ];
+/* ★ R9W-3：**真实像素优先**（WxH，落盘前从 blob 实测），拿不到才退回「比例_清晰度」。
+   用户口径：`261009-2010_GPT-Image-2.5-flare易_1024x1024`（原来落在 …_1x1_…）。 */
+const px = String(dims || "").replace(/[^0-9x]/g, "");
+if (/^[0-9]+x[0-9]+$/.test(px)) parts.push(px);
+else {
 if (ratio && ratio.toLowerCase() !== "auto") parts.push(ratio);
 if (res && res.toLowerCase() !== "auto") parts.push(res);
+}
 if (short) parts.push(short);
 return parts.join("_") + "." + (ext || "png");
 } catch (e) { return ""; }
@@ -13616,7 +13729,17 @@ if (window.__r84Local) {
    可读名对同一任务稳定 ⇒ 重复写入是**覆盖**而不是新增第二份文件。 */
 const _r92alias = window.__r84Local.nameOf(data.url);
 const _r92ext = (String(data.url).match(/\.([a-z0-9]+)(?:\?|$)/i) || [ , "png" ])[1].toLowerCase();
-const _r92ln = (this._r92LocalName && this._r92LocalName(task, _r92ext)) || _r92alias;
+/* ★ R9W-3：文件名要真实像素 ⇒ 落盘前用 createImageBitmap 量一次（blob 已在手，零额外网络）。
+   失败不影响落盘（退回「比例_清晰度」旧口径）。 */
+let _r92dim = "";
+try {
+if (typeof createImageBitmap === "function" && String((blob && blob.type) || "").indexOf("image/") === 0) {
+const _bm = await createImageBitmap(blob);
+if (_bm && _bm.width && _bm.height) _r92dim = _bm.width + "x" + _bm.height;
+try { if (_bm && _bm.close) _bm.close(); } catch (_bc) { _r9mNote("r9w-03", _bc); }
+}
+} catch (_e) { _r9mNote("r9w-02", _e); }
+const _r92ln = (this._r92LocalName && this._r92LocalName(task, _r92ext, _r92dim)) || _r92alias;
 if (_r92ln) window.__r84Local.save(_r92ln, blob, _r92alias);
 }
 } catch (_e91b2) { _r9mNote("misc-061", _e91b2); }
@@ -16934,7 +17057,7 @@ document.addEventListener("DOMContentLoaded", () => { UI.init(); /* ★ R76-J：
    ============================================================ */
 window.StudioEditor = (function() {
 let api = null, ov = null, onSaveCb = null, escHandler = null, scriptP = null;
-const STUDIO_SRC = "image-studio.33430b3301.js";
+const STUDIO_SRC = "image-studio.fc331d31d4.js";
 /* IMPL-144 W5（2026-09-26 修拍板）：位图动作全换 GPT-Image-2.5 系——覆盖 IMPL-143 版映射（变更单第一节）
    sunburst=最强档（精细编辑/参考保真，Arena 文生图 1420.7/编辑 1520.4 双第一）→扩图/局部重绘；flare=快车道（比 GPT-Image-2 快 50%）→擦除/图像拆解/编辑文字；抠出主体维持阿里抠图专用通道
    裸名审计落账：GPT-Image-2.5 裸名非 OpenAI 正式 model id（正式 id 仅 gpt-image-2.5-flare / gpt-image-2.5-sunburst，快照 -2026-09-08）；

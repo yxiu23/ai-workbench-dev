@@ -97,7 +97,7 @@ textarea{resize:vertical;min-height:80px}
 /* IMPL-94⑧：热区提升到桌面（用户拍板）——30px 级控件 +7px=44px，与 wand/doc/mode 的 ::before -7px 同语言；触屏桌面统一 */
 .prompt-actions .workflow-btn,.prompt-tools .tool-btn,.preset-trigger,.prompt-save-btn,.modal-close{position:relative}
 .prompt-actions .workflow-btn::after,.prompt-tools .tool-btn::after,.preset-trigger::after,.prompt-save-btn::after,.modal-close::after{content:'';position:absolute;inset:-7px;border-radius:inherit}
-.prompt-module textarea{min-height:170px;font-size:13px;line-height:1.6;border-radius:var(--radius-sm)} /* IMPL-95⑦：2.2 归并（并后者值） */
+.prompt-module textarea{min-height:170px;font-size:12px;line-height:1.6;text-align:justify;border-radius:var(--radius-sm)}   /* ★ R9W-5：字号降一档（13→12）+ 两端对齐 */ /* IMPL-95⑦：2.2 归并（并后者值） */
 .prompt-tools{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
 /* IMPL-78 R5：最近/清空按钮化——对齐 prompt-actions .workflow-btn 语言（surface-2 底+border 边+hover 品牌化） */
 .prompt-tools .tool-btn{min-height:30px;padding:4px 11px;font-size:12px;color:var(--text-muted);border-radius:var(--radius-sm);transition:all var(--transition);display:flex;align-items:center;gap:4px;background:var(--surface-2);border:1px solid var(--border)}
@@ -215,12 +215,12 @@ textarea{resize:vertical;min-height:80px}
 .sp-bubble.sp-diff{background:var(--surface-2);font-family:var(--font-mono)}
 .sp-diff ins{text-decoration:none;background:var(--success-soft);color:var(--success);border-radius:2px;padding:0 1px}
 .sp-diff del{text-decoration:none;background:var(--danger-soft);color:var(--danger);border-radius:2px;padding:0 1px}
-.sp-streaming .sp-caret{display:inline-block;width:7px;height:14px;background:var(--brand);animation:spBlink 1s steps(2) infinite;vertical-align:-2px;margin-left:2px;border-radius:1px}
+
 @keyframes spBlink{0%,49%{opacity:1}50%,100%{opacity:0}}
-@media (prefers-reduced-motion: reduce){.sp-streaming .sp-caret{animation:none}}
+
 /* IMPL-104：讨论/识图卡内的流式光标此前无样式（零尺寸不可见）——与主气泡光标同观感 */
-.disc-text .sp-caret,.vis-body .sp-caret{display:inline-block;width:7px;height:14px;background:var(--brand);animation:spBlink 1s steps(2) infinite;vertical-align:-2px;margin-left:2px;border-radius:1px}
-@media (prefers-reduced-motion: reduce){.disc-text .sp-caret,.vis-body .sp-caret{animation:none}}
+
+
 /* IMPL-104：动效偏好全局兜底——未逐条覆盖的 74/177 动效选择器对 reduce 用户一并静止 */
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;transition-delay:0ms !important;scroll-behavior:auto !important}}
 /* ── IMPL-71：讨论/接棒可视化（需求⑥⑦）+ 识图模型行（需求⑤） ── *//* ── IMPL-71：讨论/接棒可视化（需求⑥⑦）+ 识图模型行（需求⑤） ── */
@@ -270,6 +270,28 @@ textarea{resize:vertical;min-height:80px}
 .disc-fmt .disc-li{margin:0 0 3px;padding-left:1.2em;text-indent:-1.2em}
 .disc-fmt .disc-li:last-child{margin-bottom:0}
 .disc-fmt .disc-gap{height:5px}
+/* ★ R9W-5：智能体正文的 Markdown 样式（**只新增规则**，不改任何现有选择器的值） */
+.md-root{white-space:normal}
+.md-host{white-space:normal}
+.md-p{margin:0 0 4px}
+.md-p:last-child,.md-list:last-child,.md-table:last-child,.md-pre:last-child,.md-quote:last-child{margin-bottom:0}
+.md-gap{height:6px}
+.md-h{margin:8px 0 4px;font-weight:600;line-height:1.45}
+.md-h1,.md-h2{font-size:14px}
+.md-h3,.md-h4{font-size:13px}
+.md-h5,.md-h6{font-size:12px;color:var(--text-muted)}
+.md-list{margin:0 0 4px;padding-left:1.35em}
+.md-list li{margin:0 0 2px}
+.md-quote{margin:0 0 4px;padding:2px 0 2px 9px;border-left:3px solid var(--border);color:var(--text-muted)}
+.md-pre{margin:0 0 6px;padding:8px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);overflow:auto;max-height:320px;font-family:var(--font-mono);font-size:11px;line-height:1.5;white-space:pre}
+.md-code{padding:1px 4px;background:var(--surface-2);border:1px solid var(--border);border-radius:4px;font-family:var(--font-mono);font-size:.92em}
+.md-table{margin:0 0 6px;border-collapse:collapse;width:100%;font-size:11px}
+.md-table th,.md-table td{border:1px solid var(--border);padding:3px 6px;text-align:left;vertical-align:top}
+.md-table th{background:var(--surface-2);font-weight:600}
+.md-mark{padding:0 2px;background:var(--warning-soft);border-radius:3px;color:inherit}
+.md-a{color:var(--brand);text-decoration:underline}
+.md-hr{margin:7px 0;border:0;border-top:1px solid var(--border)}
+.md-img{color:var(--text-dim)}
 .disc-card.final[data-jump]{cursor:pointer}
 .vis-card{background:color-mix(in srgb, var(--warning) 7%, transparent);border:1px solid color-mix(in srgb, var(--warning) 26%, transparent);border-left:3px solid var(--warning);border-radius:var(--radius-sm);padding:8px 10px;font-size:12px}
 .vis-head{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;color:var(--warning-ink);font-weight:600;font-size:12px;min-width:0}
