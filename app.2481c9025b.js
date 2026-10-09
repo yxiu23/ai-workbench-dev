@@ -8970,7 +8970,17 @@ aspectRatio: v2
 });
 if (dec.aspectRatio) v2 = dec.aspectRatio;
 }
-if (el.tagName === "SELECT" && p.options && !p.options.map(String).includes(String(v2))) continue;
+/* ★★ R9ZR：`options` 有**两种形态** —— 纯字符串（如 "16:9"）与对象（`{value,label}`，音色类就是）。
+   原写法 `p.options.map(String)` 对对象形态得到一串 `"[object Object]"` ⇒ 白名单校验**必然失败**
+   ⇒ 直接 `continue` **跳过回灌**。而 `el.tagName === "SELECT"` 对 `datalist` 参数同样成立
+   （音色类的 options 是对象，渲染出来就是一个 `<select>`）⇒
+   **粘贴工作流之后，音色会被静默重置成该模型的默认值**（用户看到的是"我明明选了精英男声，
+   粘回来变成青涩男声"，而且没有任何提示）。
+   实测命中 4 档：`audio_tts` / `voice_composite` / `cosyvoice_v35_plus` / `qwen_audio_tts_plus`。
+   ⚠ 与 21008 行（表单缓存回填）是**同一类写法**，一并收口（那边目前被 `p.type === "select"` 挡着，
+     属"尚未引爆"，但同源同因，留着就是下一个坑）。 */
+const _optVals = (p.options || []).map(function (o) { return String(o && typeof o === "object" ? (o.value != null ? o.value : o) : o); });
+if (el.tagName === "SELECT" && p.options && _optVals.indexOf(String(v2)) < 0) continue;
 el.value = v2;
 UI._onFieldChange(p.key, el);
 }
@@ -17410,7 +17420,10 @@ const pool = this.state.formCache[this.state.tab + "_pool"] || {};
    cache 同模型可信（datalist 自由输入的自定义音色照常保留）；select/cap-grid/range 原有校验不变 */
 const fromPool = !(cache && cache[p.key] != null);
 let val = cache && cache[p.key] != null ? cache[p.key] : pool[p.key] != null ? pool[p.key] : pool["l:" + p.label];
-if (val != null && p.type === "select" && Array.isArray(p.options) && !p.options.map(String).includes(String(val))) val = null;
+/* ★★ R9ZR：与 12568 行同源同因 —— `options` 对象形态（`{value,label}`）下 `map(String)` 恒不等
+   ⇒ 会把**合法值**判成非法并清成 null（"尚未引爆"：本行前面挡着 `p.type === "select"`，
+   而当前用对象 options 的参数都是 `datalist`）。同源写法一起收口，别留成下一个坑。 */
+if (val != null && p.type === "select" && Array.isArray(p.options) && !p.options.map(o => String(o && typeof o === "object" ? (o.value != null ? o.value : o) : o)).includes(String(val))) val = null;
 if (val != null && p.type === "cap-grid" && Array.isArray(p.options) && !p.options.map(o => String(o.value)).includes(String(val))) val = null;
 if (val != null && fromPool && p.type === "datalist" && Array.isArray(p.options) && !p.options.map(o => String(o.value)).includes(String(val))) val = null;
 if (val != null && fromPool && p.type === "text" && p.pattern && !new RegExp(p.pattern).test(String(val))) val = null;
