@@ -2982,6 +2982,7 @@ const SkillSession = {
       const v = JSON.parse(storageGet(this.LS_ACTIVE, "[]"));
       if (Array.isArray(v)) this.active = v.filter(id => SKILLS.some(s => s.skillId === id));
     } catch (e) { _r9mNote("store-003", e); }
+    try { this.actions(); } catch (e) { _r9mNote("act-07", e); }
   },
   save() {
     try { storageSet(this.LS_ACTIVE, JSON.stringify(this.active)); } catch (e) { _r9mNote("store-004", e); }
@@ -4160,30 +4161,102 @@ const userParts = [{ type: "text", text: "我的想法：" + (text || (this.pend
         return;
       }
       if (kind === "prompt") {
-        const pf = document.querySelector('[data-key="prompt"], [data-key="text"]');
-        if (!pf) { Toast.warning("没找到提示词框"); return; }
-        const cur = String(pf.value || "");
-        pf.value = cur ? (cur.replace(/\s+$/, "") + "\n" + b.dataset.t) : b.dataset.t;
-        try { pf.dispatchEvent(new Event("input", { bubbles: true })); } catch (e) { _r9mNote("act-04", e); }
-        Toast.success("已追加到提示词框");
+        const r = this._writePrompt(b.dataset.t);
+        Toast[r.ok ? "success" : "warning"](r.ok ? "已追加到提示词框" : r.reason);
         return;
       }
       if (kind === "ref") {
-        /* 找当前模型的「普通参考图位」——排除首尾帧槽与遮罩槽（它们语义不同，不能混） */
-        const m = UI.state.model;
-        const p = m && (m.params || []).find(x => x.type === "ref-image"
-          && !/frame|first|last/i.test(String(x.key))
-          && !/mask|遮罩/i.test(String(x.key) + String(x.label || "")));
-        if (!p) { Toast.warning("当前模型没有可以加图的参考图位"); return; }
-        UI._getRefs(p.key).push({ id: genId(), kind: "url", src: String(b.dataset.u), name: "ref", uploaded: true, remote: String(b.dataset.u) });
-        UI._renderRefGrid(p.key);
-        Toast.success("已加进参考图");
+        const r = this._addRef(b.dataset.u);
+        Toast[r.ok ? "success" : "warning"](r.ok ? "已加进参考图" : r.reason);
         return;
       }
     } catch (e) {
       _r9mNote("act-01", e);
       Toast.error("动作执行失败：" + ((e && e.message) || "未知错误"));
     }
+  },
+  /* ═══ 动作层（R9ZA）· 把能力从 UI 解耦出来 ═══
+     为什么要有这一层：动作卡按钮只是**一个消费者**。同一批能力还必须能被
+     ① 外部 harness（自动化脚本 / 浏览器扩展）② MCP server ③ 快捷键 / URL 参数
+     复用 —— 条件就是**能力必须有一个不依赖 UI 形态的入口**。
+     契约：每个动作**返回对象**（`{ok:true,...}` / `{ok:false,reason}`），**不抛异常**；
+     挂载在 `window.__w5Actions`（惰性，SkillSession.init 时挂一次）。
+     ★ 注意 `generate` **不在** list() 里 —— 它会真的花钱，只给外部显式调用，不给技能动作卡用。 */
+  _writePrompt(text, mode) {
+    const pf = document.querySelector('[data-key="prompt"], [data-key="text"]');
+    if (!pf) return { ok: false, reason: "没找到提示词框" };
+    const cur = String(pf.value || "");
+    const t = String(text == null ? "" : text);
+    const replace = mode === "replace" || !cur;
+    pf.value = replace ? t : (cur.replace(/\s+$/, "") + "\n" + t);
+    try { pf.dispatchEvent(new Event("input", { bubbles: true })); } catch (e) { _r9mNote("act-04", e); }
+    return { ok: true, mode: replace ? "replace" : "append" };
+  },
+  _addRef(url) {
+    /* 找当前模型的「普通参考图位」——排除首尾帧槽与遮罩槽（它们语义不同，不能混） */
+    const m = UI.state.model;
+    const p = m && (m.params || []).find(x => x.type === "ref-image"
+      && !/frame|first|last/i.test(String(x.key))
+      && !/mask|遮罩/i.test(String(x.key) + String(x.label || "")));
+    if (!p) return { ok: false, reason: "当前模型没有可以加图的参考图位" };
+    try {
+      UI._getRefs(p.key).push({ id: genId(), kind: "url", src: String(url), name: "ref", uploaded: true, remote: String(url) });
+      UI._renderRefGrid(p.key);
+      return { ok: true, slot: p.key };
+    } catch (e) { return { ok: false, reason: String((e && e.message) || e) }; }
+  },
+  /* ⚠ 会真的调用上游 ⇒ 花钱。只给外部显式调用，**不暴露**在 list() 里 */
+  _generate() {
+    if (typeof UI.handleGenerate !== "function") return { ok: false, reason: "生成入口不可用" };
+    try { UI.handleGenerate(); return { ok: true }; }
+    catch (e) { return { ok: false, reason: String((e && e.message) || e) }; }
+  },
+  /* 读当前工作台状态 —— 让外部（和技能）知道"现在是什么配置"，不必靠猜 */
+  _readContext() {
+    let m = null, key = "";
+    try { m = UI.state.model; key = UI.state.modelKey; } catch (e) { _r9mNote("act-09", e); }
+    const get = (sel) => { const el = document.querySelector(sel); return el ? String(el.value) : null; };
+    const p = ((m && m.params) || []).find(x => x.key === "aspectRatio");
+    const refs = {};
+    try {
+      ((m && m.params) || []).forEach(x => {
+        if (x.type === "ref-image" || x.type === "ref-video" || x.type === "ref-audio") {
+          const arr = (UI.state.refState[key] || {})[x.key] || [];
+          if (arr.length) refs[x.label || x.key] = arr.length;
+        }
+      });
+    } catch (e) { _r9mNote("act-10", e); }
+    return {
+      ok: true,
+      tab: (UI.state && UI.state.tab) || "",
+      model: (m && m.name) || "",
+      modelId: (m && m.id) || "",
+      aspectRatio: get('[data-key="aspectRatio"]'),
+      ratios: p && Array.isArray(p.options) ? p.options.filter(o => /^\d{1,2}:\d{1,2}$/.test(o)) : [],
+      count: get('[data-key="__count"]') || "1",
+      refs: refs
+    };
+  },
+  actions() {
+    const self = this;
+    const api = {
+      version: "R9ZA",
+      list: () => [
+        { id: "fitRatio", args: ["width", "height"], desc: "按当前模型可选比例，换算最接近的一档" },
+        { id: "setParam", args: ["key", "value"], desc: "设置当前模型的一个参数" },
+        { id: "writePrompt", args: ["text", "mode?"], desc: "写入提示词框（默认追加，mode='replace' 覆盖）" },
+        { id: "addRef", args: ["url"], desc: "把图片 URL 加进参考图" },
+        { id: "readContext", args: [], desc: "读当前工作台状态（模型 / 参数 / 参考图 / 张数）" }
+      ],
+      fitRatio: (w, h) => { const r = self._fitRatio(w, h); return r ? Object.assign({ ok: true }, r) : { ok: false, reason: "尺寸无法解析（写成 1920x1080 这样）" }; },
+      setParam: (k, v) => self._setParam(k, v),
+      writePrompt: (t, mode) => self._writePrompt(t, mode),
+      addRef: (u) => self._addRef(u),
+      generate: () => self._generate(),
+      readContext: () => self._readContext()
+    };
+    try { window.__w5Actions = api; } catch (e) { _r9mNote("act-08", e); }
+    return api;
   },
   panelSend(text) {
     const ses = this.ses;
