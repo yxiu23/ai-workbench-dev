@@ -302,6 +302,13 @@ textarea{resize:vertical;min-height:80px}
 .sp-card-use:hover{background:var(--brand-hover)}
 .sp-card-row{display:flex;gap:6px;font-size:11px;line-height:1.6;color:var(--text-muted)}
 .sp-card-row b{flex:0 0 auto;font-weight:600;color:var(--text-dim)}
+/* ★ R9Z：本地工具动作卡（只新增规则） */
+.sp-acts{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px}
+.sp-act-btn{display:inline-flex;flex-direction:column;align-items:flex-start;gap:1px;padding:6px 11px;border:1px solid var(--brand);border-radius:var(--radius-sm);background:var(--brand-soft);color:var(--brand);cursor:pointer;text-align:left;transition:background var(--transition-fast)}
+.sp-act-btn:hover{background:var(--brand);color:#fff}
+.sp-act-main{font-size:12px;font-weight:600;line-height:1.3}
+.sp-act-sub{font-size:10px;opacity:.75;line-height:1.3}
+.sp-acts-hint{font-size:10px;color:var(--text-dim)}
 .disc-card.final[data-jump]{cursor:pointer}
 .vis-card{background:color-mix(in srgb, var(--warning) 7%, transparent);border:1px solid color-mix(in srgb, var(--warning) 26%, transparent);border-left:3px solid var(--warning);border-radius:var(--radius-sm);padding:8px 10px;font-size:12px}
 .vis-head{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;color:var(--warning-ink);font-weight:600;font-size:12px;min-width:0}

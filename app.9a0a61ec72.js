@@ -2812,6 +2812,8 @@ const SKILL_CONTRACT = [
   "3. 用户的调整指令互相冲突时，以最新指令为准；已确认过的条件不要反复追问。"
 ].join("\n");
 
+const HOST_ACTIONS_DOC = "\n【工作台动作（可选 · 只在用户明确要求时使用）】\n你有能力**触发**对工作台参数的修改：在回答的**最后**单独输出一行动作指令（一行一条），前端会把它渲染成一个按钮。\n格式：\n· 用户给了像素尺寸、或要求「适配比例」 ⇒ 【动作】比例 1920x1080\n· 用户要求指定某个参数 ⇒ 【动作】参数 aspectRatio=16:9\n· 用户要求把某段文字放进提示词框 ⇒ 【动作】提示词 <那段文字>\n· 用户给了图片地址、要求当参考图 ⇒ 【动作】参考图 <完整URL>\n\n规则：\n1. 只在用户**明确要求**时输出动作行；不要自作主张改用户的参数或设置。\n2. 你无法直接执行这些动作——那一行由前端执行。所以不要说「我已经帮你改好了」，\n   而要说「给你一个按钮，点一下即可套用」。\n3. 比例请**只写像素尺寸**（如 1920x1080），由前端换算成当前模型支持的最接近比例；\n   不要自己换算，也不要凭记忆猜测模型支持哪些比例。\n4. 一次最多输出 3 条动作行；不需要时一条都别写。\n";
+
 const SKILLS = [
   { skillId: "prompt-optimizer", name: "提示词优化", description: "把简单想法扩写成结构完整、可直接出图的中文提示词。", allowedTools: [], requiredCapabilities: [], tab: "image", group: "提示词", fallback: null, allowEmpty: false },
   { skillId: "visual-prompt-reverse", name: "图像反推", description: "分析参考图，反推可复现其视觉特征的提示词。", allowedTools: [], requiredCapabilities: ["image_input"], tab: "image", group: "提示词", fallback: null, allowEmpty: true },
@@ -3085,8 +3087,15 @@ const SkillSession = {
       });
       sys += "\n\n" + parts.join("\n\n") + "\n\n【合并规则】存在多个技能时，以第一个技能为主风格锚点，辅助技能仅补充其关键约束；指令冲突时以主技能为准。";
     }
-    sys += "\n" + SKILL_CONTRACT;
-    const userParts = [{ type: "text", text: "我的想法：" + (text || (this.pendingDocs.length && !urls.length ? "（请分析我附加的文档）" : "（以参考图为准）")) + "\n当前模型：" + (UI.state.model?.name || "") }];
+    sys += "\n" + SKILL_CONTRACT + "\n" + HOST_ACTIONS_DOC;
+    const _r9zRatioQ = (function () {
+  try {
+    const _p = (UI.state.model?.params || []).find(x => x.key === "aspectRatio");
+    const _o = _p && Array.isArray(_p.options) ? _p.options.filter(v => /^\d{1,2}:\d{1,2}$/.test(v)) : [];
+    return _o.length ? "\n当前模型可选比例：" + _o.join(" / ") + "\n（需要改比例时，只输出像素尺寸即可，例如【动作】比例 1920x1080，由前端换算成上表中最近的一档）" : "";
+  } catch (e) { _r9mNote("act-05", e); return ""; }
+})();
+const userParts = [{ type: "text", text: "我的想法：" + (text || (this.pendingDocs.length && !urls.length ? "（请分析我附加的文档）" : "（以参考图为准）")) + "\n当前模型：" + (UI.state.model?.name || "") + _r9zRatioQ }];
     urls.forEach(u => userParts.push({ type: "image_url", image_url: { url: u } }));
     this._drainDocs(userParts, "首轮");
     this.ses = {
@@ -4026,6 +4035,156 @@ const SkillSession = {
     if (inp) inp.value = "";
     this.panelSend(msg);
   },
+  /* ═══ R9Z · 本地工具（Local Actions）═══
+     技能输出里出现「【动作】…」行时 → 从正文剥离 → 渲染成按钮 → 点击**作用于工作台**。
+     ★ 四条设计原则（为什么这么做，而不是"让模型自己算"）：
+       ① **计算在代码里、不在模型里**：比例适配是纯数学，LLM 算数不可靠（铁 141）。
+       ② **选项取自当前模型真值**：每个模型的比例集合不同（有的没 21:9、有的没 5:4）
+          ⇒ 不按全局清单给，按 `UI.state.model.params[aspectRatio].options` 给。
+       ③ **走与用户手点完全相同的路径**（写 `[data-key]` + `dispatchEvent("change")`）
+          ⇒ 参数缓存、快捷按钮回显、visibleIf 联动、张数胶囊……全部照常生效。
+       ④ **默认不动作**：只有用户明确要求时，技能才输出动作行（见 HOST_ACTIONS_DOC）。 */
+  _fitRatio(w, h) {
+    const W = Number(w), H = Number(h);
+    if (!(W > 0 && H > 0)) return null;
+    const p = ((typeof UI !== "undefined" && UI.state.model && UI.state.model.params) || []).find(x => x.key === "aspectRatio");
+    const all = p && Array.isArray(p.options) ? p.options : [];
+    const opts = all.filter(o => typeof o === "string" && /^\d{1,2}:\d{1,2}$/.test(o));
+    /* 当前模型没有比例参数时，退回全站通用档（仍然可用，只是不保证模型接受） */
+    const cand = opts.length ? opts : ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3", "5:4", "4:5", "21:9", "9:21"];
+    const target = Math.log(W / H);
+    const scored = cand.map(o => {
+      const ab = o.split(":");
+      const e = Math.abs(Math.log(Number(ab[0]) / Number(ab[1])) - target); /* 对数空间：横竖对称，不受绝对像素量级影响 */
+      return { ratio: o, err: e };
+    }).sort((x, y) => x.err - y.err);
+    if (!scored.length) return null;
+    const best = scored[0];
+    return {
+      ratio: best.ratio,
+      /* errPct = 长边比偏差百分比；exact = 长宽比完全吻合 */
+      errPct: (Math.exp(best.err) - 1) * 100,
+      exact: best.err < 1e-6,
+      alts: scored.slice(1, 3).map(x => x.ratio),
+      fromModel: opts.length > 0
+    };
+  },
+  /* 统一设参：写 DOM + 触发 change（与用户手点同一条路）。返回 {ok,from,to,reason} */
+  _setParam(key, value) {
+    let el = null;
+    try { el = document.querySelector('[data-key="' + key + '"]'); } catch (e) { _r9mNote("act-02", e); }
+    if (!el) return { ok: false, reason: "当前模型没有「" + key + "」这个参数" };
+    const before = String(el.value);
+    try { el.value = String(value); } catch (e) { return { ok: false, reason: "值不被接受" }; }
+    try { el.dispatchEvent(new Event("change", { bubbles: true })); } catch (e) { _r9mNote("act-03", e); }
+    const now = String(el.value);
+    return { ok: now === String(value) || now !== before, from: before, to: now };
+  },
+  _acts(t) {
+    const src = String(t == null ? "" : t).split("\n");
+    const out = [];
+    const clean = (s) => String(s || "").replace(/\*\*/g, "").replace(/^\s*[-*+•]\s*/, "").trim();
+    for (let i = 0; i < src.length; i++) {
+      const s = clean(src[i]);
+      const m = /^【动作】\s*(\S+)\s*(.*)$/.exec(s);
+      if (!m) continue;
+      const verb = m[1], arg = m[2].trim();
+      if (/^(比例|适配比例|fit-ratio|ratio|aspect)$/.test(verb)) {
+        const dm = /(\d{2,5})\s*[x×*X]\s*(\d{2,5})/.exec(arg);
+        const rm = /(\d{1,2}:\d{1,2})/.exec(arg);
+        if (dm) out.push({ type: "fit", w: dm[1], h: dm[2] });
+        else if (rm) out.push({ type: "set", key: "aspectRatio", value: rm[1] });
+        continue;
+      }
+      if (/^(参数|设参数|set|param)$/.test(verb)) {
+        const kv = /([A-Za-z_][A-Za-z0-9_]*)\s*[=＝:：]\s*(\S+)/.exec(arg);
+        if (kv) out.push({ type: "set", key: kv[1], value: kv[2] });
+        continue;
+      }
+      if (/^(提示词|写提示词|prompt)$/.test(verb) && arg) { out.push({ type: "prompt", text: arg }); continue; }
+      if (/^(参考图|加参考图|ref|image)$/.test(verb)) {
+        const um = /(https?:\/\/\S+)/.exec(arg);
+        if (um) out.push({ type: "ref", url: um[1] });
+        continue;
+      }
+    }
+    return out;
+  },
+  /* 把动作行从正文里摘掉（信息都在按钮上，不重复显示）——同时压掉因摘行留下的连续空行 */
+  _stripActs(t) {
+    const clean = (s) => String(s || "").replace(/\*\*/g, "").replace(/^\s*[-*+•]\s*/, "").trim();
+    return String(t == null ? "" : t).split("\n").filter(l => !/^【动作】/.test(clean(l))).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  },
+  _actsBody(acts) {
+    if (!acts.length) return "";
+    const btns = acts.map(a => {
+      if (a.type === "fit") {
+        const f = this._fitRatio(a.w, a.h);
+        const lab = f ? ("适配比例 → " + f.ratio) : "适配比例";
+        const sub = f ? (a.w + "×" + a.h + (f.exact ? " · 完全吻合" : " · 差 " + f.errPct.toFixed(1) + "%")) : (a.w + "×" + a.h);
+        return '<button type="button" class="sp-act-btn" data-sp-act="fit" data-w="' + esc(String(a.w)) + '" data-h="' + esc(String(a.h)) + '" title="' + esc(sub) + '">'
+          + '<span class="sp-act-main">' + esc(lab) + '</span><span class="sp-act-sub">' + esc(sub) + "</span></button>";
+      }
+      if (a.type === "set") {
+        const p = ((typeof UI !== "undefined" && UI.state.model && UI.state.model.params) || []).find(x => x.key === a.key);
+        const nm = (p && p.label) || a.key;
+        return '<button type="button" class="sp-act-btn" data-sp-act="set" data-k="' + esc(a.key) + '" data-v="' + esc(String(a.value)) + '">'
+          + '<span class="sp-act-main">设为 ' + esc(a.value) + '</span><span class="sp-act-sub">' + esc(nm) + "</span></button>";
+      }
+      if (a.type === "prompt") {
+        return '<button type="button" class="sp-act-btn" data-sp-act="prompt" data-t="' + esc(a.text) + '">'
+          + '<span class="sp-act-main">写入提示词框</span><span class="sp-act-sub">追加，不覆盖你已写的</span></button>';
+      }
+      return '<button type="button" class="sp-act-btn" data-sp-act="ref" data-u="' + esc(a.url) + '">'
+        + '<span class="sp-act-main">加进参考图</span><span class="sp-act-sub">' + esc(String(a.url).slice(0, 42)) + "</span></button>";
+    }).join("");
+    return '<div class="sp-acts" role="group" aria-label="可执行的动作">' + btns
+      + '<span class="sp-acts-hint">点了才会改 · 不影响你现在的设置</span></div>';
+  },
+  _runAct(b) {
+    const kind = b.dataset.spAct;
+    try {
+      if (kind === "fit") {
+        const f = this._fitRatio(b.dataset.w, b.dataset.h);
+        if (!f) { Toast.warning("这个尺寸我看不懂，写成「1920x1080」这样就行"); return; }
+        const r = this._setParam("aspectRatio", f.ratio);
+        if (!r.ok) { Toast.warning("没能改比例：" + (r.reason || "当前模型可能不支持")); return; }
+        Toast.success("比例已设为 " + f.ratio + "（" + b.dataset.w + "×" + b.dataset.h
+          + (f.exact ? " 完全吻合" : "，最接近，差 " + f.errPct.toFixed(1) + "%") + "）");
+        return;
+      }
+      if (kind === "set") {
+        const r = this._setParam(b.dataset.k, b.dataset.v);
+        if (!r.ok) { Toast.warning("没能改参数：" + (r.reason || "值不被接受")); return; }
+        Toast.success("已把 " + b.dataset.k + " 设为 " + r.to);
+        return;
+      }
+      if (kind === "prompt") {
+        const pf = document.querySelector('[data-key="prompt"], [data-key="text"]');
+        if (!pf) { Toast.warning("没找到提示词框"); return; }
+        const cur = String(pf.value || "");
+        pf.value = cur ? (cur.replace(/\s+$/, "") + "\n" + b.dataset.t) : b.dataset.t;
+        try { pf.dispatchEvent(new Event("input", { bubbles: true })); } catch (e) { _r9mNote("act-04", e); }
+        Toast.success("已追加到提示词框");
+        return;
+      }
+      if (kind === "ref") {
+        /* 找当前模型的「普通参考图位」——排除首尾帧槽与遮罩槽（它们语义不同，不能混） */
+        const m = UI.state.model;
+        const p = m && (m.params || []).find(x => x.type === "ref-image"
+          && !/frame|first|last/i.test(String(x.key))
+          && !/mask|遮罩/i.test(String(x.key) + String(x.label || "")));
+        if (!p) { Toast.warning("当前模型没有可以加图的参考图位"); return; }
+        UI._getRefs(p.key).push({ id: genId(), kind: "url", src: String(b.dataset.u), name: "ref", uploaded: true, remote: String(b.dataset.u) });
+        UI._renderRefGrid(p.key);
+        Toast.success("已加进参考图");
+        return;
+      }
+    } catch (e) {
+      _r9mNote("act-01", e);
+      Toast.error("动作执行失败：" + ((e && e.message) || "未知错误"));
+    }
+  },
   panelSend(text) {
     const ses = this.ses;
     if (!ses || ses.streaming) return;
@@ -4181,8 +4340,10 @@ const SkillSession = {
       /* ★ R9Y：技能输出结构化落地 —— 若终稿是「配方卡」格式（video-style-mixer 等），
          渲染成卡片 + 一键「用第 N 组」；识别不到就维持原来的 Markdown 围栏。 */
       const _rcs = this._cards(ver.text);
+      const _acts = this._acts(ver.text);
       body = (ver.note ? `<div class="sp-note">${esc(ver.note)}</div>` : "")
-        + (_rcs.length ? this._cardsBody(_rcs) : ('<div class="sp-bubble fenced md-host">' + this._mdHtml(ver.text) + "</div>"));
+        + (_rcs.length ? this._cardsBody(_rcs) : ('<div class="sp-bubble fenced md-host">' + this._mdHtml(_acts.length ? this._stripActs(ver.text) : ver.text) + "</div>"))
+        + (_acts.length ? this._actsBody(_acts) : "");
       if (ses.showDiff && ses.verIdx > 0) {
         const parts = this._diffWords(ses.versions[ses.verIdx - 1].text, ver.text);
         body += `<div class="sp-bubble sp-diff">` + parts.map(p =>
@@ -4334,6 +4495,10 @@ const SkillSession = {
       });
       if (ses.lastTurn === "ask" && !ses.collapsed && !ses.streaming) setTimeout(() => inp.focus(), 80);
     }
+    box.querySelectorAll("[data-sp-act]").forEach(b => b.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this._runAct(b);
+    }));
     box.querySelectorAll("[data-sp-card-use]").forEach(b => b.addEventListener("click", (e) => {
       e.stopPropagation();
       this._useCard(Number(b.dataset.spCardUse) || 1);
