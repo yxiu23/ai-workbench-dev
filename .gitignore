@@ -14,6 +14,12 @@
 # Worker 源码（源在 studio/worker/，这里不放）
 worker-base.js
 
+# ★ R9ZY（2026-10-11）：本仓**只放网站运行必需的发布物**。
+#   交付件（报告 / Worker 完整代码 / 找回的图）与密钥簿都**与网站运行无关**，
+#   且都会公网可读 ⇒ 一律不进本仓（备份留在项目 studio/_backup/）。
+deliver/
+vault/
+
 # 本地/临时
 *.log
 *.tmp

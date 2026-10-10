@@ -14513,10 +14513,14 @@ const ex = window.__r91Sess.get(id);
 if (ex) return ex;
 const u = URL.createObjectURL(blob);
 window.__r91Sess.set(id, u);
-/* 上限 40 条，超了从最早的开始 revoke（否则长会话会一直占内存） */
+/* ★★ R9ZY-3-2：上限 40 条，超了只**摘掉表项**，**绝不 revoke**。
+   为什么（修 2026-10-11 实测）：revoke 掉最早的 URL 后，页面上还指着它的 <img src="blob:…">
+   **不会同步清** ⇒ 直接变裂图；实测塞 50 条 ⇒ t0~t9 永久失效，且刷新前无法恢复。
+   改成只 delete：blob URL 只要还有 <img> 指着就仍可正常解码；
+   表格淘汰只是"不再复用它"，旧的由浏览器在引用归零后自行回收。
+   ⚠ 代价：每个已淘汰的 URL 字符串会留在内存（每条 ~50 B），几十条可忽略 —— 换掉 40+ 条裂图的体验。 */
 if (window.__r91Sess.size > 40) {
 const k = window.__r91Sess.keys().next().value;
-try { URL.revokeObjectURL(window.__r91Sess.get(k)); } catch (_e) { _r9mNote("blob-004", _e); }
 window.__r91Sess.delete(k);
 }
 return u;
@@ -14525,6 +14529,10 @@ return u;
 async _preloadResult(task) {
 const url = task.result?.url;
 if (!url || this._preloadCache.has(url)) return;
+/* ★★ R9ZY-3-1：blob:/data: 是**本机资源**，无需"预载"（它已在内存里、零网络收益）；
+   且 blob: 一旦被清扫/淘汰，fetch 必报 ERR_FILE_NOT_FOUND（修实测一次刷出 40+ 条）。
+   ⇒ 直接返回，不 fetch、不入预载缓存、不触发转存。 */
+if (/^(blob:|data:)/i.test(url)) return;
 /* ★ R86：视频**不做全量预载、也不在此处即时转存** ——
    ① _preloadCache 只服务「原图预览秒开」，对视频没意义；
    ② 全量 fetch 几十 MB 再上传 R2，会当场抢用户带宽。
@@ -14771,7 +14779,15 @@ applyArchived(data.url);
 console.log("[archive] Worker 转存成功:", url, "→", data.url);
 } else {
 console.warn("[archive] Worker 转存失败:", data.error || "unknown");
-this._r9bLocalOnly(task, "Worker /archive 也失败：" + (data.error || "unknown"));
+/* ★★ R9ZY-3-3：区分「源对象已不存在（上游 404）」与「网络/网关故障」。
+   真身（实测）：源 URL 返回 404 ⇒ 源对象已过期或被生命周期清理 ⇒ **重试也没用**，
+   必须去源站重新获取。此前一律说"Worker /archive 也失败"⇒ 用户以为是网络抖动 ⇒ 白重试。
+   ⚠ 用**显式字符串匹配**而不是正则 —— 报错文案由我们自己的 Worker 生产，形态可控。 */
+{
+  const _r9zyErr = String((data && data.error) || "unknown");
+  if (_r9zyErr.indexOf("404") >= 0) this._r9bLocalOnly(task, "源文件已过期或已被清理（上游返回 404），无法转存 —— 需要回原处重新获取");
+  else this._r9bLocalOnly(task, "Worker /archive 也失败：" + _r9zyErr);
+}
 }
 } catch (e2) { this._r9bLocalOnly(task, "Worker /archive 异常：" + ((e2 && e2.message) || e2)); }
 },
