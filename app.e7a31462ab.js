@@ -7106,6 +7106,170 @@ function _r9gProbeCaps() {
   }).catch(function () { /* 探测失败＝保持现状，绝不因此影响功能（这是设计，不是吞错） */ });
 }
 
+/* ══════ R9ZY · 错误日志（payload/R9ZY_errlog.txt）══════ */
+/* ══════════════════════════════════════════════════════════════════════════════
+   ★★ R9ZY · 错误日志（修：「需要有个日志功能，最起码能记录错误，这样我也能方便的反馈给你」）
+   ──────────────────────────────────────────────────────────────────────────────
+   以前报错是**一闪而过**的：Toast 弹一下、Console 滚过去，要复现就得重来一遍
+   （而重来一遍要么花钱、要么根本复现不了 —— R9ZJ/R9ZX 两次都是这样丢的现场）。
+
+   本模块做三件事：
+     ① **自动记录**：拦 `Toast.error/warning`、`window.onerror`、`unhandledrejection`，
+        并尽量带上**上下文**（当前 tab / 模型 / 动作 / 最近一次出网请求的 URL 与状态码）。
+     ② **离线留存**：环形缓冲写 localStorage（上限 120 条），**刷新页面也不丢**。
+     ③ **一键拿走**：`__w5Logs()`（返回可复制文本）· `copy(__w5Logs())`（Console 里直接进剪贴板）
+        · `__w5LogsClear()`（清空）。报错的同时也会 `console.error("[ERRLOG] …")` 打一条完整记录。
+
+   ⚠ 三条纪律：
+     · **绝不因为记日志而把主流程搞挂** —— 整个模块内部零抛出（失败就 `_r9mNote` 留痕）。
+     · **不记录任何凭据**：URL 里的 `token=` 一律打码；请求体一律不记。
+     · **有上限**：条数 120、单条 2000 字符；超了丢最旧（localStorage 写满不能拖死页面）。
+   ══════════════════════════════════════════════════════════════════════════════ */
+var ErrLog = (function () {
+  var KEY = "w5_errlog_v1";
+  var MAXN = 120, MAXLEN = 2000;
+  var mem = null;
+
+  function load() {
+    if (mem) return mem;
+    mem = [];
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) { var a = JSON.parse(raw); if (Array.isArray(a)) mem = a; }
+    } catch (e) { swallow("errlog-load", e); }
+    return mem;
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(mem.slice(-MAXN))); }
+    catch (e) { try { mem = mem.slice(-30); localStorage.setItem(KEY, JSON.stringify(mem)); } catch (e2) { swallow("errlog-save", e2); } }
+  }
+  /* URL 打码：token / key / 签名类查询参数一律替换（日志可能被贴到聊天里） */
+  function scrub(s) {
+    var t = String(s == null ? "" : s);
+    /* ⚠ 判据不能要求前面是 `?`/`&` —— 错误消息里常见 `：token=xxx`（全角冒号）、
+       `Authorization: Bearer xxx` 这类形态，第一版就是漏了它们（实测 false）。
+       改成"键名两侧有边界即可"，宁可多打。 */
+    t = t.replace(/(^|[^A-Za-z0-9_])(token|apikey|api_key|secret|signature|sig|access_key|accesskey|authorization)\s*[=:]\s*[^&\s"',;)]+/gi, "$1$2=***");
+    t = t.replace(/(Bearer)\s+[A-Za-z0-9._~+\/-]{12,}/gi, "$1 ***");
+    t = t.replace(/sk-[A-Za-z0-9_-]{12,}/g, "sk-***");
+    t = t.replace(/LTAI[A-Za-z0-9]{8,}/g, "LTAI***");
+    return t.length > MAXLEN ? t.slice(0, MAXLEN) + "…(截断)" : t;
+  }
+  /* 当前的"现场"——尽量拼出可复现的上下文 */
+  function ctx() {
+    var o = { t: new Date().toISOString() };
+    try { o.tab = (UI && UI.state && UI.state.tab) || ""; } catch (e) { swallow("errlog-ctx1", e); }
+    try { o.model = (UI && UI.state && UI.state.model && UI.state.model.id) || ""; } catch (e) { swallow("errlog-ctx2", e); }
+    try { if (UI && typeof UI._collectParamsAsync !== "function") o.note = "no-collect"; } catch (e) { swallow("errlog-ctx3", e); }
+    try { o.build = (window.__w5Build || "") ; } catch (e) { swallow("errlog-ctx4", e); }
+    try { o.net = (window.__w5LastNet || null); } catch (e) { swallow("errlog-ctx5", e); }
+    return o;
+  }
+  function push(kind, text, extra) {
+    try {
+      load();
+      var e = ctx();
+      e.k = String(kind || "?"); e.m = scrub(text);
+      if (extra) { try { e.x = scrub(typeof extra === "string" ? extra : JSON.stringify(extra)); } catch (e3) { e.x = "[extra 不可序列化]"; } }
+      mem.push(e);
+      if (mem.length > MAXN) mem = mem.slice(-MAXN);
+      save();
+      try {
+        console.error("[ERRLOG] " + e.k + " · " + e.m + "  · " + (e.tab || "-") + "/" + (e.model || "-")
+          + (e.net ? " · " + e.net.method + " " + e.net.url + " → " + e.net.status : "")
+          + "  · 完整日志：copy(__w5Logs())");
+      } catch (e4) { /* console 不可用就算了 */ }
+    } catch (e2) { try { _r9mNote("errlog-push", e2); } catch (e5) { swallow("errlog-push-fatal", e5); } }
+  }
+  function asText() {
+    load();
+    var L = mem.slice(-60);
+    if (!L.length) return "（暂无错误记录）";
+    var out = ["# 图片工作台 错误日志", "# 生成时间 " + new Date().toISOString(), "# 共 " + mem.length + " 条（列出最近 " + L.length + " 条）", ""];
+    for (var i = 0; i < L.length; i++) {
+      var e = L[i];
+      out.push("[" + (i + 1) + "] " + e.t + "  " + e.k);
+      out.push("    说明: " + (e.m || ""));
+      if (e.tab || e.model) out.push("    现场: tab=" + (e.tab || "-") + " model=" + (e.model || "-"));
+      if (e.net) out.push("    请求: " + e.net.method + " " + e.net.url + " → " + e.net.status + (e.net.note ? " (" + e.net.note + ")" : ""));
+      if (e.x) out.push("    细节: " + e.x);
+      out.push("");
+    }
+    return out.join("\n");
+  }
+
+  /* ── ① 拦 Toast（用户看到的每一条 error/warning 都留档） ── */
+  try {
+    if (typeof Toast === "object" && Toast) {
+      ["error", "warning"].forEach(function (k) {
+        var o = Toast[k];
+        if (typeof o !== "function" || o.__w5logged) return;
+        var w = function () {
+          try { push(k, Array.prototype.join.call(arguments, " ")); } catch (e1) { swallow("errlog-toast", e1); }
+          return o.apply(Toast, arguments);
+        };
+        w.__w5logged = 1; Toast[k] = w;
+      });
+    }
+  } catch (e) { swallow("errlog-hook-toast", e); }
+
+  /* ── ② 拦未捕获异常 / 未处理 rejection ── */
+  try {
+    window.addEventListener("error", function (ev) {
+      try {
+        push("uncaught", (ev && (ev.message || (ev.error && ev.error.message))) || "unknown",
+             (ev && (ev.filename || "")) + ":" + (ev && ev.lineno || ""));
+      } catch (e1) { swallow("errlog-onerror", e1); }
+    });
+  } catch (e) { swallow("errlog-hook-err", e); }
+  try {
+    window.addEventListener("unhandledrejection", function (ev) {
+      try {
+        var r = ev && ev.reason;
+        push("rejection", (r && (r.message || r)) || "unknown", (r && r.stack) ? String(r.stack).slice(0, 400) : "");
+      } catch (e1) { swallow("errlog-onrej", e1); }
+    });
+  } catch (e) { swallow("errlog-hook-rej", e); }
+
+  /* ── ③ 给 Api.request 挂"最近一次出网"（出网失败时能知道打到哪、什么状态码） ── */
+  return {
+    push: push,
+    text: asText,
+    clear: function () { try { mem = []; localStorage.removeItem(KEY); return "已清空"; } catch (e) { return "清空失败：" + String(e && e.message); } },
+    note: function (method, url, status, extra) {
+      try { window.__w5LastNet = { method: String(method || ""), url: scrub(url), status: status, note: extra ? scrub(extra) : "" }; } catch (e) { swallow("errlog-note", e); }
+    },
+    count: function () { try { return load().length; } catch (e) { return -1; } }
+  };
+})();
+try {
+  window.__w5Logs = function () { return ErrLog.text(); };
+  window.__w5LogsClear = function () { return ErrLog.clear(); };
+} catch (e) { swallow("errlog-expose", e); }
+
+/* ── ④ 给 `Api.request` 挂"最近一次出网"（**延迟到脚本跑完再包** —— 本模块插在 `const Api = {`
+      之前，此刻 `Api` 这个 const 还在 TDZ 里，直接引用会抛 ReferenceError） ── */
+try {
+  setTimeout(function () {
+    try {
+      var _o = Api.request;
+      if (typeof _o !== "function" || _o.__w5logged) return;
+      var _w = async function (method, path, body, opts) {
+        try {
+          var r = await _o.apply(Api, arguments);
+          try { ErrLog.note(method, path, "OK"); } catch (e1) { swallow("errlog-api-ok", e1); }
+          return r;
+        } catch (e) {
+          try { ErrLog.note(method, path, (e && e.status) || "ERR", (e && e.message) || String(e)); } catch (e2) { swallow("errlog-api-err", e2); }
+          throw e;
+        }
+      };
+      _w.__w5logged = 1;
+      Api.request = _w;
+    } catch (e) { swallow("errlog-hook-api", e); }
+  }, 0);
+} catch (e) { swallow("errlog-hook-api-outer", e); }
+/* ══════ R9ZY end ══════ */
 const Api = {
 _uploadCache: new Map,
 async request(method, path, body, opts = {}) {
@@ -9777,8 +9941,25 @@ diag.push(`适配:${String(eFit && eFit.message || eFit).slice(0, 32)}`);
 }
 if (blob) {
 let putErr = null;
-/* ★ R9L：先试**服务端暂存**（Worker 换临时凭证 + 传桶，前端不碰密钥）。
-   返回 null = 本环境没有该能力 ⇒ 直接落到下面的原路径（零行为变化）。 */
+/* ★★ R9ZY-2：**顺序反过来** —— 前端有阿里云凭据时**先走直传**（老路径 · 一跳、就近接入），
+   服务端暂存退为兜底。起因（修 2026-10-10）：「阿里抠图以前秒出、现在很慢很慢」。
+   真因 = R9L 把服务端暂存提到最前 ⇒ 中间图上传变成「浏览器 → CF Worker（可能海外）→
+   阿里 OSS（上海）」跨洋两跳。**慢的是中间图上传，不是抠图本身。**
+   ⚠ 不能一律改回直传：R9L 的初衷是「没配前端密钥也能用」（服务端用 Worker 里的机读密钥）。
+     所以按**能力分流**：Store.hasSegCred() 为真 ⇒ 先直传（快）；否则 ⇒ 仍走服务端（能用）。
+   ⚠ 直传失败会落到下面原有分支（服务端暂存），不丢功能。 */
+let _staged = null;
+try {
+if (Store.hasSegCred && Store.hasSegCred()) {
+try {
+_staged = await this.ossStagePut(await this.viapiSts(), blob, ext);
+if (_staged) return _staged;
+} catch (eDir) {
+diag.push(`直传:${String(eDir && (eDir.code || eDir.message) || eDir).slice(0, 40)}`);
+}
+}
+} catch (_eOrder) { _r9mNote("seg-order", _eOrder); }
+/* R9L 原路径：服务端暂存（无前端凭据时首选、有凭据时兜底） */
 try {
 const _segUrl = await _r9lStageProxy(blob, ext);
 if (_segUrl) return _segUrl;
