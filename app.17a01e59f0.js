@@ -7394,7 +7394,7 @@ ver2 = (pr.headers.get("X-Aiwork-Proxy") || "").trim();
 if (probe && ver) throw new Error("Worker 媒体代理预检探测通过（部署版本 " + ver + (ver2 ? " · " + ver2 : "") + " 在位）但请求仍失败——可能为瞬时网络抖动或 Worker 运行时异常，请重试一次；持续失败请到 Cloudflare 控制台查看该 Worker 的实时日志");
 if (probe) throw new Error("Worker 媒体代理可达但响应缺版本特征——线上是很旧的部署（预检不回 x-media-proxy-version）。请到 Cloudflare 控制台 → 计算（Workers）→ Workers 和 Pages → 选中该 Worker → 编辑代码 → 全选粘贴 studio/ 下**最新一版**《W5-给修-Worker完整代码-*.js》全文 → 部署，完成后硬刷新本页");
 throw new Error("Worker 媒体代理连不上（预检探测同样失败）—— ⚠ 这一步**不能断定**是「没部署」：网络故障、系统代理、跨域都会是这个表现。请按序排查：① 设置页里「R2 Worker 地址」域名是否写对；② 浏览器直接打开「该地址 + /health」——能看到 version 字段 ⇒ 已部署，问题在网络链路（查代理/网络后重试）；打不开 ⇒ 才是未部署；③ 若确认未部署，到 Cloudflare 控制台 → 计算（Workers）→ Workers 和 Pages → 选中该 Worker → 编辑代码 → 全选粘贴 studio/ 下**最新一版**《W5-给修-Worker完整代码-*.js》全文 → 部署");
-} throw new Error("网络请求失败，可能是跨域(CORS)或网络问题"); }
+} throw new Error("网络请求失败（浏览器连不上 " + (function () { try { return new URL(url).origin; } catch (_u) { return "该地址"; } })() + "）—— ⚠ 这一步**尚未确认**是跨域，请按下面自查，别急着重试：① 打开浏览器开发者工具「网络」面板，找到这条请求：**能看到状态码**（503 / 504 / 524 等）⇒ 是服务端或网关的问题，**不是 CORS**，按该状态码处置（524 = 网关等待超 125 秒）；**显示 (failed) / blocked / CORS error** ⇒ 才是跨域或网络层被拦。② 高频真因是**响应体过大**（任务中心单条查询曾达 7MB）被网关截断 —— 这种情况**重试一次**通常就好，或改用轻量查询（任务中心现已默认返回摘要）。③ 若确是 CORS：该响应未带 Access-Control-Allow-Origin，需服务端为该来源放行。"); }
 throw e;
 }
 },
@@ -18063,7 +18063,7 @@ document.addEventListener("DOMContentLoaded", () => { UI.init(); /* ★ R76-J：
    ============================================================ */
 window.StudioEditor = (function() {
 let api = null, ov = null, onSaveCb = null, escHandler = null, scriptP = null;
-const STUDIO_SRC = "image-studio.59d4127d1c.js";
+const STUDIO_SRC = "image-studio.72f91ae331.js";
 /* IMPL-144 W5（2026-09-26 修拍板）：位图动作全换 GPT-Image-2.5 系——覆盖 IMPL-143 版映射（变更单第一节）
    sunburst=最强档（精细编辑/参考保真，Arena 文生图 1420.7/编辑 1520.4 双第一）→扩图/局部重绘；flare=快车道（比 GPT-Image-2 快 50%）→擦除/图像拆解/编辑文字；抠出主体维持阿里抠图专用通道
    裸名审计落账：GPT-Image-2.5 裸名非 OpenAI 正式 model id（正式 id 仅 gpt-image-2.5-flare / gpt-image-2.5-sunburst，快照 -2026-09-08）；
@@ -19190,6 +19190,26 @@ if (exA.refDataUrls && exA.refDataUrls.length) finalPrompt = (finalPrompt ? fina
 if (e.action === "angle-adjust" && op13 && op13.operation === "multiangle" && op13.params && typeof op13.params === "object") {
   const _ap13a = String(op13.anglePrompt || "").trim();
   if (_ap13a) finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + _ap13a;
+  /* ★★ R9ZW-1：角度调整**必须看到三轴数值本身**，不能只靠模糊折句。
+     起因（修 2026-10-11）：「生成的图片并没有按设定的角度变化」。
+     做法：把三轴**原值**明确写进指令（模型对数字的服从度远高于形容词），
+     并显式指认**参考图1 = 方位示意立方体**（编辑器 R9ZW 侧画的，走 urls 通道）。 */
+  try {
+    const _h = Number(op13.params.horizontal_angle);
+    const _v = Number(op13.params.vertical_angle);
+    const _z = Number(op13.params.zoom);
+    const _hasRef = !!(exA.refDataUrls && exA.refDataUrls.length);
+    const _seg = [];
+    _seg.push("【视角重绘指令】把主图的观察视角精确调整到：水平环绕角 " + (Number.isFinite(_h) ? Math.round(_h) : 30) + " 度、垂直俯仰角 " + (Number.isFinite(_v) ? Math.round(_v) : 30) + " 度、缩放 " + (Number.isFinite(_z) ? _z.toFixed(1) : "1.0"));
+    if (_hasRef) {
+      _seg.push("第 2 张图是目标相机方位的示意立方体：橙色面代表调整后的相机朝向，立方体六个面标注了前/后/左/右/上/下，请严格按该方位重绘主图的主体");
+      _seg.push("只改变观察视角，主体的形态、材质、颜色、光线与整体风格必须保持与主图一致，并补全该视角下新出现的部分");
+      _seg.push("示意图仅用于指示方位，**不要把立方体、边框、文字或任何示意元素画进结果**");
+    } else {
+      _seg.push("只改变观察视角，主体的形态、材质、颜色、光线与整体风格必须保持与主图一致，并补全该视角下新出现的部分");
+    }
+    finalPrompt = (finalPrompt ? finalPrompt + "；" : "") + _seg.join("；");
+  } catch (_e13) { _r9mNote("r9zw-01", _e13); }
 }
 /* ★ R9ZC-1b：终极兜底 —— 三轴全默认时 anglePromptOf 返回空串，仍然会撞"prompt 必填"。
    给一个**最小语义非空**的描述（只说事实、不写风格），保证任何动作都不会因空 prompt 挂掉。 */
