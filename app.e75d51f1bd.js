@@ -2854,7 +2854,12 @@ const SKILL_MODEL_PRESETS = [
      ⚠ think:false 仍是诚实标注（Worker 的 apiyi 分支无 thinking 注入，开关是 no-op）。 */
   { id: "apiyi:gpt-6.1-sol", label: "GPT-6.1 Sol（易）", vision: true, think: false, desc: "最新 6 代旗舰 · 支持视觉 · $2/$10 每 M tokens", billing: { type: "perToken", inUsdPerM: 2, outUsdPerM: 10, source: "api", note: "APIYI 官转（入 $2/M · 出 $10/M，pricing 端点 ratio 1.0 × 2 / × 5）" } },
   { id: "apiyi:claude-opus-5-5", label: "Claude Opus 5.5（易）", vision: true, think: false, desc: "Anthropic 旗舰 · 长文与代码强", billing: { type: "perToken", inUsdPerM: 4, outUsdPerM: 20, source: "api", note: "APIYI 官转（入 $4/M · 出 $20/M）" } },
-  { id: "apiyi:gemini-3.1-pro-preview", label: "Gemini 3.1 Pro（易）", vision: true, think: false, desc: "Google 多模态旗舰 · 看图理解强", billing: { type: "perToken", inUsdPerM: 1.8, outUsdPerM: 10.8, source: "api", note: "APIYI 官转（入 $1.8/M · 出 $10.8/M）" } }
+  { id: "apiyi:gemini-3.1-pro-preview", label: "Gemini 3.1 Pro（易）", vision: true, think: false, desc: "Google 多模态旗舰 · 看图理解强", billing: { type: "perToken", inUsdPerM: 1.8, outUsdPerM: 10.8, source: "api", note: "APIYI 官转（入 $1.8/M · 出 $10.8/M）" } },
+
+  /* ★ R9ZY-5（2026-10-11 · 修点名要加）：GPT-6 Luna —— APIYI 现价最便宜的 6 代档。
+     费率真值：ratio 0.05 / comp 5 ⇒ **入 $0.1/M · 出 $0.5/M**（¥0.7/¥3.5）。
+     ⚠ vision:true 是**暂标**（pricing 不带模态信息，本轮未真调）—— 待一次真调核实后回填。 */
+  { id: "apiyi:gpt-6-luna", label: "GPT-6 Luna（易）", vision: true, think: false, desc: "6 代最省档 · $0.1/$0.5 每 M tokens · 视觉待实测", billing: { type: "perToken", inUsdPerM: 0.1, outUsdPerM: 0.5, source: "api", note: "APIYI 官转（入 $0.1/M · 出 $0.5/M，pricing 端点 ratio 0.05 × 2 / × 5）" } }
 ];
 
 /* ★ R85：非 APIYI 直连档的费率表（只读查询，不参与 UI 模型列表）。单位与 APIYI 档一致 = **美元/百万 token**，
