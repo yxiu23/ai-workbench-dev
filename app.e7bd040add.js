@@ -7106,6 +7106,20 @@ function _r9gProbeCaps() {
   }).catch(function () { /* 探测失败＝保持现状，绝不因此影响功能（这是设计，不是吞错） */ });
 }
 
+/* ★★ R9ZU：异步任务通道能力闸。
+   读的仍是 R9L 存下的整份 caps（不新增探测、不新增网络往返）。
+   ⚠ 语义是"**确定没有**才拒绝"：
+     · caps 已到手且明确 apiyiAsync === false ⇒ 拒（旧 Worker 没这端点）；
+     · caps **还没探测回来**（null）⇒ 也是拒 —— 宁可退回同步（行为与今天一致），
+       也绝不冒险提交到一个可能不存在的端点（那会变成 404，比 524 更难查）。
+   代价：页面刚打开的最初一瞬，首次 APIYI 慢请求会走同步（概率极低且不更坏）。 */
+function _r9zuCapsReady() {
+  try {
+    if (!__r9gCaps) { if (!__r9gProbed) _r9gProbeCaps(); return false; }
+    return __r9gCaps.apiyiAsync === true;
+  } catch (_e) { return false; }
+}
+
 /* ══════ R9ZY · 错误日志（payload/R9ZY_errlog.txt）══════ */
 /* ══════════════════════════════════════════════════════════════════════════════
    ★★ R9ZY · 错误日志（修：「需要有个日志功能，最起码能记录错误，这样我也能方便的反馈给你」）
@@ -7449,6 +7463,21 @@ _directReq(method, path, body, opts = {}) {
   const url = w + "/media/" + chan + (path.charAt(0) === "/" ? path : "/" + path)
     + (_r9gHdr ? "" : (path.indexOf("?") >= 0 ? "&" : "?") + "token=" + encodeURIComponent(token));
   /* ★ R9E-APIYI-P1-6：上游密钥由 Worker 注入，前端不发自己的凭据 */
+  return _r9gHdr
+    ? this.request(method, url, body, { skipAuth: true, authorization: "Bearer " + token, ...opts })
+    : this.request(method, url, body, { skipAuth: true, noAuth: true, ...opts });
+},
+/* ★★ R9ZU：Worker Task Center 直连（不走 /media/<chan> 那条）。
+   为什么单拆一个：/media/apiyi/* 是"同步透明代理"（用户请求一直挂着等上游 ⇒ 撞 CF 125s 墙）；
+   /task/* 是"异步任务中心"（提交秒回，跑上游交给 Cron）。两条路形态不同，不能复用 _directReq
+   —— 后者的 chan 前缀会拼出 /media/apiyi/task/... 这种不存在的路径。 */
+_taskReq(method, path, body, opts = {}) {
+  const w = (Store.getR2WorkerUrl() || "").trim().replace(/\/$/, "");
+  if (!w) throw new Error("no_worker_url: 未配置 R2 Worker 地址——异步任务通道需要它，请在 设置→编辑密钥 填入 R2 Worker 地址与 Token");
+  const token = Store.getR2AuthToken() || "";
+  if (!__r9gProbed) _r9gProbeCaps();
+  const _r9gHdr = _r9gBearerOn();
+  const url = w + path + (_r9gHdr ? "" : (path.indexOf("?") >= 0 ? "&" : "?") + "token=" + encodeURIComponent(token));
   return _r9gHdr
     ? this.request(method, url, body, { skipAuth: true, authorization: "Bearer " + token, ...opts })
     : this.request(method, url, body, { skipAuth: true, noAuth: true, ...opts });
@@ -18332,6 +18361,29 @@ function apiyiTimeoutOf(modelId, def, size) {
   return 36e4;
 }
 
+/* ★★ R9ZU · 异步判据：这个请求**值不值得**走异步通道？
+   ─────────────────────────────────────────────────────────────────────────────
+   背景：CF 的 Proxy Read Timeout = 125s（计"上游首字节"），Free/Pro/Business 不可调。
+     同步通道（/media/apiyi/*）在 125s 内必被 CF 断成 524 —— 而 APIYI 明文
+     「客户端断开不取消上游、照常计费」⇒ 最坏情况是**钱扣了、图没拿到**。
+   判据（修 2026-10-10 拍板「按模型白名单自动切」）：
+     · 只有**预算 ≥ 300s** 的档（即实测会撞 125s 的慢档）才走异步；
+     · 快档（flux 180s、以及将来任何 < 300s 的）继续走同步直发
+       ⇒ 零额外轮询往返、行为逐字节不变（这是"自动切"的核心价值）。
+   为什么用**预算**而不是参数名枚举模型 id：
+     apiyiTimeoutOf 是"我们对这个模型的耐心"的**唯一真值源**（分档依据是官方建议时延），
+     预算 ≥300s ⇔ 官方/实测口径认为它会跑好几分钟 ⇔ 正是会撞墙的那批。
+     ⇒ 用同一把尺，杜绝"新加个慢模型忘了加进白名单"这类漂移。
+   ⚠ 能力闸：Worker 必须已报 caps.apiyiAsync（否则旧 Worker 没这端点，贸然提交会 404）。
+     没这能力 ⇒ 一律退回同步（行为与今天完全一致，不会更坏）。 */
+function apiyiWantsAsync(def, size) {
+  try {
+    if (typeof _r9zuCapsReady !== "undefined" && !_r9zuCapsReady()) return false;
+    const budget = apiyiTimeoutOf(def && def.modelId, def, size);
+    return budget >= 3e5;
+  } catch (_e) { return false; }
+}
+
 /** 从 MODELS.image 里按 id 取 APIYI 模型定义（**channel 是唯一真值**，不是动作表）。 */
 function apiModelById(id) {
   if (!id || typeof MODELS === "undefined" || !Array.isArray(MODELS.image)) return null;
@@ -18400,9 +18452,158 @@ function apiyiSize(ratio, tier) {
   return "";                                      /* 收不住就交服务端 auto，不硬塞非法值 */
 }
 
+/** ★★ R9ZU · 异步版 apiyiPost —— **签名与返回形态与同步版逐字一致**，
+ *  这样它能作为 apiyiPost 内部的一个分支被调用，所有调用点零改动。
+ *
+ *  链路：POST /task/apiyi（秒回 taskId）→ 轮询 GET /task/<id> → 取回上游响应体原文 → 同款解析
+ *
+ *  ⚠ 为什么必须走异步（而不是"再给同步多等一会"）：
+ *    CF 的 Proxy Read Timeout 卡的是**上游首字节**（125s），Free/Pro/Business 不可调；
+ *    而 10-10 实测证明它是**概率性触发**（`/ktest?ms=140000` 撑到 180s、
+ *    `/ktest?ms=150000` 却 170s 无字节）⇒ 保活只能提高概率、**不能保证**。
+ *    唯一确定的做法 = 让用户请求**根本不等上游**：提交秒回，等待搬给 Cron。
+ *
+ *  ⚠ 形态转换（FormData → files[]）：上游 /v1/images/edits 要 multipart，
+ *    而跨请求只能传文本 ⇒ 这里把每个部件的字节转成裸 base64 放进 files[]，
+ *    Worker 的 Cron 侧还原成 FormData 再发（见 Worker runApiyiTask 的注释）。 */
+
+/** ★ 给"上游已被调度/已计费之后"的错误打显式标记 —— 供 apiyiPost 决定**能不能**退回同步重试。
+ *  为什么必须显式标记而不是解析错误文案：文案会随批次改（甚至被上游改），
+ *  而"能不能重试"是**计费安全**问题，靠正则猜等于拿钱赌。标记不会漂移。 */
+function _ayErr(e) {
+  try { e.__ayAccepted = true; } catch (_x) { /* 冻结对象等极端情况：标记失败也如实抛，宁可不降级 */ }
+  return e;
+}
+
+async function apiyiPostAsync(pathname, body, def, size) {
+  /* ① 形态归一：FormData → { scalars, files[] }；普通对象 → 原样 body、无 files */
+  const scalars = {};
+  const files = [];
+  if (body && typeof body === "object" && typeof body.append === "function" && typeof body.forEach === "function") {
+    /* ⚠ FormData.forEach 的签名是 (value, key) —— **不是** (key, value)。写反会静默把所有
+       字段名当值发出去，而且不会有任何报错（最难查的一类）。 */
+    body.forEach(function (value, key) {
+      if (value && typeof value === "object" && typeof value.arrayBuffer === "function") {
+        /* File / Blob 部件 ⇒ 读成 base64。⚠ 必须**同步收集 promise** 再 await，
+           不能在 forEach 里 await（forEach 不认 async 回调，会直接跑完不留痕）。 */
+        files.push((async function () {
+          const buf = new Uint8Array(await value.arrayBuffer());
+          let bin = "";
+          for (let i = 0; i < buf.length; i += 1) bin += String.fromCharCode(buf[i]);
+          return {
+            field: key,
+            name: value.name || (key + ".png"),
+            mime: value.type || "application/octet-stream",
+            b64: btoa(bin),
+          };
+        })());
+      } else {
+        scalars[key] = String(value);
+      }
+    });
+  } else if (body && typeof body === "object") {
+    Object.keys(body).forEach(function (k) { scalars[k] = body[k]; });
+  }
+
+  const filesResolved = await Promise.all(files);
+
+  console.info("[W5-route]", JSON.stringify({
+    phase: "apiyi-async-submit", path: pathname, model: (def && def.modelId) || null,
+    size: size || scalars.size || null, files: filesResolved.length, ts: Date.now(),
+  }));
+
+  /* ② 提交（秒回） */
+  const sub = await Api._taskReq("POST", "/task/apiyi", {
+    path: pathname,
+    body: scalars,
+    files: filesResolved,
+    model: (def && def.modelId) || (def && def.id) || "",
+    modelType: "image",
+  }, { timeout: 12e4 });   /* ⚠ 提交本身只需"上传 + KV 写"，给 120s 很宽裕；
+                              它**绝不该**因为上游慢而超时（上游压根不在这一跳）。 */
+  const taskId = sub && (sub.taskId || (sub.task && sub.task.id));
+  if (!taskId) throw new Error("异步通道提交未返回 taskId：" + JSON.stringify(sub).slice(0, 200));
+
+  /* ★★ 分界线：拿到 taskId = **上游可能已被调度**（Cron 随时会取走它并真发上游）。
+     从此处起的**任何**失败（轮询超时 / 网络断 / 任务失败 / 结果体坏）
+     都不许退回同步重试 —— 退回等于再发一次，可能造成**双重计费**。
+     ⇒ 整段包一层，catch 里统一打 `__ayAccepted` 标记（下面各处仍各自 throw，语义不变）。 */
+  try {
+
+  /* ③ 轮询（复用与宿主 PollManager **同一套**节奏与状态语义） */
+  const timeoutMs = CONFIG.POLL_TIMEOUT || 18e5;
+  const phases = (Array.isArray(CONFIG.POLL_PHASES) && CONFIG.POLL_PHASES.length)
+    ? CONFIG.POLL_PHASES
+    : [{ until: 3e4, interval: 3e3 }, { until: 18e4, interval: 1500 }, { until: 6e5, interval: 2e3 }];
+  const intervalOf = function (elapsed) {
+    for (let i = 0; i < phases.length; i += 1) if (elapsed < phases[i].until) return phases[i].interval;
+    return phases[phases.length - 1].interval;
+  };
+
+  const t0 = Date.now();
+  let last = null;
+  for (let i = 0; ; i += 1) {
+    const elapsed = Date.now() - t0;
+    if (elapsed > timeoutMs) {
+      throw _ayErr(new Error("异步任务轮询超时（>" + Math.round(timeoutMs / 1000) + "s，任务 " + taskId
+        + "）—— 任务可能仍在跑，可在任务列表查看"));
+    }
+    await new Promise(function (r) { setTimeout(r, i === 0 ? 2000 : intervalOf(elapsed)); });
+    last = await Api._taskReq("GET", "/task/" + encodeURIComponent(taskId), undefined, { timeout: 3e4 });
+
+    const st = String((last && last.status) || "").toLowerCase();
+    if (st === "succeeded" || st === "success" || st === "completed") {
+      /* ★★ 拿回**上游响应体原文**并走与同步版**同一段**解析 —— 单点收口，杜绝两套口径漂移。 */
+      let parsed = null;
+      try { parsed = last.resultBody ? JSON.parse(last.resultBody) : null; } catch (_e) { parsed = null; }
+      if (!parsed) {
+        throw _ayErr(new Error("异步任务已成功但结果体无法解析：" + String(last.resultBody || "").slice(0, 200)));
+      }
+      const arr = Array.isArray(parsed.data) ? parsed.data : [];
+      const raw = arr.map(function (it) { return (it && (it.b64_json || it.url)) || ""; }).filter(Boolean);
+      if (!raw.length) {
+        const em = (parsed && parsed.error && (parsed.error.message || parsed.error)) || "";
+        throw _ayErr(new Error("APIYI 未返回图片数据" + (em ? "：" + String(em) : "") + " · " + JSON.stringify(parsed).slice(0, 200)));
+      }
+      console.info("[W5-route]", JSON.stringify({ phase: "apiyi-async-done", secs: Math.round((Date.now() - t0) / 1000), n: raw.length, polls: i + 1, ts: Date.now() }));
+      return { urls: raw.map(function (v) { return /^https?:\/\//i.test(v) ? v : b64ToBlobUrl(v); }), usage: (parsed && parsed.usage) || null };
+    }
+    if (st === "failed" || st === "error") {
+      throw _ayErr(new Error("APIYI 异步任务失败（任务 " + taskId + "）：" + String((last && last.error) || "").slice(0, 300)));
+    }
+    /* queued / running ⇒ 继续等（与同步通道"生成中"的体验一致） */
+  }
+
+  } catch (_e) {
+    /* 走到这里 = 已过 taskId 分界线 ⇒ 无论哪种失败都标注"上游可能已调度"，不许退同步。 */
+    throw _ayErr(_e);
+  }
+}
+
 /** 统一收口：POST 到 APIYI 并把 data[].b64_json / .url 换成可显示 URL 数组。
- *  ⚠ **绝不传 response_format**（官方：传了直接 400）；b64_json 无 data: 前缀（自己造 Blob）。 */
+ *  ⚠ **绝不传 response_format**（官方：传了直接 400）；b64_json 无 data: 前缀（自己造 Blob）。
+ *
+ *  ★★ R9ZU：**在本函数内部分流**（同步 / 异步）—— 这是刻意选择的最小侵入点：
+ *    它的签名与返回值在所有调用点（apiyiImages / apiyiEdits / 编辑器位图动作）都一致，
+ *    在这里分流 ⇒ 调用点**零改动**，也不会有人"漏改一条分支"。
+ *    判据见 apiyiWantsAsync（预算 ≥300s 的慢档 + Worker 已报能力）。 */
 async function apiyiPost(pathname, body, def, size) {
+  /* ★ 分流点：慢档 + Worker 具备异步能力 ⇒ 走异步（提交秒回 + Cron 跑上游）。
+     任一条不满足 ⇒ 逐字节走下面的原同步逻辑（含原有 429/5xx 退避重试）。 */
+  if (apiyiWantsAsync(def, size)) {
+    try {
+      return await apiyiPostAsync(pathname, body, def, size);
+    } catch (e) {
+      /* ⚠ 降级策略（**只按显式标记，绝不靠正则猜**）：异步链路自身失败时，要不要退回同步重试？
+         退回的收益 = 用户不至于白等；退回的**风险** = 若上游其实已受理（已计费），
+         再发一次同步就是**双重计费** —— 这类错误绝不能掩护着重试。
+         ⇒ apiyiPostAsync 在"上游已被调度"之后抛的错，一律打 `e.__ayAccepted = true`；
+            这里**只认这个标记**（不解析错误文案，文案会变、标记不会）。 */
+      if (e && e.__ayAccepted) throw e;
+      console.warn("[W5-route]", JSON.stringify({ phase: "apiyi-async-fallback", msg: String((e && e.message) || e).slice(0, 200), ts: Date.now() }));
+      /* 落回同步路径（继续执行下方原逻辑） */
+    }
+  }
   /* ★★ R95-1-4（报告 01 P1-3）：429 / 5xx **带抖动退避**，上限 2 次重试。
      官方口径：429 = 「限流 **或** 余额/额度不足」，不该一次就放弃、也不该猜死是哪一个。
      ⚠ 只在**明确是限流/服务端错误**时重试；参数类 4xx **绝不重试**（重试无用、还可能白跑）。 */
@@ -19285,6 +19486,13 @@ window.__w5Host = Object.assign(window.__w5Host || {}, {
   apiyiImages: apiyiImages,             /* 文生图 /v1/images/generations（JSON） */
   apiyiEdits: apiyiEdits,               /* 改图 /v1/images/edits（multipart，mask 只对第 1 张） */
   apiyiGemini: apiyiGemini,             /* Gemini 原生 :generateContent */
+  /* ★★ R9ZU：异步通道三件挂全局 —— 两个用途：
+     ① **验收可达**：它们在本 IIFE 内，离线验收脚本（CDP eval）拿不到 ⇒ 无法验分流；
+     ② **现场可诊断**：修在 Console 里能直接 `__w5Host.apiyiWantsAsync(...)` 看某个模型
+        当前会不会走异步（这比"猜"快得多，也便于他把结论反馈给我）。 */
+  apiyiPost: apiyiPost,                 /* APIYI 图片统一出口（**内部按预算分流同步/异步**） */
+  apiyiPostAsync: apiyiPostAsync,       /* 异步版（提交 /task/apiyi + 轮询 /task/<id>） */
+  apiyiWantsAsync: apiyiWantsAsync,     /* 分流判据（预算 ≥300s 且 Worker 报了 apiyiAsync） */
   blobUrlToDataURL: blobUrlToDataURL,   /* blob:/https: → dataURL（参考图下载） */
 });
 return { open: open, close: close };
