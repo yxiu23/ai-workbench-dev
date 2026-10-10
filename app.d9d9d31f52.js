@@ -13905,6 +13905,33 @@ const el = document.querySelector('[data-key="__count"]');
 const n = parseInt(el && el.value, 10);
 return Number.isFinite(n) ? Math.max(1, Math.min(4, n)) : 1;
 },
+/* ★★ R9ZR：失败落卡的**唯一实现**（幂等）。
+   谁调：① handleGenerate 外层 catch（原 R77-A）② R9Q 批次 IIFE 的 catch（R9ZR 新增）。
+   为什么必须同源：R9Q 把 APIYI 早分流包进 IIFE，它自己的 catch 会先接住异常 ⇒ 外层永远收不到
+   ⇒ 失败被静默（僵尸卡）。这里做成"从 Store 里捞出在途 processing 的 _r76Api 任务落 failed"，
+   与调用点无关，重复调用安全（第二次没有 processing 任务 ⇒ 空转）。 */
+_r77FailPending(e) {
+try {
+const _r77ft = Store.getTasks();
+const _r77failed = [];
+_r77ft.forEach(function (t) {
+if (t && t._r76Api && t.status === "processing") {
+t.status = "failed";
+t.error = _errText(e);
+t.completedAt = Date.now();
+_r77failed.push(t);
+}
+});
+if (_r77failed.length) {
+Store.saveTasks(_r77ft);
+/* ★ 注意容器分工（实测踩过）：全卡（含 .sv-error 失败块）由 _renderTask → _renderSingleView
+   渲染进 #resultList；_renderResultStrip 只画底部**缩略条**。只调后者 ⇒ 失败看不见。 */
+this._renderTask(_r77failed[_r77failed.length - 1]);
+this._renderActiveTasks();
+this._renderResultStrip();
+}
+} catch (_e77) { _r9mNote("r9zr-01", _e77); }
+},
 async handleGenerate() {
 if (this.state.model?.seg) return this._handleSegGenerate();
 const key = Store.getApiKey();
@@ -14170,35 +14197,13 @@ this.playSuccessSound();
 this._celebrate(task);
 }
 }
-})().catch(function (_r9qE) { window.__r9qFail = (window.__r9qFail || 0) + 1; _r9mNote("r9q", _r9qE); }));
+})().catch((_r9qE) => { window.__r9qFail = (window.__r9qFail || 0) + 1; _r9mNote("r9q", _r9qE); this._r77FailPending(_r9qE); })); /* ★ R9ZR：箭头函数保住 this —— 否则失败又是僵尸卡 */
 /* 窗口满 3 或到最后一张 ⇒ 等这一批落地再继续（这就是并发上限） */
 if (_r9qJobs.length >= 3 || i === count - 1) { await Promise.all(_r9qJobs.splice(0)); }
 }
 } catch (e) {
-/* ★ R77-A：把在途的 APIYI 任务落成 failed 并写清原因。
-   此前 catch 只 Toast、不写任务状态，紧接着 R76-E3 的 finally 又把 processing 卡摘掉
-   ⇒ 生成失败 = 「什么都没发生」。现在失败会**留在结果区**，原因就在卡片上。
-   注：此处不引用循环内声明的 task（作用域外），直接按 Store 里在途的 _r76Api 任务处理。 */
-try {
-const _r77ft = Store.getTasks();
-const _r77failed = [];
-_r77ft.forEach(function (t) {
-if (t && t._r76Api && t.status === "processing") {
-t.status = "failed";
-t.error = _errText(e);
-t.completedAt = Date.now();
-_r77failed.push(t);
-}
-});
-if (_r77failed.length) {
-Store.saveTasks(_r77ft);
-/* ★ 注意容器分工（实测踩过）：全卡（含 .sv-error 失败块）由 _renderTask → _renderSingleView
-   渲染进 #resultList；_renderResultStrip 只画底部**缩略条**。只调后者 ⇒ 失败看不见。 */
-this._renderTask(_r77failed[_r77failed.length - 1]);
-this._renderActiveTasks();
-this._renderResultStrip();
-}
-} catch (_e77) { _r9mNote("misc-047", _e77); }
+/* ★ R77-A（R9ZR 起：逻辑抽到 _r77FailPending，供 R9Q 的 IIFE catch 同源复用） */
+this._r77FailPending(e);
 if (e && e.code === "StageFailed" && location.protocol === "file:") {
 const hint = document.getElementById("fileModeHint");
 if (hint) {
