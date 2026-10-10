@@ -10893,10 +10893,19 @@ pBase = r2Url;
 }
 const hist = Store.getHistory();
 const isCloud = u => u.startsWith(pBase) || /\.r2\.dev\//.test(u);
+/* ★★ R9ZY-4：**已知永不返回 ACAO** 的域 —— 对其发起跨域 fetch 必被浏览器拦截，
+   转存 100% 失败。静态认域后**前置剔除**，连一次失败尝试都不发（消灭首次打开时的噪音）。
+   名单宁短勿长：只放实测确证无 CORS 的域。r2.dev / weserv 都**有** CORS（或已被 isCloud 接管）放进来会误伤。 */
+const _r9zyNoCorsHost = h => {
+try {
+const host = String(new URL(h, location.href).hostname).toLowerCase();
+return /(^|\.)scapi\.net$/.test(host);
+} catch (_r9zyE0) { return false; }
+};
 /* ★ R9N：失败过的条目 **6 小时内不再自动重试** —— 无 CORS 的直链（scapi.net 这类）永远转不成，
    旧行为＝每次打开网站都重跑一遍 fetch、再弹一次失败提示。手动下载路径不受影响。 */
 const _r9nCool = 216e5;
-const pending = hist.filter(h => h.status === "succeeded" && h.result?.url && !isCloud(h.result.url) && !h.result.originalUrl && (!h.result.archiveFailedAt || Date.now() - h.result.archiveFailedAt > _r9nCool) && (/^https?:/.test(h.result.url) || String(h.result.url).indexOf("blob:") === 0)); /* ★ R74-4：blob: 也补转存 · R9N：加失败退避 */
+const pending = hist.filter(h => h.status === "succeeded" && h.result?.url && !isCloud(h.result.url) && !h.result.originalUrl && (!h.result.archiveFailedAt || Date.now() - h.result.archiveFailedAt > _r9nCool) && !_r9zyNoCorsHost(h.result.url) && (/^https?:/.test(h.result.url) || String(h.result.url).indexOf("blob:") === 0)); /* ★ R74-4：blob: 也补转存 · R9N：加失败退避 · R9ZY-4：无 CORS 域前置剔除 */
 pending.slice(0, 3).forEach(h => {
 this._archiveResult(h).catch(() => {});
 });
