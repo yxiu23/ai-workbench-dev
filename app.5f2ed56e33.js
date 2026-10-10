@@ -7182,7 +7182,7 @@ retryAfter: retryAfter
 }
 /* ★★ R9ZI：524 单独给可执行文案 —— 这是 **Cloudflare 网关**断的，不是上游超时，两者对策完全不同：
    上游超时 ⇒ 只能等或换小图；网关 524 ⇒ 部署带「慢请求保活」的 Worker（R9ZI+）即可从根上消除。 */
-if (r9ziSt === 524) throw Object.assign(new Error("网关超时（Cloudflare 524）：等待上游超过网关 125 秒读取上限，被网关先行断开。⚠ 上游任务可能仍在生成并**照常计费**，稍后可在 APIYI 后台查看产物。可执行：① 换更快的模型档（如 SeeDream 5.0 Flash / FLUX）或调低清晰度档；② 到 Cloudflare 控制台重新部署**最新一版** Worker（R9ZI 起已含慢请求保活，可从根上消除 125 秒限制）——交付件是 studio/ 下的《W5-给修-Worker完整代码-*.js》（⚠ 文件名随批次走，别用旧名字；贴完用 curl 看 /health 的 version 确认）"), {
+if (r9ziSt === 524) throw Object.assign(new Error("网关超时（Cloudflare 524）：等待上游超过网关 125 秒读取上限，被网关先行断开。⚠ 上游任务可能仍在生成并**照常计费**，稍后可在 APIYI 后台查看产物。可执行：① **换成速创档**（模型键里**不带 `apiyi:` 前缀**的那三个 `gpt-image-2.5` 系）—— 它走**异步两段式**（提交秒级返回 + 每 4 秒轮询），单条请求都很短，**从结构上就不会撞 125 秒墙**，是当前唯一确定可用的路；或换更快的模型档（SeeDream 5.0 Flash / FLUX）、调低清晰度档；② 到 Cloudflare 控制台重新部署**最新一版** Worker（R9ZI 起已含慢请求保活，可从根上消除 125 秒限制）——交付件是 studio/ 下的《W5-给修-Worker完整代码-*.js》（⚠ 文件名随批次走，别用旧名字；贴完用 curl 看 /health 的 version 确认）"), {
 status: 524,
 data: data
 });
@@ -18390,7 +18390,25 @@ console.info("[W5-route]", JSON.stringify({ phase: "ref-attach", refs: _refs.len
 }
 const pix = wyPixels(ex.aspectRatio, ex.resolution);
 if (pix) body.aspectRatio = pix;
-if (ex.quality) body.quality = ex.quality;
+/* ★★ R9ZX：`quality` **只对 sunburst 下发** —— 上游的白名单是**逐路径**的：
+     · `image_gpt_2.5`（标准生成型）⇒ **根本没有 quality 参数**（本文件另一处注释就写着「标准生成型
+       无 quality 参数（doc/78）」），传了直接被上游拒：`code:500 转发请求失败: 存在未绑定的参数: quality`
+     · `image_gpt_2.5_flare`  ⇒ 不传（= 服务端默认 medium；`BITMAP_MODEL_MAP` 的注释也写着"flare 系不传"）
+     · `image_gpt_2.5_sunburst` ⇒ 接受 low/medium/high/xhigh/max
+   原写法是**无条件** `if (ex.quality) body.quality = ex.quality;` —— 与它自己的注释相反。
+   为什么之前没炸：只有"省流自动降级"那条路径里写了 `delete ex.quality`（那里会退到标准档）；
+   而**用户显式选档（`op13.model` 存在）时省流不触发** ⇒ 质量键有值就直接发给不认它的路径 ⇒ 提交被 500。
+   实测来源：修 2026-10-10 08:0x 在角度面板选速创档，报「速创提交未返回任务 id: … 存在未绑定的参数: quality」。
+   ⚠ 顺带把这个"被丢弃"留痕（静默丢参数 = 用户以为选了就生效，是同一类病）。 */
+{
+  const _wySun = /^image_gpt_2\.5_sunburst$/.test(mp);
+  const _wyFlare = /^image_gpt_2\.5_flare$/.test(mp);
+  if (ex.quality && !_wySun) {
+    console.info("[W5-route]", JSON.stringify({ phase: "wy-quality-drop", model: mp, got: String(ex.quality),
+      why: _wyFlare ? "flare 档不接收 quality（服务端默认 medium）" : "标准生成型无 quality 参数（doc/78）", ts: Date.now() }));
+  }
+  if (_wySun && ex.quality) body.quality = ex.quality;
+}
 if (ex.background) body.background = ex.background; /* H1（十三批）：背景参数透传（auto/transparent） */
 if (ex.num) body.n = ex.num; /* S1（十三批）：张数透传（速创未知字段通常忽略；结果按 result 全量回传） */
 if (maskData) body.mask = await wyUploadDataUrl(maskData, "mask.png"); /* Z20：mask 由 multipart 部件改 URL 形态 */
