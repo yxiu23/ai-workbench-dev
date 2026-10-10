@@ -18088,7 +18088,7 @@ document.addEventListener("DOMContentLoaded", () => { UI.init(); /* ★ R76-J：
    ============================================================ */
 window.StudioEditor = (function() {
 let api = null, ov = null, onSaveCb = null, escHandler = null, scriptP = null;
-const STUDIO_SRC = "image-studio.72f91ae331.js";
+const STUDIO_SRC = "image-studio.982c675912.js";
 /* IMPL-144 W5（2026-09-26 修拍板）：位图动作全换 GPT-Image-2.5 系——覆盖 IMPL-143 版映射（变更单第一节）
    sunburst=最强档（精细编辑/参考保真，Arena 文生图 1420.7/编辑 1520.4 双第一）→扩图/局部重绘；flare=快车道（比 GPT-Image-2 快 50%）→擦除/图像拆解/编辑文字；抠出主体维持阿里抠图专用通道
    裸名审计落账：GPT-Image-2.5 裸名非 OpenAI 正式 model id（正式 id 仅 gpt-image-2.5-flare / gpt-image-2.5-sunburst，快照 -2026-09-08）；
@@ -18631,7 +18631,26 @@ async function apiyiPost(pathname, body, def, size) {
   }
   /* ★★ R95-1-4（报告 01 P1-3）：429 / 5xx **带抖动退避**，上限 2 次重试。
      官方口径：429 = 「限流 **或** 余额/额度不足」，不该一次就放弃、也不该猜死是哪一个。
-     ⚠ 只在**明确是限流/服务端错误**时重试；参数类 4xx **绝不重试**（重试无用、还可能白跑）。 */
+     ⚠ 只在**明确是限流/服务端错误**时重试；参数类 4xx **绝不重试**（重试无用、还可能白跑）。
+     ══════════════════════════════════════════════════════════════════════════════
+     ★★★ R9ZY-5（2026-10-11 · 修报「提交一次扣很多次」——**实测定位到真凶**）
+     ══════════════════════════════════════════════════════════════════════════════
+     实测（零计费空 body 探针，api.apiyi.com/v1/images/generations）：
+       · 存在的模型（gpt-image-2.5-flare，prompt 空） ⇒ 400 prompt is required
+       · 其余模型 / 不存在模型                        ⇒ **503**
+           `Current group default and fallback groups [...] have no available
+            channels for model XXX under billing mode [...]`
+     ⇒ **503 在这家的语义是「该模型在本令牌下没有可用渠道」= 永久性拒绝**，不是瞬时故障！
+        其常见成因之一**正是「余额/额度耗尽」**（渠道因欠费被摘掉）。
+     旧判据 `/429|50[0-9]|.../` **把 503 当成可重试** ⇒ 欠费期间一次点击 = **1 原始 + 2 重试 = 3 次**
+        全部打向 APIYI，叠加编辑器侧任何一次重复提交 ⇒ 账单「提交一次扣很多次」。
+     ★ 新判据（两条同时收紧）：
+       ① **永久性拒绝白名单**：消息含 `no available channels` / `not found` / `unsupported`
+          / `不支持的` ⇒ **绝不重试**（重试一万次也是同样的拒绝，纯烧次数）。
+       ② 重试只认**真·瞬时**信号：`429` / `500` / `502` / `504`（**`503` 剔除**，它已被 ① 收走；
+          仅在 ① 未命中且确为「服务暂时不可用」字样时才归可重试）。 */
+  const _PERM = /no available channels|not found|unsupported|不支持|invalid[_ ]model/i;
+  const _TRANSIENT = /\b(429|500|502|504)\b|rate.?limit|too many|频繁|限流|overload|service temporarily unavailable|temporarily unavailable/i;
   const _delays = [700, 1900];
   let _attempt = 0;
   for (;;) {
@@ -18649,7 +18668,12 @@ async function apiyiPost(pathname, body, def, size) {
       return { urls: raw.map(function(v) { return /^https?:\/\//i.test(v) ? v : b64ToBlobUrl(v); }), usage: _usage };
     } catch (e) {
       const _m = String((e && e.message) || e);
-      const _retri = /429|50[0-9]|rate.?limit|too many|频繁|限流|overload/i.test(_m);
+      /* ★ R9ZY-5：先判永久性拒绝（含欠费无渠道）⇒ 既重试、也顺手把人话讲清楚。 */
+      if (_PERM.test(_m)) {
+        console.warn("[W5-route]", JSON.stringify({ phase: "apiyi-no-retry-permanent", msg: _m.slice(0, 160), ts: Date.now() }));
+        throw new Error("APIYI 拒绝了这次请求（不会重试、未产生额外调用）：" + _m.slice(0, 200));
+      }
+      const _retri = _TRANSIENT.test(_m);
       if (!_retri || _attempt >= _delays.length) throw e;
       const _wait = _delays[_attempt] + Math.floor(Math.random() * 400);
       _attempt++;
@@ -19373,7 +19397,10 @@ const _r17Hint = /没有扣费|已经计费/.test(rawMsg) ? ""
                : _r17Timeout ? "（这次已经计费，先别急着重试）" : "";
 const m9 = /HTTP\s+(\d{3})/.exec(rawMsg); const st = (err && err.status) || (m9 ? parseInt(m9[1], 10) : 0); /* Z9（第六批）：Api.request 抛错 Object.assign 附着 err.status */
 const mmL = (typeof BITMAP_MODEL_MAP !== "undefined" && BITMAP_MODEL_MAP[e.action] || {}).label || "位图动作";
-if (st === 401) { try { Toast.error(mmL + "的服务未授权（HTTP 401）：Worker 令牌无效或未配置——请到设置页检查 R2 Worker 地址与 Token（不静默回退）"); } catch (_) { _r9mNote("ui-066", _); } }
+/* ★ R9ZY-5：401 来自**上游 APIYI**（Worker 转发原文），不是我们的 Worker Token。
+   真因二选一：① APIYI 账户余额/额度耗尽；② 令牌被禁用/已失效。
+   ⚠ 与原「Worker Token」文案的区别：那条把人指向设置页，白跑一趟（实测验证过）。 */
+if (st === 401) { try { Toast.error(mmL + "的服务未授权（HTTP 401 · 来自上游 APIYI）：请在 api.apiyi.com 控制台检查①账户余额/额度是否耗尽 ②令牌是否被禁用——本机 R2 Worker 地址与 Token 无需改动；本次未重试、未产生额外调用"); } catch (_) { _r9mNote("ui-066", _); } }
 else if (st === 404) { try { Toast.error(mmL + "的服务通道未部署（HTTP 404）：Worker 的 wy / apiyi 代理路由未上线、或该端点不在 APIYI 白名单内、或模型名不在本令牌分组里——已按规约不静默回退"); } catch (_) { _r9mNote("ui-067", _); } }
 else if (st >= 400 && st < 500) { try { Toast.error(mmL + "的服务通道未配置或上游不可用（HTTP " + st + "）——已按规约不静默回退"); } catch (_) { _r9mNote("ui-068", _); } }
 else if (/HTTP\s+4\d\d/i.test(rawMsg)) { try { Toast.error(mmL + "的服务通道未配置或上游不可用（" + rawMsg.slice(0, 90) + "）——已按规约不静默回退"); } catch (_) { _r9mNote("ui-069", _); } }
