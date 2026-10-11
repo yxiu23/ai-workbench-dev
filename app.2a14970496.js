@@ -18470,7 +18470,7 @@ function _ayErr(e) {
   return e;
 }
 
-async function apiyiPostAsync(pathname, body, def, size) {
+async function apiyiAsyncFetch(pathname, body, def, size) {
   /* ★★★ R9ZY-6-③（2026-10-11）：**耗时埋点**。
      修的提问：「速度有点慢 不知道是不是轮询问题还是网络传输问题」——
      这类问题**必须有数据**才能答（不许拿感觉归因，更不许拿"我觉得"当结论）。
@@ -18490,8 +18490,15 @@ async function apiyiPostAsync(pathname, body, def, size) {
            不能在 forEach 里 await（forEach 不认 async 回调，会直接跑完不留痕）。 */
         files.push((async function () {
           const buf = new Uint8Array(await value.arrayBuffer());
+          /* ★ R9ZY-10②（修：「速度有点慢」的嫌疑点之一）：**分块**拼字符。
+             原来逐字节 `bin += String.fromCharCode(b)` 是 **O(n) 字符串累加** ——
+             2MB 图要跑 200 万次拼接，浏览器里会明显卡顿（内存还会翻倍）。
+             分块后每 8K 调一次 `String.fromCharCode.apply` ⇒ 字符串操作少 3 个数量级。 */
           let bin = "";
-          for (let i = 0; i < buf.length; i += 1) bin += String.fromCharCode(buf[i]);
+          const _CHUNK = 8192;
+          for (let i = 0; i < buf.length; i += _CHUNK) {
+            bin += String.fromCharCode.apply(null, buf.subarray(i, Math.min(i + _CHUNK, buf.length)));
+          }
           return {
             field: key,
             name: value.name || (key + ".png"),
@@ -18565,7 +18572,12 @@ async function apiyiPostAsync(pathname, body, def, size) {
       throw _ayErr(new Error("异步任务轮询超时（>" + Math.round(timeoutMs / 1000) + "s，任务 " + taskId
         + "）—— 任务可能仍在跑，可在任务列表查看"));
     }
-    await new Promise(function (r) { setTimeout(r, i === 0 ? 2000 : intervalOf(elapsed)); });
+    /* ★ R9ZY-10③（修：「速度慢」）：首次等待 2000ms → **800ms**。
+       首次是"刚提交完、上游通常还没开始出图"的空窗，等 2 秒纯浪费时间；
+       800ms 让"提交秒回 ⇒ 立刻确认任务在跑"的体感成立。
+       ⚠ 后续间隔沿用 CONFIG.POLL_PHASES（那是与宿主任务中心**共用**的配置，
+         动它会波及全部轮询 —— 收益小、风险大，故不动）。 */
+    await new Promise(function (r) { setTimeout(r, i === 0 ? 800 : intervalOf(elapsed)); });
     /* ★ R9ZY-6-③：**单次轮询耗时**单独记 —— 若网络好而这一项稳定在几百 ms，
        那"慢"就出在**上游生成**或**轮询间隔粒度**，与传输无关（这是修要的那个区分）。 */
     const _ayPollT = Date.now();
@@ -18580,19 +18592,17 @@ async function apiyiPostAsync(pathname, body, def, size) {
 
     const st = String((last && last.status) || "").toLowerCase();
     if (st === "succeeded" || st === "success" || st === "completed") {
-      /* ★★ 拿回**上游响应体原文**并走与同步版**同一段**解析 —— 单点收口，杜绝两套口径漂移。 */
+      /* ★★★ R9ZY-10（2026-10-11）：底层**只负责取回「上游响应体原文」**，解析交给调用方。
+         为什么必须拆：**Gemini 形态**（`candidates[].content.parts[].inlineData`）与
+         **OpenAI 形态**（`data[].b64_json|url`）**完全不同** —— 原先这里写死 OpenAI 解析，
+         于是 Gemini 档（Nano Banana 全系）**根本没法复用异步通道** ⇒ 只能走同步 ⇒ 撞 524。
+         ⇒ 拆成 `apiyiAsyncFetch`（本函数：提交+轮询+返回原文）+ `apiyiPostAsync`（OpenAI 包装）。 */
       let parsed = null;
       try { parsed = last.resultBody ? JSON.parse(last.resultBody) : null; } catch (_e) { parsed = null; }
       if (!parsed) {
         throw _ayErr(new Error("异步任务已成功但结果体无法解析：" + String(last.resultBody || "").slice(0, 200)));
       }
-      const arr = Array.isArray(parsed.data) ? parsed.data : [];
-      const raw = arr.map(function (it) { return (it && (it.b64_json || it.url)) || ""; }).filter(Boolean);
-      if (!raw.length) {
-        const em = (parsed && parsed.error && (parsed.error.message || parsed.error)) || "";
-        throw _ayErr(new Error("APIYI 未返回图片数据" + (em ? "：" + String(em) : "") + " · " + JSON.stringify(parsed).slice(0, 200)));
-      }
-      console.info("[W5-route]", JSON.stringify({ phase: "apiyi-async-done", secs: Math.round((Date.now() - t0) / 1000), n: raw.length, polls: i + 1, ts: Date.now() }));
+      console.info("[W5-route]", JSON.stringify({ phase: "apiyi-async-done", secs: Math.round((Date.now() - t0) / 1000), polls: i + 1, ts: Date.now() }));
       /* ★ R9ZY-6-③：收尾汇总 —— 修 Console 里 `copy(__ayTiming)` 拿到完整分布。 */
       _ayT.doneMs = Date.now() - _ayT.start;
       _ayT.resultBytes = String(last.resultBody || "").length;
@@ -18603,7 +18613,7 @@ async function apiyiPostAsync(pathname, body, def, size) {
         polls: _ayT.polls, pollMsMax: _ayT.pollMsMax, pollMs: _ayT.pollMs,
         resultBytes: _ayT.resultBytes, doneMs: _ayT.doneMs, ts: Date.now(),
       }));
-      return { urls: raw.map(function (v) { return /^https?:\/\//i.test(v) ? v : b64ToBlobUrl(v); }), usage: (parsed && parsed.usage) || null };
+      return parsed;   /* ← 只返回**上游原文**（形态解析由调用方负责） */
     }
     if (st === "failed" || st === "error") {
       throw _ayErr(new Error("APIYI 异步任务失败（任务 " + taskId + "）：" + String((last && last.error) || "").slice(0, 300)));
@@ -18615,6 +18625,21 @@ async function apiyiPostAsync(pathname, body, def, size) {
     /* 走到这里 = 已过 taskId 分界线 ⇒ 无论哪种失败都标注"上游可能已调度"，不许退同步。 */
     throw _ayErr(_e);
   }
+}
+
+/** ★★★ R9ZY-10（2026-10-11）：OpenAI 形态包装层。
+   签名与返回形态与改造前**逐字一致**（`__w5Host` 的诊断口与所有调用点都不用动）。
+   作用：把 `apiyiAsyncFetch` 取回的**上游原文**按 OpenAI 形态（`data[].b64_json|url`）解析成 urls。
+   ⚠ 单点收口：这一步**只此一处**，别在别处再写一遍（否则又会出现"两套口径漂移"）。 */
+async function apiyiPostAsync(pathname, body, def, size) {
+  const parsed = await apiyiAsyncFetch(pathname, body, def, size);
+  const arr = Array.isArray(parsed.data) ? parsed.data : [];
+  const raw = arr.map(function (it) { return (it && (it.b64_json || it.url)) || ""; }).filter(Boolean);
+  if (!raw.length) {
+    const em = (parsed && parsed.error && (parsed.error.message || parsed.error)) || "";
+    throw new Error("APIYI 未返回图片数据" + (em ? "：" + String(em) : "") + " · " + JSON.stringify(parsed).slice(0, 200));
+  }
+  return { urls: raw.map(function (v) { return /^https?:\/\//i.test(v) ? v : b64ToBlobUrl(v); }), usage: (parsed && parsed.usage) || null };
 }
 
 /** 统一收口：POST 到 APIYI 并把 data[].b64_json / .url 换成可显示 URL 数组。
@@ -18646,6 +18671,13 @@ async function apiyiPost(pathname, body, def, size) {
       /* 落回同步路径（继续执行下方原逻辑） */
     }
   }
+  /* ★★★ R9ZY-10④（2026-10-11）：**同步路径也埋点**。
+     原来只有异步链路写 `window.__ayTiming` ⇒ 走同步的档（快档 flux、以及一切没走异步的）
+     **完全没有耗时数据** ⇒ 想诊断"慢在哪"时只能靠猜。
+     ⚠ 这里写在**分流之后**：异步分支已经 return，能走到这儿的一定是同步路径。
+     ⚠ `mode` 字段用来区分两条路的读数（同步没有 pollMs，因为压根不轮询）。 */
+  const _syT = { start: Date.now(), mode: "sync", path: pathname, model: (def && def.modelId) || null, ms: 0, doneMs: 0, note: "同步路径（一次性长请求，无轮询）" };
+  try { if (typeof window !== "undefined") window.__ayTiming = _syT; } catch (_eSy) { /* 无 window 忽略 */ }
   /* ★★ R95-1-4（报告 01 P1-3）：429 / 5xx **带抖动退避**，上限 2 次重试。
      官方口径：429 = 「限流 **或** 余额/额度不足」，不该一次就放弃、也不该猜死是哪一个。
      ⚠ 只在**明确是限流/服务端错误**时重试；参数类 4xx **绝不重试**（重试无用、还可能白跑）。
@@ -18679,6 +18711,10 @@ async function apiyiPost(pathname, body, def, size) {
         const em = (r && r.error && (r.error.message || r.error)) || "";
         throw new Error("APIYI 未返回图片数据" + (em ? "：" + String(em) : "") + " · " + JSON.stringify(r).slice(0, 200));
       }
+      /* ★ R9ZY-10④：同步路径收尾 —— 记总耗时（修 Console `copy(__ayTiming)` 可直接看）。 */
+      _syT.ms = Date.now() - _syT.start;
+      _syT.doneMs = _syT.ms;
+      console.info("[W5-route]", JSON.stringify({ phase: "apiyi-sync-done", ms: _syT.ms, model: _syT.model, ts: Date.now() }));
       /* ★ R5：把**上游给的用量原样带回去**（不归一、不改名）—— 归属与算法交给 calcEstimate 那一层。
          OpenAI 形态是 usage；Gemini 形态是 usageMetadata（下面 apiyiGemini 自己取）。 */
       const _usage = (r && r.usage) || null;
@@ -18743,7 +18779,19 @@ async function apiyiGemini(prompt, def, ex, imgData, refs) {
   if (def.thinking && e.thinking === "high") cfg.thinkingConfig = { thinkingLevel: "high" };
   const body = { contents: [{ parts: parts }], generationConfig: cfg };
   console.info("[W5-route]", JSON.stringify({ phase: "apiyi-gemini", model: def.endpointModel, parts: parts.length, isImageSize: ic.imageSize || null, isAspectRatio: ic.aspectRatio || null, thinking: !!(cfg.thinkingConfig) , ts: Date.now() }));
-  const r = await Api._directReq("POST", def.endpoint, body, { apiyi: true, timeout: apiyiTimeoutOf(def.modelId, def, size) });
+  /* ★★★ R9ZY-10①（2026-10-11 · 「NB 系可选但一选就可能撞 524」的根治）：
+     **Gemini 形态原先直连同步通道** —— 而它是 **Nano Banana 全系的唯一出路**
+     （NB2 / NB2.1 / NB2 Lite / NB Pro），预算 **300s（1K/2K）/ 600s（4K）** 远超 CF 的
+     125s 读墙 ⇒ 走同步**迟早**被网关断成 524（APIYI 明文「客户端断开不取消上游、照常计费」
+     ⇒ 钱扣了图拿不到）。
+     ⇒ 与 `apiyiPost` **同源判据**分流到异步通道；取回的是「上游响应体原文」，
+        **解析仍在本函数下面那一段**（Gemini 与 OpenAI 的响应形态完全不同，不能复用）。
+     ⚠ 与 apiyiImages/apiyiEdits 的差别**只在"谁解析"**，分流判据完全共用（单一真值源）。
+     ⚠ 三者同在一个 IIFE（`APIYI_FUNCS` 的插入点）⇒ `_r9zuWantsAsyncEnsured` /
+        `apiyiAsyncFetch` 均可直接调用（R9ZY-8 的跨 IIFE 崩点不会在这里重演）。 */
+  const r = (await _r9zuWantsAsyncEnsured(def, size))
+    ? await apiyiAsyncFetch(def.endpoint, body, def, size)
+    : await Api._directReq("POST", def.endpoint, body, { apiyi: true, timeout: apiyiTimeoutOf(def.modelId, def, size) });
   const c0 = ((r && r.candidates) || [])[0] || {};
   const ps = (c0.content && c0.content.parts) || [];
   const imgs = ps.map(function(p) { return (p && p.inlineData) || null; }).filter(Boolean);   /* ★ 筛，不写死下标 */
