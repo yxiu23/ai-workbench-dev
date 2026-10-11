@@ -18470,6 +18470,20 @@ function _ayErr(e) {
   return e;
 }
 
+/* ★★★ R9ZY-15：**能力闸** —— Worker 是否支持 `files[].url`（= 能自己去取图）。
+   为什么非要有这道闸（硬理由）：宿主随 R9ZY-15 上线后，走异步时会发 `{url, b64:""}`；
+   而**旧 Worker 要求 b64 非空 ⇒ 直接 400 ⇒ 慢档整体打挂**。
+   ⇒ 只有 Worker **明确报** `caps.fileUrl === true` 才用链接，否则照旧传字节
+     ⇒ **不存在"必须先贴 Worker"的部署顺序约束**（与 apiyiAsync / slowKeepalive 同一套设计）。
+   ⚠ 跨 IIFE 读全局：必须 `typeof` 守卫 —— 对**未声明**的变量 typeof 返回 "undefined" 不抛，
+     但对 **TDZ 中的 let/const 会抛 ReferenceError** ⇒ 整段再包一层 try（R9ZY-9 血泪）。 */
+function _r9zuFileUrlOk() {
+  try {
+    if (typeof __r9gCaps === "undefined" || !__r9gCaps) return false;
+    return __r9gCaps.fileUrl === true;
+  } catch (_eFU) { return false; }
+}
+
 async function apiyiAsyncFetch(pathname, body, def, size, extra) {
   /* ★★★ R9ZY-6-③（2026-10-11）：**耗时埋点**。
      修的提问：「速度有点慢 不知道是不是轮询问题还是网络传输问题」——
@@ -18495,7 +18509,7 @@ async function apiyiAsyncFetch(pathname, body, def, size, extra) {
            ⚠ 这里丢掉的只是**本地上传** —— 宿主侧照常构造 Blob，所以**同步路径与全部调用点零改动**；
              Worker 侧看到 `{url, b64:""}` 会自己去取（见 runApiyiTask 的 files 循环）。
            ⚠ `extra.srcUrl` 由 `apiyiEdits` 的调用方传入（只在 `e.url` 是 http(s) 时才有）。 */
-        if (extra && extra.srcUrl && !_srcUrlUsed && key === "image[]") {
+        if (extra && extra.srcUrl && !_srcUrlUsed && key === "image[]" && _r9zuFileUrlOk()) {
           _srcUrlUsed = true;
           files.push(Promise.resolve({
             field: key, name: "image.png", mime: "image/png", b64: "", url: String(extra.srcUrl),
