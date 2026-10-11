@@ -18849,7 +18849,13 @@ async function apiyiImages(imgData, prompt, def, ex) {
    而修的链路到 CF 下行仅 30KB/s、**上行更窄**；编辑器里的源图常是**无损 PNG**，
    dataURL 之后动辄数 MB，base64 再胖 33% ⇒ 提交那一跳传不完 ⇒ 超时。
    （超时后旧逻辑会降级回同步 ⇒ 同步必等满 125s 才被网关切断 ⇒ 524，用户白等 4 分钟。）
-   ⇒ 这里做一个**保守**的瘦身：**只有长边超过上限才缩**，且**不换 MIME**（PNG 的 alpha 语义不能丢）。
+   ⇒ 瘦身分两步（修追问「原图就 1.5M、以后 9M 怎么办」——**只缩分辨率不够**）：
+     ① **长边超上限就缩**（超出的像素对模型是冗余）；
+     ② **实测有透明才保留 PNG，否则转 JPEG** —— PNG 是无损的，1.5MB 缩完仍有 ~0.7MB，
+        在 30KB/s 上还要 25 秒；转 JPEG(0.92) 能到 ~250KB（**8 秒量级**）。这一步才是量级改善。
+   ⚠ 透明判定**必须实测像素**（读 alpha 通道）：后缀是 png **不等于**真用了透明
+     （截图、相机出图、很多工具导出的 png 都是满不透明的）。
+   ⚠ 读不到像素（跨域污染等）⇒ **保守当作有透明**（宁可传大，不可把透明变成黑底）。
    ⚠ 只在**没有 mask** 时用（见调用点）：有 mask 的动作要求 image 与 mask 严格同几何，
      单方面缩 image 会破坏对齐 —— 那是另一套语义，一律不动。
    ⚠ 这个"上限"不是拍脑袋：gpt-image / Seedream 这类模型的**工作分辨率**就在 1K~2K 量级，
@@ -18881,8 +18887,23 @@ async function _shrinkImageDataUrl(dataUrl, maxEdge) {
     const cx = cv.getContext("2d");
     if (!cx) return dataUrl;
     cx.drawImage(img, 0, 0, w, h);
-    /* ⚠ 保持原编码族：已是 JPEG/WebP 的才输出有损，其余一律 PNG（保 alpha）—— 不擅自改语义。 */
-    const outMime = (mime === "image/jpeg" || mime === "image/webp") ? mime : "image/png";
+    /* ★ 实测"到底有没有用到透明"：
+       · 没有透明 ⇒ 转 **JPEG 0.92**（1.5MB 的 PNG 常能降到 ~250KB —— "大图怎么办"的关键一步）
+       · 确有透明 ⇒ 保持 **PNG**（否则透明区会变成黑底，那是**看得见的坏结果**）。
+       ⚠ 原 MIME 已是 JPEG 的**直接短路**（按定义没有 alpha 通道，省一次全图扫描）。
+       ⚠ 读像素失败（跨域污染等）⇒ **保守当作有透明** ⇒ 保持 PNG（宁可传大，不可传坏）。 */
+    let hasAlpha = false;
+    if (mime !== "image/jpeg") {
+      hasAlpha = true;
+      try {
+        const d = cx.getImageData(0, 0, w, h).data;
+        /* 用 Uint32 视图一次比 4 字节（比逐字节快 4 倍）。小端下 alpha 在高字节 ⇒ >>> 24。 */
+        const u32 = new Uint32Array(d.buffer, d.byteOffset, d.length >> 2);
+        hasAlpha = false;
+        for (let q = 0; q < u32.length; q += 1) { if ((u32[q] >>> 24) !== 255) { hasAlpha = true; break; } }
+      } catch (_eA) { hasAlpha = true; }
+    }
+    const outMime = hasAlpha ? "image/png" : "image/jpeg";
     const out = cv.toDataURL(outMime, 0.92);
     if (!out || out.length >= str.length) return dataUrl;          /* 缩完反而更大 ⇒ 退回原图（绝不更坏） */
     return out;
@@ -18920,7 +18941,11 @@ async function apiyiEdits(imgData, maskData, prompt, def, ex) {
   if (_imgUpload !== imgData) {
     console.info("[W5-route]", JSON.stringify({ phase: "apiyi-shrink", from: String(imgData || "").length, to: String(_imgUpload || "").length, ts: Date.now() }));
   }
-  fd.append("image[]", dataUrlToFile(_imgUpload, "image.png"), "image.png");
+  /* ⚠ 文件名必须**跟实际 MIME 走**：瘦身可能把 PNG 转成 JPEG，若文件名还叫 `.png`，
+     有些上游会按扩展名判格式 ⇒ 解码失败或行为诡异（这类"名实不符"最难查）。 */
+  const _mU = /^data:([^;,]+)/.exec(String(_imgUpload || "")) || [];
+  const _extU = String(_mU[1] || "").indexOf("jpeg") >= 0 ? "jpg" : "png";
+  fd.append("image[]", dataUrlToFile(_imgUpload, "image." + _extU), "image." + _extU);
   /* 参考图追加在**源图之后**（顺序即 prompt 里「图1/图2/图3」的指代依据，官方明写）。
      单张失败不阻断（源图才是关键），但必须留痕。 */
   const refs = Array.isArray(e.refDataUrls) ? e.refDataUrls : [];
