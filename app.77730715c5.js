@@ -16992,7 +16992,7 @@ Toast.success("已清理");
 }));
 },
 _confirmCleanLocal() {
-const html = `<div style="font-size:13px;line-height:1.7;color:var(--text-muted)">\n      将清除：历史记录、任务、提示词历史、预设、缩略图缓存。<br>\n      保留：密钥保险箱、偏好设置。\n    </div>`;
+const html = `<div style="font-size:13px;line-height:1.7;color:var(--text-muted)">\n      将清除：历史记录、任务、提示词历史、预设、缩略图缓存、**编辑器工作台会话**。<br>\n      保留：密钥保险箱、偏好设置。\n    </div>`;
 this._showModal("清理本地数据", html, [ { label: "先导出备份", fn: () => this._exportHistory() }, {
 label: "取消",
 fn: () => this._closeModal()
@@ -17013,6 +17013,20 @@ if (typeof IDB !== "undefined" && IDB.db) {
 Promise.allSettled([ IDB.db.history.clear(), IDB.db.tasks.clear(), IDB.db.thumbs.clear() ]).catch(() => {});
 }
 this._preloadCache.clear?.();
+/* ★★★ R9ZY-6（2026-10-11）：编辑器有一套**独立 IndexedDB**（库名 studio-workbench，
+   存"工作台会话 + 图片资产"），与宿主这份完全隔离 —— 旧版清理一行都没碰它。
+   不删它 ⇒ 编辑器资产库里的失效 blob 记录每次打开都复活 ⇒ 拖图层就刷 ERR_FILE_NOT_FOUND。
+   ⚠ 编辑器正开着时 deleteDatabase 会被 onblocked 顶住 ⇒ 先请它关闭（点遮罩里的关闭键）。 */
+try {
+  const _r9zy6ov = document.querySelector(".studioOverlay");
+  if (_r9zy6ov) { const _r9zy6c = _r9zy6ov.querySelector(".studioClose"); if (_r9zy6c) _r9zy6c.click(); }
+} catch (_r9zy6e1) { /* 编辑器本来就没开 —— 正常路径 */ }
+try {
+  const _r9zy6db = indexedDB.deleteDatabase("studio-workbench");
+  _r9zy6db.onsuccess = function () { console.log("[cleanLocal] R9ZY-6 编辑器工作台会话库已删除"); };
+  _r9zy6db.onblocked = function () { console.warn("[cleanLocal] R9ZY-6 编辑器会话库待删（编辑器仍开在别的标签页）"); };
+  _r9zy6db.onerror = function () { console.warn("[cleanLocal] R9ZY-6 编辑器会话库删除失败"); };
+} catch (_r9zy6e2) { /* 无 indexedDB 的极端环境：忽略 */ }
 } catch (e) {
 console.warn("[cleanLocal]", e);
 }
@@ -18136,7 +18150,7 @@ document.addEventListener("DOMContentLoaded", () => { UI.init(); /* ★ R76-J：
    ============================================================ */
 window.StudioEditor = (function() {
 let api = null, ov = null, onSaveCb = null, escHandler = null, scriptP = null;
-const STUDIO_SRC = "image-studio.982c675912.js";
+const STUDIO_SRC = "image-studio.124d773a88.js";
 /* IMPL-144 W5（2026-09-26 修拍板）：位图动作全换 GPT-Image-2.5 系——覆盖 IMPL-143 版映射（变更单第一节）
    sunburst=最强档（精细编辑/参考保真，Arena 文生图 1420.7/编辑 1520.4 双第一）→扩图/局部重绘；flare=快车道（比 GPT-Image-2 快 50%）→擦除/图像拆解/编辑文字；抠出主体维持阿里抠图专用通道
    裸名审计落账：GPT-Image-2.5 裸名非 OpenAI 正式 model id（正式 id 仅 gpt-image-2.5-flare / gpt-image-2.5-sunburst，快照 -2026-09-08）；
@@ -18549,6 +18563,13 @@ function _ayErr(e) {
 }
 
 async function apiyiPostAsync(pathname, body, def, size) {
+  /* ★★★ R9ZY-6-③（2026-10-11）：**耗时埋点**。
+     修的提问：「速度有点慢 不知道是不是轮询问题还是网络传输问题」——
+     这类问题**必须有数据**才能答（不许拿感觉归因，更不许拿"我觉得"当结论）。
+     分四段记：编码（base64）/ 提交 / 每一轮轮询 / 合计；汇总挂 `window.__ayTiming`
+     ⇒ 修在 Console 里 `copy(__ayTiming)` 就能把一次真实的耗时分布给我。 */
+  const _ayT = { start: Date.now(), encMs: 0, submitMs: 0, pollMs: [], polls: 0, doneMs: 0, note: "" };
+  try { if (typeof window !== "undefined") window.__ayTiming = _ayT; } catch (_ayE0) { /* 无 window 的环境忽略 */ }
   /* ① 形态归一：FormData → { scalars, files[] }；普通对象 → 原样 body、无 files */
   const scalars = {};
   const files = [];
@@ -18580,12 +18601,22 @@ async function apiyiPostAsync(pathname, body, def, size) {
 
   const filesResolved = await Promise.all(files);
 
+  /* ★ R9ZY-6-③：编码段耗时 + 上传体积（base64 比原字节胖 ~33%，这是提交慢的嫌疑点之一）。 */
+  const _ayBytes = filesResolved.reduce(function (a, f) { return a + Math.ceil(String(f.b64 || "").length * 3 / 4); }, 0);
+  _ayT.encMs = Date.now() - _ayT.start;
+  _ayT.files = filesResolved.length;
+  _ayT.bytes = _ayBytes;
+
   console.info("[W5-route]", JSON.stringify({
     phase: "apiyi-async-submit", path: pathname, model: (def && def.modelId) || null,
     size: size || scalars.size || null, files: filesResolved.length, ts: Date.now(),
   }));
+  console.info("[W5-route]", JSON.stringify({
+    phase: "apiyi-async-enc", ms: _ayT.encMs, files: filesResolved.length, bytes: _ayBytes, ts: Date.now(),
+  }));
 
   /* ② 提交（秒回） */
+  const _aySubT = Date.now();
   const sub = await Api._taskReq("POST", "/task/apiyi", {
     path: pathname,
     body: scalars,
@@ -18596,6 +18627,11 @@ async function apiyiPostAsync(pathname, body, def, size) {
                               它**绝不该**因为上游慢而超时（上游压根不在这一跳）。 */
   const taskId = sub && (sub.taskId || (sub.task && sub.task.id));
   if (!taskId) throw new Error("异步通道提交未返回 taskId：" + JSON.stringify(sub).slice(0, 200));
+  /* ★ R9ZY-6-③：提交段耗时 —— 若这一段就很大，说明**上行传输/编码**是瓶颈（不是轮询）。 */
+  _ayT.submitMs = Date.now() - _aySubT;
+  console.info("[W5-route]", JSON.stringify({
+    phase: "apiyi-async-submitted", submitMs: _ayT.submitMs, totalMs: Date.now() - _ayT.start, taskId: taskId, ts: Date.now(),
+  }));
 
   /* ★★ 分界线：拿到 taskId = **上游可能已被调度**（Cron 随时会取走它并真发上游）。
      从此处起的**任何**失败（轮询超时 / 网络断 / 任务失败 / 结果体坏）
@@ -18622,7 +18658,17 @@ async function apiyiPostAsync(pathname, body, def, size) {
         + "）—— 任务可能仍在跑，可在任务列表查看"));
     }
     await new Promise(function (r) { setTimeout(r, i === 0 ? 2000 : intervalOf(elapsed)); });
+    /* ★ R9ZY-6-③：**单次轮询耗时**单独记 —— 若网络好而这一项稳定在几百 ms，
+       那"慢"就出在**上游生成**或**轮询间隔粒度**，与传输无关（这是修要的那个区分）。 */
+    const _ayPollT = Date.now();
     last = await Api._taskReq("GET", "/task/" + encodeURIComponent(taskId), undefined, { timeout: 3e4 });
+    _ayT.pollMs.push(Date.now() - _ayPollT);
+    _ayT.polls = i + 1;
+    { const _st = String((last && last.status) || "").toLowerCase();
+      console.info("[W5-route]", JSON.stringify({
+        phase: "apiyi-async-poll", n: i + 1, pollMs: Date.now() - _ayPollT,
+        status: _st, elapsedMs: Date.now() - t0, bodyBytes: JSON.stringify(last || {}).length, ts: Date.now(),
+      })); }
 
     const st = String((last && last.status) || "").toLowerCase();
     if (st === "succeeded" || st === "success" || st === "completed") {
@@ -18639,6 +18685,16 @@ async function apiyiPostAsync(pathname, body, def, size) {
         throw _ayErr(new Error("APIYI 未返回图片数据" + (em ? "：" + String(em) : "") + " · " + JSON.stringify(parsed).slice(0, 200)));
       }
       console.info("[W5-route]", JSON.stringify({ phase: "apiyi-async-done", secs: Math.round((Date.now() - t0) / 1000), n: raw.length, polls: i + 1, ts: Date.now() }));
+      /* ★ R9ZY-6-③：收尾汇总 —— 修 Console 里 `copy(__ayTiming)` 拿到完整分布。 */
+      _ayT.doneMs = Date.now() - _ayT.start;
+      _ayT.resultBytes = String(last.resultBody || "").length;
+      _ayT.pollMsMax = _ayT.pollMs.length ? Math.max.apply(null, _ayT.pollMs) : 0;
+      _ayT.note = "encMs=编码 · submitMs=提交上传 · pollMs[]=各轮轮询 · doneMs=全程";
+      console.info("[W5-route]", JSON.stringify({
+        phase: "apiyi-async-summary", encMs: _ayT.encMs, submitMs: _ayT.submitMs,
+        polls: _ayT.polls, pollMsMax: _ayT.pollMsMax, pollMs: _ayT.pollMs,
+        resultBytes: _ayT.resultBytes, doneMs: _ayT.doneMs, ts: Date.now(),
+      }));
       return { urls: raw.map(function (v) { return /^https?:\/\//i.test(v) ? v : b64ToBlobUrl(v); }), usage: (parsed && parsed.usage) || null };
     }
     if (st === "failed" || st === "error") {
