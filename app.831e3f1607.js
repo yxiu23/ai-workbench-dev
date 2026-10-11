@@ -18037,7 +18037,7 @@ document.addEventListener("DOMContentLoaded", () => { UI.init(); /* ★ R76-J：
    ============================================================ */
 window.StudioEditor = (function() {
 let api = null, ov = null, onSaveCb = null, escHandler = null, scriptP = null;
-const STUDIO_SRC = "image-studio.124d773a88.js";
+const STUDIO_SRC = "image-studio.3b086c2923.js";
 /* IMPL-144 W5（2026-09-26 修拍板）：位图动作全换 GPT-Image-2.5 系——覆盖 IMPL-143 版映射（变更单第一节）
    sunburst=最强档（精细编辑/参考保真，Arena 文生图 1420.7/编辑 1520.4 双第一）→扩图/局部重绘；flare=快车道（比 GPT-Image-2 快 50%）→擦除/图像拆解/编辑文字；抠出主体维持阿里抠图专用通道
    裸名审计落账：GPT-Image-2.5 裸名非 OpenAI 正式 model id（正式 id 仅 gpt-image-2.5-flare / gpt-image-2.5-sunburst，快照 -2026-09-08）；
@@ -19137,8 +19137,13 @@ function studioBusy(text) { /* IMPL-143 P2：位图动作执行期反馈条（�
 const b = document.getElementById("studioBusy");
 if (!b) return;
 const t = b.querySelector(".studioBusyText");
-if (t) t.textContent = text || "";
-b.hidden = !text;
+var _q = (window.__sbN = window.__sbN || { n: 0, last: "", ts: 0 });
+var _s = String(text || "");
+if (_s) { _q.n++; _q.last = _s; _q.ts = Date.now(); } else if (_q.n) _q.n--;
+if (_q.n && Date.now() - _q.ts > 1800000) _q.n = 0;
+var _v = _q.n > 0;
+if (t) t.textContent = _v ? (_q.n > 1 ? ("⚙ " + _q.n + " 个任务进行中（可继续发）") : _q.last) : "";
+b.hidden = !_v;
 }
 function studioInlinePrompt(label) { /* Z6（第六批）：编辑器内就地提示词输入条（hostPrompt 为空时 inpaint/edit-text 就地输入；studioBusy 同层位置；Esc 语义 Z22 B案：输入条在场=Esc 只收口输入条（Toast 保留、编辑器不关；close 清理条目兜底保留）。Z16（第七批）：贴底居中 bottom:14px（原 top:14px 浮顶栏）+ textarea 自动增高 1→6 行封顶滚动（Enter 提交/Shift+Enter 换行）+ 编辑器官方令牌镜像双套配色：--dc-editor-ui-* 属内核 Shadow DOM 内部令牌、宿主不可跨界继承→data-studio-theme 属性选套（初值=Z12 缓存 sc_studio_theme；内核切换经 mount.onThemeChange 实时回写打开中输入条；样式收敛至壳样式块 #studioInlinePrompt 规则） */
 return new Promise(function(resolve) {
