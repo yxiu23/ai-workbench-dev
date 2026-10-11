@@ -18470,7 +18470,7 @@ function _ayErr(e) {
   return e;
 }
 
-async function apiyiAsyncFetch(pathname, body, def, size) {
+async function apiyiAsyncFetch(pathname, body, def, size, extra) {
   /* ★★★ R9ZY-6-③（2026-10-11）：**耗时埋点**。
      修的提问：「速度有点慢 不知道是不是轮询问题还是网络传输问题」——
      这类问题**必须有数据**才能答（不许拿感觉归因，更不许拿"我觉得"当结论）。
@@ -18481,11 +18481,27 @@ async function apiyiAsyncFetch(pathname, body, def, size) {
   /* ① 形态归一：FormData → { scalars, files[] }；普通对象 → 原样 body、无 files */
   const scalars = {};
   const files = [];
+  /* ★ R9ZY-15：源图只换**第一个** `image[]`（后面的都是参考图，必须真传字节）。 */
+  let _srcUrlUsed = false;
   if (body && typeof body === "object" && typeof body.append === "function" && typeof body.forEach === "function") {
     /* ⚠ FormData.forEach 的签名是 (value, key) —— **不是** (key, value)。写反会静默把所有
        字段名当值发出去，而且不会有任何报错（最难查的一类）。 */
     body.forEach(function (value, key) {
       if (value && typeof value === "object" && typeof value.arrayBuffer === "function") {
+        /* ★★★ R9ZY-15（2026-10-11 · 修：「base64 既然会拖慢速度，那改成走 R2 可以吗」）：
+           **源图已在 R2 ⇒ 只传链接、不上传字节** —— 浏览器这一段开销直接归零。
+           收益最大的场景：大图（9MB 级）、以及**连续多次操作**（同一个源图只传一次）。
+           ⚠ 只换**第一个** `image[]`（= 源图）；参考图必须真传（它们不在 R2 上）。
+           ⚠ 这里丢掉的只是**本地上传** —— 宿主侧照常构造 Blob，所以**同步路径与全部调用点零改动**；
+             Worker 侧看到 `{url, b64:""}` 会自己去取（见 runApiyiTask 的 files 循环）。
+           ⚠ `extra.srcUrl` 由 `apiyiEdits` 的调用方传入（只在 `e.url` 是 http(s) 时才有）。 */
+        if (extra && extra.srcUrl && !_srcUrlUsed && key === "image[]") {
+          _srcUrlUsed = true;
+          files.push(Promise.resolve({
+            field: key, name: "image.png", mime: "image/png", b64: "", url: String(extra.srcUrl),
+          }));
+          return;
+        }
         /* File / Blob 部件 ⇒ 读成 base64。⚠ 必须**同步收集 promise** 再 await，
            不能在 forEach 里 await（forEach 不认 async 回调，会直接跑完不留痕）。 */
         files.push((async function () {
@@ -18636,8 +18652,8 @@ async function apiyiAsyncFetch(pathname, body, def, size) {
    签名与返回形态与改造前**逐字一致**（`__w5Host` 的诊断口与所有调用点都不用动）。
    作用：把 `apiyiAsyncFetch` 取回的**上游原文**按 OpenAI 形态（`data[].b64_json|url`）解析成 urls。
    ⚠ 单点收口：这一步**只此一处**，别在别处再写一遍（否则又会出现"两套口径漂移"）。 */
-async function apiyiPostAsync(pathname, body, def, size) {
-  const parsed = await apiyiAsyncFetch(pathname, body, def, size);
+async function apiyiPostAsync(pathname, body, def, size, extra) {
+  const parsed = await apiyiAsyncFetch(pathname, body, def, size, extra);
   const arr = Array.isArray(parsed.data) ? parsed.data : [];
   const raw = arr.map(function (it) { return (it && (it.b64_json || it.url)) || ""; }).filter(Boolean);
   if (!raw.length) {
@@ -18654,7 +18670,7 @@ async function apiyiPostAsync(pathname, body, def, size) {
  *    它的签名与返回值在所有调用点（apiyiImages / apiyiEdits / 编辑器位图动作）都一致，
  *    在这里分流 ⇒ 调用点**零改动**，也不会有人"漏改一条分支"。
  *    判据见 apiyiWantsAsync（预算 ≥300s 的慢档 + Worker 已报能力）。 */
-async function apiyiPost(pathname, body, def, size) {
+async function apiyiPost(pathname, body, def, size, extra) {
   /* ★ 分流点：慢档 + Worker 具备异步能力 ⇒ 走异步（提交秒回 + Cron 跑上游）。
      任一条不满足 ⇒ 逐字节走下面的原同步逻辑（含原有 429/5xx 退避重试）。
      ★★★ R9ZY-8（2026-10-11 · 修实报 524）：**判据改成 await 版** ——
@@ -18664,7 +18680,7 @@ async function apiyiPost(pathname, body, def, size) {
      ⇒ 异步通道确定生效，不再取决于探测时机。 */
   if (await _r9zuWantsAsyncEnsured(def, size)) {
     try {
-      return await apiyiPostAsync(pathname, body, def, size);
+      return await apiyiPostAsync(pathname, body, def, size, extra);
     } catch (e) {
       /* ⚠ 降级策略（**只按显式标记，绝不靠正则猜**）：异步链路自身失败时，要不要退回同步重试？
          退回的收益 = 用户不至于白等；退回的**风险** = 若上游其实已受理（已计费），
@@ -18956,7 +18972,9 @@ async function apiyiEdits(imgData, maskData, prompt, def, ex) {
   }
   if (maskData) fd.append("mask", dataUrlToFile(maskData, "mask.png"), "mask.png");
   console.info("[W5-route]", JSON.stringify({ phase: "apiyi-edit", model: fd.get("model"), size: sz || null, quality: e.quality || null, mask: !!maskData, bg: fd.get("background") || null, refs: refOk, ts: Date.now() }));  /* ★ R93：日志带 bg —— 真机上能直接看出「透明」是不是输出侧来的 */
-  const res = await apiyiPost("/v1/images/edits", fd, def, e.resolution);
+  /* ★ R9ZY-15：`e.srcUrl` = 源图在 R2 上的链接（有才传）。异步通道会用它**代替上传字节**；
+     同步通道读不到这个 extra ⇒ 照旧用本地字节（行为不变）。 */
+  const res = await apiyiPost("/v1/images/edits", fd, def, e.resolution, e.srcUrl ? { srcUrl: e.srcUrl } : null);
   const urls = res.urls;
   console.info("[W5-route]", JSON.stringify({ phase: "apiyi-done", secs: Math.round((Date.now() - t0) / 1000), n: urls.length, ts: Date.now() }));
   return { assetUrl: urls[0], candidates: urls, usage: res.usage };
@@ -19380,6 +19398,15 @@ if (apiDef) {
 const wA = (typeof Store !== "undefined" && Store.getR2WorkerUrl && Store.getR2WorkerUrl());
 if (!wA) { try { Toast.warning(mm ? mm.label : actName(e.action)) + "：APIYI 通道未配置（设置页填 R2 Worker 地址与 Token）"; } catch (_) { _r9mNote("ui-061", _); } return false; }
 const exA = {};
+/* ★★★ R9ZY-15（2026-10-11 · 修：「base64 既然会拖慢速度，那改成走 R2 可以吗」）：
+   **源图若已在 R2**（e.url 是 http(s)）⇒ 把链接带上，异步通道**用它代替上传字节**
+   ⇒ 浏览器这一段**零上传**（大图 / 连续多次操作时，这是最值钱的那笔开销）。
+   ⚠ 只在**异步通道**生效（在 apiyiAsyncFetch 里换）——同步通道仍用本地字节，**行为完全不变**。
+   ⚠ 只认 http(s)：blob: / data: 不是 Worker 能去取的东西。
+   ⚠ 用 try 包住：任何意外都不许影响主流程（这是纯优化）。
+   ⚠⚠ 本块在**模板字符串**内 ⇒ 注释里**禁写反引号**（写了会提前结束外层模板串）；
+      正则里的斜杠必须写成 \\/ （单个 \/ 会被模板串吃掉 ⇒ 产物变成 // ⇒ 语法错，铁 100 同源）。 */
+try { if (e && /^https?:\/\//i.test(String(e.url || ""))) exA.srcUrl = String(e.url); } catch (_eSU) { _r9mNote("misc-076", _eSU); }
 if (op13 && op13.quality) exA.quality = String(op13.quality);
 /* ★★ R93：编辑器算好的「与源图同几何的合法输出尺寸」（apiyiEdits 在 size 为空且有 mask 时采用） */
 if (e.maskSize) exA.maskSize = String(e.maskSize);
@@ -19915,7 +19942,7 @@ return { open: open, close: close };
     for (var p = el.parentElement; p; p = p.parentElement) {
       if (p.nodeType !== 1) continue;
       var oy = "";
-      try { oy = getComputedStyle(p).overflowY; } catch (e) { _r9mNote("misc-076", e); }
+      try { oy = getComputedStyle(p).overflowY; } catch (e) { _r9mNote("misc-077", e); }
       if (oy === "auto" || oy === "scroll") return p;
     }
     return null;
@@ -20236,7 +20263,7 @@ return { open: open, close: close };
     /* IMPL-87：宿主标记=网格基底明暗——深色网格下白玻璃按钮/设置面板自动切深色
        （CSS 侧 [data-svfloor="dark"]），亮暗判定复用影色自适应的基底解析 */
     var _bc = rgbOfBase(baseFill), _bl = _bc ? _bc[0] * .299 + _bc[1] * .587 + _bc[2] * .114 : 255;
-    try { document.documentElement.setAttribute("data-svfloor", _bl < 128 ? "dark" : "light"); } catch (_e) { _r9mNote("misc-077", _e); }
+    try { document.documentElement.setAttribute("data-svfloor", _bl < 128 ? "dark" : "light"); } catch (_e) { _r9mNote("misc-078", _e); }
     /* 基底后置（IMPL-83）：先画线→聚光衰减→destination-over 垫底，
        地台不受聚光影响（页面 margins 连续白）；无聚光时顺序与先垫底等价 */
 
@@ -20639,14 +20666,14 @@ return { open: open, close: close };
     sync(true);
     if (window.ResizeObserver && list) {
       ro = new ResizeObserver(function () { sync(false); });
-      try { ro.observe(list); } catch (e) { _r9mNote("misc-078", e); }
+      try { ro.observe(list); } catch (e) { _r9mNote("misc-079", e); }
     }
     list.addEventListener("load", onMedia, true);
     list.addEventListener("loadedmetadata", onMedia, true);
     try {
       moTheme = new MutationObserver(function () { sync(true); });
       moTheme.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-    } catch (e) { _r9mNote("misc-079", e); }
+    } catch (e) { _r9mNote("misc-080", e); }
     window.addEventListener("resize", function () { sync(false); }, { passive: true });
     /* 内容滚动（IMPL-81）：网格锚固定=背景语义不随内容滚动，落影经 rectOf 实时贴卡。
        IMPL-89③：scroll 事件内同步 applyHole()（仅写 4 个 CSS 变量，成本极低）——
@@ -20674,7 +20701,7 @@ return { open: open, close: close };
           if (typeof RMQ.addEventListener === "function") RMQ.addEventListener("change", onRmq);
           else if (typeof RMQ.addListener === "function") RMQ.addListener(onRmq);
         }
-      } catch (e) { _r9mNote("misc-080", e); }
+      } catch (e) { _r9mNote("misc-081", e); }
     }
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
@@ -20687,7 +20714,7 @@ return { open: open, close: close };
       if (typeof MOB_Q.addEventListener === "function") MOB_Q.addEventListener("change", onMobQ);
       else if (typeof MOB_Q.addListener === "function") MOB_Q.addListener(onMobQ);
     }
-  } catch (e) { _r9mNote("misc-081", e); }
+  } catch (e) { _r9mNote("misc-082", e); }
 
   /* ---------- 对外 API：原有三键 { sync, redraw, config } 不变 ----------
      config = S 活引用（设置面板直写后调 SvFloor.sync() 即重画；签名键覆盖全部参数）。
