@@ -1212,6 +1212,48 @@ type: "ref-image",
 output: "csv",
 max: 14
 } ]
+}, {
+id: "apiyi:nano-banana-2.1",
+name: "Nano Banana 2.1（易）",
+endpoint: "/v1beta/models/gemini-nano-banana-2.1:generateContent",
+endpointModel: "gemini-nano-banana-2.1",
+gemini: true,
+thinking: true, /* ★ R95-1-3：把「是否支持 thinkingLevel」写入定义 —— 原来 apiyiGemini 读 def.thinking 而定义里根本没这字段（恒 undefined ⇒ 思考参数永不下发） */
+price: "0.35元/张（$0.05/次）",
+async: false,
+type: "image",
+channel: "apiyi",
+modelId: "nano-banana-2.1",
+desc: "NB 新一代 · 更快更准 · 1K/2K/4K · 能力待实测",
+billing: { type: "perImage", unit: 0.35 },
+params: [ {
+key: "prompt",
+label: "提示词",
+type: "textarea",
+required: true,
+default: "",
+placeholder: "描述图片"
+}, {
+key: "aspectRatio",
+label: "比例",
+type: "select",
+default: "1:1",
+options: [ "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9", "1:4", "4:1", "1:8", "8:1" ],
+hint: "本模型支持 14 种比例"
+}, {
+key: "resolution",
+label: "清晰度",
+type: "select",
+default: "1K",
+options: [ "1K", "2K", "4K" ],
+hint: "1K/2K/4K（4K 官方建议 600 秒兜底）"
+}, {
+key: "urls",
+label: "参考图",
+type: "ref-image",
+output: "csv",
+max: 14
+} ]
 } ],
 video: [ {
 /* ★ R21-5（修 2026-10-01「视频模型需要更新到宿主模型列表」）：APIYI 视频档进列表。
@@ -10401,6 +10443,7 @@ qwen3_asr_17b: "mic",
 "apiyi:nano-banana": "google",
 "apiyi:nano-banana-2-lite": "google",
 "apiyi:nano-banana-2": "google",
+"apiyi:nano-banana-2.1": "google", /* ★ R9ZY-5c（2026-10-11）：NB2.1 入表（厂商 = Google） */
 "apiyi:nano-banana-pro": "google",
 "apiyi:seedance-2-5-260628": "seed",
 "apiyi:veo-3.1-generate-preview": "google",
