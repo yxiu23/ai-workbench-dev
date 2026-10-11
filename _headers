@@ -10,6 +10,12 @@
 /image-studio.*.js
   Cache-Control: public, max-age=31536000, immutable
 
+# ★ R9ZY-46 清单外置：`models.js` **刻意不带 hash**（为将来升级"运行时清单"留路 ——
+#   换清单只需推这一个文件）。⚠ 正因为名字不变，这里**绝不能** immutable，只能短缓存，
+#   否则清单改了用户永远拿旧的。（GitHub Pages 忽略本文件，那边按平台默认 10 分钟生效。）
+/models.js
+  Cache-Control: public, max-age=300
+
 # HTML 刻意不在此列：入口必须每次校验，否则更新要等缓存过期才生效。
 
 # ② 安全头（R96-2-2 · 报告 SEC-P0-3）—— 全部是**纯加法**，不改任何现有行为：
