@@ -18060,14 +18060,10 @@ Object.keys(BITMAP_MODEL_MAP).forEach(function(k) { const v = BITMAP_MODEL_MAP[k
 try {
 if (typeof MODELS !== "undefined" && Array.isArray(MODELS.image) && typeof modelLogoOf === "function") {
 var R9ZY16_WY_SKIP = { "gpt-image-2": 1 };
-  /* 2026-10-01：清单含 APIYI 全部档 + **速创全部图像档**。
-     ★ R16（修 14:4x「APIYI 置顶、速创置底」）：**先 APIYI、后速创** ——
-     下拉顺序 = 这里 push 进 cat.models 的顺序（编辑器走 Object.entries 的插入序）。
-     ★★ R9ZY-16（2026-10-11 · 修：「速创的香蕉 2.1 没加入到角度调整」）：
-     根因 = **速创档没有 channel 字段**（只有 type:"image" + async:true）⇒ 只按 channel 过滤会全漏；
-     原来这里只硬编码了 3 个 gpt-image 系 ⇒ **NanoBanana 系从来没进去过**。
-     判据补一条：endpoint 以 /api/async/ 开头 ⇒ 归速创（与 R42 视频同一判据源）。
-     ⚠ 排除 gpt-image-2（修 R9ZY-7 拍板淘汰）。 */
+  /* 清单 = APIYI 全部档 + 速创全部图像档（★R16：先 APIYI 后速创，顺序 = push 序）。
+     ★★R9ZY-16：速创档**没有 channel 字段** ⇒ 只按 channel 过滤会全漏（原来只硬编码 3 个
+     gpt-image 系，NanoBanana 系从来没进去过）⇒ 补判据：endpoint 前缀 /api/async/ 归速创。
+     ⚠ gpt-image-2 排除（R9ZY-7 已拍板淘汰）。 */
   MODELS.image.filter(function(x) { return x.channel === "apiyi"; }).map(function(x) { return x.id; })
     .concat(MODELS.image.filter(function(x) { return String(x.endpoint || "").indexOf("/api/async/") === 0 && !R9ZY16_WY_SKIP[x.id]; }).map(function(x) { return x.id; })).forEach(function(id) {
 const m = MODELS.image.find(function(x) { return x.id === id; });
