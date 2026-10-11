@@ -7286,7 +7286,7 @@ retryAfter: retryAfter
 }
 /* ★★ R9ZI：524 单独给可执行文案 —— 这是 **Cloudflare 网关**断的，不是上游超时，两者对策完全不同：
    上游超时 ⇒ 只能等或换小图；网关 524 ⇒ 部署带「慢请求保活」的 Worker（R9ZI+）即可从根上消除。 */
-if (r9ziSt === 524) throw Object.assign(new Error("网关超时（Cloudflare 524）：等待上游超过网关 125 秒读取上限，被网关先行断开。⚠ 上游任务可能仍在生成并**照常计费**，稍后可在 APIYI 后台查看产物。可执行：① **这一档已自动改走异步通道**（R9ZY-8 起：慢档提交秒级返回、再由 Worker 轮询上游），**正常情况下你不会再看到本条**——若还看到，说明异步没生效，请把 `copy(__w5Logs())` 的结果发我，我据此定位（别再自己折腾 Worker：线上已是最新版 R9ZX-20261011）；② 应急可临时**换成速创档**（模型键里**不带 `apiyi:` 前缀**的那三个 `gpt-image-2.5` 系，走异步两段式），或换更快的档（SeeDream 5.0 Flash / FLUX）、调低清晰度——这两条是**绕过**，不是解决；② 到 Cloudflare 控制台重新部署**最新一版** Worker（R9ZI 起已含慢请求保活，可从根上消除 125 秒限制）——交付件是 studio/ 下的《W5-给修-Worker完整代码-*.js》（⚠ 文件名随批次走，别用旧名字；贴完用 curl 看 /health 的 version 确认）"), {
+if (r9ziSt === 524) throw Object.assign(new Error("网关超时（Cloudflare 524）：等待上游超过网关 125 秒读取上限，被网关先行断开。⚠ 上游任务可能仍在生成并**照常计费**，稍后可在 APIYI 后台查看产物。可执行：① **这一档已自动改走异步通道**（R9ZY-8 起：慢档提交秒级返回、再由 Worker 轮询上游），**正常情况下你不会再看到本条**——若还看到，说明异步没生效，请把 `copy(__w5Logs())` 的结果发我，我据此定位（**别再自己折腾 Worker**：线上跑的就是最新一版，贴过一次就不再需要重复贴）；② 应急可临时**换成速创档**（模型键里**不带 `apiyi:` 前缀**的那三个 `gpt-image-2.5` 系，走异步两段式），或换更快的档（SeeDream 5.0 Flash / FLUX）、调低清晰度——这是**绕过**，不是解决。"), {
 status: 524,
 data: data
 });
@@ -18538,8 +18538,13 @@ async function apiyiAsyncFetch(pathname, body, def, size) {
     files: filesResolved,
     model: (def && def.modelId) || (def && def.id) || "",
     modelType: "image",
-  }, { timeout: 12e4 });   /* ⚠ 提交本身只需"上传 + KV 写"，给 120s 很宽裕；
-                              它**绝不该**因为上游慢而超时（上游压根不在这一跳）。 */
+  }, { timeout: 30e4 });   /* ⚠ 提交本身只需"上传 + KV 写" —— 耗时**全在上传**（body 里是 base64 的图）。
+                              ★ R9ZY-12：120s → **300s**。修实报角度调整仍 524，查出来是**这一跳超时**：
+                              他的链路到 CF 的下行只有 30KB/s，**上行更窄**，几 MB 的 base64 传不完
+                              ⇒ 提交抛超时 ⇒（当时）降级回同步 ⇒ 同步必撞 125s 墙 = 524。
+                              真实修法是**减小上传体积**（见 APIYI_FUNCS 的 _shrinkImageDataUrl），
+                              这里加长超时是第二道保险：宁可慢一点成功，也不要"传一半被掐 + 白等 125s"。
+                              ⚠ 300s < Worker 的 900s 闸门，安全。 */
   const taskId = sub && (sub.taskId || (sub.task && sub.task.id));
   if (!taskId) throw new Error("异步通道提交未返回 taskId：" + JSON.stringify(sub).slice(0, 200));
   /* ★ R9ZY-6-③：提交段耗时 —— 若这一段就很大，说明**上行传输/编码**是瓶颈（不是轮询）。 */
@@ -18667,7 +18672,19 @@ async function apiyiPost(pathname, body, def, size) {
          ⇒ apiyiPostAsync 在"上游已被调度"之后抛的错，一律打 `e.__ayAccepted = true`；
             这里**只认这个标记**（不解析错误文案，文案会变、标记不会）。 */
       if (e && e.__ayAccepted) throw e;
-      console.warn("[W5-route]", JSON.stringify({ phase: "apiyi-async-fallback", msg: String((e && e.message) || e).slice(0, 200), ts: Date.now() }));
+      /* ★★★ R9ZY-12（2026-10-11 · 修实报角度调整仍 524，查出来就是这个洞）：
+         **提交阶段的"超时/网络中断"同样不许降级**。
+         为什么：拿不到 taskId 有两种可能 —— ① Worker 压根没收到；② 收到了、KV 也写了，
+         只是**响应在回来的路上丢了**。②的情况下上游随时会被 Cron 取走并真发 ⇒ 已计费。
+         这两种在客户端**区分不出来** ⇒ 降级重试就有**双重计费**风险；
+         而且降级后的同步请求在这条链路上**必撞 125s 墙**（修实测）⇒ 白等 4 分钟还得不到图。
+         ⇒ 宁可"快速失败 + 明确告知可能已提交"，也不拿钱和白等去赌。 */
+      const _ayMsg = String((e && e.message) || e);
+      if (/timeout|超时|abort|network|网络|Failed to fetch|ERR_/i.test(_ayMsg)) {
+        throw new Error("异步通道提交未完成（" + _ayMsg + "）—— 网络中断时无法确认上游是否已受理，"
+          + "为避免重复计费**未自动重试**；请稍后在任务列表确认是否已有本次任务，再决定是否重新发起");
+      }
+      console.warn("[W5-route]", JSON.stringify({ phase: "apiyi-async-fallback", msg: _ayMsg.slice(0, 200), ts: Date.now() }));
       /* 落回同步路径（继续执行下方原逻辑） */
     }
   }
@@ -18826,6 +18843,54 @@ async function apiyiImages(imgData, prompt, def, ex) {
 }
 
 /** 改图（/v1/images/edits，multipart）。**第 1 张 image 永远是源图**，mask 只对它生效（官方口径）。 */
+/* ★★★ R9ZY-12（2026-10-11 · 修实报「角度调整仍 524」的真凶之一）：**上传体积**。
+   ─────────────────────────────────────────────────────────────────────────────
+   异步通道要先把图 base64 塞进 body、float 到 Worker（提交 POST /task/apiyi）。
+   而修的链路到 CF 下行仅 30KB/s、**上行更窄**；编辑器里的源图常是**无损 PNG**，
+   dataURL 之后动辄数 MB，base64 再胖 33% ⇒ 提交那一跳传不完 ⇒ 超时。
+   （超时后旧逻辑会降级回同步 ⇒ 同步必等满 125s 才被网关切断 ⇒ 524，用户白等 4 分钟。）
+   ⇒ 这里做一个**保守**的瘦身：**只有长边超过上限才缩**，且**不换 MIME**（PNG 的 alpha 语义不能丢）。
+   ⚠ 只在**没有 mask** 时用（见调用点）：有 mask 的动作要求 image 与 mask 严格同几何，
+     单方面缩 image 会破坏对齐 —— 那是另一套语义，一律不动。
+   ⚠ 这个"上限"不是拍脑袋：gpt-image / Seedream 这类模型的**工作分辨率**就在 1K~2K 量级，
+     源图超过 2048 长边对模型是**冗余像素**，缩掉不损失模型看到的信息。
+   ⚠ 任何异常 ⇒ **原样返回**（优化绝不许变成新的故障源）。 */
+async function _shrinkImageDataUrl(dataUrl, maxEdge) {
+  try {
+    const str = String(dataUrl || "");
+    if (str.indexOf("data:image/") !== 0) return dataUrl;          /* blob:/http: 等非 dataURL ⇒ 不动 */
+    if (typeof document === "undefined" || typeof Image === "undefined") return dataUrl;  /* 非浏览器环境 */
+    const m = /^data:([^;,]+)[;,]/.exec(str);
+    const mime = String((m && m[1]) || "image/png").toLowerCase();
+    const img = await new Promise(function (res, rej) {
+      const im = new Image();
+      im.onload = function () { res(im); };
+      im.onerror = function () { rej(new Error("decode-failed")); };
+      im.src = str;
+    });
+    const w0 = img.naturalWidth || img.width || 0;
+    const h0 = img.naturalHeight || img.height || 0;
+    if (!w0 || !h0) return dataUrl;
+    const long0 = Math.max(w0, h0);
+    if (long0 <= maxEdge) return dataUrl;                          /* 本来就够小 ⇒ 零改动（不碰原图） */
+    const k = maxEdge / long0;
+    const w = Math.max(1, Math.round(w0 * k));
+    const h = Math.max(1, Math.round(h0 * k));
+    const cv = document.createElement("canvas");
+    cv.width = w; cv.height = h;
+    const cx = cv.getContext("2d");
+    if (!cx) return dataUrl;
+    cx.drawImage(img, 0, 0, w, h);
+    /* ⚠ 保持原编码族：已是 JPEG/WebP 的才输出有损，其余一律 PNG（保 alpha）—— 不擅自改语义。 */
+    const outMime = (mime === "image/jpeg" || mime === "image/webp") ? mime : "image/png";
+    const out = cv.toDataURL(outMime, 0.92);
+    if (!out || out.length >= str.length) return dataUrl;          /* 缩完反而更大 ⇒ 退回原图（绝不更坏） */
+    return out;
+  } catch (_e) {
+    return dataUrl;
+  }
+}
+
 async function apiyiEdits(imgData, maskData, prompt, def, ex) {
   const t0 = Date.now();
   const e = ex || {};
@@ -18850,7 +18915,12 @@ async function apiyiEdits(imgData, maskData, prompt, def, ex) {
      用户显式选了 background 就尊重用户（面板透传）；否则由我们指定 opaque。 */
   if (e.background) fd.append("background", e.background);
   else if (maskData) fd.append("background", "opaque");
-  fd.append("image[]", dataUrlToFile(imgData, "image.png"), "image.png");
+  /* ★ R9ZY-12：**无 mask ⇒ 源图可安全瘦身**（有 mask ⇒ 必须与 mask 同几何，一个字都不动）。 */
+  const _imgUpload = maskData ? imgData : await _shrinkImageDataUrl(imgData, 2048);
+  if (_imgUpload !== imgData) {
+    console.info("[W5-route]", JSON.stringify({ phase: "apiyi-shrink", from: String(imgData || "").length, to: String(_imgUpload || "").length, ts: Date.now() }));
+  }
+  fd.append("image[]", dataUrlToFile(_imgUpload, "image.png"), "image.png");
   /* 参考图追加在**源图之后**（顺序即 prompt 里「图1/图2/图3」的指代依据，官方明写）。
      单张失败不阻断（源图才是关键），但必须留痕。 */
   const refs = Array.isArray(e.refDataUrls) ? e.refDataUrls : [];
