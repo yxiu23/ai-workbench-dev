@@ -249,8 +249,8 @@ output: "csv"
 } ]
 }, {
 id: "nanoBanana2",
-name: "NanoBanana2",
-endpoint: "/api/async/image_nanoBanana2",
+name: "NanoBanana 2.1",
+endpoint: "/api/async/NanoBanana2.1",
 price: "0.1元/张",
 async: true,
 type: "image",
@@ -267,7 +267,7 @@ required: true,
 default: "",
 placeholder: "描述图片"
 }, {
-key: "size",
+key: "imageSize",
 label: "分辨率",
 type: "select",
 default: "1K",
@@ -1045,48 +1045,6 @@ type: "ref-image",
 output: "csv"
 } ]
 }, {
-id: "apiyi:nano-banana",
-name: "Nano Banana 一代（易）",
-endpoint: "/v1beta/models/gemini-2.5-flash-image:generateContent",
-endpointModel: "gemini-2.5-flash-image",
-gemini: true,
-thinking: false, /* ★ R95-1-3：把「是否支持 thinkingLevel」写入定义 —— 原来 apiyiGemini 读 def.thinking 而定义里根本没这字段（恒 undefined ⇒ 思考参数永不下发） */
-price: "0.14元/张（$0.02/次）",
-async: false,
-type: "image",
-channel: "apiyi",
-modelId: "nano-banana",
-desc: "一代经典，1K 成本低",
-billing: { type: "perImage", unit: 0.14 },
-params: [ {
-key: "prompt",
-label: "提示词",
-type: "textarea",
-required: true,
-default: "",
-placeholder: "描述图片"
-}, {
-key: "aspectRatio",
-label: "比例",
-type: "select",
-default: "1:1",
-options: [ "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9" ],
-hint: "本模型支持 10 种比例"
-}, {
-key: "resolution",
-label: "清晰度",
-type: "select",
-default: "1K",
-options: [ "1K" ],
-hint: "本模型只有 1K 一档（传 2K/4K 会报错）"
-}, {
-key: "urls",
-label: "参考图",
-type: "ref-image",
-output: "csv",
-max: 14
-} ]
-}, {
 id: "apiyi:nano-banana-2-lite",
 name: "Nano Banana 2 Lite（易）",
 endpoint: "/v1beta/models/gemini-3.1-flash-lite-image:generateContent",
@@ -1463,13 +1421,18 @@ name: "Wan3.0 视频（易）",
    POST /wan/api/v1/services/aigc/video-generation/video-synthesis · 必带 X-DashScope-Async: enable ·
    duration 必须整数 · resolution 大写 720P/1080P；查询 GET /v1/tasks/{task_id}。 */
 endpoint: "/wan/api/v1/services/aigc/video-generation/video-synthesis",
-price: "按Token·$0.48/M（每条价官方未提供）",
+/* ★ R9ZY-7（2026-10-11 · 修：「按Token·$0.48/M（每条价官方未提供）这个定个大约数值，别显示这么长小字」）：
+   **列表价改成短价**。估算依据（**不是编造**）：本档走 **DashScope 透传**＝直连阿里云百炼，
+   与宿主「Wan3.0-Video（连）」**同一上游** ⇒ 秒价口径应一致（480P 0.3 / 720P 0.6 / 1080P 1.2 元/秒）
+   ⇒ 显示取最低档 **≈¥0.3/秒起**。
+   ⚠ 报账**仍按真值**（billing: perToken $0.48/M）—— 这里只改"给人看的那一格"，不动算钱的逻辑。 */
+price: "≈¥0.3/秒起",
 async: false,
 type: "video",
 channel: "apiyi",
 modelId: "wan3.0-video",
 desc: "阿里万相 · 全模态旗舰 · 需 Wan 分组",
-billing: { type: "perToken", inUsdPerM: 0.48, outUsdPerM: 0.48, source: "api", note: "视频按量计费（$0.48/M，CSV 真值）；折算方式官方未提供 ⇒ 不估每条价" },
+billing: { type: "perToken", inUsdPerM: 0.48, outUsdPerM: 0.48, source: "api", note: "视频按量计费（$0.48/M，CSV 真值）；折算方式官方未提供 ⇒ 报账按 token；列表显示价 ≈¥0.3/秒起（参照同上游 DashScope 口径）" },
 params: [ {
 key: "prompt",
 label: "提示词",
@@ -2296,98 +2259,6 @@ params: [ "audios" ]
 }
 } ],
 audio: [ {
-id: "audio_tts",
-name: "语音合成(异步)",
-endpoint: "/api/async/audio_tts",
-price: "0.0006元/字符",
-async: true,
-type: "audio",
-desc: "多音色多语种，开箱即用",
-billing: {
-type: "perChar",
-unit: 6e-4,
-charKey: "text"
-},
-params: [ {
-key: "text",
-label: "文本",
-type: "textarea",
-required: true,
-default: "你好，我是AI语音助手。"
-}, {
-key: "voice_id",
-label: "音色",
-type: "datalist",
-required: true,
-default: "male-qn-qingse",
-options: [ {
-value: "male-qn-qingse",
-label: "青涩男声"
-}, {
-value: "male-qn-jingying",
-label: "精英男声"
-}, {
-value: "male-qn-badao",
-label: "霸道男声"
-}, {
-value: "male-qn-daxuesheng",
-label: "大学生男声"
-}, {
-value: "male-qn-qingnian",
-label: "青年男声"
-}, {
-value: "male-qn-chengshu",
-label: "成熟男声"
-}, {
-value: "female-shaonv",
-label: "少女女声"
-}, {
-value: "female-yujie",
-label: "御姐女声"
-}, {
-value: "female-chengshu",
-label: "成熟女声"
-}, {
-value: "female-zhibo",
-label: "直播女声"
-}, {
-value: "female-wenrou",
-label: "温柔女声"
-}, {
-value: "female-zhishixing",
-label: "知性女声"
-}, {
-value: "presenter_male",
-label: "主持人男声"
-}, {
-value: "presenter_female",
-label: "主持人女声"
-} ]
-}, {
-key: "speed",
-label: "语速",
-type: "range",
-default: 1,
-min: .5,
-max: 2,
-step: .1,
-unit: "x"
-}, {
-key: "vol",
-label: "音量",
-type: "range",
-default: 1,
-min: .1,
-max: 10,
-step: .1
-}, {
-key: "language_boost",
-label: "语种",
-type: "select",
-default: "auto",
-options: [ "auto", "Chinese", "Chinese,Yue", "English", "Arabic", "Russian", "Spanish", "French", "Portuguese", "German", "Turkish", "Dutch", "Ukrainian", "Vietnamese", "Indonesian", "Japanese", "Italian", "Korean" ]
-} ]
-}, {
 id: "voice_composite",
 name: "语音合成(同步)",
 endpoint: "/api/voice/composite",
@@ -10440,7 +10311,6 @@ qwen3_asr_17b: "mic",
 "apiyi:seedream-5-0-flash-260915": "seed",
 "apiyi:seedream-5-0-260128": "seed",
 "apiyi:flux-2-pro": "flux",
-"apiyi:nano-banana": "google",
 "apiyi:nano-banana-2-lite": "google",
 "apiyi:nano-banana-2": "google",
 "apiyi:nano-banana-2.1": "google", /* ★ R9ZY-5c（2026-10-11）：NB2.1 入表（厂商 = Google） */
