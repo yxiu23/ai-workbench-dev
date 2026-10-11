@@ -7038,6 +7038,30 @@ function _r9zuCapsReady() {
   } catch (_e) { return false; }
 }
 
+/* ★★★ R9ZY-8（2026-10-11 · 修**实报**：角度调整 `POST /media/apiyi/v1/images/edits → 524`）
+   ─────────────────────────────────────────────────────────────────────────────
+   **病根** = 分流判据读的是「懒探测」的结果，而懒探测是 **发起即返回、结果要等下一轮**：
+     · `_r9gProbeCaps()` 只负责**发**探针，`__r9gCaps` 要等 fetch 回来才被赋值；
+     · `_r9zuCapsReady()` 见 `__r9gCaps` 为 null 就 `return false`（连"等一等"都没有）；
+   ⇒ 只要 caps 还没到手，`apiyiWantsAsync` 就判 false ⇒ **退回同步通道** ⇒ 撞 CF 的 125s 读墙（524）。
+   ⚠⚠ 上面那句旧注释「页面刚打开的最初一瞬…**概率极低**」是**判断错误**：
+      实测是**必然** —— 用户从"打开页面 → 打开编辑器 → 点角度调整"这条路上，
+      **根本没有任何一处会触发 /media 请求**，懒探测因此**从未被发起**，
+      `__r9gCaps` **永远是 null** ⇒ **每一次**慢请求都走同步 ⇒ **每次都撞 524**。
+   **修法** = 分流前**主动 await 一次带缓存的 /health 探测**：
+     `_r9lCaps()`（R9L 既有）正是"能等"的那个版本 —— 它打 `/health`、自带缓存
+     （一次页面加载最多打一次），返回时 `__r9gCaps` 已就绪。
+   ⇒ 之后再走原判据，异步通道**确定生效**（不再取决于探测时机）。
+   ⚠ 用 `typeof _r9lCaps === "function"` 兜住"不在同块/不存在"的极端情况 ⇒ 退化为旧行为，**不会崩**。 */
+async function _r9zuWantsAsyncEnsured(def, size) {
+  try {
+    if (!__r9gCaps && typeof _r9lCaps === "function") {
+      try { await _r9lCaps(); } catch (_e1) { /* 探测失败 ⇒ 交给下面的判据决定（退回同步，行为同旧版） */ }
+    }
+  } catch (_e2) { /* 忽略：判据自会兜底 */ }
+  return apiyiWantsAsync(def, size);
+}
+
 /* ══════ R9ZY · 错误日志（payload/R9ZY_errlog.txt）══════ */
 /* ══════════════════════════════════════════════════════════════════════════════
    ★★ R9ZY · 错误日志（修：「需要有个日志功能，最起码能记录错误，这样我也能方便的反馈给你」）
@@ -7278,7 +7302,7 @@ retryAfter: retryAfter
 }
 /* ★★ R9ZI：524 单独给可执行文案 —— 这是 **Cloudflare 网关**断的，不是上游超时，两者对策完全不同：
    上游超时 ⇒ 只能等或换小图；网关 524 ⇒ 部署带「慢请求保活」的 Worker（R9ZI+）即可从根上消除。 */
-if (r9ziSt === 524) throw Object.assign(new Error("网关超时（Cloudflare 524）：等待上游超过网关 125 秒读取上限，被网关先行断开。⚠ 上游任务可能仍在生成并**照常计费**，稍后可在 APIYI 后台查看产物。可执行：① **换成速创档**（模型键里**不带 `apiyi:` 前缀**的那三个 `gpt-image-2.5` 系）—— 它走**异步两段式**（提交秒级返回 + 每 4 秒轮询），单条请求都很短，**从结构上就不会撞 125 秒墙**，是当前唯一确定可用的路；或换更快的模型档（SeeDream 5.0 Flash / FLUX）、调低清晰度档；② 到 Cloudflare 控制台重新部署**最新一版** Worker（R9ZI 起已含慢请求保活，可从根上消除 125 秒限制）——交付件是 studio/ 下的《W5-给修-Worker完整代码-*.js》（⚠ 文件名随批次走，别用旧名字；贴完用 curl 看 /health 的 version 确认）"), {
+if (r9ziSt === 524) throw Object.assign(new Error("网关超时（Cloudflare 524）：等待上游超过网关 125 秒读取上限，被网关先行断开。⚠ 上游任务可能仍在生成并**照常计费**，稍后可在 APIYI 后台查看产物。可执行：① **这一档已自动改走异步通道**（R9ZY-8 起：慢档提交秒级返回、再由 Worker 轮询上游），**正常情况下你不会再看到本条**——若还看到，说明异步没生效，请把 `copy(__w5Logs())` 的结果发我，我据此定位（别再自己折腾 Worker：线上已是最新版 R9ZX-20261011）；② 应急可临时**换成速创档**（模型键里**不带 `apiyi:` 前缀**的那三个 `gpt-image-2.5` 系，走异步两段式），或换更快的档（SeeDream 5.0 Flash / FLUX）、调低清晰度——这两条是**绕过**，不是解决；② 到 Cloudflare 控制台重新部署**最新一版** Worker（R9ZI 起已含慢请求保活，可从根上消除 125 秒限制）——交付件是 studio/ 下的《W5-给修-Worker完整代码-*.js》（⚠ 文件名随批次走，别用旧名字；贴完用 curl 看 /health 的 version 确认）"), {
 status: 524,
 data: data
 });
@@ -18588,8 +18612,13 @@ async function apiyiPostAsync(pathname, body, def, size) {
  *    判据见 apiyiWantsAsync（预算 ≥300s 的慢档 + Worker 已报能力）。 */
 async function apiyiPost(pathname, body, def, size) {
   /* ★ 分流点：慢档 + Worker 具备异步能力 ⇒ 走异步（提交秒回 + Cron 跑上游）。
-     任一条不满足 ⇒ 逐字节走下面的原同步逻辑（含原有 429/5xx 退避重试）。 */
-  if (apiyiWantsAsync(def, size)) {
+     任一条不满足 ⇒ 逐字节走下面的原同步逻辑（含原有 429/5xx 退避重试）。
+     ★★★ R9ZY-8（2026-10-11 · 修实报 524）：**判据改成 await 版** ——
+     原 apiyiWantsAsync() 只读懒探测的结果，而那个探测是"发起即返回、结果下一轮才有"
+     ⇒ caps 未到手时必然判 false ⇒ **退回同步** ⇒ 撞 CF 125s 墙（修在角度调整上实报）。
+     新 _r9zuWantsAsyncEnsured() 会**先 await 一次带缓存的 /health 探测**再判
+     ⇒ 异步通道确定生效，不再取决于探测时机。 */
+  if (await _r9zuWantsAsyncEnsured(def, size)) {
     try {
       return await apiyiPostAsync(pathname, body, def, size);
     } catch (e) {
