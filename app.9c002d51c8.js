@@ -7038,29 +7038,13 @@ function _r9zuCapsReady() {
   } catch (_e) { return false; }
 }
 
-/* ★★★ R9ZY-8（2026-10-11 · 修**实报**：角度调整 `POST /media/apiyi/v1/images/edits → 524`）
-   ─────────────────────────────────────────────────────────────────────────────
-   **病根** = 分流判据读的是「懒探测」的结果，而懒探测是 **发起即返回、结果要等下一轮**：
-     · `_r9gProbeCaps()` 只负责**发**探针，`__r9gCaps` 要等 fetch 回来才被赋值；
-     · `_r9zuCapsReady()` 见 `__r9gCaps` 为 null 就 `return false`（连"等一等"都没有）；
-   ⇒ 只要 caps 还没到手，`apiyiWantsAsync` 就判 false ⇒ **退回同步通道** ⇒ 撞 CF 的 125s 读墙（524）。
-   ⚠⚠ 上面那句旧注释「页面刚打开的最初一瞬…**概率极低**」是**判断错误**：
-      实测是**必然** —— 用户从"打开页面 → 打开编辑器 → 点角度调整"这条路上，
-      **根本没有任何一处会触发 /media 请求**，懒探测因此**从未被发起**，
-      `__r9gCaps` **永远是 null** ⇒ **每一次**慢请求都走同步 ⇒ **每次都撞 524**。
-   **修法** = 分流前**主动 await 一次带缓存的 /health 探测**：
-     `_r9lCaps()`（R9L 既有）正是"能等"的那个版本 —— 它打 `/health`、自带缓存
-     （一次页面加载最多打一次），返回时 `__r9gCaps` 已就绪。
-   ⇒ 之后再走原判据，异步通道**确定生效**（不再取决于探测时机）。
-   ⚠ 用 `typeof _r9lCaps === "function"` 兜住"不在同块/不存在"的极端情况 ⇒ 退化为旧行为，**不会崩**。 */
-async function _r9zuWantsAsyncEnsured(def, size) {
-  try {
-    if (!__r9gCaps && typeof _r9lCaps === "function") {
-      try { await _r9lCaps(); } catch (_e1) { /* 探测失败 ⇒ 交给下面的判据决定（退回同步，行为同旧版） */ }
-    }
-  } catch (_e2) { /* 忽略：判据自会兜底 */ }
-  return apiyiWantsAsync(def, size);
-}
+/* ⚠⚠ R9ZY-9（2026-10-11）**重要更正**：请**不要**在本文件（本作用域）里新增任何
+   "供 IIFE 之外调用"的函数 —— 本块与 `apiyiWantsAsync` / `apiyiPost` **不在同一个 IIFE**：
+     本块各符号的产物行号 ≈ 10607~10651，而 `apiyiWantsAsync` / `apiyiPost` ≈ 21954 / 22207。
+   R9ZY-8 我把 `_r9zuWantsAsyncEnsured` 加在了**这里**，于是它调 `apiyiWantsAsync` 时
+   **ReferenceError: apiyiWantsAsync is not defined** ⇒ 位图动作**全线崩**（修 11:1x 实报）。
+   ⇒ 该函数已移到 `payload/R9ZU_wants.txt`（与 `apiyiWantsAsync` **同处插入** = 同作用域）。
+   ★ 判据（可复用）：**凡是"要被 apiyiPost 那条链调用的"，一律放 `R9ZU_wants.txt`**。 */
 
 /* ══════ R9ZY · 错误日志（payload/R9ZY_errlog.txt）══════ */
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -7417,8 +7401,17 @@ _taskReq(method, path, body, opts = {}) {
   const w = (Store.getR2WorkerUrl() || "").trim().replace(/\/$/, "");
   if (!w) throw new Error("no_worker_url: 未配置 R2 Worker 地址——异步任务通道需要它，请在 设置→编辑密钥 填入 R2 Worker 地址与 Token");
   const token = Store.getR2AuthToken() || "";
-  if (!__r9gProbed) _r9gProbeCaps();
-  const _r9gHdr = _r9gBearerOn();
+  /* ★★★ R9ZY-9（2026-10-11 · 实报 524 的**第二处**跨作用域裸调）：
+     `__r9gProbed` / `_r9gProbeCaps` / `_r9gBearerOn` 住在**另一个 IIFE**
+     （产物行号 ≈ 10528 / 10609 / 10607，而本函数 ≈ 11011）⇒ 裸调 = **ReferenceError**
+     ⇒ `_taskReq` 抛错 ⇒ `apiyiPostAsync` 整条失败 ⇒ 被 `apiyiPost` 的 catch **降级回同步**
+     ⇒ **撞 CF 125s 墙（524）**。⚠ 这条最阴：它把"异步通道没跑起来"伪装成"网络太慢"。
+     ⇒ 一律 `typeof` 守卫；`_r9gBearerOn()` 拿不到时**默认按头鉴权走**（R9ZX 的 Worker 支持头鉴权，
+        且 `?token=` 兜底也还在 ⇒ 两条都不会 401）。 */
+  try {
+    if (typeof __r9gProbed !== "undefined" && !__r9gProbed && typeof _r9gProbeCaps === "function") _r9gProbeCaps();
+  } catch (_eT1) { /* 探测失败不影响本次提交 */ }
+  const _r9gHdr = (typeof _r9gBearerOn === "function") ? _r9gBearerOn() : true;
   const url = w + path + (_r9gHdr ? "" : (path.indexOf("?") >= 0 ? "&" : "?") + "token=" + encodeURIComponent(token));
   return _r9gHdr
     ? this.request(method, url, body, { skipAuth: true, authorization: "Bearer " + token, ...opts })
@@ -18356,13 +18349,34 @@ function apiyiTimeoutOf(modelId, def, size) {
      预算 ≥300s ⇔ 官方/实测口径认为它会跑好几分钟 ⇔ 正是会撞墙的那批。
      ⇒ 用同一把尺，杜绝"新加个慢模型忘了加进白名单"这类漂移。
    ⚠ 能力闸：Worker 必须已报 caps.apiyiAsync（否则旧 Worker 没这端点，贸然提交会 404）。
-     没这能力 ⇒ 一律退回同步（行为与今天完全一致，不会更坏）。 */
+     ★★★ R9ZY-9（2026-10-11 · 实报 524 后**改写语义**）：
+       旧判据是 `_r9zuCapsReady()` —— 而它**见 caps 为 null 就 false**。问题在于：
+         · `_r9zuCapsReady` / `__r9gCaps` 住在**另一个 IIFE**（产物行号 ≈10629 / 10528，
+           本函数 ≈21954）⇒ 本作用域里 `typeof` 恒为 "undefined" **或**（若可达）caps 恒为 null；
+         · 两种情况**都让慢档被打回同步** ⇒ 撞 CF 125s 墙 ⇒ **524**（修实报）。
+       ⇒ 新语义 = **"明确没有能力"才拦**（caps === 存在且 apiyiAsync !== true）；
+         **caps 未知（拿不到 / null）一律不拦** —— 理由：拦了的代价是**必然 524**（钱扣了图没拿到），
+         而放行的代价只是"旧 Worker 上多一次 404"（有 catch 兜底 + 会写降级日志，可观测、可回滚）。
+         **两害相权，524 明显更贵。** */
 function apiyiWantsAsync(def, size) {
   try {
-    if (typeof _r9zuCapsReady !== "undefined" && !_r9zuCapsReady()) return false;
+    /* ★ R9ZY-9：只在"**明确拿到** caps 且明确不支持"时才拦；caps 未知 ⇒ 放行（交给下层 404 兜底）。 */
+    try {
+      if (typeof __r9gCaps !== "undefined" && __r9gCaps && __r9gCaps.apiyiAsync !== true) return false;
+    } catch (_eC) { /* 跨作用域访问异常 ⇒ 视作"未知" ⇒ 不拦 */ }
     const budget = apiyiTimeoutOf(def && def.modelId, def, size);
     return budget >= 3e5;
   } catch (_e) { return false; }
+}
+
+/* ★★★ R9ZY-9（2026-10-11）：`apiyiPost` 里用的 await 版判据。
+   ⚠⚠ **它必须与 `apiyiWantsAsync` 处在同一个插入点**（本文件 = 同一个 IIFE）。
+     R9ZY-8 我把它错放进了 `R9ZU_caps.txt`（另一个 IIFE）⇒ 调用时
+     **ReferenceError: apiyiWantsAsync is not defined** ⇒ 位图动作**全线崩**（修 11:1x 实报）。
+   ⇒ 现在只做一件事：转发。**真正的判据逻辑全部在 `apiyiWantsAsync`**（单一真值源，不复制）。
+   （保留 async 形态是为了让"以后真要 await 什么"时不必再动 `apiyiPost` 的调用点。） */
+async function _r9zuWantsAsyncEnsured(def, size) {
+  return apiyiWantsAsync(def, size);
 }
 
 /** 从 MODELS.image 里按 id 取 APIYI 模型定义（**channel 是唯一真值**，不是动作表）。 */
