@@ -18594,29 +18594,34 @@ async function apiyiAsyncFetch(pathname, body, def, size, extra) {
 
   const t0 = Date.now();
   let last = null;
+  /* ★ R9ZY-19 轮询容错：单次失败**绝不判死**（本机到 CF 间歇不通；任务由 Worker 的 Cron
+     独立推进 ⇒ 浏览器没连上 ≠ 任务失败）⇒ 连续失败 <4 次继续试（幂等 GET），≥4 才抛。 */
+  let _pollFails = 0;
   for (let i = 0; ; i += 1) {
     const elapsed = Date.now() - t0;
     if (elapsed > timeoutMs) {
       throw _ayErr(new Error("异步任务轮询超时（>" + Math.round(timeoutMs / 1000) + "s，任务 " + taskId
         + "）—— 任务可能仍在跑，可在任务列表查看"));
     }
-    /* ★ R9ZY-10③（修：「速度慢」）：首次等待 2000ms → **800ms**。
-       首次是"刚提交完、上游通常还没开始出图"的空窗，等 2 秒纯浪费时间；
-       800ms 让"提交秒回 ⇒ 立刻确认任务在跑"的体感成立。
-       ⚠ 后续间隔沿用 CONFIG.POLL_PHASES（那是与宿主任务中心**共用**的配置，
-         动它会波及全部轮询 —— 收益小、风险大，故不动）。 */
+    /* 首次 800ms（提交后上游通常还没开始出图，等 2s 纯浪费）。后续沿用 CONFIG.POLL_PHASES
+       —— 那是与宿主任务中心共用配置，动它波及全局，故不动。 */
     await new Promise(function (r) { setTimeout(r, i === 0 ? 800 : intervalOf(elapsed)); });
-    /* ★ R9ZY-6-③：**单次轮询耗时**单独记 —— 若网络好而这一项稳定在几百 ms，
-       那"慢"就出在**上游生成**或**轮询间隔粒度**，与传输无关（这是修要的那个区分）。 */
+    /* 单次轮询耗时单独记（区分"上游慢"与"传输慢"）。单次超时 240s 是兜底：
+       R9ZY-17 已把结果卸到 R2 ⇒ 正常只回几十字节的链接。 */
     const _ayPollT = Date.now();
-    /* ★★ R9ZY-16（2026-10-11 · 修实报「等了好久最后 timeout」）：
-       **单次轮询超时 30s → 240s**。根因（查证过）：出图**成功那一次**的轮询，
-       Worker 回的 `resultBody` 是**上游响应原文（含 b64，约 5.6MB）** ——
-       在修那条 31KB/s 到 CF 的链路上**要 3 分钟**，而原超时只有 30s ⇒ **必然超时**。
-       ⚠ 这只是**缓解**：根治要让 Worker 把结果落 R2、轮询只回 URL（几十字节），
-         但那需要 Worker 加 R2 绑定（当前没有）⇒ 已记入待办，等修定夺。
-       ⚠ 240s 仍在 CONFIG.POLL_TIMEOUT（1800s 总预算）之内。 */
-    last = await Api._taskReq("GET", "/task/" + encodeURIComponent(taskId), undefined, { timeout: 24e4 });
+    try {
+      last = await Api._taskReq("GET", "/task/" + encodeURIComponent(taskId), undefined, { timeout: 24e4 });
+    } catch (_pe) {
+      _pollFails += 1;
+      _ayT.pollMs.push(Date.now() - _ayPollT);
+      console.warn("[W5-route]", JSON.stringify({
+        phase: "apiyi-async-poll-fail", n: i + 1, fails: _pollFails,
+        msg: String((_pe && _pe.message) || _pe).slice(0, 160), ts: Date.now(),
+      }));
+      if (_pollFails >= 4) throw _pe;
+      continue;
+    }
+    _pollFails = 0;
     _ayT.pollMs.push(Date.now() - _ayPollT);
     _ayT.polls = i + 1;
     { const _st = String((last && last.status) || "").toLowerCase();
@@ -19093,6 +19098,9 @@ async function r9zcToDataUrl(url) {
   try {
     const u = String(url || "");
     if (!u || /^data:/i.test(u)) return url;
+    /* ★ R9ZY-19：结果到位 ≠ 画布可见（落 R2 后是远程链接，还要下载）⇒ 给状态，别让用户以为失败。 */
+    studioBusy("正在载入图片…（弱网下较慢）");
+    try {
     let buf = null;
     try {
       const w = (Store.getR2WorkerUrl && Store.getR2WorkerUrl()) || "";
@@ -19113,6 +19121,7 @@ async function r9zcToDataUrl(url) {
       fr.onerror = function () { res(url); };
       fr.readAsDataURL(buf);
     });
+    } finally { studioBusy(""); }
   } catch (e) { _r9mNote("r9zc-03", e); return url; }
 }
 function r9zcWrap(fn) {
