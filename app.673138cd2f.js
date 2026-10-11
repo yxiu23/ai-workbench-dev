@@ -18470,13 +18470,10 @@ function _ayErr(e) {
   return e;
 }
 
-/* ★★★ R9ZY-15：**能力闸** —— Worker 是否支持 `files[].url`（= 能自己去取图）。
-   为什么非要有这道闸（硬理由）：宿主随 R9ZY-15 上线后，走异步时会发 `{url, b64:""}`；
-   而**旧 Worker 要求 b64 非空 ⇒ 直接 400 ⇒ 慢档整体打挂**。
-   ⇒ 只有 Worker **明确报** `caps.fileUrl === true` 才用链接，否则照旧传字节
-     ⇒ **不存在"必须先贴 Worker"的部署顺序约束**（与 apiyiAsync / slowKeepalive 同一套设计）。
-   ⚠ 跨 IIFE 读全局：必须 `typeof` 守卫 —— 对**未声明**的变量 typeof 返回 "undefined" 不抛，
-     但对 **TDZ 中的 let/const 会抛 ReferenceError** ⇒ 整段再包一层 try（R9ZY-9 血泪）。 */
+/* ★ R9ZY-15 能力闸：Worker 报 caps.fileUrl 才敢用 url 形态。
+   为什么必须有：旧 Worker 要求 b64 非空 ⇒ 收到 {url,b64:""} 会 400 ⇒ 慢档整体打挂。
+   旧 Worker 不报该字段 ⇒ 自动回退传字节 ⇒ 无部署顺序约束。
+   ⚠ 跨 IIFE 读全局须 typeof 守卫（未声明不抛、TDZ 会抛 ⇒ 再包 try，R9ZY-9 血泪）。 */
 function _r9zuFileUrlOk() {
   try {
     if (typeof __r9gCaps === "undefined" || !__r9gCaps) return false;
@@ -18502,13 +18499,8 @@ async function apiyiAsyncFetch(pathname, body, def, size, extra) {
        字段名当值发出去，而且不会有任何报错（最难查的一类）。 */
     body.forEach(function (value, key) {
       if (value && typeof value === "object" && typeof value.arrayBuffer === "function") {
-        /* ★★★ R9ZY-15（2026-10-11 · 修：「base64 既然会拖慢速度，那改成走 R2 可以吗」）：
-           **源图已在 R2 ⇒ 只传链接、不上传字节** —— 浏览器这一段开销直接归零。
-           收益最大的场景：大图（9MB 级）、以及**连续多次操作**（同一个源图只传一次）。
-           ⚠ 只换**第一个** `image[]`（= 源图）；参考图必须真传（它们不在 R2 上）。
-           ⚠ 这里丢掉的只是**本地上传** —— 宿主侧照常构造 Blob，所以**同步路径与全部调用点零改动**；
-             Worker 侧看到 `{url, b64:""}` 会自己去取（见 runApiyiTask 的 files 循环）。
-           ⚠ `extra.srcUrl` 由 `apiyiEdits` 的调用方传入（只在 `e.url` 是 http(s) 时才有）。 */
+        /* ★ R9ZY-15：源图已在 R2 ⇒ 只传链接（浏览器零上传）。只换**第一个** image[]（源图），
+           参考图必须真传；且须过能力闸（旧 Worker 会 400）。丢的只是本地上传，宿主照常构造 Blob。 */
         if (extra && extra.srcUrl && !_srcUrlUsed && key === "image[]" && _r9zuFileUrlOk()) {
           _srcUrlUsed = true;
           files.push(Promise.resolve({
@@ -19412,14 +19404,9 @@ if (apiDef) {
 const wA = (typeof Store !== "undefined" && Store.getR2WorkerUrl && Store.getR2WorkerUrl());
 if (!wA) { try { Toast.warning(mm ? mm.label : actName(e.action)) + "：APIYI 通道未配置（设置页填 R2 Worker 地址与 Token）"; } catch (_) { _r9mNote("ui-061", _); } return false; }
 const exA = {};
-/* ★★★ R9ZY-15（2026-10-11 · 修：「base64 既然会拖慢速度，那改成走 R2 可以吗」）：
-   **源图若已在 R2**（e.url 是 http(s)）⇒ 把链接带上，异步通道**用它代替上传字节**
-   ⇒ 浏览器这一段**零上传**（大图 / 连续多次操作时，这是最值钱的那笔开销）。
-   ⚠ 只在**异步通道**生效（在 apiyiAsyncFetch 里换）——同步通道仍用本地字节，**行为完全不变**。
-   ⚠ 只认 http(s)：blob: / data: 不是 Worker 能去取的东西。
-   ⚠ 用 try 包住：任何意外都不许影响主流程（这是纯优化）。
-   ⚠⚠ 本块在**模板字符串**内 ⇒ 注释里**禁写反引号**（写了会提前结束外层模板串）；
-      正则里的斜杠必须写成 \\/ （单个 \/ 会被模板串吃掉 ⇒ 产物变成 // ⇒ 语法错，铁 100 同源）。 */
+/* ★ R9ZY-15：源图已在 R2（e.url 是 http(s)）⇒ 带上链接，异步通道用它代替上传字节（浏览器零上传）。
+   ⚠ 只对异步通道生效（同步仍用本地字节，行为不变）；只认 http(s)；整段 try 包住（纯优化）。
+   ⚠⚠ 本块在模板串内 ⇒ 注释禁反引号；正则斜杠必须写 \\/ （单个 \/ 会被吃掉 ⇒ 产物变 // ⇒ 语法错）。 */
 try { if (e && /^https?:\/\//i.test(String(e.url || ""))) exA.srcUrl = String(e.url); } catch (_eSU) { _r9mNote("misc-076", _eSU); }
 if (op13 && op13.quality) exA.quality = String(op13.quality);
 /* ★★ R93：编辑器算好的「与源图同几何的合法输出尺寸」（apiyiEdits 在 size 为空且有 mask 时采用） */
