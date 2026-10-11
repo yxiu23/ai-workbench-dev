@@ -18,7 +18,11 @@ worker-base.js
 #   交付件（报告 / Worker 完整代码 / 找回的图）与密钥簿都**与网站运行无关**，
 #   且都会公网可读 ⇒ 一律不进本仓（备份留在项目 studio/_backup/）。
 deliver/
-vault/
+# ⚠ R9ZY-16（2026-10-11 修正我自己的疏漏）：`vault/` 整目录排除后，
+#   宿主 bootCheck 仍在拉 vault/keybook.enc.bin ⇒ 每次打开网站 2 条 404（raw + jsdelivr）。
+#   该文件是**加密的密钥簿**、且**设计上就是从本仓拉**（GITHUB_VAULT 配置）⇒ 放行它一个。
+vault/*
+!vault/keybook.enc.bin
 
 # 本地/临时
 *.log
