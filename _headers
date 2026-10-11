@@ -16,6 +16,12 @@
 /models.js
   Cache-Control: public, max-age=300
 
+# R9ZY-47 运行时清单数据源：同样**不带 hash**，同样只能短缓存。
+# ⚠ 它由 models.js 以 `fetch("models.json", {cache:"no-cache"})` 拉取，故这里的 max-age 影响有限，
+#   但要避免中间缓存层把它长期钉住。
+/models.json
+  Cache-Control: public, max-age=300
+
 # HTML 刻意不在此列：入口必须每次校验，否则更新要等缓存过期才生效。
 
 # ② 安全头（R96-2-2 · 报告 SEC-P0-3）—— 全部是**纯加法**，不改任何现有行为：
