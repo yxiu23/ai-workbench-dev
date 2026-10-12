@@ -1,0 +1,3710 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-10-12T12:06:25.452Z",
+  "prioritySource": "model-registry.json",
+  "models": {
+    "apiyi:MAI-Image-2.6": {
+      "provider": "apiyi",
+      "modelId": "MAI-Image-2.6",
+      "kind": "image",
+      "label": "MAI-Image-2.6",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.12,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"MAI-Image-2.6\",\"category\":\"image\",\"endpoints\":[\"images\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.12,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.12,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=MAI-Image-2.6 quota_type=1 model_ratio=0 model_price=0.12 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:MAI-Image-2.6-Flash": {
+      "provider": "apiyi",
+      "modelId": "MAI-Image-2.6-Flash",
+      "kind": "image",
+      "label": "MAI-Image-2.6-Flash",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.06,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"MAI-Image-2.6-Flash\",\"category\":\"image\",\"endpoints\":[\"images\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.06,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.06,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=MAI-Image-2.6-Flash quota_type=1 model_ratio=0 model_price=0.06 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:MiniMax-H3": {
+      "provider": "apiyi",
+      "modelId": "MiniMax-H3",
+      "kind": "video",
+      "label": "MiniMax-H3",
+      "endpoint": "/hailuo/v2/video_generation",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.03,
+        "unit": "per_second"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"MiniMax-H3\",\"category\":\"video\",\"endpoints\":[\"hailuo\"],\"billing\":{\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.03,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"hailuo\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.hailuo.path = \"/hailuo/v2/video_generation\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.03,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=MiniMax-H3 quota_type=0 model_ratio=0.03 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:chatgpt-image-latest": {
+      "provider": "apiyi",
+      "modelId": "chatgpt-image-latest",
+      "kind": "image",
+      "label": "chatgpt-image-latest",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 5,
+        "out": 32,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"chatgpt-image-latest\",\"category\":\"image\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":32,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":32,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=chatgpt-image-latest quota_type=0 model_ratio=2.5 model_price=0 completion_ratio=6.4"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:doubao-seedance-2-0-260128": {
+      "provider": "apiyi",
+      "modelId": "doubao-seedance-2-0-260128",
+      "kind": "video",
+      "label": "doubao-seedance-2-0-260128",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 46,
+        "out": 46,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"doubao-seedance-2-0-260128\",\"category\":\"video\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":46,\"output_usd_per_m\":46,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":46,\"output_usd_per_m\":46,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=doubao-seedance-2-0-260128 quota_type=0 model_ratio=23 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:doubao-seedance-2-0-fast-260128": {
+      "provider": "apiyi",
+      "modelId": "doubao-seedance-2-0-fast-260128",
+      "kind": "video",
+      "label": "doubao-seedance-2-0-fast-260128",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 37,
+        "out": 37,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"doubao-seedance-2-0-fast-260128\",\"category\":\"video\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":37,\"output_usd_per_m\":37,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":37,\"output_usd_per_m\":37,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=doubao-seedance-2-0-fast-260128 quota_type=0 model_ratio=18.5 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:doubao-seedance-2-0-mini-260615": {
+      "provider": "apiyi",
+      "modelId": "doubao-seedance-2-0-mini-260615",
+      "kind": "video",
+      "label": "doubao-seedance-2-0-mini-260615",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 23,
+        "out": 23,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"doubao-seedance-2-0-mini-260615\",\"category\":\"video\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":23,\"output_usd_per_m\":23,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":23,\"output_usd_per_m\":23,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=doubao-seedance-2-0-mini-260615 quota_type=0 model_ratio=11.5 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:doubao-seedance-2-5-260628": {
+      "provider": "apiyi",
+      "modelId": "doubao-seedance-2-5-260628",
+      "kind": "video",
+      "label": "doubao-seedance-2-5-260628",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 70,
+        "out": 70,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"doubao-seedance-2-5-260628\",\"category\":\"video\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":70,\"output_usd_per_m\":70,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":70,\"output_usd_per_m\":70,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=doubao-seedance-2-5-260628 quota_type=0 model_ratio=35 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:flux-2-flex": {
+      "provider": "apiyi",
+      "modelId": "flux-2-flex",
+      "kind": "image",
+      "label": "flux-2-flex",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.06,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"flux-2-flex\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.06,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.06,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=flux-2-flex quota_type=1 model_ratio=1 model_price=0.06 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:flux-2-klein-4b": {
+      "provider": "apiyi",
+      "modelId": "flux-2-klein-4b",
+      "kind": "image",
+      "label": "flux-2-klein-4b",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.01,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"flux-2-klein-4b\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.01,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.01,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=flux-2-klein-4b quota_type=1 model_ratio=0 model_price=0.01 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:flux-2-klein-9b": {
+      "provider": "apiyi",
+      "modelId": "flux-2-klein-9b",
+      "kind": "image",
+      "label": "flux-2-klein-9b",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.01,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"flux-2-klein-9b\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.01,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.01,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=flux-2-klein-9b quota_type=1 model_ratio=0 model_price=0.01 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:flux-2-max": {
+      "provider": "apiyi",
+      "modelId": "flux-2-max",
+      "kind": "image",
+      "label": "flux-2-max",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.07,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"flux-2-max\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.07,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.07,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=flux-2-max quota_type=1 model_ratio=1 model_price=0.07 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:flux-2-pro": {
+      "provider": "apiyi",
+      "modelId": "flux-2-pro",
+      "kind": "image",
+      "label": "flux-2-pro",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.03,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"flux-2-pro\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.03,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.03,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=flux-2-pro quota_type=1 model_ratio=1 model_price=0.03 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:flux-dev": {
+      "provider": "apiyi",
+      "modelId": "flux-dev",
+      "kind": "image",
+      "label": "flux-dev",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.02,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"flux-dev\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.02,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.02,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=flux-dev quota_type=1 model_ratio=0 model_price=0.02 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:flux-kontext-max": {
+      "provider": "apiyi",
+      "modelId": "flux-kontext-max",
+      "kind": "image",
+      "label": "flux-kontext-max",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.07,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"flux-kontext-max\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.07,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.07,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=flux-kontext-max quota_type=1 model_ratio=0 model_price=0.07 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:flux-kontext-pro": {
+      "provider": "apiyi",
+      "modelId": "flux-kontext-pro",
+      "kind": "image",
+      "label": "flux-kontext-pro",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.035,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"flux-kontext-pro\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.035,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.035,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=flux-kontext-pro quota_type=1 model_ratio=0 model_price=0.035 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gemini-2.5-flash-image": {
+      "provider": "apiyi",
+      "modelId": "gemini-2.5-flash-image",
+      "kind": "image",
+      "label": "gemini-2.5-flash-image",
+      "endpoint": "/v1beta/models/gemini-2.5-flash-image:generateContent",
+      "shape": "native-gemini",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.02,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gemini-2.5-flash-image\",\"category\":\"image\",\"endpoints\":[\"chat\",\"gemini\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.02,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"gemini\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.gemini.path = \"/v1beta/models/{model}:generateContent\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.02,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gemini-2.5-flash-image quota_type=1 model_ratio=0.15 model_price=0.02 completion_ratio=100"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gemini-2.5-flash-image-preview": {
+      "provider": "apiyi",
+      "modelId": "gemini-2.5-flash-image-preview",
+      "kind": "image",
+      "label": "gemini-2.5-flash-image-preview",
+      "endpoint": "/v1beta/models/gemini-2.5-flash-image-preview:generateContent",
+      "shape": "native-gemini",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.02,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gemini-2.5-flash-image-preview\",\"category\":\"image\",\"endpoints\":[\"chat\",\"gemini\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.02,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"gemini\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.gemini.path = \"/v1beta/models/{model}:generateContent\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.02,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gemini-2.5-flash-image-preview quota_type=1 model_ratio=0.15 model_price=0.02 completion_ratio=100"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gemini-3-pro-image": {
+      "provider": "apiyi",
+      "modelId": "gemini-3-pro-image",
+      "kind": "image",
+      "label": "gemini-3-pro-image",
+      "endpoint": "/v1beta/models/gemini-3-pro-image:generateContent",
+      "shape": "native-gemini",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.09,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gemini-3-pro-image\",\"category\":\"image\",\"endpoints\":[\"chat\",\"gemini\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.09,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"gemini\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.gemini.path = \"/v1beta/models/{model}:generateContent\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.09,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gemini-3-pro-image quota_type=1 model_ratio=0.44 model_price=0.09 completion_ratio=60"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gemini-3-pro-image-preview": {
+      "provider": "apiyi",
+      "modelId": "gemini-3-pro-image-preview",
+      "kind": "image",
+      "label": "gemini-3-pro-image-preview",
+      "endpoint": "/v1beta/models/gemini-3-pro-image-preview:generateContent",
+      "shape": "native-gemini",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.09,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gemini-3-pro-image-preview\",\"category\":\"image\",\"endpoints\":[\"chat\",\"gemini\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.09,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"gemini\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.gemini.path = \"/v1beta/models/{model}:generateContent\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.09,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gemini-3-pro-image-preview quota_type=1 model_ratio=0.44 model_price=0.09 completion_ratio=60"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gemini-3-pro-image-preview-1k": {
+      "provider": "apiyi",
+      "modelId": "gemini-3-pro-image-preview-1k",
+      "kind": "image",
+      "label": "gemini-3-pro-image-preview-1k",
+      "endpoint": "/v1beta/models/gemini-3-pro-image-preview-1k:generateContent",
+      "shape": "native-gemini",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.09,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gemini-3-pro-image-preview-1k\",\"category\":\"image\",\"endpoints\":[\"chat\",\"gemini\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.09,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"gemini\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.gemini.path = \"/v1beta/models/{model}:generateContent\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.09,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gemini-3-pro-image-preview-1k quota_type=1 model_ratio=0.44 model_price=0.09 completion_ratio=60"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gemini-3-pro-image-preview-2k": {
+      "provider": "apiyi",
+      "modelId": "gemini-3-pro-image-preview-2k",
+      "kind": "image",
+      "label": "gemini-3-pro-image-preview-2k",
+      "endpoint": "/v1beta/models/gemini-3-pro-image-preview-2k:generateContent",
+      "shape": "native-gemini",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.09,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gemini-3-pro-image-preview-2k\",\"category\":\"image\",\"endpoints\":[\"chat\",\"gemini\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.09,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"gemini\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.gemini.path = \"/v1beta/models/{model}:generateContent\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.09,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gemini-3-pro-image-preview-2k quota_type=1 model_ratio=0.44 model_price=0.09 completion_ratio=60"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gemini-3-pro-image-preview-4k": {
+      "provider": "apiyi",
+      "modelId": "gemini-3-pro-image-preview-4k",
+      "kind": "image",
+      "label": "gemini-3-pro-image-preview-4k",
+      "endpoint": "/v1beta/models/gemini-3-pro-image-preview-4k:generateContent",
+      "shape": "native-gemini",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.09,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gemini-3-pro-image-preview-4k\",\"category\":\"image\",\"endpoints\":[\"chat\",\"gemini\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.09,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"gemini\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.gemini.path = \"/v1beta/models/{model}:generateContent\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.09,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gemini-3-pro-image-preview-4k quota_type=1 model_ratio=0.44 model_price=0.09 completion_ratio=60"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gemini-3.1-flash-image": {
+      "provider": "apiyi",
+      "modelId": "gemini-3.1-flash-image",
+      "kind": "image",
+      "label": "gemini-3.1-flash-image",
+      "endpoint": "/v1beta/models/gemini-3.1-flash-image:generateContent",
+      "shape": "native-gemini",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.055,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gemini-3.1-flash-image\",\"category\":\"image\",\"endpoints\":[\"chat\",\"gemini\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.055,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"gemini\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.gemini.path = \"/v1beta/models/{model}:generateContent\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.055,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gemini-3.1-flash-image quota_type=1 model_ratio=0.09 model_price=0.055 completion_ratio=120"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gemini-3.1-flash-image-4k": {
+      "provider": "apiyi",
+      "modelId": "gemini-3.1-flash-image-4k",
+      "kind": "image",
+      "label": "gemini-3.1-flash-image-4k",
+      "endpoint": "/v1beta/models/gemini-3.1-flash-image-4k:generateContent",
+      "shape": "native-gemini",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.055,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gemini-3.1-flash-image-4k\",\"category\":\"image\",\"endpoints\":[\"chat\",\"gemini\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.055,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"gemini\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.gemini.path = \"/v1beta/models/{model}:generateContent\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.055,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gemini-3.1-flash-image-4k quota_type=1 model_ratio=0.09 model_price=0.055 completion_ratio=120"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gemini-3.1-flash-image-preview": {
+      "provider": "apiyi",
+      "modelId": "gemini-3.1-flash-image-preview",
+      "kind": "image",
+      "label": "gemini-3.1-flash-image-preview",
+      "endpoint": "/v1beta/models/gemini-3.1-flash-image-preview:generateContent",
+      "shape": "native-gemini",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.055,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gemini-3.1-flash-image-preview\",\"category\":\"image\",\"endpoints\":[\"chat\",\"gemini\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.055,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"gemini\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.gemini.path = \"/v1beta/models/{model}:generateContent\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.055,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gemini-3.1-flash-image-preview quota_type=1 model_ratio=0.09 model_price=0.055 completion_ratio=120"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gemini-3.1-flash-image-preview-4k": {
+      "provider": "apiyi",
+      "modelId": "gemini-3.1-flash-image-preview-4k",
+      "kind": "image",
+      "label": "gemini-3.1-flash-image-preview-4k",
+      "endpoint": "/v1beta/models/gemini-3.1-flash-image-preview-4k:generateContent",
+      "shape": "native-gemini",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.055,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gemini-3.1-flash-image-preview-4k\",\"category\":\"image\",\"endpoints\":[\"chat\",\"gemini\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.055,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"gemini\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.gemini.path = \"/v1beta/models/{model}:generateContent\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.055,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gemini-3.1-flash-image-preview-4k quota_type=1 model_ratio=0.09 model_price=0.055 completion_ratio=120"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gemini-3.1-flash-lite-image": {
+      "provider": "apiyi",
+      "modelId": "gemini-3.1-flash-lite-image",
+      "kind": "image",
+      "label": "gemini-3.1-flash-lite-image",
+      "endpoint": "/v1beta/models/gemini-3.1-flash-lite-image:generateContent",
+      "shape": "native-gemini",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.025,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gemini-3.1-flash-lite-image\",\"category\":\"image\",\"endpoints\":[\"chat\",\"gemini\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.025,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"gemini\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.gemini.path = \"/v1beta/models/{model}:generateContent\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.025,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gemini-3.1-flash-lite-image quota_type=1 model_ratio=0.05 model_price=0.025 completion_ratio=120"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gemini-nano-banana-2.1": {
+      "provider": "apiyi",
+      "modelId": "gemini-nano-banana-2.1",
+      "kind": "image",
+      "label": "gemini-nano-banana-2.1",
+      "endpoint": "/v1beta/models/gemini-nano-banana-2.1:generateContent",
+      "shape": "native-gemini",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.05,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gemini-nano-banana-2.1\",\"category\":\"image\",\"endpoints\":[\"chat\",\"gemini\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.05,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"gemini\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.gemini.path = \"/v1beta/models/{model}:generateContent\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.05,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gemini-nano-banana-2.1 quota_type=1 model_ratio=0.33 model_price=0.05 completion_ratio=19.999999999999996"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gpt-image-1": {
+      "provider": "apiyi",
+      "modelId": "gpt-image-1",
+      "kind": "image",
+      "label": "gpt-image-1",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 5,
+        "out": 40,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gpt-image-1\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":40,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":40,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gpt-image-1 quota_type=0 model_ratio=2.5 model_price=0 completion_ratio=8"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gpt-image-1-mini": {
+      "provider": "apiyi",
+      "modelId": "gpt-image-1-mini",
+      "kind": "image",
+      "label": "gpt-image-1-mini",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 2,
+        "out": 8,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gpt-image-1-mini\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":2,\"output_usd_per_m\":8,\"cache_read_usd_per_m\":0.2,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":2,\"output_usd_per_m\":8,\"cache_read_usd_per_m\":0.2,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gpt-image-1-mini quota_type=0 model_ratio=1 model_price=0 completion_ratio=4"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gpt-image-1.5": {
+      "provider": "apiyi",
+      "modelId": "gpt-image-1.5",
+      "kind": "image",
+      "label": "gpt-image-1.5",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 5,
+        "out": 32,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gpt-image-1.5\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":32,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":32,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gpt-image-1.5 quota_type=0 model_ratio=2.5 model_price=0 completion_ratio=6.4"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gpt-image-1.5-2025-12-16": {
+      "provider": "apiyi",
+      "modelId": "gpt-image-1.5-2025-12-16",
+      "kind": "image",
+      "label": "gpt-image-1.5-2025-12-16",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 5,
+        "out": 32,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gpt-image-1.5-2025-12-16\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":32,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":32,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gpt-image-1.5-2025-12-16 quota_type=0 model_ratio=2.5 model_price=0 completion_ratio=6.4"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gpt-image-2": {
+      "provider": "apiyi",
+      "modelId": "gpt-image-2",
+      "kind": "image",
+      "label": "gpt-image-2",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 5,
+        "out": 30,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gpt-image-2\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":30,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":30,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gpt-image-2 quota_type=1 model_ratio=2.5 model_price=0.2 completion_ratio=6"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gpt-image-2-all": {
+      "provider": "apiyi",
+      "modelId": "gpt-image-2-all",
+      "kind": "image",
+      "label": "gpt-image-2-all",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.025,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gpt-image-2-all\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.025,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.025,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gpt-image-2-all quota_type=1 model_ratio=2.5 model_price=0.025 completion_ratio=6"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gpt-image-2-vip": {
+      "provider": "apiyi",
+      "modelId": "gpt-image-2-vip",
+      "kind": "image",
+      "label": "gpt-image-2-vip",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.03,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gpt-image-2-vip\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.03,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.03,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gpt-image-2-vip quota_type=1 model_ratio=2.5 model_price=0.03 completion_ratio=6"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gpt-image-2.5-all": {
+      "provider": "apiyi",
+      "modelId": "gpt-image-2.5-all",
+      "kind": "image",
+      "label": "gpt-image-2.5-all",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.025,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gpt-image-2.5-all\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.025,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.025,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gpt-image-2.5-all quota_type=1 model_ratio=2.5 model_price=0.025 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gpt-image-2.5-flare": {
+      "provider": "apiyi",
+      "modelId": "gpt-image-2.5-flare",
+      "kind": "image",
+      "label": "gpt-image-2.5-flare",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 5,
+        "out": 30,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gpt-image-2.5-flare\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":30,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":30,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gpt-image-2.5-flare quota_type=1 model_ratio=2.5 model_price=0.2 completion_ratio=6"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gpt-image-2.5-flare-2026-09-08": {
+      "provider": "apiyi",
+      "modelId": "gpt-image-2.5-flare-2026-09-08",
+      "kind": "image",
+      "label": "gpt-image-2.5-flare-2026-09-08",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 5,
+        "out": 30,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gpt-image-2.5-flare-2026-09-08\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":30,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":30,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gpt-image-2.5-flare-2026-09-08 quota_type=0 model_ratio=2.5 model_price=0 completion_ratio=6"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gpt-image-2.5-flare-vip": {
+      "provider": "apiyi",
+      "modelId": "gpt-image-2.5-flare-vip",
+      "kind": "image",
+      "label": "gpt-image-2.5-flare-vip",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.03,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gpt-image-2.5-flare-vip\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.03,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.03,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gpt-image-2.5-flare-vip quota_type=1 model_ratio=2.5 model_price=0.03 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gpt-image-2.5-sunburst": {
+      "provider": "apiyi",
+      "modelId": "gpt-image-2.5-sunburst",
+      "kind": "image",
+      "label": "gpt-image-2.5-sunburst",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 5,
+        "out": 30,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gpt-image-2.5-sunburst\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":30,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":30,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gpt-image-2.5-sunburst quota_type=1 model_ratio=2.5 model_price=0.2 completion_ratio=6"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gpt-image-2.5-sunburst-2026-09-08": {
+      "provider": "apiyi",
+      "modelId": "gpt-image-2.5-sunburst-2026-09-08",
+      "kind": "image",
+      "label": "gpt-image-2.5-sunburst-2026-09-08",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 5,
+        "out": 30,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gpt-image-2.5-sunburst-2026-09-08\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":30,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":30,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gpt-image-2.5-sunburst-2026-09-08 quota_type=0 model_ratio=2.5 model_price=0 completion_ratio=6"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gpt-image-2.5-sunburst-vip": {
+      "provider": "apiyi",
+      "modelId": "gpt-image-2.5-sunburst-vip",
+      "kind": "image",
+      "label": "gpt-image-2.5-sunburst-vip",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.03,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gpt-image-2.5-sunburst-vip\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.03,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.03,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gpt-image-2.5-sunburst-vip quota_type=1 model_ratio=2.5 model_price=0.03 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gpt-image-2.5-vip": {
+      "provider": "apiyi",
+      "modelId": "gpt-image-2.5-vip",
+      "kind": "image",
+      "label": "gpt-image-2.5-vip",
+      "endpoint": "/v1/images/generations",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.03,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gpt-image-2.5-vip\",\"category\":\"image\",\"endpoints\":[\"chat\",\"images\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.03,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"images\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.images.path = \"/v1/images/generations\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.03,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gpt-image-2.5-vip quota_type=1 model_ratio=2.5 model_price=0.03 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gpt-realtime-2.1": {
+      "provider": "apiyi",
+      "modelId": "gpt-realtime-2.1",
+      "kind": "audio",
+      "label": "gpt-realtime-2.1",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 4,
+        "out": 24,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gpt-realtime-2.1\",\"category\":\"audio\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":4,\"output_usd_per_m\":24,\"cache_read_usd_per_m\":0.4,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":4,\"output_usd_per_m\":24,\"cache_read_usd_per_m\":0.4,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gpt-realtime-2.1 quota_type=0 model_ratio=2 model_price=0 completion_ratio=6"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:gpt-realtime-2.1-mini": {
+      "provider": "apiyi",
+      "modelId": "gpt-realtime-2.1-mini",
+      "kind": "audio",
+      "label": "gpt-realtime-2.1-mini",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 0.6,
+        "out": 2.4,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"gpt-realtime-2.1-mini\",\"category\":\"audio\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":0.6,\"output_usd_per_m\":2.4,\"cache_read_usd_per_m\":0.06,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":0.6,\"output_usd_per_m\":2.4,\"cache_read_usd_per_m\":0.06,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=gpt-realtime-2.1-mini quota_type=0 model_ratio=0.3 model_price=0 completion_ratio=4"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:happyhorse-1.0-video-edit": {
+      "provider": "apiyi",
+      "modelId": "happyhorse-1.0-video-edit",
+      "kind": "video",
+      "label": "happyhorse-1.0-video-edit",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 1.8,
+        "out": 1.8,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"happyhorse-1.0-video-edit\",\"category\":\"video\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":1.8,\"output_usd_per_m\":1.8,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":1.8,\"output_usd_per_m\":1.8,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=happyhorse-1.0-video-edit quota_type=0 model_ratio=0.9 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:happyhorse-1.1-i2v": {
+      "provider": "apiyi",
+      "modelId": "happyhorse-1.1-i2v",
+      "kind": "video",
+      "label": "happyhorse-1.1-i2v",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 1.8,
+        "out": 1.8,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"happyhorse-1.1-i2v\",\"category\":\"video\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":1.8,\"output_usd_per_m\":1.8,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":1.8,\"output_usd_per_m\":1.8,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=happyhorse-1.1-i2v quota_type=0 model_ratio=0.9 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:happyhorse-1.1-r2v": {
+      "provider": "apiyi",
+      "modelId": "happyhorse-1.1-r2v",
+      "kind": "video",
+      "label": "happyhorse-1.1-r2v",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 1.8,
+        "out": 1.8,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"happyhorse-1.1-r2v\",\"category\":\"video\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":1.8,\"output_usd_per_m\":1.8,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":1.8,\"output_usd_per_m\":1.8,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=happyhorse-1.1-r2v quota_type=0 model_ratio=0.9 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:happyhorse-1.1-t2v": {
+      "provider": "apiyi",
+      "modelId": "happyhorse-1.1-t2v",
+      "kind": "video",
+      "label": "happyhorse-1.1-t2v",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 1.8,
+        "out": 1.8,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"happyhorse-1.1-t2v\",\"category\":\"video\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":1.8,\"output_usd_per_m\":1.8,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":1.8,\"output_usd_per_m\":1.8,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=happyhorse-1.1-t2v quota_type=0 model_ratio=0.9 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:nano-banana": {
+      "provider": "apiyi",
+      "modelId": "nano-banana",
+      "kind": "image",
+      "label": "nano-banana",
+      "endpoint": "/v1beta/models/nano-banana:generateContent",
+      "shape": "native-gemini",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.02,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"nano-banana\",\"category\":\"image\",\"endpoints\":[\"chat\",\"gemini\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.02,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"gemini\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.gemini.path = \"/v1beta/models/{model}:generateContent\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.02,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=nano-banana quota_type=1 model_ratio=0 model_price=0.02 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:nano-banana-2": {
+      "provider": "apiyi",
+      "modelId": "nano-banana-2",
+      "kind": "image",
+      "label": "nano-banana-2",
+      "endpoint": "/v1beta/models/nano-banana-2:generateContent",
+      "shape": "native-gemini",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.055,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"nano-banana-2\",\"category\":\"image\",\"endpoints\":[\"chat\",\"gemini\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.055,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"gemini\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.gemini.path = \"/v1beta/models/{model}:generateContent\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.055,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=nano-banana-2 quota_type=1 model_ratio=0.07 model_price=0.055 completion_ratio=120"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:nano-banana-pro": {
+      "provider": "apiyi",
+      "modelId": "nano-banana-pro",
+      "kind": "image",
+      "label": "nano-banana-pro",
+      "endpoint": "/v1beta/models/nano-banana-pro:generateContent",
+      "shape": "native-gemini",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.09,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"nano-banana-pro\",\"category\":\"image\",\"endpoints\":[\"chat\",\"gemini\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.09,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\",\"gemini\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.gemini.path = \"/v1beta/models/{model}:generateContent\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.09,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=nano-banana-pro quota_type=1 model_ratio=0.43 model_price=0.09 completion_ratio=60"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:oxygen-1.0": {
+      "provider": "apiyi",
+      "modelId": "oxygen-1.0",
+      "kind": "video",
+      "label": "oxygen-1.0",
+      "endpoint": "/v1/videos",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.02,
+        "unit": "per_second"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"oxygen-1.0\",\"category\":\"video\",\"endpoints\":[\"videos\"],\"billing\":{\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.02,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"videos\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.videos.path = \"/v1/videos\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.02,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=oxygen-1.0 quota_type=0 model_ratio=0.02 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:qwen3.5-omni-flash-realtime": {
+      "provider": "apiyi",
+      "modelId": "qwen3.5-omni-flash-realtime",
+      "kind": "audio",
+      "label": "qwen3.5-omni-flash-realtime",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 0.45,
+        "out": 2.75,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"qwen3.5-omni-flash-realtime\",\"category\":\"audio\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":0.45,\"output_usd_per_m\":2.75,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":0.45,\"output_usd_per_m\":2.75,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=qwen3.5-omni-flash-realtime quota_type=0 model_ratio=0.225 model_price=0 completion_ratio=6.111111111111111"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:qwen3.5-omni-plus-realtime": {
+      "provider": "apiyi",
+      "modelId": "qwen3.5-omni-plus-realtime",
+      "kind": "audio",
+      "label": "qwen3.5-omni-plus-realtime",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 1.38,
+        "out": 8.25,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"qwen3.5-omni-plus-realtime\",\"category\":\"audio\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":1.38,\"output_usd_per_m\":8.25,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":1.38,\"output_usd_per_m\":8.25,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=qwen3.5-omni-plus-realtime quota_type=0 model_ratio=0.69 model_price=0 completion_ratio=5.978260869565218"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:seedream-4-0-250828": {
+      "provider": "apiyi",
+      "modelId": "seedream-4-0-250828",
+      "kind": "image",
+      "label": "seedream-4-0-250828",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.035,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"seedream-4-0-250828\",\"category\":\"image\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.035,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.035,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=seedream-4-0-250828 quota_type=1 model_ratio=0 model_price=0.035 completion_ratio=10"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:seedream-4-5-251128": {
+      "provider": "apiyi",
+      "modelId": "seedream-4-5-251128",
+      "kind": "image",
+      "label": "seedream-4-5-251128",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.04,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"seedream-4-5-251128\",\"category\":\"image\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.04,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.04,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=seedream-4-5-251128 quota_type=1 model_ratio=0 model_price=0.04 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:seedream-5-0-260128": {
+      "provider": "apiyi",
+      "modelId": "seedream-5-0-260128",
+      "kind": "image",
+      "label": "seedream-5-0-260128",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.035,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"seedream-5-0-260128\",\"category\":\"image\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.035,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.035,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=seedream-5-0-260128 quota_type=1 model_ratio=0 model_price=0.035 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:seedream-5-0-flash-260915": {
+      "provider": "apiyi",
+      "modelId": "seedream-5-0-flash-260915",
+      "kind": "image",
+      "label": "seedream-5-0-flash-260915",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.018,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"seedream-5-0-flash-260915\",\"category\":\"image\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.018,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.018,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=seedream-5-0-flash-260915 quota_type=1 model_ratio=0 model_price=0.018 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:seedream-5-0-pro-260628": {
+      "provider": "apiyi",
+      "modelId": "seedream-5-0-pro-260628",
+      "kind": "image",
+      "label": "seedream-5-0-pro-260628",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.12,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"seedream-5-0-pro-260628\",\"category\":\"image\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.12,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.12,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=seedream-5-0-pro-260628 quota_type=1 model_ratio=0 model_price=0.12 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:tts-1": {
+      "provider": "apiyi",
+      "modelId": "tts-1",
+      "kind": "audio",
+      "label": "tts-1",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 30,
+        "out": 30,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"tts-1\",\"category\":\"audio\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":30,\"output_usd_per_m\":30,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":30,\"output_usd_per_m\":30,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=tts-1 quota_type=0 model_ratio=15 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:tts-1-hd": {
+      "provider": "apiyi",
+      "modelId": "tts-1-hd",
+      "kind": "audio",
+      "label": "tts-1-hd",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 60,
+        "out": 60,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"tts-1-hd\",\"category\":\"audio\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":60,\"output_usd_per_m\":60,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":60,\"output_usd_per_m\":60,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=tts-1-hd quota_type=0 model_ratio=30 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:veo-3.1-fast-generate-preview": {
+      "provider": "apiyi",
+      "modelId": "veo-3.1-fast-generate-preview",
+      "kind": "video",
+      "label": "veo-3.1-fast-generate-preview",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.3,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"veo-3.1-fast-generate-preview\",\"category\":\"video\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.3,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.3,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=veo-3.1-fast-generate-preview quota_type=1 model_ratio=10 model_price=0.3 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:veo-3.1-generate-preview": {
+      "provider": "apiyi",
+      "modelId": "veo-3.1-generate-preview",
+      "kind": "video",
+      "label": "veo-3.1-generate-preview",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 1.2,
+        "unit": "per_call"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"veo-3.1-generate-preview\",\"category\":\"video\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":1.2,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":1.2,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=veo-3.1-generate-preview quota_type=1 model_ratio=10 model_price=1.2 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:wan2.6-i2v": {
+      "provider": "apiyi",
+      "modelId": "wan2.6-i2v",
+      "kind": "video",
+      "label": "wan2.6-i2v",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 1.2,
+        "out": 1.2,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"wan2.6-i2v\",\"category\":\"video\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":1.2,\"output_usd_per_m\":1.2,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":1.2,\"output_usd_per_m\":1.2,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=wan2.6-i2v quota_type=0 model_ratio=0.6 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:wan2.6-r2v": {
+      "provider": "apiyi",
+      "modelId": "wan2.6-r2v",
+      "kind": "video",
+      "label": "wan2.6-r2v",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 75,
+        "out": 75,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"wan2.6-r2v\",\"category\":\"video\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":75,\"output_usd_per_m\":75,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":75,\"output_usd_per_m\":75,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=wan2.6-r2v quota_type=0 model_ratio=37.5 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:wan2.6-r2v-flash": {
+      "provider": "apiyi",
+      "modelId": "wan2.6-r2v-flash",
+      "kind": "video",
+      "label": "wan2.6-r2v-flash",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 75,
+        "out": 75,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"wan2.6-r2v-flash\",\"category\":\"video\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":75,\"output_usd_per_m\":75,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":75,\"output_usd_per_m\":75,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=wan2.6-r2v-flash quota_type=0 model_ratio=37.5 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:wan2.6-t2v": {
+      "provider": "apiyi",
+      "modelId": "wan2.6-t2v",
+      "kind": "video",
+      "label": "wan2.6-t2v",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "token",
+        "currency": "USD",
+        "in": 1.2,
+        "out": 1.2,
+        "unit": "per_million"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"wan2.6-t2v\",\"category\":\"video\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_token\",\"input_usd_per_m\":1.2,\"output_usd_per_m\":1.2,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":1.2,\"output_usd_per_m\":1.2,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=wan2.6-t2v quota_type=0 model_ratio=0.6 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:wan2.7-i2v": {
+      "provider": "apiyi",
+      "modelId": "wan2.7-i2v",
+      "kind": "video",
+      "label": "wan2.7-i2v",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.084,
+        "unit": "per_second"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"wan2.7-i2v\",\"category\":\"video\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.084,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.084,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=wan2.7-i2v quota_type=0 model_ratio=0.0857 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:wan2.7-r2v": {
+      "provider": "apiyi",
+      "modelId": "wan2.7-r2v",
+      "kind": "video",
+      "label": "wan2.7-r2v",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.084,
+        "unit": "per_second"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"wan2.7-r2v\",\"category\":\"video\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.084,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.084,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=wan2.7-r2v quota_type=0 model_ratio=37.5 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:wan2.7-t2v": {
+      "provider": "apiyi",
+      "modelId": "wan2.7-t2v",
+      "kind": "video",
+      "label": "wan2.7-t2v",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.084,
+        "unit": "per_second"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"wan2.7-t2v\",\"category\":\"video\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.084,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.084,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=wan2.7-t2v quota_type=0 model_ratio=0.0857 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:wan2.7-videoedit": {
+      "provider": "apiyi",
+      "modelId": "wan2.7-videoedit",
+      "kind": "video",
+      "label": "wan2.7-videoedit",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.084,
+        "unit": "per_second"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"wan2.7-videoedit\",\"category\":\"video\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.084,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.084,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=wan2.7-videoedit quota_type=0 model_ratio=37.5 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:wan3.0-video": {
+      "provider": "apiyi",
+      "modelId": "wan3.0-video",
+      "kind": "video",
+      "label": "wan3.0-video",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.0294,
+        "unit": "per_second"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"wan3.0-video\",\"category\":\"video\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.0294,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.0294,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=wan3.0-video quota_type=0 model_ratio=0.24 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    },
+    "apiyi:wan3.0-video-prime": {
+      "provider": "apiyi",
+      "modelId": "wan3.0-video-prime",
+      "kind": "video",
+      "label": "wan3.0-video-prime",
+      "endpoint": "/v1/chat/completions",
+      "shape": "openai-sync",
+      "caps": {},
+      "paramMap": {},
+      "resultPath": null,
+      "billing": {
+        "type": "fixed",
+        "currency": "USD",
+        "price": 0.063,
+        "unit": "per_second"
+      },
+      "evidence": {
+        "kind": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "{\"id\":\"wan3.0-video-prime\",\"category\":\"video\",\"endpoints\":[\"chat\"],\"billing\":{\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.063,\"tiered\":false}}"
+        },
+        "shape": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints: [\"chat\"]"
+        },
+        "endpoint": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "endpoints.chat.path = \"/v1/chat/completions\""
+        },
+        "billing": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/model-registry.json",
+          "quote": "billing: {\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.063,\"tiered\":false}"
+        },
+        "billing.pricing": {
+          "level": "doc",
+          "url": "https://api.apiyi.com/api/pricing",
+          "quote": "model_name=wan3.0-video-prime quota_type=0 model_ratio=0.24 model_price=0 completion_ratio=1"
+        }
+      },
+      "source": {
+        "registry": "model-registry.json",
+        "pricing": "/api/pricing",
+        "docs_url": null
+      }
+    }
+  }
+}
