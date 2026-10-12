@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-10-12T12:06:25.452Z",
+  "generatedAt": "2026-10-12T16:24:43.147Z",
   "prioritySource": "model-registry.json",
   "models": {
     "apiyi:MAI-Image-2.6": {
@@ -354,7 +354,106 @@
       "provider": "apiyi",
       "modelId": "doubao-seedance-2-5-260628",
       "kind": "video",
-      "label": "doubao-seedance-2-5-260628",
+      "label": "Seedance 2.5（易）",
+      "desc": "长时直出，多参考融合强 · 需 SeeDance2 分组",
+      "price": "按Token·$12.6/M（官方实测）",
+      "params": [
+        {
+          "key": "prompt",
+          "label": "提示词",
+          "type": "textarea",
+          "required": true,
+          "default": "",
+          "placeholder": "描述视频"
+        },
+        {
+          "key": "first_frame",
+          "label": "首帧",
+          "type": "ref-image",
+          "output": "single",
+          "hint": "首帧图（画布上选中的图层会自动带入）；带首帧时宽高比必须选 adaptive"
+        },
+        {
+          "key": "last_frame",
+          "label": "尾帧",
+          "type": "ref-image",
+          "output": "single",
+          "hint": "可选，与首帧构成转场；编辑模式下时长需设为 -1（智能时长）"
+        },
+        {
+          "key": "images",
+          "label": "参考图",
+          "type": "ref-image",
+          "output": "csv",
+          "max": 30,
+          "hint": "内容参考 1-30 张（官方上限）；与首尾帧互斥"
+        },
+        {
+          "key": "videos",
+          "label": "参考视频",
+          "type": "ref-video",
+          "output": "csv",
+          "max": 5,
+          "hint": "动作 / 风格参考，总时长 ≤15s；与首尾帧互斥"
+        },
+        {
+          "key": "audios",
+          "label": "参考音频",
+          "type": "ref-audio",
+          "output": "csv",
+          "max": 5,
+          "hint": "口播 / 配乐参考，总时长 ≤15s；与首尾帧互斥"
+        },
+        {
+          "key": "resolution",
+          "label": "分辨率",
+          "type": "select",
+          "default": "720p",
+          "options": [
+            "480p",
+            "720p",
+            "1080p"
+          ],
+          "hint": "小写；4k 不支持（传了会 400 且不扣费）"
+        },
+        {
+          "key": "ratio",
+          "label": "宽高比",
+          "type": "select",
+          "default": "adaptive",
+          "options": [
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16",
+            "21:9",
+            "adaptive"
+          ]
+        },
+        {
+          "key": "duration",
+          "label": "时长",
+          "type": "range",
+          "default": 5,
+          "min": 4,
+          "max": 30,
+          "step": 1,
+          "unit": "s",
+          "hint": "2.5 为 4~30 整数；按时长计费，成本敏感就显式传"
+        },
+        {
+          "key": "generate_audio",
+          "label": "音频",
+          "type": "select",
+          "default": "true",
+          "options": [
+            "true",
+            "false"
+          ]
+        }
+      ],
+      "hostId": "apiyi:seedance-2-5-260628",
       "endpoint": "/v1/chat/completions",
       "shape": "openai-sync",
       "caps": {},
@@ -600,10 +699,87 @@
       "provider": "apiyi",
       "modelId": "flux-2-pro",
       "kind": "image",
-      "label": "flux-2-pro",
+      "label": "FLUX 2 Pro（易）",
+      "desc": "写实与设计风格见长",
+      "price": "0.21元/张（$0.03）",
+      "params": [
+        {
+          "key": "prompt",
+          "label": "提示词",
+          "type": "textarea",
+          "required": true,
+          "default": "",
+          "placeholder": "描述图片"
+        },
+        {
+          "key": "aspectRatio",
+          "label": "比例",
+          "type": "select",
+          "default": "auto",
+          "options": [
+            "auto",
+            "1:1",
+            "16:9",
+            "9:16",
+            "4:3",
+            "3:4",
+            "3:2",
+            "2:3",
+            "5:4",
+            "4:5",
+            "21:9",
+            "9:21",
+            "1:3",
+            "3:1",
+            "2:1",
+            "1:2"
+          ],
+          "hint": "自动＝不下发 size，由服务端决定"
+        },
+        {
+          "key": "resolution",
+          "label": "清晰度",
+          "type": "select",
+          "default": "auto",
+          "options": [
+            "auto",
+            "1K",
+            "2K",
+            "4K"
+          ],
+          "hint": "与比例合成官方 size 像素串；自动＝不下发"
+        },
+        {
+          "key": "quality",
+          "label": "质量",
+          "type": "select",
+          "default": "medium",
+          "options": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        },
+        {
+          "key": "urls",
+          "label": "参考图",
+          "type": "ref-image",
+          "output": "csv"
+        }
+      ],
+      "hostId": "apiyi:flux-2-pro",
       "endpoint": "/v1/images/generations",
       "shape": "openai-sync",
-      "caps": {},
+      "caps": {
+        "edit": true,
+        "refs": {
+          "max": 8
+        },
+        "sizes": [],
+        "ratios": []
+      },
       "paramMap": {},
       "resultPath": null,
       "billing": {
@@ -637,13 +813,30 @@
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
           "quote": "model_name=flux-2-pro quota_type=1 model_ratio=1 model_price=0.03 completion_ratio=1"
+        },
+        "caps.edit": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/flux/overview",
+          "quote": "JSON `input_image` 传参考图（最多 8 张多图融合，走 `/generations`），另有 OpenAI 兼容 multipart `/edits` 单图编辑，FLUX.2 + FLUX.1 Kontext 通用。"
+        },
+        "caps.refs": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/flux/overview",
+          "quote": "| **参考图上限** | 8 张（FLUX.2 [pro/max/flex]）/ 4 张（FLUX.2 [klein]）/ 1 张（FLUX.1 Kontext） |"
+        },
+        "caps.sizes": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/flux/overview",
+          "quote": "| **输出分辨率** | 最大 4MP（2048×2048），任意宽高，边长须 16 倍数 |"
         }
       },
       "source": {
         "registry": "model-registry.json",
         "pricing": "/api/pricing",
         "docs_url": null
-      }
+      },
+      "route": "auto",
+      "notes": "FLUX.2 系。参考图上限**按型号分**：pro/max/flex = 8 张 · klein = 4 张 · Kontext = 1 张 ⇒ 本档（pro）取 **8**。⚠ 多图融合走 `/generations` 的 JSON 字段 `input_image`~`input_image_8`；`/edits`（multipart）**只收单张**且字段名必须叫 `image`。⚠ **无 tiers**：输出是『任意宽高，边长须 16 倍数，最大 4MP(2048×2048)』，没有档位语义。**无 mask 证据**（页里未提 mask；`/edits` 只收单张图）。"
     },
     "apiyi:flux-dev": {
       "provider": "apiyi",
@@ -1335,10 +1528,85 @@
       "provider": "apiyi",
       "modelId": "gemini-3.1-flash-lite-image",
       "kind": "image",
-      "label": "gemini-3.1-flash-lite-image",
+      "label": "Nano Banana 2 Lite（易）",
+      "desc": "四秒生成，最轻快省费",
+      "price": "0.09元/张（$0.0134 实测）",
+      "params": [
+        {
+          "key": "prompt",
+          "label": "提示词",
+          "type": "textarea",
+          "required": true,
+          "default": "",
+          "placeholder": "描述图片"
+        },
+        {
+          "key": "aspectRatio",
+          "label": "比例",
+          "type": "select",
+          "default": "1:1",
+          "options": [
+            "1:1",
+            "2:3",
+            "3:2",
+            "3:4",
+            "4:3",
+            "4:5",
+            "5:4",
+            "9:16",
+            "16:9",
+            "21:9",
+            "1:4",
+            "4:1",
+            "1:8",
+            "8:1"
+          ],
+          "hint": "本模型支持 14 种比例"
+        },
+        {
+          "key": "resolution",
+          "label": "清晰度",
+          "type": "select",
+          "default": "1K",
+          "options": [
+            "1K"
+          ],
+          "hint": "本模型只有 1K 一档（传 2K/4K 会报错）"
+        },
+        {
+          "key": "urls",
+          "label": "参考图",
+          "type": "ref-image",
+          "output": "csv",
+          "max": 14
+        }
+      ],
+      "hostId": "apiyi:nano-banana-2-lite",
       "endpoint": "/v1beta/models/gemini-3.1-flash-lite-image:generateContent",
       "shape": "native-gemini",
-      "caps": {},
+      "caps": {
+        "edit": true,
+        "sizes": [],
+        "ratios": [
+          "1:1",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16",
+          "16:9",
+          "21:9",
+          "1:4",
+          "4:1",
+          "1:8",
+          "8:1"
+        ],
+        "tiers": [
+          "1K"
+        ]
+      },
       "paramMap": {},
       "resultPath": null,
       "billing": {
@@ -1372,19 +1640,91 @@
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
           "quote": "model_name=gemini-3.1-flash-lite-image quota_type=1 model_ratio=0.05 model_price=0.025 completion_ratio=120"
+        },
+        "caps.edit": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/nano-banana-lite-image/overview",
+          "quote": "Nano Banana Lite 生图/编辑（gemini-3.1-flash-lite-image）"
+        },
+        "caps.ratios": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/nano-banana-lite-image/overview",
+          "quote": "aspectRatio 支持本页列出的 14 个比例，显式传、别靠默认值"
+        },
+        "caps.tiers": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/nano-banana-lite-image/overview",
+          "quote": "generationConfig.imageConfig.imageSize 在 Lite 上**只接受 1K**，传 2K 或 4K 会报错"
         }
       },
       "source": {
         "registry": "model-registry.json",
         "pricing": "/api/pricing",
         "docs_url": null
-      }
+      },
+      "route": "auto",
+      "notes": "⚠ **只有 1K**（传 2K/4K 会直接报错）。⚠ **refs 不写** —— Lite 页**没有**给出参考图张数上限（只有 Pro/2 页明写 14 张）⇒ 按『无证据不写』纪律留空（面板显示未知，不猜）。无 mask 字段。"
     },
     "apiyi:gemini-nano-banana-2.1": {
       "provider": "apiyi",
       "modelId": "gemini-nano-banana-2.1",
       "kind": "image",
-      "label": "gemini-nano-banana-2.1",
+      "label": "Nano Banana 2.1（易）",
+      "desc": "NB 新一代 · 更快更准 · 1K/2K/4K · 能力待实测",
+      "price": "0.35元/张（$0.05/次）",
+      "params": [
+        {
+          "key": "prompt",
+          "label": "提示词",
+          "type": "textarea",
+          "required": true,
+          "default": "",
+          "placeholder": "描述图片"
+        },
+        {
+          "key": "aspectRatio",
+          "label": "比例",
+          "type": "select",
+          "default": "1:1",
+          "options": [
+            "1:1",
+            "2:3",
+            "3:2",
+            "3:4",
+            "4:3",
+            "4:5",
+            "5:4",
+            "9:16",
+            "16:9",
+            "21:9",
+            "1:4",
+            "4:1",
+            "1:8",
+            "8:1"
+          ],
+          "hint": "本模型支持 14 种比例"
+        },
+        {
+          "key": "resolution",
+          "label": "清晰度",
+          "type": "select",
+          "default": "1K",
+          "options": [
+            "1K",
+            "2K",
+            "4K"
+          ],
+          "hint": "1K/2K/4K（4K 官方建议 600 秒兜底）"
+        },
+        {
+          "key": "urls",
+          "label": "参考图",
+          "type": "ref-image",
+          "output": "csv",
+          "max": 14
+        }
+      ],
+      "hostId": "apiyi:nano-banana-2.1",
       "endpoint": "/v1beta/models/gemini-nano-banana-2.1:generateContent",
       "shape": "native-gemini",
       "caps": {},
@@ -1633,10 +1973,119 @@
       "provider": "apiyi",
       "modelId": "gpt-image-2",
       "kind": "image",
-      "label": "gpt-image-2",
+      "label": "GPT-Image-2（易）",
+      "desc": "上一代官方款，参数同形",
+      "price": "按Token·入$5/出$30每M",
+      "params": [
+        {
+          "key": "prompt",
+          "label": "提示词",
+          "type": "textarea",
+          "required": true,
+          "default": "",
+          "placeholder": "描述图片"
+        },
+        {
+          "key": "aspectRatio",
+          "label": "比例",
+          "type": "select",
+          "default": "auto",
+          "options": [
+            "auto",
+            "1:1",
+            "16:9",
+            "9:16",
+            "4:3",
+            "3:4",
+            "3:2",
+            "2:3",
+            "5:4",
+            "4:5",
+            "21:9",
+            "9:21",
+            "1:3",
+            "3:1",
+            "2:1",
+            "1:2"
+          ],
+          "hint": "自动＝不下发 size，由服务端决定"
+        },
+        {
+          "key": "resolution",
+          "label": "清晰度",
+          "type": "select",
+          "default": "auto",
+          "options": [
+            "auto",
+            "1K",
+            "2K",
+            "4K"
+          ],
+          "hint": "与比例合成官方 size 像素串；自动＝不下发"
+        },
+        {
+          "key": "quality",
+          "label": "质量",
+          "type": "select",
+          "default": "medium",
+          "options": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        },
+        {
+          "key": "urls",
+          "label": "参考图",
+          "type": "ref-image",
+          "output": "csv"
+        },
+        {
+          "key": "mask",
+          "label": "遮罩图",
+          "type": "ref-image",
+          "output": "single"
+        }
+      ],
+      "hostId": "apiyi:gpt-image-2",
       "endpoint": "/v1/images/generations",
       "shape": "openai-sync",
-      "caps": {},
+      "caps": {
+        "edit": true,
+        "mask": true,
+        "refs": {
+          "max": 16
+        },
+        "sizes": [
+          "auto",
+          "1024x1024",
+          "1536x1024",
+          "1024x1536",
+          "2048x2048",
+          "2048x1152",
+          "3840x2160",
+          "2160x3840"
+        ],
+        "ratios": [],
+        "tiers": [
+          "1K",
+          "2K",
+          "4K"
+        ],
+        "count": {
+          "min": 1,
+          "max": 1
+        },
+        "timeout": {
+          "by": "quality",
+          "low": 120000,
+          "medium": 240000,
+          "high": 600000,
+          "default": 240000
+        }
+      },
       "paramMap": {},
       "resultPath": null,
       "billing": {
@@ -1671,13 +2120,45 @@
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
           "quote": "model_name=gpt-image-2 quota_type=1 model_ratio=2.5 model_price=0.2 completion_ratio=6"
+        },
+        "caps.edit": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2/image-edit",
+          "quote": "本页用于「基于一张或多张参考图改图 / 融合生成 / mask 局部重绘」。"
+        },
+        "caps.mask": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2/image-edit",
+          "quote": "| `mask` | file | 否 | — | 掩码图（仅对第一张 image 生效，要求带 alpha 通道）|"
+        },
+        "caps.refs": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2/image-edit",
+          "quote": "多图融合最多 16 张 —— `image[]` 字段重复传入，超过会报错"
+        },
+        "caps.count": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2/text-to-image",
+          "quote": "| `n` | int | 否 | 1 | 仅支持 1 |"
+        },
+        "caps.sizes": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2/overview",
+          "quote": "预设尺寸 8 档 + 自定义约束（最大边 ≤3840 / 16 倍数 / ≤3:1 / 0.65–8.3MP）"
+        },
+        "caps.timeout": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2/overview",
+          "quote": "| `quality` 档位 | `low` / `medium` / `high` / `auto` |（xhigh / max 仅 2.5 两款接受）· 超时：low ≥120 秒 / medium ≥240 秒 / high ≥600 秒（兜底）"
         }
       },
       "source": {
         "registry": "model-registry.json",
         "pricing": "/api/pricing",
         "docs_url": null
-      }
+      },
+      "route": "auto",
+      "notes": "⚠ 与 2.5 两款的差异：**quality 只到 high**（官方：『xhigh / max 仅 2.5 两款接受』）⇒ timeout 不写这两档（不传就不会命中）。"
     },
     "apiyi:gpt-image-2-all": {
       "provider": "apiyi",
@@ -1781,10 +2262,88 @@
       "provider": "apiyi",
       "modelId": "gpt-image-2.5-all",
       "kind": "image",
-      "label": "gpt-image-2.5-all",
+      "label": "GPT-Image-2.5-All（易）",
+      "desc": "高性价比，走量首选",
+      "price": "0.21元/张（$0.03）",
+      "params": [
+        {
+          "key": "prompt",
+          "label": "提示词",
+          "type": "textarea",
+          "required": true,
+          "default": "",
+          "placeholder": "描述图片"
+        },
+        {
+          "key": "aspectRatio",
+          "label": "比例",
+          "type": "select",
+          "default": "auto",
+          "options": [
+            "auto",
+            "1:1",
+            "16:9",
+            "9:16",
+            "4:3",
+            "3:4",
+            "3:2",
+            "2:3",
+            "5:4",
+            "4:5",
+            "21:9",
+            "9:21",
+            "1:3",
+            "3:1",
+            "2:1",
+            "1:2"
+          ],
+          "hint": "自动＝不下发 size，由服务端决定"
+        },
+        {
+          "key": "resolution",
+          "label": "清晰度",
+          "type": "select",
+          "default": "auto",
+          "options": [
+            "auto",
+            "1K",
+            "2K",
+            "4K"
+          ],
+          "hint": "与比例合成官方 size 像素串；自动＝不下发"
+        },
+        {
+          "key": "quality",
+          "label": "质量",
+          "type": "select",
+          "default": "medium",
+          "options": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        },
+        {
+          "key": "urls",
+          "label": "参考图",
+          "type": "ref-image",
+          "output": "csv"
+        }
+      ],
+      "hostId": "apiyi:gpt-image-2.5-all",
       "endpoint": "/v1/images/generations",
       "shape": "openai-sync",
-      "caps": {},
+      "caps": {
+        "edit": true,
+        "sizes": [],
+        "ratios": [],
+        "count": {
+          "min": 1,
+          "max": 1
+        }
+      },
       "paramMap": {},
       "resultPath": null,
       "billing": {
@@ -1818,22 +2377,150 @@
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
           "quote": "model_name=gpt-image-2.5-all quota_type=1 model_ratio=2.5 model_price=0.025 completion_ratio=1"
+        },
+        "caps.edit": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2-all/overview",
+          "quote": "支持 **文生图 / 单图编辑 / 多图融合 / 自然语言改图**，文字还原度高、原生支持中文提示词。"
+        },
+        "caps.count": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2-all/overview",
+          "quote": "| `gpt-image-2.5-all` | 按次计费 | **$0.025 / 张** | 单次返回 1 张图片，模型为 GPT-Image 2.5 |"
+        },
+        "caps.sizes": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2-all/overview",
+          "quote": "参数红线：本模型**不接受** `size` / `quality` / `n` / `aspect_ratio`，请求里一个都不要带。"
         }
       },
       "source": {
         "registry": "model-registry.json",
         "pricing": "/api/pricing",
         "docs_url": null
-      }
+      },
+      "route": "auto",
+      "notes": "**官逆档（逆向 ChatGPT 网页版）**。⚠ 与官转系（flare/sunburst/gpt-image-2）**完全不同**：**不接受 size / quality / n / aspect_ratio**（官方：『请求里一个都不要带』），尺寸与风格全靠提示词控制 ⇒ sizes/ratios/tiers 全空。**无 mask 证据**（页里未提）· **无参考图上限证据**（只说『支持多张』）⇒ 两者都不写。⚠ 传 n=3 会按 3 张扣费但只回 1 张。"
     },
     "apiyi:gpt-image-2.5-flare": {
       "provider": "apiyi",
       "modelId": "gpt-image-2.5-flare",
       "kind": "image",
-      "label": "gpt-image-2.5-flare",
+      "label": "GPT-Image-2.5-flare（易）",
+      "desc": "速度型选手，快而稳",
+      "price": "按Token·入$5/出$30每M",
+      "params": [
+        {
+          "key": "prompt",
+          "label": "提示词",
+          "type": "textarea",
+          "required": true,
+          "default": "",
+          "placeholder": "描述图片"
+        },
+        {
+          "key": "aspectRatio",
+          "label": "比例",
+          "type": "select",
+          "default": "auto",
+          "options": [
+            "auto",
+            "1:1",
+            "16:9",
+            "9:16",
+            "4:3",
+            "3:4",
+            "3:2",
+            "2:3",
+            "5:4",
+            "4:5",
+            "21:9",
+            "9:21",
+            "1:3",
+            "3:1",
+            "2:1",
+            "1:2"
+          ],
+          "hint": "自动＝不下发 size，由服务端决定"
+        },
+        {
+          "key": "resolution",
+          "label": "清晰度",
+          "type": "select",
+          "default": "auto",
+          "options": [
+            "auto",
+            "1K",
+            "2K",
+            "4K"
+          ],
+          "hint": "与比例合成官方 size 像素串；自动＝不下发"
+        },
+        {
+          "key": "quality",
+          "label": "质量",
+          "type": "select",
+          "default": "medium",
+          "options": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        },
+        {
+          "key": "urls",
+          "label": "参考图",
+          "type": "ref-image",
+          "output": "csv"
+        },
+        {
+          "key": "mask",
+          "label": "遮罩图",
+          "type": "ref-image",
+          "output": "single"
+        }
+      ],
+      "hostId": "apiyi:gpt-image-2.5-flare",
       "endpoint": "/v1/images/generations",
       "shape": "openai-sync",
-      "caps": {},
+      "caps": {
+        "edit": true,
+        "mask": true,
+        "refs": {
+          "max": 16
+        },
+        "sizes": [
+          "auto",
+          "1024x1024",
+          "1536x1024",
+          "1024x1536",
+          "2048x2048",
+          "2048x1152",
+          "3840x2160",
+          "2160x3840"
+        ],
+        "ratios": [],
+        "tiers": [
+          "1K",
+          "2K",
+          "4K"
+        ],
+        "count": {
+          "min": 1,
+          "max": 1
+        },
+        "timeout": {
+          "by": "quality",
+          "low": 120000,
+          "medium": 240000,
+          "high": 600000,
+          "xhigh": 600000,
+          "max": 600000,
+          "default": 240000
+        }
+      },
       "paramMap": {},
       "resultPath": null,
       "billing": {
@@ -1868,13 +2555,45 @@
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
           "quote": "model_name=gpt-image-2.5-flare quota_type=1 model_ratio=2.5 model_price=0.2 completion_ratio=6"
+        },
+        "caps.edit": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2/image-edit",
+          "quote": "本页用于「基于一张或多张参考图改图 / 融合生成 / mask 局部重绘」。"
+        },
+        "caps.mask": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2/image-edit",
+          "quote": "| `mask` | file | 否 | — | 掩码图（仅对第一张 image 生效，要求带 alpha 通道）|"
+        },
+        "caps.refs": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2/image-edit",
+          "quote": "多图融合最多 16 张 —— `image[]` 字段重复传入，超过会报错"
+        },
+        "caps.count": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2/text-to-image",
+          "quote": "| `n` | int | 否 | 1 | 仅支持 1 |"
+        },
+        "caps.sizes": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2/overview",
+          "quote": "预设：auto / 1024x1024(1:1) / 1536x1024(3:2) / 1024x1536(2:3) / 2048x2048(2K) / 2048x1152(16:9 2K) / 3840x2160(4K) / 2160x3840(9:16 4K)；自定义约束：最大边 ≤3840px、两条边都是 16 的倍数、长短边比例 ≤3:1、总像素 ∈ [655360, 8294400]"
+        },
+        "caps.timeout": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2/overview",
+          "quote": "| `low` | ≥ 120 秒 | / | `medium` | ≥ 240 秒 | / | `high` | ≥ 600 秒（兜底）| / | `xhigh`（仅 2.5）| ≥ 300 秒 | / | `max`（仅 2.5）| ≥ 600 秒（兜底）|"
         }
       },
       "source": {
         "registry": "model-registry.json",
         "pricing": "/api/pricing",
         "docs_url": null
-      }
+      },
+      "route": "auto",
+      "notes": "官方：三款同价、同参数、同分组、同端点，切换只改 model 字段。⚠ xhigh 官方推荐 ≥300 秒，我们取 600 秒（与 high 同档）—— 官方明说『2K/4K 更长』但没给数，按『宁可长不可短』取兜底值。"
     },
     "apiyi:gpt-image-2.5-flare-2026-09-08": {
       "provider": "apiyi",
@@ -1979,10 +2698,121 @@
       "provider": "apiyi",
       "modelId": "gpt-image-2.5-sunburst",
       "kind": "image",
-      "label": "gpt-image-2.5-sunburst",
+      "label": "GPT-Image-2.5-sunburst（易）",
+      "desc": "编辑精度最高，精修首选",
+      "price": "按Token·入$5/出$30每M",
+      "params": [
+        {
+          "key": "prompt",
+          "label": "提示词",
+          "type": "textarea",
+          "required": true,
+          "default": "",
+          "placeholder": "描述图片"
+        },
+        {
+          "key": "aspectRatio",
+          "label": "比例",
+          "type": "select",
+          "default": "auto",
+          "options": [
+            "auto",
+            "1:1",
+            "16:9",
+            "9:16",
+            "4:3",
+            "3:4",
+            "3:2",
+            "2:3",
+            "5:4",
+            "4:5",
+            "21:9",
+            "9:21",
+            "1:3",
+            "3:1",
+            "2:1",
+            "1:2"
+          ],
+          "hint": "自动＝不下发 size，由服务端决定"
+        },
+        {
+          "key": "resolution",
+          "label": "清晰度",
+          "type": "select",
+          "default": "auto",
+          "options": [
+            "auto",
+            "1K",
+            "2K",
+            "4K"
+          ],
+          "hint": "与比例合成官方 size 像素串；自动＝不下发"
+        },
+        {
+          "key": "quality",
+          "label": "质量",
+          "type": "select",
+          "default": "medium",
+          "options": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        },
+        {
+          "key": "urls",
+          "label": "参考图",
+          "type": "ref-image",
+          "output": "csv"
+        },
+        {
+          "key": "mask",
+          "label": "遮罩图",
+          "type": "ref-image",
+          "output": "single"
+        }
+      ],
+      "hostId": "apiyi:gpt-image-2.5-sunburst",
       "endpoint": "/v1/images/generations",
       "shape": "openai-sync",
-      "caps": {},
+      "caps": {
+        "edit": true,
+        "mask": true,
+        "refs": {
+          "max": 16
+        },
+        "sizes": [
+          "auto",
+          "1024x1024",
+          "1536x1024",
+          "1024x1536",
+          "2048x2048",
+          "2048x1152",
+          "3840x2160",
+          "2160x3840"
+        ],
+        "ratios": [],
+        "tiers": [
+          "1K",
+          "2K",
+          "4K"
+        ],
+        "count": {
+          "min": 1,
+          "max": 1
+        },
+        "timeout": {
+          "by": "quality",
+          "low": 120000,
+          "medium": 240000,
+          "high": 600000,
+          "xhigh": 600000,
+          "max": 600000,
+          "default": 240000
+        }
+      },
       "paramMap": {},
       "resultPath": null,
       "billing": {
@@ -2017,13 +2847,45 @@
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
           "quote": "model_name=gpt-image-2.5-sunburst quota_type=1 model_ratio=2.5 model_price=0.2 completion_ratio=6"
+        },
+        "caps.edit": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2/image-edit",
+          "quote": "本页用于「基于一张或多张参考图改图 / 融合生成 / mask 局部重绘」。"
+        },
+        "caps.mask": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2/image-edit",
+          "quote": "| `mask` | file | 否 | — | 掩码图（仅对第一张 image 生效，要求带 alpha 通道）|"
+        },
+        "caps.refs": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2/image-edit",
+          "quote": "多图融合最多 16 张 —— `image[]` 字段重复传入，超过会报错"
+        },
+        "caps.count": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2/text-to-image",
+          "quote": "| `n` | int | 否 | 1 | 仅支持 1 |"
+        },
+        "caps.sizes": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2/overview",
+          "quote": "预设：auto / 1024x1024 / 1536x1024 / 1024x1536 / 2048x2048 / 2048x1152 / 3840x2160 / 2160x3840；自定义约束同左"
+        },
+        "caps.timeout": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2/overview",
+          "quote": "| `low` | ≥ 120 秒 | / | `medium` | ≥ 240 秒 | / | `high` | ≥ 600 秒（兜底）| / | `xhigh` | ≥ 300 秒 | / | `max` | ≥ 600 秒（兜底）|"
         }
       },
       "source": {
         "registry": "model-registry.json",
         "pricing": "/api/pricing",
         "docs_url": null
-      }
+      },
+      "route": "auto",
+      "notes": "同 flare（官方：三款同参数）。sunburst 是画质优先基座，编辑与多轮一致性最好 ⇒ 编辑类动作的默认档。"
     },
     "apiyi:gpt-image-2.5-sunburst-2026-09-08": {
       "provider": "apiyi",
@@ -2128,10 +2990,104 @@
       "provider": "apiyi",
       "modelId": "gpt-image-2.5-vip",
       "kind": "image",
-      "label": "gpt-image-2.5-vip",
+      "label": "GPT-Image-2.5-VIP（易）",
+      "desc": "配额宽松，可锁尺寸",
+      "price": "0.21元/张（$0.03）",
+      "params": [
+        {
+          "key": "prompt",
+          "label": "提示词",
+          "type": "textarea",
+          "required": true,
+          "default": "",
+          "placeholder": "描述图片"
+        },
+        {
+          "key": "aspectRatio",
+          "label": "比例",
+          "type": "select",
+          "default": "auto",
+          "options": [
+            "auto",
+            "1:1",
+            "16:9",
+            "9:16",
+            "4:3",
+            "3:4",
+            "3:2",
+            "2:3",
+            "5:4",
+            "4:5",
+            "21:9",
+            "9:21",
+            "1:3",
+            "3:1",
+            "2:1",
+            "1:2"
+          ],
+          "hint": "自动＝不下发 size，由服务端决定"
+        },
+        {
+          "key": "resolution",
+          "label": "清晰度",
+          "type": "select",
+          "default": "auto",
+          "options": [
+            "auto",
+            "1K",
+            "2K",
+            "4K"
+          ],
+          "hint": "与比例合成官方 size 像素串；自动＝不下发"
+        },
+        {
+          "key": "quality",
+          "label": "质量",
+          "type": "select",
+          "default": "medium",
+          "options": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        },
+        {
+          "key": "urls",
+          "label": "参考图",
+          "type": "ref-image",
+          "output": "csv"
+        }
+      ],
+      "hostId": "apiyi:gpt-image-2.5-vip",
       "endpoint": "/v1/images/generations",
       "shape": "openai-sync",
-      "caps": {},
+      "caps": {
+        "edit": true,
+        "sizes": [],
+        "ratios": [
+          "1:1",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16",
+          "16:9",
+          "21:9"
+        ],
+        "tiers": [
+          "1K",
+          "2K",
+          "4K"
+        ],
+        "count": {
+          "min": 1,
+          "max": 1
+        }
+      },
       "paramMap": {},
       "resultPath": null,
       "billing": {
@@ -2165,13 +3121,35 @@
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
           "quote": "model_name=gpt-image-2.5-vip quota_type=1 model_ratio=2.5 model_price=0.03 completion_ratio=1"
+        },
+        "caps.edit": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2-vip/overview",
+          "quote": "调用方式与 gpt-image-2-all 一致"
+        },
+        "caps.ratios": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2-vip/overview",
+          "quote": "`gpt-image-2-vip` 支持 **10 个比例 × 3 个分辨率档 = 30 档** 常见尺寸（比例表：1:1 / 2:3 / 3:2 / 3:4 / 4:3 / 4:5 / 5:4 / 9:16 / 16:9 / 21:9）"
+        },
+        "caps.tiers": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2-vip/overview",
+          "quote": "覆盖 **10 比例 × 3 分辨率档（1K Fast / 2K Recommended / 4K Detail）共 30 档常见尺寸**，含 4K。"
+        },
+        "caps.count": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/gpt-image-2-vip/overview",
+          "quote": "`n` 只回 1 张，不要传"
         }
       },
       "source": {
         "registry": "model-registry.json",
         "pricing": "/api/pricing",
         "docs_url": null
-      }
+      },
+      "route": "auto",
+      "notes": "**官逆档（Adobe Firefly 线路）**。与 -all 的**唯一大区别**：**支持 size**（10 比例 × 3 分辨率档 = 30 档常见尺寸，具体像素表见官方页）。⚠⚠ **mask 不写** —— 官方明说『`mask` 不做精确局部重绘，需要就走官转』（接受但整图重绘 ⇒ 不构成「局部重绘」能力）。⚠ `quality` 的 xhigh/max 只有 2.5 两款接受。"
     },
     "apiyi:gpt-realtime-2.1": {
       "provider": "apiyi",
@@ -2526,10 +3504,93 @@
       "provider": "apiyi",
       "modelId": "nano-banana-2",
       "kind": "image",
-      "label": "nano-banana-2",
+      "label": "Nano Banana 2（易）",
+      "desc": "画质接近 Pro，速度更快",
+      "price": "0.23元/张（$0.0331 实测）",
+      "params": [
+        {
+          "key": "prompt",
+          "label": "提示词",
+          "type": "textarea",
+          "required": true,
+          "default": "",
+          "placeholder": "描述图片"
+        },
+        {
+          "key": "aspectRatio",
+          "label": "比例",
+          "type": "select",
+          "default": "1:1",
+          "options": [
+            "1:1",
+            "2:3",
+            "3:2",
+            "3:4",
+            "4:3",
+            "4:5",
+            "5:4",
+            "9:16",
+            "16:9",
+            "21:9",
+            "1:4",
+            "4:1",
+            "1:8",
+            "8:1"
+          ],
+          "hint": "本模型支持 14 种比例"
+        },
+        {
+          "key": "resolution",
+          "label": "清晰度",
+          "type": "select",
+          "default": "1K",
+          "options": [
+            "1K",
+            "2K",
+            "4K"
+          ],
+          "hint": "1K/2K/4K（4K 官方建议 600 秒兜底）"
+        },
+        {
+          "key": "urls",
+          "label": "参考图",
+          "type": "ref-image",
+          "output": "csv",
+          "max": 14
+        }
+      ],
+      "hostId": "apiyi:nano-banana-2",
       "endpoint": "/v1beta/models/nano-banana-2:generateContent",
       "shape": "native-gemini",
-      "caps": {},
+      "caps": {
+        "edit": true,
+        "refs": {
+          "max": 14
+        },
+        "sizes": [],
+        "ratios": [
+          "1:1",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16",
+          "16:9",
+          "21:9",
+          "1:4",
+          "4:1",
+          "1:8",
+          "8:1"
+        ],
+        "tiers": [
+          "512",
+          "1K",
+          "2K",
+          "4K"
+        ]
+      },
       "paramMap": {},
       "resultPath": null,
       "billing": {
@@ -2563,22 +3624,118 @@
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
           "quote": "model_name=nano-banana-2 quota_type=1 model_ratio=0.07 model_price=0.055 completion_ratio=120"
+        },
+        "caps.edit": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/nano-banana-2-image/image-edit",
+          "quote": "Nano Banana 2 图片编辑 API 参考与在线调试 — 输入图片 + 指令生成新图片"
+        },
+        "caps.refs": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/nano-banana-2-image/overview",
+          "quote": "官方硬限制是单图 7MB、每次请求最多 14 张"
+        },
+        "caps.ratios": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/nano-banana-2-image/overview",
+          "quote": "aspectRatio（本页列了 14 个合法比例）"
+        },
+        "caps.tiers": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/nano-banana-2-image/overview",
+          "quote": "支持 512px、1K、2K、4K 四档分辨率，最高 4096×4096"
         }
       },
       "source": {
         "registry": "model-registry.json",
         "pricing": "/api/pricing",
         "docs_url": null
-      }
+      },
+      "route": "auto",
+      "notes": "无 mask 字段（Gemini 原生）。**14 个比例 + 512px**（Pro 只有 10 个 / 无 512）。⚠ 官方警告：代码里模型名用 gemini-3.1-flash-image，**不要用带 -4k 后缀的名字**（那是给聊天客户端的）。timeout 不写进清单（官方建议 360 秒兜底，宿主内联已有）。"
     },
     "apiyi:nano-banana-pro": {
       "provider": "apiyi",
       "modelId": "nano-banana-pro",
       "kind": "image",
-      "label": "nano-banana-pro",
+      "label": "Nano Banana Pro（易）",
+      "desc": "旗舰画质，4K 文字最强",
+      "price": "0.63元/张（$0.09/次）",
+      "params": [
+        {
+          "key": "prompt",
+          "label": "提示词",
+          "type": "textarea",
+          "required": true,
+          "default": "",
+          "placeholder": "描述图片"
+        },
+        {
+          "key": "aspectRatio",
+          "label": "比例",
+          "type": "select",
+          "default": "1:1",
+          "options": [
+            "1:1",
+            "2:3",
+            "3:2",
+            "3:4",
+            "4:3",
+            "4:5",
+            "5:4",
+            "9:16",
+            "16:9",
+            "21:9"
+          ],
+          "hint": "本模型支持 10 种比例"
+        },
+        {
+          "key": "resolution",
+          "label": "清晰度",
+          "type": "select",
+          "default": "1K",
+          "options": [
+            "1K",
+            "2K",
+            "4K"
+          ],
+          "hint": "1K/2K/4K（4K 官方建议 600 秒兜底）"
+        },
+        {
+          "key": "urls",
+          "label": "参考图",
+          "type": "ref-image",
+          "output": "csv",
+          "max": 14
+        }
+      ],
+      "hostId": "apiyi:nano-banana-pro",
       "endpoint": "/v1beta/models/nano-banana-pro:generateContent",
       "shape": "native-gemini",
-      "caps": {},
+      "caps": {
+        "edit": true,
+        "refs": {
+          "max": 14
+        },
+        "sizes": [],
+        "ratios": [
+          "1:1",
+          "2:3",
+          "3:2",
+          "3:4",
+          "4:3",
+          "4:5",
+          "5:4",
+          "9:16",
+          "16:9",
+          "21:9"
+        ],
+        "tiers": [
+          "1K",
+          "2K",
+          "4K"
+        ]
+      },
       "paramMap": {},
       "resultPath": null,
       "billing": {
@@ -2612,13 +3769,35 @@
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
           "quote": "model_name=nano-banana-pro quota_type=1 model_ratio=0.43 model_price=0.09 completion_ratio=60"
+        },
+        "caps.edit": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/nano-banana-image/image-edit",
+          "quote": "Nano Banana Pro 图片编辑 API 参考与在线调试 — 输入图片 + 指令生成新图片"
+        },
+        "caps.refs": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/nano-banana-image/overview",
+          "quote": "官方硬限制是单图 7MB、每次请求最多 14 张"
+        },
+        "caps.ratios": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/nano-banana-image/overview",
+          "quote": "下表为 Nano Banana Pro 在 1K / 2K / 4K 三档分辨率下、10 种宽高比对应的实际输出像素尺寸（表格 10 行：1:1 / 2:3 / 3:2 / 3:4 / 4:3 / 4:5 / 5:4 / 9:16 / 16:9 / 21:9）"
+        },
+        "caps.tiers": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/nano-banana-image/overview",
+          "quote": "Nano Banana Pro 支持 1K、2K、4K 三档分辨率（不含 Nano Banana 2 独有的 512px）"
         }
       },
       "source": {
         "registry": "model-registry.json",
         "pricing": "/api/pricing",
         "docs_url": null
-      }
+      },
+      "route": "auto",
+      "notes": "⚠ 与 gpt-image 系的**核心差异**：走 Gemini 原生端点，**无 mask 字段**（mask 不写 = 不支持）；分辨率用 imageSize 档位而非像素串；比例用 aspectRatio。**只有 10 个比例**（1:4/4:1/1:8/8:1 要改用 Nano Banana 2）。timeout 不写进清单（宿主已有内联的 gemini 分档：2K=300s / 4K=600s）。"
     },
     "apiyi:oxygen-1.0": {
       "provider": "apiyi",
@@ -2871,10 +4050,97 @@
       "provider": "apiyi",
       "modelId": "seedream-5-0-260128",
       "kind": "image",
-      "label": "seedream-5-0-260128",
+      "label": "SeeDream 5.0（易）",
+      "desc": "当前推荐档，综合素质强",
+      "price": "0.25元/张（$0.035）",
+      "params": [
+        {
+          "key": "prompt",
+          "label": "提示词",
+          "type": "textarea",
+          "required": true,
+          "default": "",
+          "placeholder": "描述图片"
+        },
+        {
+          "key": "aspectRatio",
+          "label": "比例",
+          "type": "select",
+          "default": "auto",
+          "options": [
+            "auto",
+            "1:1",
+            "16:9",
+            "9:16",
+            "4:3",
+            "3:4",
+            "3:2",
+            "2:3",
+            "5:4",
+            "4:5",
+            "21:9",
+            "9:21",
+            "1:3",
+            "3:1",
+            "2:1",
+            "1:2"
+          ],
+          "hint": "自动＝不下发 size，由服务端决定"
+        },
+        {
+          "key": "resolution",
+          "label": "清晰度",
+          "type": "select",
+          "default": "auto",
+          "options": [
+            "auto",
+            "1K",
+            "2K",
+            "4K"
+          ],
+          "hint": "与比例合成官方 size 像素串；自动＝不下发"
+        },
+        {
+          "key": "quality",
+          "label": "质量",
+          "type": "select",
+          "default": "medium",
+          "options": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        },
+        {
+          "key": "urls",
+          "label": "参考图",
+          "type": "ref-image",
+          "output": "csv"
+        }
+      ],
+      "hostId": "apiyi:seedream-5-0-260128",
       "endpoint": "/v1/chat/completions",
       "shape": "openai-sync",
-      "caps": {},
+      "caps": {
+        "edit": true,
+        "refs": {
+          "max": 10
+        },
+        "sizes": [],
+        "ratios": [],
+        "tiers": [
+          "1K",
+          "2K",
+          "3K",
+          "4K"
+        ],
+        "count": {
+          "min": 1,
+          "max": 1
+        }
+      },
       "paramMap": {},
       "resultPath": null,
       "billing": {
@@ -2908,22 +4174,130 @@
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
           "quote": "model_name=seedream-5-0-260128 quota_type=1 model_ratio=0 model_price=0.035 completion_ratio=1"
+        },
+        "caps.edit": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/seedream-image/overview",
+          "quote": "同端点 + `image` 参数，支持单图改图、多图融合、批量序列生成（最多 15 张）。"
+        },
+        "caps.refs": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/seedream-image/overview",
+          "quote": "最多 10 张参考图，且**输入图 + 输出图合计不能超过 15 张**。本模型没有 `mask` 字段。"
+        },
+        "caps.tiers": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/seedream-image/overview",
+          "quote": "`size` 可以填档位（`1K` / `2K` / `3K` / `4K`，默认 `2K`）或者精确像素"
+        },
+        "caps.count": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/seedream-image/overview",
+          "quote": "`n` 会被**静默忽略**（仍只返回 1 张、按 1 张计费）"
         }
       },
       "source": {
         "registry": "model-registry.json",
         "pricing": "/api/pricing",
         "docs_url": null
-      }
+      },
+      "route": "auto",
+      "notes": "同 flash 的三点结构差异（无 /edits · image 是 URL 数组 · 无 mask/quality）。⚠ 与 flash 的**档位差异**：本档支持 1K/2K/3K/4K（默认 2K）⇒ 有 3K/4K。⚠ 姊妹档 `seedream-5-0-pro` 反而**没有 3K/4K**（上限 2048×2048），别搞混。"
     },
     "apiyi:seedream-5-0-flash-260915": {
       "provider": "apiyi",
       "modelId": "seedream-5-0-flash-260915",
       "kind": "image",
-      "label": "seedream-5-0-flash-260915",
+      "label": "SeeDream 5.0 Flash（易）",
+      "desc": "全系最便宜，十几秒交付",
+      "price": "0.13元/张（$0.018）",
+      "params": [
+        {
+          "key": "prompt",
+          "label": "提示词",
+          "type": "textarea",
+          "required": true,
+          "default": "",
+          "placeholder": "描述图片"
+        },
+        {
+          "key": "aspectRatio",
+          "label": "比例",
+          "type": "select",
+          "default": "auto",
+          "options": [
+            "auto",
+            "1:1",
+            "16:9",
+            "9:16",
+            "4:3",
+            "3:4",
+            "3:2",
+            "2:3",
+            "5:4",
+            "4:5",
+            "21:9",
+            "9:21",
+            "1:3",
+            "3:1",
+            "2:1",
+            "1:2"
+          ],
+          "hint": "自动＝不下发 size，由服务端决定"
+        },
+        {
+          "key": "resolution",
+          "label": "清晰度",
+          "type": "select",
+          "default": "auto",
+          "options": [
+            "auto",
+            "1K",
+            "2K",
+            "4K"
+          ],
+          "hint": "与比例合成官方 size 像素串；自动＝不下发"
+        },
+        {
+          "key": "quality",
+          "label": "质量",
+          "type": "select",
+          "default": "medium",
+          "options": [
+            "low",
+            "medium",
+            "high",
+            "xhigh",
+            "max"
+          ]
+        },
+        {
+          "key": "urls",
+          "label": "参考图",
+          "type": "ref-image",
+          "output": "csv"
+        }
+      ],
+      "hostId": "apiyi:seedream-5-0-flash-260915",
       "endpoint": "/v1/chat/completions",
       "shape": "openai-sync",
-      "caps": {},
+      "caps": {
+        "edit": true,
+        "refs": {
+          "max": 10
+        },
+        "sizes": [],
+        "ratios": [],
+        "tiers": [
+          "1K",
+          "1.5K",
+          "2K"
+        ],
+        "count": {
+          "min": 1,
+          "max": 1
+        }
+      },
       "paramMap": {},
       "resultPath": null,
       "billing": {
@@ -2957,13 +4331,35 @@
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
           "quote": "model_name=seedream-5-0-flash-260915 quota_type=1 model_ratio=0 model_price=0.018 completion_ratio=1"
+        },
+        "caps.edit": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/seedream-image/overview",
+          "quote": "同端点 + `image` 参数，支持单图改图、多图融合、批量序列生成（最多 15 张）。"
+        },
+        "caps.refs": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/seedream-image/overview",
+          "quote": "最多 10 张参考图，且**输入图 + 输出图合计不能超过 15 张**。本模型没有 `mask` 字段。"
+        },
+        "caps.tiers": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/seedream-image/overview",
+          "quote": "`seedream-5-0-flash` 只有 `1K` / `1.5K` / `2K` 三档、精确像素上限约 462 万，这两款都**没有 3K / 4K 档**"
+        },
+        "caps.count": {
+          "level": "doc",
+          "url": "https://docs.apiyi.com/api-capabilities/seedream-image/overview",
+          "quote": "`n` 会被**静默忽略**（仍只返回 1 张、按 1 张计费）"
         }
       },
       "source": {
         "registry": "model-registry.json",
         "pricing": "/api/pricing",
         "docs_url": null
-      }
+      },
+      "route": "auto",
+      "notes": "⚠ 与 OpenAI 形态**三个根本差异**：① **没有 `/v1/images/edits` 端点**（生成+编辑都打 `/v1/images/generations`，JSON）② 参考图在 `image` 字段（**URL 数组**，非 multipart、非 `image[]`）③ **没有 mask / 没有 quality**。⚠ 本档**只有 1K/1.5K/2K**（精确像素上限约 462 万）⇒ **无 3K/4K**。⚠ `n` 被**静默忽略**。商用务必显式传 `watermark: false`。"
     },
     "apiyi:seedream-5-0-pro-260628": {
       "provider": "apiyi",
@@ -3167,7 +4563,61 @@
       "provider": "apiyi",
       "modelId": "veo-3.1-generate-preview",
       "kind": "video",
-      "label": "veo-3.1-generate-preview",
+      "label": "VEO 3.1（易）",
+      "desc": "最高 4K，原生带音轨",
+      "price": "¥8.40/次（$1.2）",
+      "params": [
+        {
+          "key": "prompt",
+          "label": "提示词",
+          "type": "textarea",
+          "required": true,
+          "default": "",
+          "placeholder": "描述视频"
+        },
+        {
+          "key": "first_frame",
+          "label": "首帧",
+          "type": "ref-image",
+          "output": "single",
+          "hint": "官方仅接受 1 张参考图（input_reference）"
+        },
+        {
+          "key": "resolution",
+          "label": "分辨率",
+          "type": "select",
+          "default": "1080p",
+          "options": [
+            "720p",
+            "1080p",
+            "4k"
+          ],
+          "hint": "三档同价（按次计费）；4k 需 models = veo-3.1-generate-preview，耗时 4~6 倍"
+        },
+        {
+          "key": "ratio",
+          "label": "宽高比",
+          "type": "select",
+          "default": "16:9",
+          "options": [
+            "16:9",
+            "9:16"
+          ]
+        },
+        {
+          "key": "seconds",
+          "label": "时长",
+          "type": "select",
+          "default": "8",
+          "options": [
+            "4",
+            "6",
+            "8"
+          ],
+          "hint": "官方字段是 seconds 且必须传字符串（写 duration 会被静默忽略成 4 秒）；1080p 与 4k 只接受 8 秒一档，只有 720p 三档时长都能用"
+        }
+      ],
+      "hostId": "apiyi:veo-3.1-generate-preview",
       "endpoint": "/v1/chat/completions",
       "shape": "openai-sync",
       "caps": {},
@@ -3612,7 +5062,134 @@
       "provider": "apiyi",
       "modelId": "wan3.0-video",
       "kind": "video",
-      "label": "wan3.0-video",
+      "label": "Wan3.0 视频（易）",
+      "desc": "阿里万相 · 全模态旗舰 · 需 Wan 分组",
+      "price": "≈¥0.3/秒起",
+      "params": [
+        {
+          "key": "prompt",
+          "label": "提示词",
+          "type": "textarea",
+          "required": true,
+          "default": "",
+          "placeholder": "描述视频"
+        },
+        {
+          "key": "resolution",
+          "label": "分辨率",
+          "type": "select",
+          "default": "1080P",
+          "options": [
+            "1080P",
+            "720P",
+            "480P"
+          ]
+        },
+        {
+          "key": "ratio",
+          "label": "宽高比",
+          "type": "select",
+          "default": "adaptive",
+          "options": [
+            "adaptive",
+            "21:9",
+            "16:9",
+            "4:3",
+            "1:1",
+            "3:4",
+            "9:16"
+          ]
+        },
+        {
+          "key": "duration",
+          "label": "时长",
+          "type": "range",
+          "default": 5,
+          "min": 2,
+          "max": 30,
+          "step": 1,
+          "unit": "s",
+          "hint": "2~30 秒（官方另支持 -1 智能时长，滑杆无法表达）"
+        },
+        {
+          "key": "audio",
+          "label": "音频",
+          "type": "select",
+          "default": "true",
+          "options": [
+            "true",
+            "false"
+          ],
+          "hint": "是否输出有声视频"
+        },
+        {
+          "key": "prompt_extend",
+          "label": "提示词改写",
+          "type": "select",
+          "default": "true",
+          "options": [
+            "true",
+            "false"
+          ]
+        },
+        {
+          "key": "seed",
+          "label": "种子",
+          "type": "text",
+          "default": "",
+          "placeholder": "可选，留空随机"
+        },
+        {
+          "key": "watermark",
+          "label": "水印",
+          "type": "select",
+          "default": "false",
+          "options": [
+            "false",
+            "true"
+          ],
+          "hint": "右下角「AI生成」水印标识"
+        },
+        {
+          "key": "first_frame",
+          "label": "首帧",
+          "type": "ref-image",
+          "output": "single",
+          "hint": "可选，图生视频"
+        },
+        {
+          "key": "last_frame",
+          "label": "尾帧",
+          "type": "ref-image",
+          "output": "single",
+          "hint": "需搭配首帧"
+        },
+        {
+          "key": "images",
+          "label": "参考图",
+          "type": "ref-image",
+          "output": "csv",
+          "max": 10,
+          "hint": "内容参考 1-10 张，与首尾帧互斥"
+        },
+        {
+          "key": "videos",
+          "label": "参考视频",
+          "type": "ref-video",
+          "output": "csv",
+          "max": 5,
+          "hint": "总时长 ≤15s，与首尾帧互斥"
+        },
+        {
+          "key": "audios",
+          "label": "参考音频",
+          "type": "ref-audio",
+          "output": "csv",
+          "max": 5,
+          "hint": "总时长 ≤15s，与首尾帧互斥"
+        }
+      ],
+      "hostId": "apiyi:wan3.0-video",
       "endpoint": "/v1/chat/completions",
       "shape": "openai-sync",
       "caps": {},
