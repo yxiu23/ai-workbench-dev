@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><!-- IMPL-115②：iOS standalone 沉浸机制——default=状态栏白色实心条压在页面顶部（内容不延伸），结果态深色网格上方永远隔一条系统白条+边缘融合渐变（用户"白黑羽化"根因之一）；black-translucent=页面内容延伸到状态栏下方、状态栏透明，iOS≥16.4 状态栏底色由 theme-color 染色+文字色系统自适应（配合 IMPL-114② 动态同步：结果态深底白字/编辑态白底黑字），iOS<16.4 恒白字（结果态深底无感，编辑态白底上时间/电量对比度低的已知权衡） -->
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#ffffff"><!-- IMPL-114②：默认=编辑态白(--bg-elev)；结果态由 __wbSyncThemeColor 动态切网格基底色——iOS standalone 把 theme-color 渲染在状态栏区（含系统边缘融合渐变），恒浅色=结果态状态栏白块+白黑过渡（用户截图实锤）；原 media 限定 light 在系统深色时整条失效 -->
-<title>修的媒体工作台 V26.10.12</title>
+<title>修的媒体工作台 V26.10.14</title>
 <link rel="icon" type="image/webp" id="faviconLink" href="data:,">
 <link rel="preload" as="script" href="image-studio.3b086c2923.js"><!-- Z8（第六批）：编辑器内核预取（gzip≈657KB 空闲预下载；执行仍由 loadStudio 注入，二次打开走缓存）。Z14（第七批）：原行尾 /* */ 写法是 JS 注释而非 HTML 注释，解析器当正文处理致 head 提前闭合、该文字成 body 首节点，改 HTML 注释；preload 本体保留 -->
 <link href="https://cdn.jsdelivr.net/npm/filepond@4.31.4/dist/filepond.min.css" integrity="sha384-+KK4pfg7lNMtjUYMx/cAlRn+xxDDRjg558DFRSh51ac3aLjX/aX0DXib6n/uoHDh" crossorigin="anonymous" rel="stylesheet">
@@ -371,7 +371,7 @@ setTimeout(function() { if (!el.hidden) kill(false); }, 12000);
         <div class="clean-grid vault-grid">
           <button class="clean-card" id="vaultChangeBtn">
             <span class="clean-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/><path d="M5 6v4"/><path d="M19 14v4"/><path d="M10 2v2"/><path d="M7 8H3"/><path d="M21 16h-4"/><path d="M11 3H9"/></svg></span>
-            <span class="clean-txt"><b>编辑密钥</b><i>更新凭据并生成新密码簿</i></span>
+            <span class="clean-txt"><b>我的 Key</b><i>填入发给你的 Key，立即生效</i></span>
           </button>
           <button class="clean-card" id="vaultLockBtn">
             <span class="clean-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
@@ -382,7 +382,7 @@ setTimeout(function() { if (!el.hidden) kill(false); }, 12000);
     </div>
     <div class="settings-section settings-about">
       <div class="about-app">修的媒体工作台</div>
-      <span class="about-ver">V26.10.12</span>
+      <span class="about-ver">V26.10.14</span>
     </div>
   </div>
 </aside>
@@ -473,11 +473,16 @@ setTimeout(function() { if (!el.hidden) kill(false); }, 12000);
         <input type="password" id="kKeyR2Token" placeholder="R2 Token（可留空：不填就用上面的 Key）" autocomplete="off" spellcheck="false" aria-label="R2 Token（可留空）">
         <button id="keyEditConfirm">保存</button>
       </div>
-      <div id="keyEditDone" style="display:none;text-align:center;padding:6px 0 2px">
-        <div class="ke-done-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;color:var(--success);vertical-align:-4px"><path d="M20 6 9 17l-5-5"/></svg> 新密码簿已生成</div>
-        <button id="keyEditDownload">下载 keybook.enc.bin</button>
-        <div class="ke-note">上传到仓库 vault/ 目录后生效</div>
-      </div>
+      <!-- ★★★ R9ZY-76 U1：原"把密码簿下到本地 → 再传到仓库对应目录"那一整块已删除。
+           理由（它是"死且错"，不是"旧"）：
+             · R9ZY-72 起凭据直接存本机，**不再产出密码簿** ⇒ 那几句已经没有对应动作；
+             · 而它指向的文件 vault/keybook.enc.bin **已被删除**（commit 211cfb8）⇒ 照着做必然失败；
+             · 保留 #keyEditDone 空壳：保存逻辑还会做 done.style.display = "none" ——
+               删掉元素本身也没事（那处有 null 守卫），但空壳成本为零、风险更小。
+           ⚠ 教训：R9ZY-72「去保险箱化」当时**只改了行为没扫文案**，我只验了"输入框 5→2"就收工了。
+           ⚠ 写法注意：**本注释不得逐字引用那几句要删的文案** —— 否则下面那条"话术全清"的
+             负判据会命中注释自己（我第一版就踩了，断言红了两条）。 -->
+      <div id="keyEditDone" style="display:none"></div>
     </div>
   </div>
 </div>
@@ -513,7 +518,7 @@ setTimeout(function() { if (!el.hidden) kill(false); }, 12000);
   撤销回填
 </button>
 <script src="https://cdn.jsdelivr.net/npm/dexie@4.0.10/dist/dexie.min.js" integrity="sha384-3VWLzUTczDc/wazaoH+b5qG4iME0duPONRO281rRiaFkfpV/b3w5uxrvod7rCHcW" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/filepond@4.31.4/dist/filepond.min.js" integrity="sha384-c078+4FiHYcn/w4KMWj9QOV3edh+OSlorDHKh9Y2J+zaNdGuInl1mOXvJUhUE0D6" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.min.js" integrity="sha384-wGezC7N90KbkjgHvCbNjlz7d502kSpRFW9oc/m/rd2xiKZHlKwA2sb5p5fa/nYil" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/filepond-plugin-file-validate-type@1.2.8/dist/filepond-plugin-file-validate-type.min.js" integrity="sha384-tMUBUcmF6dDU7B/pv8y3fjtIMko7kpuNZNcXtL2zZWOh9xfUotLE9BIj1r+A98v6" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js" integrity="sha384-HZZ/fukV+9G8gwTNjN7zQDG0Sp7MsZy5DDN6VfY3Be7V9dvQpEpR2jF2HlyFUUjU" crossorigin="anonymous"></script><script src="models.js"></script><script src="app.c77bc8f320.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/filepond@4.31.4/dist/filepond.min.js" integrity="sha384-c078+4FiHYcn/w4KMWj9QOV3edh+OSlorDHKh9Y2J+zaNdGuInl1mOXvJUhUE0D6" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.min.js" integrity="sha384-wGezC7N90KbkjgHvCbNjlz7d502kSpRFW9oc/m/rd2xiKZHlKwA2sb5p5fa/nYil" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/filepond-plugin-file-validate-type@1.2.8/dist/filepond-plugin-file-validate-type.min.js" integrity="sha384-tMUBUcmF6dDU7B/pv8y3fjtIMko7kpuNZNcXtL2zZWOh9xfUotLE9BIj1r+A98v6" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js" integrity="sha384-HZZ/fukV+9G8gwTNjN7zQDG0Sp7MsZy5DDN6VfY3Be7V9dvQpEpR2jF2HlyFUUjU" crossorigin="anonymous"></script><script src="models.js"></script><script src="app.5a71e6175b.js"></script>
 
 </body>
 </html>
