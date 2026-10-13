@@ -470,11 +470,8 @@ setTimeout(function() { if (!el.hidden) kill(false); }, 12000);
     <div class="modal-body">
       <div id="keyEditForm">
         <input type="password" id="kKeyApi" placeholder="API Key" autocomplete="off" spellcheck="false" aria-label="API Key">
-        <input type="text" id="kKeyR2Url" placeholder="R2 Worker 地址" autocomplete="off" spellcheck="false" aria-label="R2 Worker 地址">
-        <input type="password" id="kKeyR2Token" placeholder="R2 Token" autocomplete="off" spellcheck="false" aria-label="R2 Token">
-        <input type="text" id="kKeyAk" placeholder="AccessKey ID" autocomplete="off" spellcheck="false" aria-label="AccessKey ID">
-        <input type="password" id="kKeySk" placeholder="AccessKey Secret" autocomplete="off" spellcheck="false" aria-label="AccessKey Secret">
-        <button id="keyEditConfirm">生成新密码簿</button>
+        <input type="password" id="kKeyR2Token" placeholder="R2 Token（可留空：不填就用上面的 Key）" autocomplete="off" spellcheck="false" aria-label="R2 Token（可留空）">
+        <button id="keyEditConfirm">保存</button>
       </div>
       <div id="keyEditDone" style="display:none;text-align:center;padding:6px 0 2px">
         <div class="ke-done-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;color:var(--success);vertical-align:-4px"><path d="M20 6 9 17l-5-5"/></svg> 新密码簿已生成</div>
@@ -516,7 +513,7 @@ setTimeout(function() { if (!el.hidden) kill(false); }, 12000);
   撤销回填
 </button>
 <script src="https://cdn.jsdelivr.net/npm/dexie@4.0.10/dist/dexie.min.js" integrity="sha384-3VWLzUTczDc/wazaoH+b5qG4iME0duPONRO281rRiaFkfpV/b3w5uxrvod7rCHcW" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/filepond@4.31.4/dist/filepond.min.js" integrity="sha384-c078+4FiHYcn/w4KMWj9QOV3edh+OSlorDHKh9Y2J+zaNdGuInl1mOXvJUhUE0D6" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.min.js" integrity="sha384-wGezC7N90KbkjgHvCbNjlz7d502kSpRFW9oc/m/rd2xiKZHlKwA2sb5p5fa/nYil" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/filepond-plugin-file-validate-type@1.2.8/dist/filepond-plugin-file-validate-type.min.js" integrity="sha384-tMUBUcmF6dDU7B/pv8y3fjtIMko7kpuNZNcXtL2zZWOh9xfUotLE9BIj1r+A98v6" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js" integrity="sha384-HZZ/fukV+9G8gwTNjN7zQDG0Sp7MsZy5DDN6VfY3Be7V9dvQpEpR2jF2HlyFUUjU" crossorigin="anonymous"></script><script src="models.js"></script><script src="app.85bb3458cc.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/filepond@4.31.4/dist/filepond.min.js" integrity="sha384-c078+4FiHYcn/w4KMWj9QOV3edh+OSlorDHKh9Y2J+zaNdGuInl1mOXvJUhUE0D6" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.min.js" integrity="sha384-wGezC7N90KbkjgHvCbNjlz7d502kSpRFW9oc/m/rd2xiKZHlKwA2sb5p5fa/nYil" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/filepond-plugin-file-validate-type@1.2.8/dist/filepond-plugin-file-validate-type.min.js" integrity="sha384-tMUBUcmF6dDU7B/pv8y3fjtIMko7kpuNZNcXtL2zZWOh9xfUotLE9BIj1r+A98v6" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js" integrity="sha384-HZZ/fukV+9G8gwTNjN7zQDG0Sp7MsZy5DDN6VfY3Be7V9dvQpEpR2jF2HlyFUUjU" crossorigin="anonymous"></script><script src="models.js"></script><script src="app.c77bc8f320.js"></script>
 
 </body>
 </html>

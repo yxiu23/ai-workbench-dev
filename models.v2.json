@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-10-12T16:24:43.147Z",
+  "generatedAt": "2026-10-13T12:34:33.216Z",
   "prioritySource": "model-registry.json",
   "models": {
     "apiyi:MAI-Image-2.6": {
@@ -1733,14 +1733,14 @@
       "billing": {
         "type": "fixed",
         "currency": "USD",
-        "price": 0.05,
+        "price": 0.045,
         "unit": "per_call"
       },
       "evidence": {
         "kind": {
           "level": "doc",
           "url": "https://docs.apiyi.com/model-registry.json",
-          "quote": "{\"id\":\"gemini-nano-banana-2.1\",\"category\":\"image\",\"endpoints\":[\"chat\",\"gemini\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.05,\"per_second_usd\":null,\"tiered\":false}}"
+          "quote": "{\"id\":\"gemini-nano-banana-2.1\",\"category\":\"image\",\"endpoints\":[\"chat\",\"gemini\"],\"billing\":{\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.045,\"per_second_usd\":null,\"tiered\":false}}"
         },
         "shape": {
           "level": "doc",
@@ -1755,12 +1755,12 @@
         "billing": {
           "level": "doc",
           "url": "https://docs.apiyi.com/model-registry.json",
-          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.05,\"per_second_usd\":null,\"tiered\":false}"
+          "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.045,\"per_second_usd\":null,\"tiered\":false}"
         },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
-          "quote": "model_name=gemini-nano-banana-2.1 quota_type=1 model_ratio=0.33 model_price=0.05 completion_ratio=19.999999999999996"
+          "quote": "model_name=gemini-nano-banana-2.1 quota_type=1 model_ratio=0.33 model_price=0.045 completion_ratio=19.999999999999996"
         }
       },
       "source": {
