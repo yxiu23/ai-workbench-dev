@@ -1,11 +1,12 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-10-13T12:34:33.216Z",
+  "generatedAt": "2026-10-14T00:17:19.398Z",
   "prioritySource": "model-registry.json",
   "models": {
     "apiyi:MAI-Image-2.6": {
       "provider": "apiyi",
       "modelId": "MAI-Image-2.6",
+      "vendor": "microsoft",
       "kind": "image",
       "label": "MAI-Image-2.6",
       "endpoint": "/v1/images/generations",
@@ -40,6 +41,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.12,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "microsoft",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -55,6 +62,7 @@
     "apiyi:MAI-Image-2.6-Flash": {
       "provider": "apiyi",
       "modelId": "MAI-Image-2.6-Flash",
+      "vendor": "microsoft",
       "kind": "image",
       "label": "MAI-Image-2.6-Flash",
       "endpoint": "/v1/images/generations",
@@ -89,6 +97,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.06,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "microsoft",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -104,6 +118,7 @@
     "apiyi:MiniMax-H3": {
       "provider": "apiyi",
       "modelId": "MiniMax-H3",
+      "vendor": "minimax",
       "kind": "video",
       "label": "MiniMax-H3",
       "endpoint": "/hailuo/v2/video_generation",
@@ -138,6 +153,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.03,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "minimax",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -153,6 +174,7 @@
     "apiyi:chatgpt-image-latest": {
       "provider": "apiyi",
       "modelId": "chatgpt-image-latest",
+      "vendor": "openai",
       "kind": "image",
       "label": "chatgpt-image-latest",
       "endpoint": "/v1/chat/completions",
@@ -188,6 +210,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":32,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "openai",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -203,6 +231,7 @@
     "apiyi:doubao-seedance-2-0-260128": {
       "provider": "apiyi",
       "modelId": "doubao-seedance-2-0-260128",
+      "vendor": "bytedance",
       "kind": "video",
       "label": "doubao-seedance-2-0-260128",
       "endpoint": "/v1/chat/completions",
@@ -238,6 +267,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":46,\"output_usd_per_m\":46,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "bytedance",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -253,6 +288,7 @@
     "apiyi:doubao-seedance-2-0-fast-260128": {
       "provider": "apiyi",
       "modelId": "doubao-seedance-2-0-fast-260128",
+      "vendor": "bytedance",
       "kind": "video",
       "label": "doubao-seedance-2-0-fast-260128",
       "endpoint": "/v1/chat/completions",
@@ -288,6 +324,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":37,\"output_usd_per_m\":37,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "bytedance",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -303,6 +345,7 @@
     "apiyi:doubao-seedance-2-0-mini-260615": {
       "provider": "apiyi",
       "modelId": "doubao-seedance-2-0-mini-260615",
+      "vendor": "bytedance",
       "kind": "video",
       "label": "doubao-seedance-2-0-mini-260615",
       "endpoint": "/v1/chat/completions",
@@ -338,6 +381,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":23,\"output_usd_per_m\":23,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "bytedance",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -353,6 +402,7 @@
     "apiyi:doubao-seedance-2-5-260628": {
       "provider": "apiyi",
       "modelId": "doubao-seedance-2-5-260628",
+      "vendor": "bytedance",
       "kind": "video",
       "label": "Seedance 2.5（易）",
       "desc": "长时直出，多参考融合强 · 需 SeeDance2 分组",
@@ -487,6 +537,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":70,\"output_usd_per_m\":70,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "bytedance",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -502,6 +558,7 @@
     "apiyi:flux-2-flex": {
       "provider": "apiyi",
       "modelId": "flux-2-flex",
+      "vendor": "black-forest",
       "kind": "image",
       "label": "flux-2-flex",
       "endpoint": "/v1/images/generations",
@@ -536,6 +593,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.06,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "black-forest",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -551,6 +614,7 @@
     "apiyi:flux-2-klein-4b": {
       "provider": "apiyi",
       "modelId": "flux-2-klein-4b",
+      "vendor": "black-forest",
       "kind": "image",
       "label": "flux-2-klein-4b",
       "endpoint": "/v1/images/generations",
@@ -585,6 +649,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.01,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "black-forest",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -600,6 +670,7 @@
     "apiyi:flux-2-klein-9b": {
       "provider": "apiyi",
       "modelId": "flux-2-klein-9b",
+      "vendor": "black-forest",
       "kind": "image",
       "label": "flux-2-klein-9b",
       "endpoint": "/v1/images/generations",
@@ -634,6 +705,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.01,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "black-forest",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -649,6 +726,7 @@
     "apiyi:flux-2-max": {
       "provider": "apiyi",
       "modelId": "flux-2-max",
+      "vendor": "black-forest",
       "kind": "image",
       "label": "flux-2-max",
       "endpoint": "/v1/images/generations",
@@ -683,6 +761,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.07,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "black-forest",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -698,6 +782,7 @@
     "apiyi:flux-2-pro": {
       "provider": "apiyi",
       "modelId": "flux-2-pro",
+      "vendor": "black-forest",
       "kind": "image",
       "label": "FLUX 2 Pro（易）",
       "desc": "写实与设计风格见长",
@@ -809,6 +894,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.03,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "black-forest",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -841,6 +932,7 @@
     "apiyi:flux-dev": {
       "provider": "apiyi",
       "modelId": "flux-dev",
+      "vendor": "black-forest",
       "kind": "image",
       "label": "flux-dev",
       "endpoint": "/v1/images/generations",
@@ -875,6 +967,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.02,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "black-forest",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -890,6 +988,7 @@
     "apiyi:flux-kontext-max": {
       "provider": "apiyi",
       "modelId": "flux-kontext-max",
+      "vendor": "black-forest",
       "kind": "image",
       "label": "flux-kontext-max",
       "endpoint": "/v1/images/generations",
@@ -924,6 +1023,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.07,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "black-forest",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -939,6 +1044,7 @@
     "apiyi:flux-kontext-pro": {
       "provider": "apiyi",
       "modelId": "flux-kontext-pro",
+      "vendor": "black-forest",
       "kind": "image",
       "label": "flux-kontext-pro",
       "endpoint": "/v1/images/generations",
@@ -973,6 +1079,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.035,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "black-forest",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -988,6 +1100,7 @@
     "apiyi:gemini-2.5-flash-image": {
       "provider": "apiyi",
       "modelId": "gemini-2.5-flash-image",
+      "vendor": "google",
       "kind": "image",
       "label": "gemini-2.5-flash-image",
       "endpoint": "/v1beta/models/gemini-2.5-flash-image:generateContent",
@@ -1022,6 +1135,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.02,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "google",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -1037,6 +1156,7 @@
     "apiyi:gemini-2.5-flash-image-preview": {
       "provider": "apiyi",
       "modelId": "gemini-2.5-flash-image-preview",
+      "vendor": "google",
       "kind": "image",
       "label": "gemini-2.5-flash-image-preview",
       "endpoint": "/v1beta/models/gemini-2.5-flash-image-preview:generateContent",
@@ -1071,6 +1191,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.02,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "google",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -1086,6 +1212,7 @@
     "apiyi:gemini-3-pro-image": {
       "provider": "apiyi",
       "modelId": "gemini-3-pro-image",
+      "vendor": "google",
       "kind": "image",
       "label": "gemini-3-pro-image",
       "endpoint": "/v1beta/models/gemini-3-pro-image:generateContent",
@@ -1120,6 +1247,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.09,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "google",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -1135,6 +1268,7 @@
     "apiyi:gemini-3-pro-image-preview": {
       "provider": "apiyi",
       "modelId": "gemini-3-pro-image-preview",
+      "vendor": "google",
       "kind": "image",
       "label": "gemini-3-pro-image-preview",
       "endpoint": "/v1beta/models/gemini-3-pro-image-preview:generateContent",
@@ -1169,6 +1303,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.09,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "google",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -1184,6 +1324,7 @@
     "apiyi:gemini-3-pro-image-preview-1k": {
       "provider": "apiyi",
       "modelId": "gemini-3-pro-image-preview-1k",
+      "vendor": "google",
       "kind": "image",
       "label": "gemini-3-pro-image-preview-1k",
       "endpoint": "/v1beta/models/gemini-3-pro-image-preview-1k:generateContent",
@@ -1218,6 +1359,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.09,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "google",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -1233,6 +1380,7 @@
     "apiyi:gemini-3-pro-image-preview-2k": {
       "provider": "apiyi",
       "modelId": "gemini-3-pro-image-preview-2k",
+      "vendor": "google",
       "kind": "image",
       "label": "gemini-3-pro-image-preview-2k",
       "endpoint": "/v1beta/models/gemini-3-pro-image-preview-2k:generateContent",
@@ -1267,6 +1415,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.09,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "google",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -1282,6 +1436,7 @@
     "apiyi:gemini-3-pro-image-preview-4k": {
       "provider": "apiyi",
       "modelId": "gemini-3-pro-image-preview-4k",
+      "vendor": "google",
       "kind": "image",
       "label": "gemini-3-pro-image-preview-4k",
       "endpoint": "/v1beta/models/gemini-3-pro-image-preview-4k:generateContent",
@@ -1316,6 +1471,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.09,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "google",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -1331,6 +1492,7 @@
     "apiyi:gemini-3.1-flash-image": {
       "provider": "apiyi",
       "modelId": "gemini-3.1-flash-image",
+      "vendor": "google",
       "kind": "image",
       "label": "gemini-3.1-flash-image",
       "endpoint": "/v1beta/models/gemini-3.1-flash-image:generateContent",
@@ -1365,6 +1527,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.055,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "google",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -1380,6 +1548,7 @@
     "apiyi:gemini-3.1-flash-image-4k": {
       "provider": "apiyi",
       "modelId": "gemini-3.1-flash-image-4k",
+      "vendor": "google",
       "kind": "image",
       "label": "gemini-3.1-flash-image-4k",
       "endpoint": "/v1beta/models/gemini-3.1-flash-image-4k:generateContent",
@@ -1414,6 +1583,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.055,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "google",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -1429,6 +1604,7 @@
     "apiyi:gemini-3.1-flash-image-preview": {
       "provider": "apiyi",
       "modelId": "gemini-3.1-flash-image-preview",
+      "vendor": "google",
       "kind": "image",
       "label": "gemini-3.1-flash-image-preview",
       "endpoint": "/v1beta/models/gemini-3.1-flash-image-preview:generateContent",
@@ -1463,6 +1639,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.055,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "google",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -1478,6 +1660,7 @@
     "apiyi:gemini-3.1-flash-image-preview-4k": {
       "provider": "apiyi",
       "modelId": "gemini-3.1-flash-image-preview-4k",
+      "vendor": "google",
       "kind": "image",
       "label": "gemini-3.1-flash-image-preview-4k",
       "endpoint": "/v1beta/models/gemini-3.1-flash-image-preview-4k:generateContent",
@@ -1512,6 +1695,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.055,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "google",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -1527,6 +1716,7 @@
     "apiyi:gemini-3.1-flash-lite-image": {
       "provider": "apiyi",
       "modelId": "gemini-3.1-flash-lite-image",
+      "vendor": "google",
       "kind": "image",
       "label": "Nano Banana 2 Lite（易）",
       "desc": "四秒生成，最轻快省费",
@@ -1636,6 +1826,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.025,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "google",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -1668,6 +1864,7 @@
     "apiyi:gemini-nano-banana-2.1": {
       "provider": "apiyi",
       "modelId": "gemini-nano-banana-2.1",
+      "vendor": "google",
       "kind": "image",
       "label": "Nano Banana 2.1（易）",
       "desc": "NB 新一代 · 更快更准 · 1K/2K/4K · 能力待实测",
@@ -1757,6 +1954,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.045,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "google",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -1772,6 +1975,7 @@
     "apiyi:gpt-image-1": {
       "provider": "apiyi",
       "modelId": "gpt-image-1",
+      "vendor": "openai",
       "kind": "image",
       "label": "gpt-image-1",
       "endpoint": "/v1/images/generations",
@@ -1807,6 +2011,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":40,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "openai",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -1822,6 +2032,7 @@
     "apiyi:gpt-image-1-mini": {
       "provider": "apiyi",
       "modelId": "gpt-image-1-mini",
+      "vendor": "openai",
       "kind": "image",
       "label": "gpt-image-1-mini",
       "endpoint": "/v1/images/generations",
@@ -1857,6 +2068,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":2,\"output_usd_per_m\":8,\"cache_read_usd_per_m\":0.2,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "openai",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -1872,6 +2089,7 @@
     "apiyi:gpt-image-1.5": {
       "provider": "apiyi",
       "modelId": "gpt-image-1.5",
+      "vendor": "openai",
       "kind": "image",
       "label": "gpt-image-1.5",
       "endpoint": "/v1/images/generations",
@@ -1907,6 +2125,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":32,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "openai",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -1922,6 +2146,7 @@
     "apiyi:gpt-image-1.5-2025-12-16": {
       "provider": "apiyi",
       "modelId": "gpt-image-1.5-2025-12-16",
+      "vendor": "openai",
       "kind": "image",
       "label": "gpt-image-1.5-2025-12-16",
       "endpoint": "/v1/images/generations",
@@ -1957,6 +2182,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":32,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "openai",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -1972,6 +2203,7 @@
     "apiyi:gpt-image-2": {
       "provider": "apiyi",
       "modelId": "gpt-image-2",
+      "vendor": "openai",
       "kind": "image",
       "label": "GPT-Image-2（易）",
       "desc": "上一代官方款，参数同形",
@@ -2116,6 +2348,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":30,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "openai",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -2163,6 +2401,7 @@
     "apiyi:gpt-image-2-all": {
       "provider": "apiyi",
       "modelId": "gpt-image-2-all",
+      "vendor": "openai",
       "kind": "image",
       "label": "gpt-image-2-all",
       "endpoint": "/v1/images/generations",
@@ -2197,6 +2436,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.025,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "openai",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -2212,6 +2457,7 @@
     "apiyi:gpt-image-2-vip": {
       "provider": "apiyi",
       "modelId": "gpt-image-2-vip",
+      "vendor": "openai",
       "kind": "image",
       "label": "gpt-image-2-vip",
       "endpoint": "/v1/images/generations",
@@ -2246,6 +2492,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.03,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "openai",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -2261,6 +2513,7 @@
     "apiyi:gpt-image-2.5-all": {
       "provider": "apiyi",
       "modelId": "gpt-image-2.5-all",
+      "vendor": "openai",
       "kind": "image",
       "label": "GPT-Image-2.5-All（易）",
       "desc": "高性价比，走量首选",
@@ -2373,6 +2626,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.025,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "openai",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -2405,6 +2664,7 @@
     "apiyi:gpt-image-2.5-flare": {
       "provider": "apiyi",
       "modelId": "gpt-image-2.5-flare",
+      "vendor": "openai",
       "kind": "image",
       "label": "GPT-Image-2.5-flare（易）",
       "desc": "速度型选手，快而稳",
@@ -2551,6 +2811,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":30,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "openai",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -2598,6 +2864,7 @@
     "apiyi:gpt-image-2.5-flare-2026-09-08": {
       "provider": "apiyi",
       "modelId": "gpt-image-2.5-flare-2026-09-08",
+      "vendor": "openai",
       "kind": "image",
       "label": "gpt-image-2.5-flare-2026-09-08",
       "endpoint": "/v1/images/generations",
@@ -2633,6 +2900,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":30,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "openai",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -2648,6 +2921,7 @@
     "apiyi:gpt-image-2.5-flare-vip": {
       "provider": "apiyi",
       "modelId": "gpt-image-2.5-flare-vip",
+      "vendor": "openai",
       "kind": "image",
       "label": "gpt-image-2.5-flare-vip",
       "endpoint": "/v1/images/generations",
@@ -2682,6 +2956,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.03,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "openai",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -2697,6 +2977,7 @@
     "apiyi:gpt-image-2.5-sunburst": {
       "provider": "apiyi",
       "modelId": "gpt-image-2.5-sunburst",
+      "vendor": "openai",
       "kind": "image",
       "label": "GPT-Image-2.5-sunburst（易）",
       "desc": "编辑精度最高，精修首选",
@@ -2843,6 +3124,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":30,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "openai",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -2890,6 +3177,7 @@
     "apiyi:gpt-image-2.5-sunburst-2026-09-08": {
       "provider": "apiyi",
       "modelId": "gpt-image-2.5-sunburst-2026-09-08",
+      "vendor": "openai",
       "kind": "image",
       "label": "gpt-image-2.5-sunburst-2026-09-08",
       "endpoint": "/v1/images/generations",
@@ -2925,6 +3213,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":5,\"output_usd_per_m\":30,\"cache_read_usd_per_m\":1.25,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "openai",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -2940,6 +3234,7 @@
     "apiyi:gpt-image-2.5-sunburst-vip": {
       "provider": "apiyi",
       "modelId": "gpt-image-2.5-sunburst-vip",
+      "vendor": "openai",
       "kind": "image",
       "label": "gpt-image-2.5-sunburst-vip",
       "endpoint": "/v1/images/generations",
@@ -2974,6 +3269,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.03,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "openai",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -2989,6 +3290,7 @@
     "apiyi:gpt-image-2.5-vip": {
       "provider": "apiyi",
       "modelId": "gpt-image-2.5-vip",
+      "vendor": "openai",
       "kind": "image",
       "label": "GPT-Image-2.5-VIP（易）",
       "desc": "配额宽松，可锁尺寸",
@@ -3117,6 +3419,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.03,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "openai",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -3154,6 +3462,7 @@
     "apiyi:gpt-realtime-2.1": {
       "provider": "apiyi",
       "modelId": "gpt-realtime-2.1",
+      "vendor": "openai",
       "kind": "audio",
       "label": "gpt-realtime-2.1",
       "endpoint": "/v1/chat/completions",
@@ -3189,6 +3498,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":4,\"output_usd_per_m\":24,\"cache_read_usd_per_m\":0.4,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "openai",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -3204,6 +3519,7 @@
     "apiyi:gpt-realtime-2.1-mini": {
       "provider": "apiyi",
       "modelId": "gpt-realtime-2.1-mini",
+      "vendor": "openai",
       "kind": "audio",
       "label": "gpt-realtime-2.1-mini",
       "endpoint": "/v1/chat/completions",
@@ -3239,6 +3555,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":0.6,\"output_usd_per_m\":2.4,\"cache_read_usd_per_m\":0.06,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "openai",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -3254,6 +3576,7 @@
     "apiyi:happyhorse-1.0-video-edit": {
       "provider": "apiyi",
       "modelId": "happyhorse-1.0-video-edit",
+      "vendor": null,
       "kind": "video",
       "label": "happyhorse-1.0-video-edit",
       "endpoint": "/v1/chat/completions",
@@ -3304,6 +3627,7 @@
     "apiyi:happyhorse-1.1-i2v": {
       "provider": "apiyi",
       "modelId": "happyhorse-1.1-i2v",
+      "vendor": null,
       "kind": "video",
       "label": "happyhorse-1.1-i2v",
       "endpoint": "/v1/chat/completions",
@@ -3354,6 +3678,7 @@
     "apiyi:happyhorse-1.1-r2v": {
       "provider": "apiyi",
       "modelId": "happyhorse-1.1-r2v",
+      "vendor": null,
       "kind": "video",
       "label": "happyhorse-1.1-r2v",
       "endpoint": "/v1/chat/completions",
@@ -3404,6 +3729,7 @@
     "apiyi:happyhorse-1.1-t2v": {
       "provider": "apiyi",
       "modelId": "happyhorse-1.1-t2v",
+      "vendor": null,
       "kind": "video",
       "label": "happyhorse-1.1-t2v",
       "endpoint": "/v1/chat/completions",
@@ -3454,6 +3780,7 @@
     "apiyi:nano-banana": {
       "provider": "apiyi",
       "modelId": "nano-banana",
+      "vendor": "google",
       "kind": "image",
       "label": "nano-banana",
       "endpoint": "/v1beta/models/nano-banana:generateContent",
@@ -3488,6 +3815,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.02,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "google",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -3503,6 +3836,7 @@
     "apiyi:nano-banana-2": {
       "provider": "apiyi",
       "modelId": "nano-banana-2",
+      "vendor": "google",
       "kind": "image",
       "label": "Nano Banana 2（易）",
       "desc": "画质接近 Pro，速度更快",
@@ -3620,6 +3954,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.055,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "google",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -3657,6 +3997,7 @@
     "apiyi:nano-banana-pro": {
       "provider": "apiyi",
       "modelId": "nano-banana-pro",
+      "vendor": "google",
       "kind": "image",
       "label": "Nano Banana Pro（易）",
       "desc": "旗舰画质，4K 文字最强",
@@ -3765,6 +4106,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.09,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "google",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -3802,6 +4149,7 @@
     "apiyi:oxygen-1.0": {
       "provider": "apiyi",
       "modelId": "oxygen-1.0",
+      "vendor": null,
       "kind": "video",
       "label": "oxygen-1.0",
       "endpoint": "/v1/videos",
@@ -3851,6 +4199,7 @@
     "apiyi:qwen3.5-omni-flash-realtime": {
       "provider": "apiyi",
       "modelId": "qwen3.5-omni-flash-realtime",
+      "vendor": "alibaba",
       "kind": "audio",
       "label": "qwen3.5-omni-flash-realtime",
       "endpoint": "/v1/chat/completions",
@@ -3886,6 +4235,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":0.45,\"output_usd_per_m\":2.75,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "alibaba",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -3901,6 +4256,7 @@
     "apiyi:qwen3.5-omni-plus-realtime": {
       "provider": "apiyi",
       "modelId": "qwen3.5-omni-plus-realtime",
+      "vendor": "alibaba",
       "kind": "audio",
       "label": "qwen3.5-omni-plus-realtime",
       "endpoint": "/v1/chat/completions",
@@ -3936,6 +4292,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":1.38,\"output_usd_per_m\":8.25,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "alibaba",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -3951,6 +4313,7 @@
     "apiyi:seedream-4-0-250828": {
       "provider": "apiyi",
       "modelId": "seedream-4-0-250828",
+      "vendor": "bytedance",
       "kind": "image",
       "label": "seedream-4-0-250828",
       "endpoint": "/v1/chat/completions",
@@ -3985,6 +4348,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.035,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "bytedance",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -4000,6 +4369,7 @@
     "apiyi:seedream-4-5-251128": {
       "provider": "apiyi",
       "modelId": "seedream-4-5-251128",
+      "vendor": "bytedance",
       "kind": "image",
       "label": "seedream-4-5-251128",
       "endpoint": "/v1/chat/completions",
@@ -4034,6 +4404,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.04,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "bytedance",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -4049,6 +4425,7 @@
     "apiyi:seedream-5-0-260128": {
       "provider": "apiyi",
       "modelId": "seedream-5-0-260128",
+      "vendor": "bytedance",
       "kind": "image",
       "label": "SeeDream 5.0（易）",
       "desc": "当前推荐档，综合素质强",
@@ -4170,6 +4547,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.035,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "bytedance",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -4207,6 +4590,7 @@
     "apiyi:seedream-5-0-flash-260915": {
       "provider": "apiyi",
       "modelId": "seedream-5-0-flash-260915",
+      "vendor": "bytedance",
       "kind": "image",
       "label": "SeeDream 5.0 Flash（易）",
       "desc": "全系最便宜，十几秒交付",
@@ -4327,6 +4711,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.018,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "bytedance",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -4364,6 +4754,7 @@
     "apiyi:seedream-5-0-pro-260628": {
       "provider": "apiyi",
       "modelId": "seedream-5-0-pro-260628",
+      "vendor": "bytedance",
       "kind": "image",
       "label": "seedream-5-0-pro-260628",
       "endpoint": "/v1/chat/completions",
@@ -4398,6 +4789,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.12,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "bytedance",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -4413,6 +4810,7 @@
     "apiyi:tts-1": {
       "provider": "apiyi",
       "modelId": "tts-1",
+      "vendor": "openai",
       "kind": "audio",
       "label": "tts-1",
       "endpoint": "/v1/chat/completions",
@@ -4448,6 +4846,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":30,\"output_usd_per_m\":30,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "openai",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -4463,6 +4867,7 @@
     "apiyi:tts-1-hd": {
       "provider": "apiyi",
       "modelId": "tts-1-hd",
+      "vendor": "openai",
       "kind": "audio",
       "label": "tts-1-hd",
       "endpoint": "/v1/chat/completions",
@@ -4498,6 +4903,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":60,\"output_usd_per_m\":60,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "openai",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -4513,6 +4924,7 @@
     "apiyi:veo-3.1-fast-generate-preview": {
       "provider": "apiyi",
       "modelId": "veo-3.1-fast-generate-preview",
+      "vendor": "google",
       "kind": "video",
       "label": "veo-3.1-fast-generate-preview",
       "endpoint": "/v1/chat/completions",
@@ -4547,6 +4959,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":0.3,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "google",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -4562,6 +4980,7 @@
     "apiyi:veo-3.1-generate-preview": {
       "provider": "apiyi",
       "modelId": "veo-3.1-generate-preview",
+      "vendor": "google",
       "kind": "video",
       "label": "VEO 3.1（易）",
       "desc": "最高 4K，原生带音轨",
@@ -4650,6 +5069,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_call\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":1.2,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "google",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -4665,6 +5090,7 @@
     "apiyi:wan2.6-i2v": {
       "provider": "apiyi",
       "modelId": "wan2.6-i2v",
+      "vendor": "alibaba",
       "kind": "video",
       "label": "wan2.6-i2v",
       "endpoint": "/v1/chat/completions",
@@ -4700,6 +5126,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":1.2,\"output_usd_per_m\":1.2,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "alibaba",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -4715,6 +5147,7 @@
     "apiyi:wan2.6-r2v": {
       "provider": "apiyi",
       "modelId": "wan2.6-r2v",
+      "vendor": "alibaba",
       "kind": "video",
       "label": "wan2.6-r2v",
       "endpoint": "/v1/chat/completions",
@@ -4750,6 +5183,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":75,\"output_usd_per_m\":75,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "alibaba",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -4765,6 +5204,7 @@
     "apiyi:wan2.6-r2v-flash": {
       "provider": "apiyi",
       "modelId": "wan2.6-r2v-flash",
+      "vendor": "alibaba",
       "kind": "video",
       "label": "wan2.6-r2v-flash",
       "endpoint": "/v1/chat/completions",
@@ -4800,6 +5240,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":75,\"output_usd_per_m\":75,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "alibaba",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -4815,6 +5261,7 @@
     "apiyi:wan2.6-t2v": {
       "provider": "apiyi",
       "modelId": "wan2.6-t2v",
+      "vendor": "alibaba",
       "kind": "video",
       "label": "wan2.6-t2v",
       "endpoint": "/v1/chat/completions",
@@ -4850,6 +5297,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_token\",\"input_usd_per_m\":1.2,\"output_usd_per_m\":1.2,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":null,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "alibaba",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -4865,6 +5318,7 @@
     "apiyi:wan2.7-i2v": {
       "provider": "apiyi",
       "modelId": "wan2.7-i2v",
+      "vendor": "alibaba",
       "kind": "video",
       "label": "wan2.7-i2v",
       "endpoint": "/v1/chat/completions",
@@ -4899,6 +5353,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.084,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "alibaba",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -4914,6 +5374,7 @@
     "apiyi:wan2.7-r2v": {
       "provider": "apiyi",
       "modelId": "wan2.7-r2v",
+      "vendor": "alibaba",
       "kind": "video",
       "label": "wan2.7-r2v",
       "endpoint": "/v1/chat/completions",
@@ -4948,6 +5409,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.084,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "alibaba",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -4963,6 +5430,7 @@
     "apiyi:wan2.7-t2v": {
       "provider": "apiyi",
       "modelId": "wan2.7-t2v",
+      "vendor": "alibaba",
       "kind": "video",
       "label": "wan2.7-t2v",
       "endpoint": "/v1/chat/completions",
@@ -4997,6 +5465,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.084,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "alibaba",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -5012,6 +5486,7 @@
     "apiyi:wan2.7-videoedit": {
       "provider": "apiyi",
       "modelId": "wan2.7-videoedit",
+      "vendor": "alibaba",
       "kind": "video",
       "label": "wan2.7-videoedit",
       "endpoint": "/v1/chat/completions",
@@ -5046,6 +5521,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.084,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "alibaba",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -5061,6 +5542,7 @@
     "apiyi:wan3.0-video": {
       "provider": "apiyi",
       "modelId": "wan3.0-video",
+      "vendor": "alibaba",
       "kind": "video",
       "label": "Wan3.0 视频（易）",
       "desc": "阿里万相 · 全模态旗舰 · 需 Wan 分组",
@@ -5222,6 +5704,12 @@
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.0294,\"tiered\":false}"
         },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "alibaba",
+          "source": "studio/vendor.rules.jsonc"
+        },
         "billing.pricing": {
           "level": "doc",
           "url": "https://api.apiyi.com/api/pricing",
@@ -5237,6 +5725,7 @@
     "apiyi:wan3.0-video-prime": {
       "provider": "apiyi",
       "modelId": "wan3.0-video-prime",
+      "vendor": "alibaba",
       "kind": "video",
       "label": "wan3.0-video-prime",
       "endpoint": "/v1/chat/completions",
@@ -5270,6 +5759,12 @@
           "level": "doc",
           "url": "https://docs.apiyi.com/model-registry.json",
           "quote": "billing: {\"type\":\"per_second\",\"input_usd_per_m\":null,\"output_usd_per_m\":null,\"cache_read_usd_per_m\":null,\"per_call_usd\":null,\"per_second_usd\":0.063,\"tiered\":false}"
+        },
+        "vendor": {
+          "level": "derived",
+          "rule": "前缀匹配 /undefined/",
+          "vendor": "alibaba",
+          "source": "studio/vendor.rules.jsonc"
         },
         "billing.pricing": {
           "level": "doc",
