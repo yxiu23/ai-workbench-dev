@@ -1,6 +1,6 @@
 {
   "schemaVersion": "1.0",
-  "generatedAt": "2026-11-22T09:54:18.551Z",
+  "generatedAt": "2026-11-22T10:05:15.395Z",
   "prioritySource": "model-registry.json",
   "models": {
     "apiyi:MAI-Image-2.6": {
@@ -3662,7 +3662,7 @@
       "kind": "image",
       "label": "GPT-Image-2.6-Flare（易）",
       "desc": "速度型选手，贵在快",
-      "price": "1.40元/张（$0.2）",
+      "price": "按Token·入$5/出$30每M",
       "params": [
         {
           "key": "prompt",
@@ -3751,10 +3751,14 @@
       "paramMap": {},
       "resultPath": null,
       "billing": {
-        "type": "fixed",
+        "type": "token",
         "currency": "USD",
-        "price": 0.2,
-        "unit": "per_call"
+        "in": 5,
+        "out": 30,
+        "unit": "per_million",
+        "imageIn": 8,
+        "cacheRead": 1.25,
+        "source": "pricing.billing_expr"
       },
       "evidence": {
         "kind": {
@@ -3802,7 +3806,7 @@
       "kind": "image",
       "label": "GPT-Image-2.6-Sunburst（易）",
       "desc": "编辑精度最高，精修用",
-      "price": "1.40元/张（$0.2）",
+      "price": "按Token·入$5/出$30每M",
       "params": [
         {
           "key": "prompt",
@@ -3891,10 +3895,14 @@
       "paramMap": {},
       "resultPath": null,
       "billing": {
-        "type": "fixed",
+        "type": "token",
         "currency": "USD",
-        "price": 0.2,
-        "unit": "per_call"
+        "in": 5,
+        "out": 30,
+        "unit": "per_million",
+        "imageIn": 8,
+        "cacheRead": 1.25,
+        "source": "pricing.billing_expr"
       },
       "evidence": {
         "kind": {
