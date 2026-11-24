@@ -511,5 +511,30 @@ setTimeout(function() { if (!el.hidden) kill(false); }, 12000);
 <script src="https://cdn.jsdelivr.net/npm/dexie@4.0.10/dist/dexie.min.js" integrity="sha384-3VWLzUTczDc/wazaoH+b5qG4iME0duPONRO281rRiaFkfpV/b3w5uxrvod7rCHcW" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/filepond@4.31.4/dist/filepond.min.js" integrity="sha384-c078+4FiHYcn/w4KMWj9QOV3edh+OSlorDHKh9Y2J+zaNdGuInl1mOXvJUhUE0D6" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/filepond-plugin-image-preview@4.6.12/dist/filepond-plugin-image-preview.min.js" integrity="sha384-wGezC7N90KbkjgHvCbNjlz7d502kSpRFW9oc/m/rd2xiKZHlKwA2sb5p5fa/nYil" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/filepond-plugin-file-validate-type@1.2.8/dist/filepond-plugin-file-validate-type.min.js" integrity="sha384-tMUBUcmF6dDU7B/pv8y3fjtIMko7kpuNZNcXtL2zZWOh9xfUotLE9BIj1r+A98v6" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js" integrity="sha384-HZZ/fukV+9G8gwTNjN7zQDG0Sp7MsZy5DDN6VfY3Be7V9dvQpEpR2jF2HlyFUUjU" crossorigin="anonymous"></script><script src="models.js"></script><script src="app.64c6056cc0.js"></script>
 
-</body>
+<script>
+(function () {
+  if (window.__r209) return; window.__r209 = 1;
+  var ov = null;
+  function close() { if (ov) { ov.remove(); ov = null; } }
+  document.addEventListener('click', function (e) {
+    var img = (e.target && e.target.closest) ? e.target.closest('.ref-item img, .ref-thumb img, [data-ref-grid] img') : null;
+    if (!img) return;
+    var src = img.getAttribute('data-full') || img.currentSrc || img.src;
+    if (!src) return;
+    e.preventDefault(); e.stopPropagation();
+    close();
+    ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.84);display:flex;align-items:center;justify-content:center;cursor:zoom-out;padding:24px';
+    var im = document.createElement('img');
+    im.src = src;
+    im.style.cssText = 'max-width:92vw;max-height:92vh;object-fit:contain;border-radius:6px;box-shadow:0 12px 48px rgba(0,0,0,.55)';
+    ov.appendChild(im);
+    ov.addEventListener('click', close);
+    document.body.appendChild(ov);
+    document.addEventListener('keydown', function esc(ev) {
+      if (ev.key === 'Escape') { close(); document.removeEventListener('keydown', esc); }
+    });
+  }, true);
+})();
+</script></body>
 </html>
